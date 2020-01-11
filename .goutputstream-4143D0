@@ -69,7 +69,7 @@ def smooth(x,window_len=11,window='hanning'):
     return y[int(window_len/2+1):-int(window_len/2-1)]
 
 
-def plot_spec(df,title="",ax=None,yscale='log',vmarkers=None,thres=None,ymin=None):
+def plot_spec(df,title="",ax=None,yscale='log',vmarkers=None,thres=None):
     """Plots spectrum stored in dataframe 'df'
 
        - optionally with peak markers if single x_pos or array x_pos is passed to 'vmarkers'"""
@@ -82,8 +82,6 @@ def plot_spec(df,title="",ax=None,yscale='log',vmarkers=None,thres=None,ymin=Non
         pass
     if thres:
         plt.hlines(y=thres,xmin=df.index.min(),xmax=df.index.max())
-    if ymin:
-        plt.ylim(ymin,)
         
 
 
@@ -103,11 +101,11 @@ def peak_detect(df,window_len=23,thres=0.003,width=0.01,plot_smoothed_spec=True,
     plt.show()
 
     # Second derivative 
-    df_sec_deriv = df_smooth.iloc[:-2].copy()
-    for i in range(len(df_smooth.index) - 2):
-        scale = 1/(df_smooth['Counts'].iloc[i+1]+10) # scale data to decrease y range
+    df_sec_deriv = df_smooth.copy()
+    for i in range(len(df_smooth.index)-3#):
+        norm = 1/(df_smooth['Counts'].iloc[i]+10) # normalize data to decrease y range
         #dm = df_smooth.index[i+1]-df_smooth.index[i] # use dm in denominator of deriv if real units are desired
-        df_sec_deriv['Counts'].iloc[i] = scale*(df_smooth['Counts'].iloc[i+2] - 2*df_smooth['Counts'].iloc[i+1] + df_smooth['Counts'].iloc[i])/1**2
+        df_sec_deriv['Counts'].iloc[i] = norm*(df_smooth['Counts'].iloc[i+1] - 2*df_smooth['Counts'].iloc[i] + df_smooth['Counts'].iloc[i-1])/1**2
     # Plot second derivative
     #df_sec_deriv.plot(figsize=(20,5))
     #plt.title("Second derivative of spectrum")
@@ -116,10 +114,10 @@ def peak_detect(df,window_len=23,thres=0.003,width=0.01,plot_smoothed_spec=True,
     plot_spec(df_sec_deriv,title="Second derivative of spectrum",yscale='linear',thres=-thres)
 
     # Take only negative part of re-scaled second derivative and invert
-    df_sec_deriv_mod = df_smooth.iloc[:-2].copy()
-    for i in range(len(df_smooth.index) - 2):
-        scale = -1/(df_smooth['Counts'].iloc[i+1]+10) # scale data to decrease y range
-        value = scale*(df_smooth['Counts'].iloc[i+2] - 2*df_smooth['Counts'].iloc[i+1] + df_smooth['Counts'].iloc[i])/1**2 # Used (second order forward finite difference)
+    df_sec_deriv_mod = df_smooth.copy()
+    for i in range(len(df_smooth.index)-4):
+        norm = -1/(df_smooth['Counts'].iloc[i+1]+10) # normalize data to decrease y range
+        value = norm*(df_smooth['Counts'].iloc[i+2] - 2*df_smooth['Counts'].iloc[i+1] + df_smooth['Counts'].iloc[i])/1**2 # Used (second order forward finite difference)
         if value > 0:
             df_sec_deriv_mod['Counts'].iloc[i] = value 
         else:
@@ -136,9 +134,14 @@ def peak_detect(df,window_len=23,thres=0.003,width=0.01,plot_smoothed_spec=True,
     #plt.ylim(-0.02,0)
     #plt.yscale('log')
     #plt.show()
-    plot_spec(df_sec_deriv_mod,title="Negative part of second derivative, scaled and inverted",thres=thres,vmarkers=li_peak_pos,ymin=1e-04)
+    plot_spec(df_sec_deriv_mod,title="Negative part of second derivative, scaled and inverted",thres=thres,vmarkers=li_peak_pos)
     
     # Plot raw spectrum with detected peaks marked
+    #df.plot(figsize=(20,5))
+    #plt.title("Spectrum with detected peaks marked")
+    #plt.yscale('log')
+    #plt.vlines(x=li_peak_pos,ymin=0,ymax=df.max())
+    #plt.show()
     plot_spec(df,title="Spectrum with detected peaks marked",vmarkers=li_peak_pos)
     return li_peak_pos
 

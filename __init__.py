@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import lmfit as fit
 import scipy.constants as con
-import emgfit.peak_detect 
+from emgfit.peak_detect import * 
 
 ##### Import following modules immediately if package is loaded with import *
 __all__ = [
