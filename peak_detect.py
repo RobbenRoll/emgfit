@@ -155,6 +155,51 @@ def add_peak(li_peak_pos,x_pos,label="?",m_AME=None,m_AME_error=None):
 def assign_species():
     return
 
+def splitspecies(s):
+    """ Splits ion species string into list containing constituent atom strings (e.g. '4H1:1C12' returns ['4H1','1C12']"""
+    return s.split(':')
+
+def splitparticle(s):
+    """ Extracts number, particle/element type and mass number of particle string (e.g. 1Cs133, Cs133, 1e"""
+    tail = s.lstrip('+-0123456789') 
+    head = s[:-len(tail)] 
+    if head == '+': # handle missing number
+        n = int(1)
+    elif head == '-': # handle missing number
+        n = int(-1)
+    else:
+        n = int(head) # leading number including sign (if present)
+    El = tail.rstrip('0123456789') # central letters 
+    if El == 'e' and len(El) == len(tail): # handle electron strings, e.g. ':-1e' 
+        A = 0
+    else: 
+        A = int(tail[len(El):]) # trailing number
+    return n, El, A
+
+class peak:
+    def __init__(self,x_pos,species,m_AME=None,m_AME_error=None):
+        self.x_pos = x_pos
+        self.species = species # e.g. 1Cs133 or Cs133 or 4H1:1C12
+        try:
+            m = 0.0
+            m_error_sq = 0.0
+            for ptype in splitspecies(species):          
+                n, El, A = splitparticle(ptype)
+                if El == 'e': # electron 
+                    m += n*m_e
+                    # neglect uncertainty of m_e 
+                else: # regular atom
+                    m += n*emg.mdata_AME(El,A)[2]                    
+                    m_error_sq += (n*emg.mdata_AME(El,A)[3])**2
+                    extrapol = emg.mdata_AME(El,A)[3]     
+            self.m_AME = m
+            self.m_AME_error = np.sqrt(m_error_sq)
+            self.extrapolated_yn = int(extrapol)
+        except:
+            raise
+
+    def properties(self):
+        print(self.x_pos,self.species,self.m_AME,self.m_AME_error,self.extrapolated_yn)
 
 #### 
 

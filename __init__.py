@@ -33,6 +33,6 @@ def mdata_AME(El,A):
     m_AME = df_AME['ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
     m_AME_error = df_AME['Error ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
     extrapolated_yn = df_AME['Extrapolated?'].loc[(El,A)]
-    return [El,A,m_AME,m_AME_error,extrapolated_yn]
+    return [El, A, m_AME, m_AME_error, extrapolated_yn]
 
 ###################################################################################################
