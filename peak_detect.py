@@ -180,26 +180,56 @@ class peak:
     def __init__(self,x_pos,species,m_AME=None,m_AME_error=None):
         self.x_pos = x_pos
         self.species = species # e.g. 1Cs133 or Cs133 or 4H1:1C12
-        try:
-            m = 0.0
-            m_error_sq = 0.0
-            for ptype in splitspecies(species):          
-                n, El, A = splitparticle(ptype)
-                if El == 'e': # electron 
-                    m += n*m_e
-                    # neglect uncertainty of m_e 
-                else: # regular atom
-                    m += n*emg.mdata_AME(El,A)[2]                    
-                    m_error_sq += (n*emg.mdata_AME(El,A)[3])**2
-                    extrapol = emg.mdata_AME(El,A)[3]     
-            self.m_AME = m
-            self.m_AME_error = np.sqrt(m_error_sq)
-            self.extrapolated_yn = int(extrapol)
-        except:
-            raise
-
-    def properties(self):
-        print(self.x_pos,self.species,self.m_AME,self.m_AME_error,self.extrapolated_yn)
+        m = 0.0
+        m_error_sq = 0.0
+        for ptype in splitspecies(species):          
+            n, El, A = splitparticle(ptype)
+            extrapol = False # initialize boolean flag
+            if ptype == '?': # unidentified species
+                m = None
+                m_error = None
+            elif El == 'e': # electron 
+                m += n*m_e
+                # neglect uncertainty of m_e 
+            else: # regular atom
+                m += n*emg.mdata_AME(El,A)[2]                    
+                m_error_sq += (n*emg.mdata_AME(El,A)[3])**2
+                m_error = np.sqrt(m_error_sq)
+                if emg.mdata_AME(El,A)[3] == 1: # extrapolated mass
+                    extrapol = True     
+        self.m_AME = m
+        self.m_AME_error = m_error
+        self.extrapolated_yn = extrapol
+        self.fitted = False
+        self.area = None
+        self.m_fit = None
+        self.stat_error = None # A * Std. Dev. / sqrt(N) with A = 
+        self.cal_error = None
+        self.peakshape_error = None
+        self.m_fit_error = None # total uncertainty of mass value - includes: stat. mass uncertainty, peakshape uncertainty, calibration uncertainty 
+        self.ME_keV = None # Mass excess [keV] 
+        self.m_dev_keV = None # TITAN -AME [keV]
+        self.chi_sq_red = None # chi square reduced of peak fit 
+        self.R = None # TOF ratio
+        self.R_error = None # uncertainty of TOF ratio
+        
+    def properties(self): 
+        """ Print peak properties """
+        print("x_pos:",self.x_pos,"u")
+        print("Species:",self.species)
+        print("AME mass:",self.m_AME,"u     (",np.round(self.m_AME*u_to_keV,3),"keV )")
+        print("AME mass uncertainty:",self.m_AME_error,"u         (",np.round(self.m_AME_error*u_to_keV,3),"keV )")
+        print("Extrapolated mass?",self.extrapolated_yn)
+        if self.fitted == True:
+            print("Peak area:",np.round(self.area,1),"counts")
+            print("(Ionic) mass:",self.m_fit,"u     (",np.round(self.m_fit*u_to_keV,3),"keV )")
+            print("Stat. mass uncertainty:",self.stat_error,"u     (",np.round(self.stat_error*u_to_keV,3),"keV )")
+            print("Calibration uncertainty:",self.cal_error,"u     (",np.round(self.cal_error*u_to_keV,3),"keV )")
+            print("Peakshape uncertainty:",self.peakshape_error,"u     (",np.round(self.peakshape_error*u_to_keV,3),"keV )")
+            print("Total mass uncertainty:",self.m_fit_error,"u     (",np.round(self.m_fit_error*u_to_keV,3),"keV )")
+            print("Mass excess:",np.round(self.ME_keV,3),"keV")
+            print("TITAN - AME:",np.round(self.m_dev_keV,3),"keV")
+            print("χ_sq_red:",np.round(self.chi_sq_red))
 
 #### 
 

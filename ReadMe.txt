@@ -19,7 +19,7 @@ Flow chart:
 
 * Plot full spectrum
 * Cut data to specified fit range
-* Detect all peaks and plot result
+* Detect all peaks and plot result	(-> create peak objects)
 * Query identification of peaks and peak numbers for peak shape calibrant and mass calibrant
 * Determine peak shape and peak shape parameters
 * Determine optimal tail order
