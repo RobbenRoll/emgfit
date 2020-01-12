@@ -10,10 +10,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import lmfit as fit
-import emgfit
+import config
 from emgfit.emg_funcs import * 
-u_to_keV = emgfit.u_to_keV
-m_e = emgfit.m_e
+u_to_keV = config.u_to_keV
+m_e = config.m_e
 
 # Define fit model
 def h_emg_m2_p2(x, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,tau_p1,tau_p2,A): 
