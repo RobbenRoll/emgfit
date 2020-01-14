@@ -20,6 +20,8 @@ def splitspecies(s):
 
 def splitparticle(s):
     """ Extracts number, particle/element type and mass number of particle string (e.g. 1Cs133, Cs133, 1e"""
+    if s == '?': # handle unidentified species
+        return None, '?', None
     tail = s.lstrip('+-0123456789') 
     head = s[:-len(tail)] 
     if head == '+': # handle missing number
@@ -69,8 +71,6 @@ class peak:
         self.ME_keV = None # Mass excess [keV] 
         self.m_dev_keV = None # TITAN -AME [keV]
         self.chi_sq_red = None # chi square reduced of peak fit 
-        self.R = None # TOF ratio
-        self.R_error = None # uncertainty of TOF ratio
         
     def properties(self): 
         """ Print peak properties """
@@ -149,15 +149,23 @@ def smooth(x,window_len=11,window='hanning'):
 
 
 ##### Routine for plotting spectrum 
-def plot_spec(df,title="",ax=None,yscale='log',vmarkers=None,thres=None,ymin=None):
+def plot_spec(df,title="",ax=None,yscale='log',peaks=None,vmarkers=None,thres=None,ymin=None):
     """Plots spectrum stored in dataframe 'df'
 
-       - optionally with peak markers if single x_pos or array x_pos is passed to 'vmarkers'"""
+       - optionally with peak markers if 
+		(a) single x_pos or array x_pos is passed to 'vmarkers'
+            or  (b) list of peak objects is passed to 'li_peaks'
+    """
     df.plot(figsize=(20,6),ax=ax)
     plt.yscale(yscale)
     plt.title(title)
     try:
         plt.vlines(x=vmarkers,ymin=0,ymax=df.max())
+    except TypeError:
+        pass
+    try:
+        li_x_pos = [p.x_pos for p in peaks]
+        plt.vlines(x=li_x_pos,ymin=0,ymax=df.max())
     except TypeError:
         pass
     if thres:
@@ -219,16 +227,33 @@ def peak_detect(df,window_len=23,thres=0.003,width=0.01,plot_smoothed_spec=True,
     
     # Plot raw spectrum with detected peaks marked
     plot_spec(df,title="Spectrum with detected peaks marked",vmarkers=li_peak_pos)
-    return li_peak_pos
+    
+    # Create list of peak objects
+    peaks = []
+    for x in li_peak_pos:
+        p = peak(x,'?') # instantiate new peak
+        peaks.append(p)
+    return peaks 
+
+##### Sort list of peak objects by marker positions x_pos
+def sort_x(peak): 
+    return peak.x_pos  
 
 ##### Add peak manually
-def add_peak(li_peak_pos,x_pos,label="?",m_AME=None,m_AME_error=None):
-    "Add a peak to be fitted manually"
-    li_peak_pos = np.append(li_peak_pos,x_pos)
-    li_peak_pos = np.sort(li_peak_pos) # sort peak positions in ascending order
+def add_peak(peaks,x_pos,label="?",m_AME=None,m_AME_error=None):
+    "Add a peak manually to list 'peaks'"
+    p = peak(x_pos,label,m_AME=m_AME,m_AME_error=m_AME_error) # instantiate new peak
+    peaks.append(p)
+    peaks.sort(key=sort_x) # sort peak positions in ascending order
     print("Peak added at ",x_pos," u")
-    return li_peak_pos
+    return peaks
 
+def properties(peaks): 
+    """ Print properties of all peaks in list 'peaks'
+    """
+    dict_peaks = [p.__dict__ for p in peaks]
+    df_prop = pd.DataFrame(dict_peaks) 
+    return df_prop
 
 # Specify identified species
 def assign_species():
