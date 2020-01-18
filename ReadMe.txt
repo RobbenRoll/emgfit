@@ -12,20 +12,28 @@ Things to control by user:
 
 Options: 
 * Save and load peak shape
-* Save fit results 
-* Save output plots
+* Save fit results (save fit result dataframe as excel file)
+* Save output plots (Individually or all?)
 
 Flow chart:
 
 * Plot full spectrum
 * Cut data to specified fit range
 * Detect all peaks and plot result	(-> create peak objects)
-* Query identification of peaks and peak numbers for peak shape calibrant and mass calibrant
+* Query identification of peaks  
+* Query peak numbers for peak shape calibrant and mass calibrant
+* Determine optimal tail order (minimize chi_sq_red)
 * Determine peak shape and peak shape parameters
-* Determine optimal tail order
-* Determine peak shape uncertainty  
+* Determine peak shape uncertainty (vary all parameters within 1-sigma and determine shift of mass centroid)  
 * Show peak shape fit results
 * Fit calibrant peak to obtain scaling factor
 * Scale parameters
 * Fit full spectrum
 * Show fit output and save results: Plot full fit curve and zooms of regions of interest, compile fit results  
+
+
+
+
+class peak
+peak objects stored in peak
+spectrum data stored in dataframe, create spectrum class?

@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import scipy.signal as sig
+from IPython.display import display
 from emgfit.config import *
 #u_to_keV = config.u_to_keV
 #m_e = config.m_e
@@ -240,23 +241,43 @@ def sort_x(peak):
     return peak.x_pos  
 
 ##### Add peak manually
-def add_peak(peaks,x_pos,label="?",m_AME=None,m_AME_error=None):
+def add_peak(peaks,x_pos,species="?",m_AME=None,m_AME_error=None):
     "Add a peak manually to list 'peaks'"
-    p = peak(x_pos,label,m_AME=m_AME,m_AME_error=m_AME_error) # instantiate new peak
+    p = peak(x_pos,species,m_AME=m_AME,m_AME_error=m_AME_error) # instantiate new peak
     peaks.append(p)
     peaks.sort(key=sort_x) # sort peak positions in ascending order
-    print("Peak added at ",x_pos," u")
+    print("Added peak at ",x_pos," u")
     return peaks
+
+##### Remove peak manually
+def remove_peak(peaks,index=None,x_pos=None,species="?"):
+    """Remove a peak manually from list 'peaks'
+
+       select peak by specifying species label, peak position 'x_pos' or peak 'index' (0-based! Check for index by calling properties(peaks) ) 
+    """
+    if index:
+        i = index        
+    elif label != "?":
+        p = [peak for peak in peaks if label in peak.species] # select peak with species label 'species' 
+        i = peaks.index(p)
+    elif x_pos:
+        p = [peak for peak in peaks if x_pos in peak.x_pos] # select peak with species label 'species' 
+        i = peaks.index(p)
+    rem_peak = peaks.pop(index)
+    print("Removed peak at ",rem_peak.x_pos," u")
+    return peaks
+
 
 def properties(peaks): 
     """ Print properties of all peaks in list 'peaks'
     """
     dict_peaks = [p.__dict__ for p in peaks]
-    df_prop = pd.DataFrame(dict_peaks) 
+    df_prop = pd.DataFrame(dict_peaks)
+    display(df_prop) 
     return df_prop
 
 # Specify identified species
-def assign_species():
+def assign_species(peaks, ):
     return
 
 #### 
