@@ -22,11 +22,11 @@ def splitspecies(s):
 
 def splitparticle(s):
     """ Extracts number, particle/element type and mass number of particle string (e.g. 1Cs133, Cs133, 1e) """
-    if s == '?': # handle unidentified species
+    if s[-1:] == '?': # handle unidentified species (indicated by '?' at end of string) 
         return None, '?', None
     tail = s.lstrip('+-0123456789') 
     head = s[:-len(tail)] 
-    if head == '+': # handle missing number
+    if head == '+' or head == '': # handle missing number (if '+' given or 1 in front of single omitted) 
         n = int(1)
     elif head == '-': # handle missing number
         n = int(-1)
@@ -34,33 +34,34 @@ def splitparticle(s):
         n = int(head) # leading number including sign (if present)
     El = tail.rstrip('0123456789') # central letters 
     if El == 'e' and len(El) == len(tail): # handle electron strings, e.g. ':-1e' 
-        A = int(0)
+        A = 0
     else: 
         A = int(tail[len(El):]) # trailing number
     return n, El, A
 
 def get_AME_values(species):
     """ Calculates the AME mass, AME mass error, the extrapolation flag and the mass number A of the given species string"""
-        m = 0.0
-        m_error_sq = 0.0
-        A_tot = int(0)
-        for ptype in splitspecies(species):          
-            n, El, A = splitparticle(ptype)
-            extrapol = False # initialize boolean flag
-            if ptype == '?': # unidentified species
-                m = None
-                m_error = None
-                A_tot = None
-            elif El == 'e': # electron 
-                m += n*m_e
-                # neglect uncertainty of m_e 
-            else: # regular atom
-                m += n*mdata_AME(El,A)[2]                    
-                m_error_sq += (n*mdata_AME(El,A)[3])**2
-                m_error = np.sqrt(m_error_sq)
-                A_tot += A
-                if mdata_AME(El,A)[3] == 1: # extrapolated mass
-                    extrapol = True    
+    m = 0.0
+    m_error_sq = 0.0
+    A_tot = 0
+    for ptype in splitspecies(species):          
+        n, El, A = splitparticle(ptype)
+        extrapol = False # initialize boolean flag
+        if ptype[-1:] == '?': # unidentified species
+            m = None
+            m_error = None
+            A_tot = None
+        elif El == 'e': # electron 
+            m += n*m_e
+            # neglect uncertainty of m_e 
+        else: # regular atom
+            m += n*mdata_AME(El,A)[2]                    
+            m_error_sq += (n*mdata_AME(El,A)[3])**2
+            m_error = np.sqrt(m_error_sq)
+            A_tot += A
+            if mdata_AME(El,A)[3] == 1: # extrapolated mass
+                extrapol = True    
+    return m, m_error, extrapol, A_tot
 
 
 class peak:
@@ -71,7 +72,7 @@ class peak:
         self.m_AME = m_AME # 
         self.m_AME_error = m_AME_error
         # Calculate AME values for specified species
-        m = 0.0
+        """m = 0.0
         m_error_sq = 0.0
         A_tot = 0
         for ptype in splitspecies(species):          
@@ -90,7 +91,8 @@ class peak:
                 m_error = np.sqrt(m_error_sq)
                 A_tot += A
                 if mdata_AME(El,A)[3] == 1: # extrapolated mass
-                    extrapol = True     
+                    extrapol = True     """
+        m, m_error, extrapol, A_tot = get_AME_values(species)
         if self.m_AME == None: # unless m_AME has been user-defined, the mass value of the specified 'species' is calculated from AME database
              self.m_AME = m
         if self.m_AME_error == None: # unless m_AME_error has been user-defined, the mass error of the specified 'species' is calculated from AME database
@@ -110,29 +112,11 @@ class peak:
 
     def update_lit_values(self):
         """ Overwrite m_AME, m_AME_error and extrapolated_yn attributes of peak with AME values for specified species """
-        m = 0.0
-        m_error_sq = 0.0
-        A_tot = 0
-        for ptype in splitspecies(species):          
-            n, El, A = splitparticle(ptype)
-            extrapol = False # initialize boolean flag
-            if ptype == '?': # unidentified species
-                m = None
-                m_error = None
-                A_tot = None
-            elif El == 'e': # electron 
-                m += n*m_e
-                # neglect uncertainty of m_e 
-            else: # regular atom
-                m += n*mdata_AME(El,A)[2]                    
-                m_error_sq += (n*mdata_AME(El,A)[3])**2
-                m_error = np.sqrt(m_error_sq)
-                A_tot += A
-                if mdata_AME(El,A)[3] == 1: # extrapolated mass
-                    extrapol = True    
+        m, m_error, extrapol, A_tot = get_AME_values(self.species) # calculate values for species
         self.m_AME = m
         self.m_AME_error = m_error     
         self.extrapolated_yn = extrapol
+        self.A = A_tot
         
         
     def properties(self): 
@@ -428,9 +412,9 @@ class spectrum:
         spec.assign_species('1Cs133:-1e',peak_index = 2)    
             ->  assigns peak with peak_index 2 (third-lowest-mass peak) as '1Cs133:-1e', all other peaks remain unchanged
 
-        spec.assign_species(['1Ru102:-1e', '1Pd102:-1e', 'Rh102:-1e',  ,'1Sr83:1F19:-1e', '?'])    
+        spec.assign_species(['1Ru102:-1e', '1Pd102:-1e', 'Rh102:-1e', None,'1Sr83:1F19:-1e', '?'])    
             -> assigns species of first, second, third and fourth peak with the species labels given in the above list
-            -> the blank species argumement leaves the species assignment of the 4th peak unchanged (a former species assignment to this peak persists!)    
+            -> the 'None' argument leaves the species assignment of the 4th peak unchanged (a former species assignment to this peak persists!)    
             -> the '?' argument overwrites any former species assignment to the highest-mass-peak and marks the peak as unidentified  
         """
         try:
@@ -447,16 +431,31 @@ class spectrum:
                 print("Species of peak",i,"assigned as",p.species)
             elif len(species) == len(self.peaks) and peak_index == None and x_pos == None: # assignment of multiple species
                 for i in range(len(species)):
-                    species_i = species.index(i) 
-                    if species_i: # skip peaks without specified assignment
+                    species_i = species[i] 
+                    if species_i: # skip peak if 'None' given as argument
                         p = self.peaks[i]
                         p.species = species_i
                         p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated_yn attributes with AME values for specified species  
                         print("Species of peak",i,"assigned as",p.species)
             else:
-                print("Species assignment failed.")
+                print('WARNING: Species assignment failed.')
         except:
             print('Errors occured in peak assignment!')
+            raise
+
+
+    ##### Determine peak shape
+    def fit_peak_shape(self,index_shape_det_peak,):
+        """
+        Determine optimal tail order and peak shape parameters by fitting the selected peak-shape calibrant 
+
+        If a left and right tail order is specified by the user, the tail order determination is skipped. 
+        The routine tries to find the peak shape that minimizes chi squared reduced.
+        """
+        return
+        
+        
+
 
 #### 
 

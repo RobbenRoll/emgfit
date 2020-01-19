@@ -35,5 +35,27 @@ Flow chart:
 
 
 class peak
-peak objects stored in peak
-spectrum data stored in dataframe, create spectrum class?
+attributes: peak parameters
+
+class spectrum
+attributes: data - mass spectrum data stored in pandas dataframe
+            peaks - list of all peak objects asociated with spectrum
+            shape_calib_peak - index of shape calibration peak
+            init_peak_shape_pars - initial values of peak shape parameters
+            shape_calib_fit_results - 
+            peak_shape_pars - peak shape parameters obtained from peak calibration
+            mass_calib_peak - index of mass calibration peak
+            mass_calib_fit_results - 
+            scl_factor - obtained from mass calibration
+
+General fitting routine:
+Parameters: df_to_fit= None, x_fit_cen = None, x_fit_range = 0.005, model = emg22, init_pars = None, vary_shape_pars = False, scl_fac = 1, x_pos = [] 
+
+
+TO DO:
+* add peak marker labels to plots?
+            
+
+
+
+

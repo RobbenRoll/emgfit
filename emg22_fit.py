@@ -16,11 +16,11 @@ u_to_keV = emgfit.u_to_keV
 m_e = emgfit.m_e
 
 # Define fit model
-def h_emg_m2_p2(x, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,tau_p1,tau_p2,A): 
-    return A*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2),(tau_m1,tau_m2),(eta_p1,eta_p2),(tau_p1,tau_p2))
+def h_emg_m2_p2(x, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,tau_p1,tau_p2,amp): 
+    return amp*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2),(tau_m1,tau_m2),(eta_p1,eta_p2),(tau_p1,tau_p2))
 
 # Define function to perform hyper-EMG(2,2) fit
-def peak_fit_emg_m2_p2(df_to_fit=None,x_cen=None,x_fit_range=None,A=0.01,init_pars=None,vary_shape_pars=False,scl_fac=1,overlapping_peaks=False,m_AME= None, m_AME_error= None):
+def peak_fit_emg_m2_p2(df_to_fit=None,x_cen=None,x_fit_range=None,amp=0.01,init_pars=None,vary_shape_pars=False,scl_fac=1,overlapping_peaks=False,m_AME= None, m_AME_error= None):
     """
     df_to_fit: dataframe with data to fit (index column: mass bin [u], data column: counts in bin)  
     x_cen: centre of mass window to fit [u]
@@ -42,7 +42,7 @@ def peak_fit_emg_m2_p2(df_to_fit=None,x_cen=None,x_fit_range=None,A=0.01,init_pa
     emg_mod = fit.Model(h_emg_m2_p2,nan_policy='propagate') # define fit model
     pars = fit.Parameters() # create dictionary with fit parameters 
     # Add parameters to dictionary and initialize them 
-    pars.add('A', value=A, min=0) 
+    pars.add('amp', value=amp, min=0) 
     pars.add('mu', value=x_cen, min=x_cen-1, max=x_cen+1)
     pars.add('sigma', value= init_pars['sigma'], min=init_pars['sigma']-0.01, max=init_pars['sigma']+0.01, vary=vary_shape_pars)
     pars.add('theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -125,10 +125,10 @@ def multi_peak_fit_emg_m2_p2(df_to_fit=None,x_fit_cen=None,x_fit_range=None,peak
     def make_model(peak_i):
         pref = 'emg{0}_'.format(peak_i) # determine prefix for respective peak
         mu_i = peak_pos[peak_i] # read in x position of respective peak
-        A_i = peak_amps[peak_i] # read in amplitude A of respective peak
+        amp_i = peak_amps[peak_i] # read in amplitude of respective peak
         model = fit.Model(h_emg_m2_p2, prefix = pref, nan_policy='propagate')
         # Add respective parameters for peak to dictionary and define starting values 
-        model.set_param_hint(pref+'A', value=A_i, min=0) 
+        model.set_param_hint(pref+'amp', value=amp_i, min=0) 
         model.set_param_hint(pref+'mu', value=mu_i, min=mu_i-1, max=mu_i+1)
         model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=init_pars['sigma']-0.005, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
         model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
