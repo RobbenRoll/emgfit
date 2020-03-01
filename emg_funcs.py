@@ -16,6 +16,8 @@ import mpmath as mp
 import scipy.special as spc
 np_exp = np.exp #np.frompyfunc(mp.exp,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... ) 
 np_erfc = spc.erfc #np.frompyfunc(mp.erfc,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
+norm_precision = 6 # number of decimals on which eta parameters have to agree with unity (avoids numerical errors due to rounding)
+
 
 # Define negative skewed hyper-EMG particle distribution function (NS-EMG PDF)
 def h_m_emg(x, mu, sigma, *t_args): 
@@ -33,7 +35,7 @@ def h_m_emg(x, mu, sigma, *t_args):
     li_eta_m = t_args[0]
     li_tau_m = t_args[1]
     t_order_m = len(li_eta_m) # order of negative tail exponentials
-    if np.round(np.sum(li_eta_m), decimals=9) != 1.0:  # check normalization of eta_m's
+    if np.round(np.sum(li_eta_m), decimals=norm_precision) != 1.0:  # check normalization of eta_m's
         raise Exception("eta_m's don't add up to 1") 
     if len(li_tau_m) != t_order_m:  # check if all arguments match tail order
         raise Exception("orders of eta_m and tau_m do not match!")
@@ -62,7 +64,7 @@ def h_p_emg(x, mu, sigma, *t_args):
     li_eta_p = t_args[0]
     li_tau_p = t_args[1]
     t_order_p = len(li_eta_p) # order of positive tails
-    if np.round(np.sum(li_eta_p), decimals=9) != 1.0:  # check normalization of eta_p's
+    if np.round(np.sum(li_eta_p), decimals=norm_precision) != 1.0:  # check normalization of eta_p's
         raise Exception("eta_p's don't add up to 1") 
     if len(li_tau_p) != t_order_p:  # check if all arguments match tail order
         raise Exception("orders of eta_p and tau_p do not match!")
@@ -88,14 +90,16 @@ def h_emg(x, mu, sigma , theta, *t_args):
     Returns:
     float: ordinate of hyper-EMG PDF
     """
-    #if isinstance(x,(float,int,np.float,np.int)):
     li_eta_m = t_args[0]
     li_tau_m = t_args[1]
     li_eta_p = t_args[2]
     li_tau_p = t_args[3]
-    h = theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) + (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p) 
-    #if h == "nan":
-    #    h = 0
+    if theta == 1: 
+        h = h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) 
+    elif theta == 0:
+        h = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p) 
+    else:
+        h = theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) + (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p) 
     return h
     """if isinstance(x,np.ndarray):
         h = np.array([])
@@ -124,7 +128,7 @@ def mu_emg(mu,theta,*t_args):
 
     """
     li_eta_m = t_args[0]
-    if np.round(np.sum(li_eta_m), decimals=9) != 1.0:  # check normalization of eta_m's
+    if np.round(np.sum(li_eta_m), decimals=norm_precision) != 1.0:  # check normalization of eta_m's
         raise Exception("eta_m's don't add up to 1") 
     li_tau_m = t_args[1]
     t_order_m = len(li_eta_m)
@@ -133,7 +137,7 @@ def mu_emg(mu,theta,*t_args):
         sum_M_mh += li_eta_m[i]*li_tau_m[i]
         
     li_eta_p = t_args[2]
-    if np.round(np.sum(li_eta_p), decimals=9) != 1.0:  # check normalization of eta_p's
+    if np.round(np.sum(li_eta_p), decimals=norm_precision) != 1.0:  # check normalization of eta_p's
         raise Exception("eta_p's don't add up to 1") 
     li_tau_p = t_args[3]
     t_order_p = len(li_eta_p)
@@ -158,7 +162,7 @@ def sigma_emg(sigma,theta,*t_args):
 
     """
     li_eta_m = t_args[0]
-    if np.round(np.sum(li_eta_m), decimals=9) != 1.0:  # check normalization of eta_m's
+    if np.round(np.sum(li_eta_m), decimals=norm_precision) != 1.0:  # check normalization of eta_m's
         raise Exception("eta_m's don't add up to 1") 
     li_tau_m = t_args[1]
     t_order_m = len(li_eta_m)
@@ -170,7 +174,7 @@ def sigma_emg(sigma,theta,*t_args):
         sum_S_mh += (li_eta_m[i] + li_eta_m[i]*(1.-li_eta_m[i])**2)*li_tau_m[i]**2
         
     li_eta_p = t_args[2]
-    if np.round(np.sum(li_eta_p), decimals=9) != 1.0:  # check normalization of eta_p's
+    if np.round(np.sum(li_eta_p), decimals=norm_precision) != 1.0:  # check normalization of eta_p's
         raise Exception("eta_p's don't add up to 1") 
     li_tau_p = t_args[3]
     t_order_p = len(li_eta_p)

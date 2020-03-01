@@ -7,9 +7,13 @@ import pandas as pd
 import scipy.constants as con
 
 ##### Define fundamental constants
-global m_e, u_to_keV
+global m_e, u, u_to_keV
 m_e = con.physical_constants["electron mass in u"][0]  #548.5799.0907e-06 # electron mass [u] (from AME2016, Huang2017)
+u = con.u
 u_to_keV = con.physical_constants["atomic mass constant energy equivalent in MeV"][0]*1000 # conversion factor from u to keV
+
+##### Define constant for fit routines
+A_stat = 1.25  # constant of proportionality for calculating statistical mass error of HyperEmg-fits:  stat_error = A_stat * Std. Dev. / sqrt(area)
 
 ##### Import AME dataframe
 df_AME = pd.read_csv("C:/Users/Stefan/Dropbox/Beam time analysis/AME2016/AME2016_formatted.csv",encoding = 'unicode_escape')

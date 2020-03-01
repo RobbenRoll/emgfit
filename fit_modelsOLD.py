@@ -15,7 +15,8 @@ from emgfit.emg_funcs import *
 u_to_keV = emgfit.u_to_keV
 m_e = emgfit.m_e
 
-# Define fit model
+
+# Define fit function
 def h_emg_m2_p2(x, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,tau_p1,tau_p2,amp): 
     return amp*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2),(tau_m1,tau_m2),(eta_p1,eta_p2),(tau_p1,tau_p2))
 
@@ -127,6 +128,7 @@ def multi_peak_fit_emg_m2_p2(df_to_fit=None,x_fit_cen=None,x_fit_range=None,peak
         mu_i = peak_pos[peak_i] # read in x position of respective peak
         amp_i = peak_amps[peak_i] # read in amplitude of respective peak
         model = fit.Model(h_emg_m2_p2, prefix = pref, nan_policy='propagate')
+        
         # Add respective parameters for peak to dictionary and define starting values 
         model.set_param_hint(pref+'amp', value=amp_i, min=0) 
         model.set_param_hint(pref+'mu', value=mu_i, min=mu_i-1, max=mu_i+1)
@@ -235,3 +237,97 @@ def multi_peak_fit_emg_m2_p2(df_to_fit=None,x_fit_cen=None,x_fit_range=None,peak
 
 
 ###################################################################################################
+###################################################################################################
+
+##### Define initial parameters and store them in dictionary
+amp = 0.45
+mu = None
+sigma = 0.00018 #0.00017
+theta = 0.35 # 0.6
+eta_m1 = 0.9
+eta_m2 = 0.1
+eta_m3 = 0
+tau_m1 = 25e-06 #[u]
+tau_m2 = 400e-06
+tau_m3 = 0
+eta_p1 = 0.9
+eta_p2 = 0.1
+eta_p3 = 0
+tau_p1 = 35e-06
+tau_p2 = 400e-06
+tau_p3 = 0
+
+pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta, 'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3, 'tau_m1': tau_m1, 'tau_m2': tau_m2, 'tau_m3': tau_m3, 'eta_p1': eta_p1, 'eta_p2': eta_p2, 'eta_p3': eta_p3, 'tau_p1': tau_p1, 'tau_p2': tau_p2, 'tau_p3': tau_p3}
+
+
+##### Define emg22 fit model 
+def emg22(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True):
+    
+    # Define model function
+    def emg22(x, amp, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,tau_p1,tau_p2): 
+        return amp*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2),(tau_m1,tau_m2),(eta_p1,eta_p2),(tau_p1,tau_p2)) # from emg_funcs.py
+    pref = 'p{0}_'.format(peak_index) # set prefix for respective peak (e.g. 'p0' for peak with index 0)
+    model = fit.Model(emg22, prefix = pref, nan_policy='propagate')
+ 
+    if shape_calibrant:
+        constraint = shape_calibrant.eak 
+    expr = constraint
+    # Add parameters bounds or restrictions and define starting values 
+    model.set_param_hint(pref+'amp', value=amp, min=0) 
+    model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=init_pars['sigma']-0.005, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
+    model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
+    model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, vary=vary_shape_pars) 
+    model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1',vary=vary_shape_pars) # ensures normalization of eta_m's
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=0, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=0, vary=vary_shape_pars)
+    model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
+    model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, expr='1-'+pref+'eta_p1',vary=vary_shape_pars) # ensures normalization of eta_p's
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=0, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=0, vary=vary_shape_pars)
+    pars = model.make_params() # create parameters object
+    return model
+
+
+"""
+#### Define emg22 model class
+# Define model function
+def h_emg_m2_p2(x, amp, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,tau_p1,tau_p2): 
+    return amp*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2),(tau_m1,tau_m2),(eta_p1,eta_p2),(tau_p1,tau_p2)) # from emg_funcs.py
+
+#####
+def peak_fit_emg22(spectrum, x_fit_cen=None, x_fit_range=None, init_pars=None, vary_shape_pars=False, scl_fac=1):
+    x_min = x_fit_cen - x_fit_range/2
+    x_max = x_fit_cen + x_fit_range/2
+    df_fit = spectrum.data[x_min:x_max] # cut data to fit range
+    peaks_to_fit = [peak for peak in spectrum.peaks if (x_min < peak.x_pos < x_max)] # select peak at position 'x_pos'
+    print(peaks_to_fit)
+    x = df_fit.index.values
+    y = df_fit['Counts'].values
+    y_err = np.sqrt(y+1) # assume Poisson (counting) statistics -> standard deviation of each point approximated by sqrt(counts+1)
+    weight_facs = 1./y_err # makes sure that residuals include division by statistical error (residual = (fit_model - y) * weights)
+
+    make_model = emg22_fit.make_model_emg22 # define single-peak fit model
+   
+    # create multi-peak composite model from single-peak model
+    mod = fit.models.ConstantModel(independent_vars='x',prefix='bkg_') # Background
+    mod.set_param_hint('bkg_c', value= 0.3, min=0)
+    for peak in peaks_to_fit: # loop over peaks to fit
+        peak_index = spectrum.peaks.index(peak)
+        x_pos = peak.x_pos
+        amp = df_fit['Counts'].loc[x_pos]/2200 # estimate amplitude from peak maximum, the factor 2235 is empirically determined and shape-dependent
+        this_mod = make_model(peak_index, x_pos, amp, vary_shape_pars=vary_shape)
+        if mod is None: 
+            mod = this_mod
+        else:
+            mod = mod + this_mod
+    pars = mod.make_params()    
+
+    # Perform fit, print fit report and plot resulting fit 
+    out = mod.fit(y, x=x, params=pars, weights = weight_facs,method='leastsq',scale_covar=False)
+    return out
+"""
+
+
+
+
