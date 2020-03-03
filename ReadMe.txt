@@ -41,7 +41,7 @@ Flow chart:
 * Show fit output and save results: Plot full fit curve and zooms of regions of interest, compile fit results  
 
 
-
+* upper limit for constant background: 4 counts/bin
 
 class peak
 attributes: peak parameters
@@ -73,6 +73,8 @@ TO DO:
 * enable peak shape determination with multiple peaks? (need to constrain parameters of neighboring peaks to shape calibrant parameters)
 * fix 'uncertainties could not be estimated, PAR at initial value' error (usually circumvented by chosing other initial parameters)
 * test peak shape uncertainty estimation (do eta's get changed as expected?)
+* add scaling of initial peak shape pars with shape calibrant mass number A
+* implement optional automatic plotting of fit results for each peak (group) for visual inspection
 
 * increase ftol and xtol of fit algorithm?? - seems irrelevant 
 * Evaluate recalibration error??

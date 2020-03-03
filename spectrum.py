@@ -163,6 +163,7 @@ class spectrum:
 	"""
         data_uncut = pd.read_csv(filename, header = None, names= ['Mass [u]', 'Counts'], skiprows = 18,delim_whitespace = True,index_col=False,dtype=float)
         data_uncut.set_index('Mass [u]',inplace =True)
+        self.fit_model = None 
         self.shape_cal_pars = None
         self.mass_calibrant = None
         self.cal_fac = 1.0
@@ -459,12 +460,12 @@ class spectrum:
         """ create multi-peak composite model from single-peak model """
         model = getattr(fit_models,model) # get single peak model from fit_models.py
         mod = fit.models.ConstantModel(independent_vars='x',prefix='bkg_') 
-        mod.set_param_hint('bkg_c', value= 0.3, min=0)
+        mod.set_param_hint('bkg_c', value= 0.3, min=0,max=4)
         df = self.data
         for peak in peaks_to_fit: 
             peak_index = self.peaks.index(peak)
             x_pos = df.index[np.argmin(np.abs(df.index.values - peak.x_pos))] # x_pos of closest bin
-            amp = df['Counts'].loc[x_pos]/2200 # estimate amplitude from peak maximum, the factor 2200 is empirically determined and shape-dependent
+            amp = df['Counts'].loc[x_pos]/1200 # estimate amplitude from peak maximum, the factor 1200 is empirically determined and shape-dependent
             if init_pars: 
                 this_mod = model(peak_index, x_pos, amp, init_pars=init_pars, vary_shape_pars=vary_shape, index_first_peak=index_first_peak)
             else:
@@ -582,7 +583,7 @@ class spectrum:
 
 
     ##### Determine peak shape
-    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', init_pars = 'default', fit_range=0.01, method='least_squares'):
+    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', init_pars = 'default', fit_range=0.01, method='least_squares',vary_tail_order=True):
         """
         Determine optimal tail order and peak shape parameters by fitting the selected peak-shape calibrant 
 
@@ -600,19 +601,48 @@ class spectrum:
         else:
             print("Definition of peak shape calibrant failed. Define EITHER the index OR the species name of the peak to use as shape calibrant!")
             return
-        print('##### Peak shape determination #####')
-        out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method)
+
+        if vary_tail_order == True and fit_model != 'Gaussian':
+            print('\n##### Determine optimal tail order #####\n')
+            # Fit peak with Hyper-EMG of increasingly higher tail orders and compile results
+            # fix fit_model to Hyper-EMG with lowest tail order that yields chi² reduced <= 1 
+            best_model = None
+            best_redchi = 2 
+            li_fit_models = ['emg01','emg10','emg11','emg12','emg21','emg22','emg23']
+            for model in li_fit_models:
+                try:
+                    out = spectrum.peakfit(self, fit_model=model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=True)
+                    print(out.fit_report())
+                    if out.redchi <= 1: 
+                       best_model = model
+                       best_redchi = out.redchi
+                       break
+                    elif out.redchi < best_redchi:
+                       best_redchi = out.redchi
+                       best_model = model 
+                except ValueError:
+                    print('\nWARNING:',model+'-fit failed due to NaN-values and was skipped! -----------------------------------------------------------\n')
+            if best_model:
+                self.fit_model = best_model
+                print('\nBest fit model determined to be:',best_model)
+                print('Corresponding chi²-reduced:',out.redchi)
+            else:
+                self.fit_model = fit_model
+                print('No fit model found that produces chi²-reduced < 2. Continuing with specified/default fit_model.')
+  
+        print('\n##### Peak shape determination #####\n')
+        out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method)
+
         peak.comment = 'shape calibrant'
         print(out.fit_report())
         dict_pars = out.params.valuesdict()
-        self.shape_cal_pars = {key.lstrip('p'+str(index_shape_calib)+'_'): val for key, val in dict_pars.items() if key.startswith('p'+str(index_shape_calib))}     
-        
+        self.shape_cal_pars = {key.lstrip('p'+str(index_shape_calib)+'_'): val for key, val in dict_pars.items() if key.startswith('p'+str(index_shape_calib))}             
         self.shape_cal_par_errors = {} # dict to store shape calibration parameter errors
         for par in out.params: 
             if par.startswith('p'+str(index_shape_calib)):
                 self.shape_cal_par_errors[par.lstrip('p'+str(index_shape_calib)+'_')+' error'] = out.params[par].stderr   
-
-        print('##### Evaluate peak shape uncertainty #####\n')
+            
+        print('\n##### Evaluate peak shape uncertainty #####\n')
         # Vary each shape parameter by plus and minus one sigma and evaluate resulting shifts of Gaussian centroid
         shape_pars = [key for key in self.shape_cal_pars if key.startswith( ('sigma','theta','eta','tau') )]
         self.centroid_shifts = {}
@@ -620,12 +650,12 @@ class spectrum:
             pars = copy.deepcopy(self.shape_cal_pars) # deep copy to avoid changes in original dictionary
             centroid = list(out.best_values.values())[1] # indexing makes sure that both Gaussian 'center' and Hyper-EMG 'mu' Parameters get fetched
             pars[par] = self.shape_cal_pars[par] + self.shape_cal_par_errors[par+' error']
-            out_p = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=pars, vary_shape=False, method=method, show_plots=False)
+            out_p = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=pars, vary_shape=False, method=method, show_plots=False)
             new_centroid = list(out_p.best_values.values())[1] # indexing makes sure that both Gaussian 'center' and Hyper-EMG 'mu' Parameters get fetched
             delta_mu_p = new_centroid - centroid
             print('Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'+',np.round(self.shape_cal_par_errors[par+' error'],6),' shifts centroid by ',np.round(delta_mu_p*1e06,6),'\u03BCu.')
             pars[par] = self.shape_cal_pars[par] - self.shape_cal_par_errors[par+' error']
-            out_m = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=pars, vary_shape=False, method=method, show_plots=False)
+            out_m = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=pars, vary_shape=False, method=method, show_plots=False)
             new_centroid = list(out_m.best_values.values())[1] # indexing makes sure that both Gaussian 'center' and Hyper-EMG 'mu' Parameters get fetched
             delta_mu_m = new_centroid - centroid            
             print('Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'-',np.round(self.shape_cal_par_errors[par+' error'],6),' shifts centroid by ',np.round(delta_mu_m*1e06,3),'\u03BCu.')
@@ -687,7 +717,7 @@ class spectrum:
 
 
     ##### Fit calibrant
-    def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None, fit_model='emg22', fit_range=0.01, method='least_squares'):
+    def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None, fit_model=None, fit_range=0.01, method='least_squares'):
         """
         Determine scale factor for spectrum by fitting the selected mass calibrant 
 
@@ -705,6 +735,8 @@ class spectrum:
             print("Definition of peak shape calibrant failed. Define EITHER the index OR the species name of the peak to use as shape calibrant!")
             return
         print('##### Calibrant fit #####')
+        if fit_model == None:
+            fit_model = self.fit_model
         out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, vary_shape=False, method=method)
 
         # Update peak properties
@@ -768,7 +800,7 @@ class spectrum:
 
 
     #### Fit spectrum
-    def fit_peaks(self, fit_model='emg22', x_fit_cen=None, x_fit_range=None, init_pars=None, vary_shape=False, method ='least_squares', scl_fac=1.0):
+    def fit_peaks(self, fit_model=None, x_fit_cen=None, x_fit_range=None, init_pars=None, vary_shape=False, method ='least_squares', scl_fac=1.0):
         """
         Fit entire spectrum or part of spectrum (if x_fit_cen and x_fit_range are specified), show results and show updated peak properties 
 
@@ -785,6 +817,8 @@ class spectrum:
         --------
         Fit model result object (further shows updated dataframe with peak properties)
         """
+        if fit_model == None:
+            fit_model = self.fit_model
         out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars, vary_shape=False, method=method)
         if x_fit_cen and x_fit_range: 
             x_min = x_fit_cen - x_fit_range/2

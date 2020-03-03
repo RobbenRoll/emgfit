@@ -243,7 +243,7 @@ def multi_peak_fit_emg_m2_p2(df_to_fit=None,x_fit_cen=None,x_fit_range=None,peak
 amp = 0.45
 mu = None
 sigma = 0.00018 #0.00017
-theta = 0.55 # 0.35
+theta = 0.5 # 0.35
 eta_m1 = 0.85
 eta_m2 = 0.10
 eta_m3 = 0.05
