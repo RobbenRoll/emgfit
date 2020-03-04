@@ -608,7 +608,7 @@ class spectrum:
             # fix fit_model to Hyper-EMG with lowest tail order that yields chi² reduced <= 1 
             best_model = None
             best_redchi = 2 
-            li_fit_models = ['emg01','emg10','emg11','emg12','emg21','emg22','emg23']
+            li_fit_models = ['Gaussian','emg01','emg10','emg11','emg12','emg21','emg22','emg23','emg32','emg33']
             for model in li_fit_models:
                 try:
                     out = spectrum.peakfit(self, fit_model=model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=True)
@@ -625,7 +625,7 @@ class spectrum:
             if best_model:
                 self.fit_model = best_model
                 print('\nBest fit model determined to be:',best_model)
-                print('Corresponding chi²-reduced:',out.redchi)
+                print('Corresponding chi²-reduced:',best_redchi)
             else:
                 self.fit_model = fit_model
                 print('No fit model found that produces chi²-reduced < 2. Continuing with specified/default fit_model.')

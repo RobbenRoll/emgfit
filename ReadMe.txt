@@ -36,7 +36,7 @@ Flow chart:
 * Determine peak shape uncertainty (vary all parameters within 1-sigma and determine shift of mass centroid)  
 * Show peak shape fit results
 * Fit calibrant peak to obtain calibration factor
-* Scale peak shape paramters (not necessary for isobaric species)
+* Scale peak shape parameters (not necessary for isobaric species)
 * Fit full spectrum
 * Show fit output and save results: Plot full fit curve and zooms of regions of interest, compile fit results  
 
