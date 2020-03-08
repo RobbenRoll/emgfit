@@ -146,7 +146,7 @@ class peak:
 ###################################################################################################
 ##### Define spectrum class 
 class spectrum:
-    def __init__(self,filename,m_start=None,m_stop=None):
+    def __init__(self,filename,m_start=None,m_stop=None,skiprows = 18):
         """ 
         Creates spectrum object by importing TOF data from .txt or .csv file, plotting full spectrum and then cutting spectrum to specified fit range {m_start;m_stop}
 	Input file format: two-column .csv- or .txt-file with comma separated values 	column 1: mass bin,  column 2: counts per bin
@@ -161,7 +161,7 @@ class spectrum:
         --------
         Pandas dataframe 'data' containing mass data and plot of full spectrum with fit range markers
 	"""
-        data_uncut = pd.read_csv(filename, header = None, names= ['Mass [u]', 'Counts'], skiprows = 18,delim_whitespace = True,index_col=False,dtype=float)
+        data_uncut = pd.read_csv(filename, header = None, names= ['Mass [u]', 'Counts'], skiprows = skiprows,delim_whitespace = True,index_col=False,dtype=float)
         data_uncut.set_index('Mass [u]',inplace =True)
         self.fit_model = None 
         self.shape_cal_pars = None
@@ -249,6 +249,7 @@ class spectrum:
         """
         peaks = self.peaks
         data = self.data # get spectrum data stored in dataframe 'self.data'
+        ymax = data.max()[0]
         data.plot(figsize=(20,6),ax=ax)
         plt.yscale(yscale)
         plt.ylabel('Counts')
@@ -257,15 +258,32 @@ class spectrum:
             plt.vlines(x=vmarkers,ymin=0,ymax=data.max())
         except TypeError:
             pass
-        try:
+        """try:
             li_x_pos = [p.x_pos for p in peaks]
             plt.vlines(x=li_x_pos,ymin=0,ymax=data.max())
         except TypeError:
-            pass
+            pass"""
+        if yscale == 'log':
+            for p in peaks:
+                #x_idx = np.argmin(np.abs(data.index.values - p.x_pos)) # set ymin = data.iloc[x_idx] to get peak markers starting at peak max.
+                plt.vlines(x=p.x_pos,ymin=0,ymax=1.05*ymax,linestyles='dashed')
+                plt.text(p.x_pos, 1.21*ymax, peaks.index(p), horizontalalignment='center', fontsize=12)
+            if ymin:
+                plt.ylim(ymin,2*ymax)
+            else:
+                plt.ylim(0.1,2*ymax)
+        else:
+            for p in peaks:
+                #x_idx = np.argmin(np.abs(data.index.values - p.x_pos)) # set ymin = data.iloc[x_idx] to get peak markers starting at peak max.
+                plt.vlines(x=p.x_pos,ymin=0,ymax=1.03*ymax,linestyles='dashed')
+                plt.text(p.x_pos, 1.05*ymax, peaks.index(p), horizontalalignment='center', fontsize=12)
+            if ymin:
+                plt.ylim(ymin,1.1*ymax)
+            else:
+                plt.ylim(0,1.1*ymax)
+        
         if thres:
             plt.hlines(y=thres,xmin=data.index.min(),xmax=data.index.max())
-        if ymin:
-            plt.ylim(ymin,)
         plt.xlim(xmin,xmax)
         plt.show()
             

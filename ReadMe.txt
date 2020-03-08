@@ -6,6 +6,9 @@
 * final mass values of IOIs recalibrated via multiplication with calibration factor 'cal_fac' obtained from fit of mass calibrant
 * 'centroid' refers to centroid of underlying Gaussian (instead of true centroid of Hyper-EMG) 
 
+Prerequisites:
+* Packages:
+* Add PYTHONPATH to user variables and add location of emgfit folder to it such that python can find the package on its own
 
 
 Things to control by user:
@@ -65,12 +68,9 @@ Parameters: df_to_fit= None, x_fit_cen = None, x_fit_range = 0.005, model = emg2
 
 TO DO:
 * add peak marker labels/indeces to plots!
-* add warning for eta's not summing to 1 to make_model_ ?            
-* add more fit functions 
-* implement tail order determination
+* add warning for eta's not summing to 1 to make_model_ ?             
 * ADD peakshape uncertainty to calibrant fit and other fits, add uncertainty of scaling factor
 * implement save model result feature
-* enable peak shape determination with multiple peaks? (need to constrain parameters of neighboring peaks to shape calibrant parameters)
 * fix 'uncertainties could not be estimated, PAR at initial value' error (usually circumvented by chosing other initial parameters)
 * test peak shape uncertainty estimation (do eta's get changed as expected?)
 * add scaling of initial peak shape pars with shape calibrant mass number A
@@ -78,7 +78,6 @@ TO DO:
 
 * increase ftol and xtol of fit algorithm?? - seems irrelevant 
 * Evaluate recalibration error??
-
 * Obtain peakshape errors by simply re-scaling peakshape error of shape calibrant peak to other peak masses?
 
 

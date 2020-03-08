@@ -10,16 +10,26 @@ import pandas as pd
 import lmfit as fit
 import scipy.constants as con
 
+
 ###################################################################################################
 ##### Define general Hyper-EMG functions (with high precision math package)
-import mpmath as mp
+#import mpmath as mp
 import scipy.special as spc
-np_exp = np.exp #np.frompyfunc(mp.exp,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... ) 
-np_erfc = spc.erfc #np.frompyfunc(mp.erfc,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
+#np_exp = np.exp #np.frompyfunc(mp.exp,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... ) 
+#np_erfc = spc.erfc #np.frompyfunc(mp.erfc,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
 norm_precision = 6 # number of decimals on which eta parameters have to agree with unity (avoids numerical errors due to rounding)
 
+def bounded_exp(arg):
+    """ Numerically stable exponential function which avoids under- or overflow by setting bounds on argument
+    """
+    max_arg = 600 # max_arg = 600 results in maximal y-value of 3.7730203e+260
+    min_arg = -1000000000000000000
+    arg = np.where(arg > max_arg, max_arg, arg)
+    arg = np.where(arg < min_arg, min_arg, arg)
+    return np.exp(arg)
 
-# Define negative skewed hyper-EMG particle distribution function (NS-EMG PDF)
+
+# Define negative skewed hyper-EMG particle distribution functiDon (NS-EMG PDF)
 def h_m_emg(x, mu, sigma, *t_args): 
     """ Negative skewed hyper-EMG particle distribution function (NS-EMG PDF)
     
@@ -43,7 +53,7 @@ def h_m_emg(x, mu, sigma, *t_args):
     for i in range(t_order_m):
         eta_m = li_eta_m[i]
         tau_m = li_tau_m[i]
-        h_m += np.nan_to_num( eta_m/(2*tau_m)*np_exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*np_erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) ))
+        h_m += eta_m/(2*tau_m)*bounded_exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*spc.erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) )
     #print("h_m:"+str(h_m))
     return h_m
 
@@ -72,7 +82,7 @@ def h_p_emg(x, mu, sigma, *t_args):
     for i in range(t_order_p):
         eta_p = li_eta_p[i]
         tau_p = li_tau_p[i]
-        h_p += np.nan_to_num(eta_p/(2*tau_p)*np_exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*np_erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) ))
+        h_p += eta_p/(2*tau_p)*bounded_exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spc.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) )
     return h_p
 
 # Hyper-EMG PDF 

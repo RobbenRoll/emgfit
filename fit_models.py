@@ -359,7 +359,7 @@ def emg10(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     lmfit model object 
     """
     # Define model function
-    def emg10(x, amp, mu, sigma, tau_m1): 
+    def emg10(x, amp, mu, sigma, tau_m1):
         return amp*h_emg(x, mu, sigma, 1, (1,),(tau_m1,),(0,),(0,)) # from emg_funcs.py
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak (e.g. 'p0' for peak with index 0)
     model = fit.Model(emg10, prefix = pref, nan_policy='propagate')
