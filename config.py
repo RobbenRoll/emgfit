@@ -5,6 +5,8 @@
 import numpy as np
 import pandas as pd
 import scipy.constants as con
+from pathlib import Path
+
 
 ##### Define fundamental constants
 global m_e, u, u_to_keV
@@ -16,7 +18,9 @@ u_to_keV = con.physical_constants["atomic mass constant energy equivalent in MeV
 A_stat = 1.25  # constant of proportionality for calculating statistical mass error of HyperEmg-fits:  stat_error = A_stat * Std. Dev. / sqrt(area)
 
 ##### Import AME dataframe
-df_AME = pd.read_csv("C:/Users/Stefan/Dropbox/Beam time analysis/AME2016/AME2016_formatted.csv",encoding = 'unicode_escape')
+directory = Path(__file__).parent  # get directory containing this file 
+filename = str(directory)+"/AME2016/AME2016_formatted.csv"
+df_AME = pd.read_csv(filename, encoding = 'unicode_escape') # C:/Users/Stefan/Dropbox/Beam time analysis/
 df_AME.set_index(['Element','A'],inplace=True)
 
 def mdata_AME(El,A):
