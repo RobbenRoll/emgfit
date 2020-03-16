@@ -519,12 +519,12 @@ class spectrum:
 
 
     # Plot fit of full spectrum
-    def plot_fit(self,fit_result=None,fit_model=None,ax=None,show_peak_markers=True,sigmas_of_uncer_band=0,thres=None,x_min=None,x_max=None):
+    def plot_fit(self,fit_result=None,fit_model=None,ax=None,show_peak_markers=True,sigmas_of_conf_band=0,thres=None,x_min=None,x_max=None):
         """
         Plots spectrum with fit
         - with markers for all peaks stored in peak list 'self.peaks'
         """
-        if self.fit_model == None:
+        if fit_model == None:
            fit_model = self.fit_model
         peaks_to_plot = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)] # select peaks in mass range of interest
         idx_first_peak = self.peaks.index(peaks_to_plot[0])
@@ -546,9 +546,9 @@ class spectrum:
             plt.plot(fit_result.x, comps[pref], '--',linewidth=2)
         if show_peak_markers:
             self.add_peak_markers(yscale='log',ymax=y_max_log,peaks=peaks_to_plot)
-        if sigmas_of_uncer_band!=0 and fit_result.errorbars == True:
-            dely = fit_result.eval_uncertainty(sigma=sigmas_of_uncer_band)
-            plt.fill_between(fit_result.x, fit_result.best_fit-dely, fit_result.best_fit+dely, color="#ABABAB", label=str(sigmas_of_uncer_band)+'-$\sigma$ uncertainty band')
+        if sigmas_of_conf_band!=0 and fit_result.errorbars == True: # add confidence band with specified number of sigmas
+            dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
+            plt.fill_between(fit_result.x, fit_result.best_fit-dely, fit_result.best_fit+dely, color="#ABABAB", label=str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band')
         plt.title(fit_model)
         plt.rcParams.update({"font.size": 15})
         plt.xlabel('Mass [u]')
@@ -573,7 +573,7 @@ class spectrum:
 
 
     ##### Fit spectrum
-    def peakfit(self,fit_model='emg22',x_fit_cen=None,x_fit_range=None,init_pars=None,vary_shape=False,method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_uncer_band=0,recal_fac=1.0):
+    def peakfit(self,fit_model='emg22',x_fit_cen=None,x_fit_range=None,init_pars=None,vary_shape=False,method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,recal_fac=1.0):
         """
         Internal peak fitting routine, fits full spectrum or subrange (if x_fit_cen and x_fit_range are specified) and optionally shows results
         This method is for internal usage, use 'fit_peaks' method to fit spectrum and update peak properties dataframe with obtained fit results
@@ -637,7 +637,7 @@ class spectrum:
         #print(out.fit_report())
 
         if show_plots:
-            self.plot_fit(fit_result=out, fit_model=fit_model, show_peak_markers=show_peak_markers, sigmas_of_uncer_band=sigmas_of_uncer_band, x_min=x_min, x_max=x_max)
+            self.plot_fit(fit_result=out, fit_model=fit_model, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band, x_min=x_min, x_max=x_max)
 
         return out
 
@@ -654,7 +654,7 @@ class spectrum:
 
 
     ##### Determine peak shape
-    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', init_pars = 'default', fit_range=0.01, method='least_squares',vary_tail_order=True,show_plots=True,show_peak_markers=True,sigmas_of_uncer_band=0):
+    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', init_pars = 'default', fit_range=0.01, method='least_squares',vary_tail_order=True,show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0):
         """
         Determine optimal tail order and peak shape parameters by fitting the selected peak-shape calibrant
 
@@ -682,15 +682,15 @@ class spectrum:
             li_fit_models = ['Gaussian','emg01','emg10','emg11','emg12','emg21','emg22','emg23','emg32','emg33']
             for model in li_fit_models:
                 try:
-                    out = spectrum.peakfit(self, fit_model=model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_uncer_band=sigmas_of_uncer_band)
+                    out = spectrum.peakfit(self, fit_model=model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
                     print(out.fit_report())
                     if out.redchi <= 1:
-                       best_model = model
-                       best_redchi = out.redchi
-                       break
+                        best_model = model
+                        best_redchi = out.redchi
+                        break
                     elif out.redchi < best_redchi:
-                       best_redchi = out.redchi
-                       best_model = model
+                        best_model = model
+                        best_redchi = out.redchi
                 except ValueError:
                     print('\nWARNING:',model+'-fit failed due to NaN-values and was skipped! -----------------------------------------------------------\n')
             if best_model:
@@ -704,7 +704,7 @@ class spectrum:
             self.fit_model = fit_model
 
         print('\n##### Peak shape determination #####\n')
-        out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_uncer_band=sigmas_of_uncer_band)
+        out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
 
         peak.comment = 'shape calibrant'
         print(out.fit_report())
@@ -745,7 +745,7 @@ class spectrum:
 
 
     ##### Fit mass calibrant
-    def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None, fit_model=None, fit_range=0.01, method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_uncer_band=0):
+    def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None, fit_model=None, fit_range=0.01, method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0):
         """
         Determine scale factor for spectrum by fitting the selected mass calibrant
 
@@ -768,7 +768,7 @@ class spectrum:
         print('##### Calibrant fit #####')
         if fit_model == None:
             fit_model = self.fit_model
-        out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, vary_shape=False, method=method, show_plots=show_plots, show_peak_markers=show_peak_markers, sigmas_of_uncer_band=sigmas_of_uncer_band)
+        out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, vary_shape=False, method=method, show_plots=show_plots, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band)
 
         # Update peak properties
         peak.fitted = out.success
@@ -785,7 +785,7 @@ class spectrum:
         # Update peak properties with new calibrant centroid
         peak.m_fit = self.recal_fac*out.best_values['p'+str(index_mass_calib)+'_mu'] # update centroid mass of calibrant peak
         if peak.A:
-            peak.ME_keV = (peak.A*u - peak.m_fit)*u_to_keV   # Mass excess [keV]
+            peak.ME_keV = (peak.A - peak.m_fit)*u_to_keV   # Mass excess [keV]
         if peak.m_AME:
             peak.m_dev_keV = np.round( (peak.m_fit - peak.m_AME)*u_to_keV, 3) # TITAN - AME [keV]
 
@@ -824,14 +824,14 @@ class spectrum:
                         print('Could not calculate total fit error.')
                     pass
                 if p.A:
-                    p.ME_keV = (p.A*u - p.m_fit)*u_to_keV   # Mass excess [keV]
+                    p.ME_keV = (p.A - p.m_fit)*u_to_keV   # Mass excess [keV]
                 if p.m_AME:
                     p.m_dev_keV = np.round( (p.m_fit - p.m_AME)*u_to_keV, 3) # TITAN - AME [keV]
                 p.chi_sq_red = np.round(fit_result.redchi, 2)
 
 
     #### Fit spectrum
-    def fit_peaks(self, fit_model=None, x_fit_cen=None, x_fit_range=None, init_pars=None, vary_shape=False, method ='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_uncer_band=0):
+    def fit_peaks(self, fit_model=None, x_fit_cen=None, x_fit_range=None, init_pars=None, vary_shape=False, method ='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0):
         """
         Fit entire spectrum or part of spectrum (if x_fit_cen and x_fit_range are specified), show results and show updated peak properties
 
@@ -850,7 +850,7 @@ class spectrum:
         """
         if fit_model == None:
             fit_model = self.fit_model
-        out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars, vary_shape=vary_shape, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_uncer_band=sigmas_of_uncer_band)
+        out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars, vary_shape=vary_shape, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
         if x_fit_cen and x_fit_range:
             x_min = x_fit_cen - x_fit_range/2
             x_max = x_fit_cen + x_fit_range/2
@@ -863,19 +863,24 @@ class spectrum:
         for p in peaks_to_fit:
             self.fit_results[self.peaks.index(p)] = out
 
-
     # Plot fit of spectrum zoomed to specified peak or specified mass range
-    def plot_fit_zoom(self,peak_indeces=None,x_center=None,x_range=0.01,show_peak_markers=True,sigmas_of_uncer_band=0,ax=None):
+    def plot_fit_zoom(self,peak_indeces=None,x_center=None,x_range=0.01,show_peak_markers=True,sigmas_of_conf_band=0,ax=None):
         """
         Plot fit result zoomed to a region of interest
         - if peak(s) of interest are specified via 'peak_indeces' the mass range to plot is chosen automatically
         - otherwise the mass range must be specified manually with x_center and x_range
 
-        Parameters: ----------- peak_indeces (int or list of ints): index of
-        single peak or of multiple neighboring peaks to show (peaks must belong
-        to the same fit curve!) x_center (float): center of manually specified
-        mass range to plot x_range (float): width of mass range to plot around
+        Parameters:
+        -----------
+        peak_indeces (int or list of ints): index of single peak or of multiple neighboring peaks to show (peaks must belong
+        to the same fit curve!)
+        x_center (float): center of manually specified mass range to plot
+        x_range (float): width of mass range to plot around
         'x_center' or minimal width to plot around specified peaks of interest
+
+        Returns:
+        --------
+        Logarithmic and linear plots of data and fit curve over specified mass range.
         """
         if isinstance(peak_indeces,list):
             x_min = self.peaks[peak_indeces[0]].x_pos - x_range/2
@@ -888,9 +893,9 @@ class spectrum:
             x_min = x_center - x_range/2
             x_max = x_center + x_range/2
         else:
-            print("Mass range to plot could not be determined. Check documentation on function parameters")
+            print("Mass range to plot could not be determined. Check documentation on function parameters.")
             return
-        self.plot_fit(ax=ax,x_min=x_min,x_max=x_max,show_peak_markers=show_peak_markers,sigmas_of_uncer_band=sigmas_of_uncer_band)
+        self.plot_fit(ax=ax,x_min=x_min,x_max=x_max,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
 
 
 ####
