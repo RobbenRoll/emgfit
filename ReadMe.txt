@@ -43,8 +43,9 @@ Flow chart:
 * Fit full spectrum
 * Show fit output and save results: Plot full fit curve and zooms of regions of interest, compile fit results
 
-
+Note:
 * upper limit for constant background: 4 counts/bin
+* calculation of fitted mass and AME mass errors exclude the mass uncertainty of the electron mass (negligible in virtually all practical cases)!
 
 class peak
 attributes: peak parameters
@@ -83,6 +84,7 @@ TO DO:
 * implement optional automatic plotting of fit results for each peak (group) for visual inspection
 * make c_bkg parameter optional
 * perform peak-shape error estimation for each peak fitted in fit_peaks!
+* substract background contribution from peak area?
 
 * implement manually chosen fit range for peak shape determination
 
@@ -110,7 +112,7 @@ p1 + p2 + p3 = 1
 -> delta = 2*p1 + p3 - 1
 
 
-
+# Code snippet to compare Gaussian sigma and simga of Hyper-EMG function
 from emgfit.emg_funcs import sigma_emg
       pref = 'p{0}_'.format(self.peaks.index(p))
       print(out.best_values[pref+'sigma'],sigma_emg(out.best_values[pref+'sigma'],out.best_values[pref+'theta'],(1,),(out.best_values[pref+'tau_m1'],),(out.best_values[pref+'eta_p1'],out.best_values[pref+'eta_p2']),(out.best_values[pref+'tau_p1'],out.best_values[pref+'tau_p2'])))

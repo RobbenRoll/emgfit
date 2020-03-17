@@ -12,6 +12,7 @@ import copy
 from IPython.display import display
 from emgfit.config import *
 import emgfit.fit_models as fit_models
+import emgfit.emg_funcs as emg_funcs
 import lmfit as fit
 #u_to_keV = config.u_to_keV
 #u = config.u
@@ -167,7 +168,7 @@ class spectrum:
         self.shape_cal_pars = None
         self.mass_calibrant = None
         self.recal_fac = 1.0
-        self.rel_calib_error = None
+        self.rel_recal_error = None
         self.rel_peakshape_error = None
         plt.rcParams.update({"font.size": 15})
         fig  = plt.figure(figsize=(20,8))
@@ -642,8 +643,8 @@ class spectrum:
         return out
 
 
-    ##### Internal helper function to calculate peak area (counts in peak)
-    def get_peak_area(self, peak_index, fit_result=None, decimals=2):
+    ##### Internal helper function for calculating the peak area (counts in peak)
+    def calc_peak_area(self, peak_index, fit_result=None, decimals=2):
         pref = 'p'+str(peak_index)+'_'
         area = 0
         for y_i in fit_result.eval_components(x=fit_result.x)[pref]: # Get counts in subpeaks from best fit to data
@@ -651,6 +652,32 @@ class spectrum:
             if np.isnan(y_i) == True:
                 print("Warning: Encountered NaN values in "+str(self.peaks[peak_index].species)+"-subpeak! Those are omitted in area summation.")
         return np.round(area,decimals)
+
+
+    ##### Internal helper function for calculating std. dev. of Hyper-EMG fit result
+    @staticmethod
+    def calc_sigma_emg(peak_index,fit_model=None,fit_result=None):
+        pref = 'p{0}_'.format(peak_index)
+        try:
+            no_left_tails = int(fit_model[3])
+            no_right_tails = int(fit_model[4])
+        except TypeError:
+            print('ERROR: Calculation of sigma_emg failed. Fit model parameter must be string of form "emgXY" with X & Y int!')
+        li_eta_m, li_tau_m, li_eta_p, li_tau_p = [],[],[],[]
+        for i in np.arange(1,no_left_tails+1):
+            if no_left_tails == 1:
+                li_eta_m = [1]
+            else:
+                li_eta_m.append(fit_result.best_values[pref+'eta_m'+str(i)])
+            li_tau_m.append(fit_result.best_values[pref+'tau_m'+str(i)])
+        for i in np.arange(1,no_right_tails+1):
+            if no_right_tails == 1:
+                li_eta_p = [1]
+            else:
+                li_eta_p.append(fit_result.best_values[pref+'eta_p'+str(i)])
+            li_tau_p.append(fit_result.best_values[pref+'tau_p'+str(i)])
+        sigma_EMG = emg_funcs.sigma_emg(fit_result.best_values[pref+'sigma'],fit_result.best_values[pref+'theta'],tuple(li_eta_m),tuple(li_tau_m),tuple(li_eta_p),tuple(li_tau_p))
+        return sigma_EMG
 
 
     ##### Determine peak shape
@@ -747,7 +774,7 @@ class spectrum:
     ##### Fit mass calibrant
     def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None, fit_model=None, fit_range=0.01, method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0):
         """
-        Determine scale factor for spectrum by fitting the selected mass calibrant
+        Determine mass recalibration factor for spectrum by fitting the selected mass calibrant
 
             fit_model (str): name of fit model to use (e.g. 'Gaussian','emg12','emg33', ... - see fit_models.py for all available fit models)
         """
@@ -771,10 +798,15 @@ class spectrum:
         out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, vary_shape=False, method=method, show_plots=show_plots, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band)
 
         # Update peak properties
+        pref = 'p{0}_'.format(index_mass_calib)
         peak.fitted = out.success
-        peak.area = self.get_peak_area(index_mass_calib,fit_result=out)
-        peak.m_fit = out.best_values['p'+str(index_mass_calib)+'_mu']
-        peak.stat_error = A_stat*out.best_values['p'+str(index_mass_calib)+'_sigma']/np.sqrt(peak.area)  # A_stat * Std. Dev. / sqrt(area)
+        peak.area = self.calc_peak_area(index_mass_calib,fit_result=out)
+        peak.m_fit = out.best_values[pref+'mu']
+        if fit_model == 'Gaussian':
+            std_dev = out.best_values[pref+'sigma']
+        else:  # for emg models
+            std_dev = spectrum.calc_sigma_emg(peak_index=index_mass_calib,fit_model=fit_model,fit_result=out)
+        peak.stat_error = A_stat*std_dev/np.sqrt(peak.area) # A_stat*Std. Dev./sqrt(area), w/ A_stat from config
         peak.peakshape_error = 0 ################################# FIX
         peak.chi_sq_red = np.round(out.redchi, 2)
 
@@ -783,20 +815,20 @@ class spectrum:
         print("Recalibration factor: "+str(self.recal_fac))
 
         # Update peak properties with new calibrant centroid
-        peak.m_fit = self.recal_fac*out.best_values['p'+str(index_mass_calib)+'_mu'] # update centroid mass of calibrant peak
+        peak.m_fit = self.recal_fac*out.best_values[pref+'mu'] # update centroid mass of calibrant peak
         if peak.A:
-            peak.ME_keV = (peak.A - peak.m_fit)*u_to_keV   # Mass excess [keV]
+            peak.ME_keV = np.round((peak.A - peak.m_fit)*u_to_keV,3)   # Mass excess [keV]
         if peak.m_AME:
             peak.m_dev_keV = np.round( (peak.m_fit - peak.m_AME)*u_to_keV, 3) # TITAN - AME [keV]
 
-        # Determine rel. calibrant error and update calibration error
-        self.rel_calib_error = np.sqrt( (peak.m_AME_error/peak.m_AME)**2 + (peak.stat_error/peak.m_fit)**2 + (peak.peakshape_error/peak.m_fit)**2 )
-        print("Relative calibration error: "+str(np.round(self.rel_calib_error,9)))
-        peak.cal_error = peak.m_fit * self.rel_calib_error
+        # Determine rel. recalibration error and update recalibration error attribute
+        self.rel_recal_error = np.sqrt( (peak.m_AME_error/peak.m_AME)**2 + (peak.stat_error/peak.m_fit)**2 + (peak.peakshape_error/peak.m_fit)**2 )
+        print("Relative recalibration error: "+str(np.round(self.rel_recal_error,9)))
+        peak.cal_error = peak.m_fit * self.rel_recal_error
 
 
     ##### Update peak list with fit values
-    def update_peak_props(self,peaks=[],fit_result=None):
+    def update_peak_props(self,peaks=[],fit_model=None,fit_result=None):
         """
         Save fit results in list with peak properties.
         """
@@ -804,19 +836,25 @@ class spectrum:
             if p == self.mass_calibrant:
                 pass
             else:
-                p.fitted = fit_result.success
                 peak_idx = self.peaks.index(p)
-                p.area = self.get_peak_area(peak_idx,fit_result=fit_result)  #np.round(area,2)
-                p.m_fit = self.recal_fac*fit_result.best_values['p'+str(peak_idx)+'_mu']
-                p.stat_error = A_stat*fit_result.best_values['p'+str(peak_idx)+'_sigma']/np.sqrt(p.area)  # A_stat*Std. Dev./sqrt(area), w/ A_stat from config
+                pref = 'p{0}_'.format(peak_idx)
+                p.fitted = fit_result.success
+                p.area = self.calc_peak_area(peak_idx,fit_result=fit_result)  #np.round(area,2)
+                p.m_fit = self.recal_fac*fit_result.best_values[pref+'mu']
+                if fit_model == 'Gaussian':
+                    std_dev = fit_result.best_values[pref+'sigma']
+                    #peak.stat_error = A_stat*sigma/np.sqrt(peak.area)
+                else:  # for emg models
+                    std_dev = spectrum.calc_sigma_emg(peak_index=peak_idx,fit_model=fit_model,fit_result=fit_result)
+                p.stat_error = A_stat*std_dev/np.sqrt(p.area) # A_stat*Std. Dev./sqrt(area), w/ A_stat from config
                 if self.rel_peakshape_error:
                     p.peakshape_error = p.m_fit * self.rel_peakshape_error
                 elif p==peaks[0]:
                     print('WARNING: Could not calculate peak shape errors. No successful peak shape calibration performed on spectrum yet.')
-                if self.rel_calib_error:
-                    p.cal_error = p.m_fit * self.rel_calib_error
+                if self.rel_recal_error:
+                    p.cal_error = p.m_fit * self.rel_recal_error
                 elif p==peaks[0]: # only print once
-                    print('WARNING: Could not calculate mass calibration errors. No successful mass calibration performed on spectrum yet.')
+                    print('WARNING: Could not calculate mass recalibration errors. No successful mass recalibration performed on spectrum yet.')
                 try:
                     p.m_fit_error = np.sqrt(p.stat_error**2 + p.peakshape_error**2 + p.cal_error**2) # total uncertainty of mass value - includes: stat. mass uncertainty, peakshape uncertainty, calibration uncertainty
                 except TypeError:
@@ -824,7 +862,7 @@ class spectrum:
                         print('Could not calculate total fit error.')
                     pass
                 if p.A:
-                    p.ME_keV = (p.A - p.m_fit)*u_to_keV   # Mass excess [keV]
+                    p.ME_keV = np.round((p.A - p.m_fit)*u_to_keV,3)   # Mass excess [keV]
                 if p.m_AME:
                     p.m_dev_keV = np.round( (p.m_fit - p.m_AME)*u_to_keV, 3) # TITAN - AME [keV]
                 p.chi_sq_red = np.round(fit_result.redchi, 2)
@@ -857,7 +895,7 @@ class spectrum:
             peaks_to_fit = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)] # get peaks in fit range
         else:
             peaks_to_fit = self.peaks
-        spectrum.update_peak_props(self,peaks=peaks_to_fit,fit_result=out)
+        spectrum.update_peak_props(self,peaks=peaks_to_fit,fit_model=fit_model,fit_result=out)
         spectrum.peak_properties(self)
         display(out)
         for p in peaks_to_fit:
