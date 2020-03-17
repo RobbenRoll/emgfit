@@ -535,6 +535,8 @@ class spectrum:
         i_max = np.argmin(np.abs(fit_result.x - x_max))
         y_max_log = max( max(self.data.values[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
         y_max_lin = max( max(self.data.values[i_min:i_max]), max(fit_result.init_fit[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
+        weights = 1/fit_result.y_err[i_min:i_max]
+        y_max_res = max(np.abs(fit_result.residual[i_min:i_max]/weights)) + max(fit_result.y_err[i_min:i_max])
 
         # Plot fit result with logarithmic y-scale
         f1 = plt.figure(figsize=(20,12))
@@ -566,6 +568,7 @@ class spectrum:
             self.add_peak_markers(yscale='lin',ymax=y_max_lin,peaks=peaks_to_plot)
         ax_res, ax_fit = f2.axes
         ax_res.set_title(fit_model)
+        ax_res.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
         plt.xlabel('Mass [u]')
         plt.ylabel('Counts per bin')
         plt.xlim(x_min,x_max)
