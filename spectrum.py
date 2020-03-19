@@ -147,21 +147,21 @@ class peak:
 ###################################################################################################
 ##### Define spectrum class
 class spectrum:
-    def __init__(self,filename,m_start=None,m_stop=None,skiprows = 18):
+    def __init__(self,filename,m_start=None,m_stop=None,skiprows = 18,show_plot=True):
         """
         Creates spectrum object by importing TOF data from .txt or .csv file, plotting full spectrum and then cutting spectrum to specified fit range {m_start;m_stop}
-	Input file format: two-column .csv- or .txt-file with comma separated values 	column 1: mass bin,  column 2: counts per bin
+	    Input file format: two-column .csv- or .txt-file with tab separated values (column 1: mass bin, column 2: counts per bin)
 
         Parameters:
         -----------
-	   filename (str): string containing (path and) filename of mass data
+	    filename (str): string containing (path and) filename of mass data
 	    m_start (float): start of fit range
 	    m_stop (float): stop of fit range
 
-	Returns:
+	    Returns:
         --------
         Pandas dataframe 'data' containing mass data and plot of full spectrum with fit range markers
-	"""
+	    """
         data_uncut = pd.read_csv(filename, header = None, names= ['Mass [u]', 'Counts'], skiprows = skiprows,delim_whitespace = True,index_col=False,dtype=float)
         data_uncut.set_index('Mass [u]',inplace =True)
         self.fit_model = None
@@ -171,21 +171,23 @@ class spectrum:
         self.rel_recal_error = None
         self.rel_peakshape_error = None
         plt.rcParams.update({"font.size": 15})
-        fig  = plt.figure(figsize=(20,8))
         self.peaks = [] # list containing peaks associated with spectrum (each peak is represented by an instance of the class 'peak')
         self.fit_results = [] # list containing fit results of peaks associated with spectrum
         if m_start or m_stop:
             self.data = data_uncut.loc[m_start:m_stop] # dataframe containing mass spectreum data (cut to fit range)
-            plt.title('Spectrum with fit range markers')
+            plot_title = 'Spectrum with fit range markers'
         else:
             self.data = data_uncut # dataframe containing mass spectrum data
-            plt.title('Spectrum (fit full range)')
-        data_uncut.plot(ax=fig.gca())
-        plt.vlines(m_start,0,1.2*max(self.data['Counts']))
-        plt.vlines(m_stop,0,1.2*max(self.data['Counts']))
-        plt.yscale('log')
-        plt.ylabel('Counts')
-        plt.show()
+            plot_title = 'Spectrum (fit full range)'
+        if show_plot:
+            fig  = plt.figure(figsize=(20,8))
+            plt.title(plot_title)
+            data_uncut.plot(ax=fig.gca())
+            plt.vlines(m_start,0,1.2*max(self.data['Counts']))
+            plt.vlines(m_stop,0,1.2*max(self.data['Counts']))
+            plt.yscale('log')
+            plt.ylabel('Counts')
+            plt.show()
 
 
     ##### Define static method for smoothing spectrum before peak detection(taken from https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html)
@@ -194,32 +196,32 @@ class spectrum:
         """
         smooth the data using a window with requested size.
 
-	This method is based on the convolution of a scaled window with the signal.
-	The signal is prepared by introducing reflected copies of the signal
-	(with the window size) in both ends so that transient parts are minimized
-	in the begining and end part of the output signal.
+    	This method is based on the convolution of a scaled window with the signal.
+    	The signal is prepared by introducing reflected copies of the signal
+    	(with the window size) in both ends so that transient parts are minimized
+    	in the begining and end part of the output signal.
 
-	input:
-	    x: the input signal
-            window_len: the dimension of the smoothing window; should be an odd integer
-	    window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
-		    flat window will produce a moving average smoothin
+    	input:
+    	    x: the input signal
+                window_len: the dimension of the smoothing window; should be an odd integer
+    	    window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
+    		    flat window will produce a moving average smoothin
 
-	output:
-	    the smoothed signal
+    	output:
+    	    the smoothed signal
 
-	example:
-	    t=linspace(-2,2,0.1)
-	    x=sin(t)+randn(len(t))*0.1
-	    y=smooth(x)
+    	example:
+    	    t=linspace(-2,2,0.1)
+    	    x=sin(t)+randn(len(t))*0.1
+    	    y=smooth(x)
 
-	see also:
-	    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
-	    scipy.signal.lfilter
+    	see also:
+    	    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
+    	    scipy.signal.lfilter
 
-	TODO: the window parameter could be the window itself if an array instead of a string
-	NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
-	"""
+    	TODO: the window parameter could be the window itself if an array instead of a string
+    	NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
+    	"""
         if x.ndim != 1:
             raise ValueError("smooth only accepts 1 dimension arrays.")
 
@@ -317,22 +319,23 @@ class spectrum:
 
 
     ##### Define peak detection routine
-    def detect_peaks(self,window='blackman',window_len=23,thres=0.003,width=0.01,plot_smoothed_spec=True,plot_2nd_deriv=True):
+    def detect_peaks(self,window='blackman',window_len=23,thres=0.003,width=0.01,plot_smoothed_spec=True,plot_2nd_deriv=True,plot_detection_result=True):
         """
         Performs automatic peak detection on spectrum object using a scaled second derivative of the spectrum.
         """
         # Smooth spectrum (moving average with window function)
         data_smooth = self.data.copy()
         data_smooth['Counts'] = spectrum.smooth(self.data['Counts'].values,window_len=window_len,window=window)
-        # Plot smoothed ad original spectrum
-        ax = self.data.plot(figsize=(20,6))
-        data_smooth.plot(figsize=(20,6),ax=ax)
-        plt.title("Smoothed spectrum")
-        ax.legend(["Raw","Smoothed"])
-        plt.ylim(0.1,)
-        plt.yscale('log')
-        plt.ylabel('Counts')
-        plt.show()
+        if plot_smoothed_spec:
+            # Plot smoothed and original spectrum
+            ax = self.data.plot(figsize=(20,6))
+            data_smooth.plot(figsize=(20,6),ax=ax)
+            plt.title("Smoothed spectrum")
+            ax.legend(["Raw","Smoothed"])
+            plt.ylim(0.1,)
+            plt.yscale('log')
+            plt.ylabel('Counts')
+            plt.show()
 
         # Second derivative
         data_sec_deriv = data_smooth.iloc[1:-1].copy()
@@ -341,7 +344,8 @@ class spectrum:
             #dm = data_smooth.index[i+1]-data_smooth.index[i] # use dm in denominator of deriv if realistic units are desired
             data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+1] - 2*data_smooth['Counts'].iloc[i] + data_smooth['Counts'].iloc[i-1])/1**2 # Used (second order central finite difference)
             # data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+2] - 2*data_smooth['Counts'].iloc[i+1] + data_smooth['Counts'].iloc[i])/1**2    # data_sec_deriv = data_smooth.iloc[0:-2].copy()
-        spectrum.plot_df(data_sec_deriv,title="Scaled second derivative of spectrum - set threshold indicated",yscale='linear',thres=-thres)
+        if plot_2nd_deriv:
+            spectrum.plot_df(data_sec_deriv,title="Scaled second derivative of spectrum - set threshold indicated",yscale='linear',thres=-thres)
 
         # Take only negative part of re-scaled second derivative and invert
         data_sec_deriv_mod = data_smooth.iloc[1:-1].copy()
@@ -358,10 +362,12 @@ class spectrum:
         peak_find = sig.find_peaks(data_sec_deriv_mod['Counts'].values,height=thres,width=width)
         li_peak_pos = data_sec_deriv_mod.index.values[peak_find[0]]
         #peak_widths = sig.peak_widths(data_sec_deriv_mod['Counts'].values,peak_find[0])
-        spectrum.plot_df(data_sec_deriv_mod,title="Negative part of scaled second derivative, inverted - set threshold indicated",thres=thres,vmarkers=li_peak_pos,ymin=0.1*thres)
+        if plot_2nd_deriv:
+            spectrum.plot_df(data_sec_deriv_mod,title="Negative part of scaled second derivative, inverted - set threshold indicated",thres=thres,vmarkers=li_peak_pos,ymin=0.1*thres)
 
         # Plot raw spectrum with detected peaks marked
-        spectrum.plot_df(self.data,title="Spectrum with detected peaks marked",vmarkers=li_peak_pos)
+        if plot_detection_result:
+            spectrum.plot_df(self.data,title="Spectrum with detected peaks marked",vmarkers=li_peak_pos)
 
         # Create list of peak objects
         for x in li_peak_pos:
@@ -478,26 +484,7 @@ class spectrum:
             print('Errors occured in peak assignment!')
             raise
 
-    ##### Internal helper function for creating multi-peak fit models
-    def comp_model(self,peaks_to_fit=None,model='emg22',init_pars=None,vary_shape=False,index_first_peak=None):
-        """ create multi-peak composite model from single-peak model """
-        model = getattr(fit_models,model) # get single peak model from fit_models.py
-        mod = fit.models.ConstantModel(independent_vars='x',prefix='bkg_')
-        mod.set_param_hint('bkg_c', value= 0.3, min=0,max=4)
-        df = self.data
-        for peak in peaks_to_fit:
-            peak_index = self.peaks.index(peak)
-            x_pos = df.index[np.argmin(np.abs(df.index.values - peak.x_pos))] # x_pos of closest bin
-            amp = df['Counts'].loc[x_pos]/1200 # estimate amplitude from peak maximum, the factor 1200 is empirically determined and shape-dependent
-            if init_pars:
-                this_mod = model(peak_index, peak.x_pos, amp, init_pars=init_pars, vary_shape_pars=vary_shape, index_first_peak=index_first_peak)
-            else:
-                this_mod = model(peak_index, peak.x_pos, amp, vary_shape_pars=vary_shape, index_first_peak=index_first_peak)
-            mod = mod + this_mod
-        return mod
-
-
-    # Add peak markers to plot of a fit
+        # Add peak markers to plot of a fit
     def add_peak_markers(self,yscale='log',ymax=None,peaks=None):
         """
         (Internal) method for adding peak markers to current figure object, place this function as self.add_peak_markers between plt.figure() and plt.show(), only for use on already fitted spectra
@@ -576,6 +563,25 @@ class spectrum:
         plt.show()
 
 
+    ##### Internal helper function for creating multi-peak fit models
+    def comp_model(self,peaks_to_fit=None,model='emg22',init_pars=None,vary_shape=False,index_first_peak=None):
+        """ create multi-peak composite model from single-peak model """
+        model = getattr(fit_models,model) # get single peak model from fit_models.py
+        mod = fit.models.ConstantModel(independent_vars='x',prefix='bkg_')
+        mod.set_param_hint('bkg_c', value= 0.3, min=0,max=4)
+        df = self.data
+        for peak in peaks_to_fit:
+            peak_index = self.peaks.index(peak)
+            x_pos = df.index[np.argmin(np.abs(df.index.values - peak.x_pos))] # x_pos of closest bin
+            amp = max(df['Counts'].loc[x_pos]/1200,1e-04) # estimate amplitude from peak maximum, the factor 1200 is empirically determined and shape-dependent
+            if init_pars:
+                this_mod = model(peak_index, peak.x_pos, amp, init_pars=init_pars, vary_shape_pars=vary_shape, index_first_peak=index_first_peak)
+            else:
+                this_mod = model(peak_index, peak.x_pos, amp, vary_shape_pars=vary_shape, index_first_peak=index_first_peak)
+            mod = mod + this_mod
+        return mod
+
+
     ##### Fit spectrum
     def peakfit(self,fit_model='emg22',x_fit_cen=None,x_fit_range=None,init_pars=None,vary_shape=False,method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,recal_fac=1.0):
         """
@@ -646,7 +652,7 @@ class spectrum:
         return out
 
 
-    ##### Internal helper function for calculating the peak area (counts in peak)
+    ##### Internal helper function for calculating the peak area (number of counts in peak)
     def calc_peak_area(self, peak_index, fit_result=None, decimals=2):
         pref = 'p'+str(peak_index)+'_'
         area = 0
@@ -713,7 +719,8 @@ class spectrum:
             for model in li_fit_models:
                 try:
                     out = spectrum.peakfit(self, fit_model=model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
-                    print(out.fit_report())
+                    print()
+                    display(out)
                     if out.redchi <= 1:
                         best_model = model
                         best_redchi = out.redchi
