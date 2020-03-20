@@ -106,6 +106,7 @@ class peak:
         self.extrapolated_yn = extrapol
         self.fitted = False
         self.area = None
+        self.area_error = None
         self.m_fit = None
         self.stat_error = None # A_stat * Std. Dev. / sqrt(area), with A_stat as defined in config file
         self.peakshape_error = None
@@ -133,7 +134,7 @@ class peak:
         print("AME mass uncertainty:",self.m_AME_error,"u         (",np.round(self.m_AME_error*u_to_keV,3),"keV )")
         print("Extrapolated mass?",self.extrapolated_yn)
         if self.fitted == True:
-            print("Peak area:",np.round(self.area,1),"counts")
+            print("Peak area: "+str(self.area)+" +- "+str(self.peak_area_error)+" counts")
             print("(Ionic) mass:",self.m_fit,"u     (",np.round(self.m_fit*u_to_keV,3),"keV )")
             print("Stat. mass uncertainty:",self.stat_error,"u     (",np.round(self.stat_error*u_to_keV,3),"keV )")
             print("Peakshape uncertainty:",self.peakshape_error,"u     (",np.round(self.peakshape_error*u_to_keV,3),"keV )")
@@ -855,7 +856,8 @@ class spectrum:
         # Update peak properties
         pref = 'p{0}_'.format(index_mass_calib)
         peak.fitted = out.success
-        peak.area = self.calc_peak_area(index_mass_calib,fit_result=out)
+        peak.area = self.calc_peak_area(index_mass_calib,fit_result=out)[0]
+        peak.area_error = self.calc_peak_area(index_mass_calib,fit_result=out)[1]
         peak.m_fit = out.best_values[pref+'mu']
         if fit_model == 'Gaussian':
             std_dev = out.best_values[pref+'sigma']
@@ -894,7 +896,8 @@ class spectrum:
                 peak_idx = self.peaks.index(p)
                 pref = 'p{0}_'.format(peak_idx)
                 p.fitted = fit_result.success
-                p.area = self.calc_peak_area(peak_idx,fit_result=fit_result)  #np.round(area,2)
+                p.area = self.calc_peak_area(peak_idx,fit_result=fit_result)[0]
+                peak.area_error = self.calc_peak_area(peak_idx,fit_result=fit_result)[1]
                 p.m_fit = self.recal_fac*fit_result.best_values[pref+'mu']
                 if fit_model == 'Gaussian':
                     std_dev = fit_result.best_values[pref+'sigma']
