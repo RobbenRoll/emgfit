@@ -166,6 +166,7 @@ class spectrum:
         data_uncut.set_index('Mass [u]',inplace =True)
         self.fit_model = None
         self.shape_cal_pars = None
+        self.shape_cal_errors = []
         self.mass_calibrant = None
         self.recal_fac = 1.0
         self.rel_recal_error = None
@@ -654,13 +655,35 @@ class spectrum:
 
     ##### Internal helper function for calculating the peak area (number of counts in peak)
     def calc_peak_area(self, peak_index, fit_result=None, decimals=2):
+        """ Calculate peak area (total counts in peak) and its error for a given peak using the peak amplitude and the bin_width
+
+        Parameters:
+        -----------
+        peak_index (str): Index of peak of interest
+        fit_result (modelresult): lmfit modelresult object to use for area calculation (optional), if 'None': use corresponding modelresult stored in list fit_results
+        decimals (int): number of decimals to return outputs with
+
+
+        Returns:
+        --------
+        list of two floats: [area,area_error]
+        """
+
         pref = 'p'+str(peak_index)+'_'
-        area = 0
-        for y_i in fit_result.eval_components(x=fit_result.x)[pref]: # Get counts in subpeaks from best fit to data
-            area += y_i
-            if np.isnan(y_i) == True:
-                print("Warning: Encountered NaN values in "+str(self.peaks[peak_index].species)+"-subpeak! Those are omitted in area summation.")
-        return np.round(area,decimals)
+        #area = 0
+        #for y_i in fit_result.eval_components(x=fit_result.x)[pref]: # Get counts in subpeaks from best fit to data
+        #    area += y_i
+        #    if np.isnan(y_i) == True:
+        #    print("Warning: Encountered NaN values in "+str(self.peaks[peak_index].species)+"-subpeak! Those are omitted in area summation.")
+        if fit_result == None:
+            fit_result = self.fit_results[peak_index]
+        bin_width = self.data.index[1] - self.data.index[0] # width of mass bins, needed to convert peak amplitude (peak area in units Counts/mass range) to Counts
+        try:
+            area = fit_result.best_values[pref+'amp']/bin_width
+            area_err = fit_result.params[pref+'amp'].stderr/bin_width
+        except AttributeError:
+            print('ERROR: Could not get amplitude parameter ("amp") of peak. Likely the peak has not been fitted successfully yet.')
+        return [np.round(area,decimals), np.round(area_err,decimals)]
 
 
     ##### Internal helper function for calculating std. dev. of Hyper-EMG fit result
@@ -744,13 +767,13 @@ class spectrum:
         out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
 
         peak.comment = 'shape calibrant'
-        print(out.fit_report())
+        display(out)  # print(out.fit_report())
         dict_pars = out.params.valuesdict()
         self.shape_cal_pars = {key.lstrip('p'+str(index_shape_calib)+'_'): val for key, val in dict_pars.items() if key.startswith('p'+str(index_shape_calib))}
         self.shape_cal_par_errors = {} # dict to store shape calibration parameter errors
         for par in out.params:
             if par.startswith('p'+str(index_shape_calib)):
-                self.shape_cal_par_errors[par.lstrip('p'+str(index_shape_calib)+'_')+' error'] = out.params[par].stderr
+                self.shape_cal_par_errors[par.lstrip('p'+str(index_shape_calib)+'_')] = out.params[par].stderr
 
         print('\n##### Evaluate peak shape uncertainty #####\n')
         # Vary each shape parameter by plus and minus one sigma and sum resulting shifts of Gaussian centroid in quadrature to obtain rel. peakshape error
@@ -759,16 +782,16 @@ class spectrum:
         for par in shape_pars:
             pars = copy.deepcopy(self.shape_cal_pars) # deep copy to avoid changes in original dictionary
             centroid = list(out.best_values.values())[1] # indexing makes sure that both Gaussian 'center' and Hyper-EMG 'mu' Parameters get fetched
-            pars[par] = self.shape_cal_pars[par] + self.shape_cal_par_errors[par+' error']
+            pars[par] = self.shape_cal_pars[par] + self.shape_cal_par_errors[par]
             out_p = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=pars, vary_shape=False, method=method, show_plots=False)
             new_centroid = list(out_p.best_values.values())[1] # indexing makes sure that both Gaussian 'center' and Hyper-EMG 'mu' Parameters get fetched
             delta_mu_p = new_centroid - centroid
-            print('Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'+',np.round(self.shape_cal_par_errors[par+' error'],6),' shifts centroid by ',np.round(delta_mu_p*1e06,6),'\u03BCu.')
-            pars[par] = self.shape_cal_pars[par] - self.shape_cal_par_errors[par+' error']
+            print('Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'+',np.round(self.shape_cal_par_errors[par],6),' shifts centroid by ',np.round(delta_mu_p*1e06,6),'\u03BCu.')
+            pars[par] = self.shape_cal_pars[par] - self.shape_cal_par_errors[par]
             out_m = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=pars, vary_shape=False, method=method, show_plots=False)
             new_centroid = list(out_m.best_values.values())[1] # indexing makes sure that both Gaussian 'center' and Hyper-EMG 'mu' Parameters get fetched
             delta_mu_m = new_centroid - centroid
-            print('Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'-',np.round(self.shape_cal_par_errors[par+' error'],6),' shifts centroid by ',np.round(delta_mu_m*1e06,3),'\u03BCu.')
+            print('Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'-',np.round(self.shape_cal_par_errors[par],6),' shifts centroid by ',np.round(delta_mu_m*1e06,3),'\u03BCu.')
             self.centroid_shifts[par+' centroid shift'] = max([delta_mu_p,delta_mu_m])
         shape_error = np.sqrt(np.sum(np.square(list(self.centroid_shifts.values())))) # add centroid shifts in quadrature to obtain total peakshape error
         self.rel_peakshape_error = shape_error/centroid
@@ -779,6 +802,28 @@ class spectrum:
             print('\nRelative peakshape error: ',rel_error_rounded)
 
         return out
+
+
+   ##### Save shape calibration parameters to TXT file
+    def save_peak_shape_cal(self,filename):
+        """ Save peak shape parameters (and their errors, if existent) to .txt file"""
+        df1 = pd.DataFrame.from_dict(self.shape_cal_pars,orient='index',columns=['Value'])
+        df1.index.rename('Model: '+str(self.fit_model),inplace=True)
+        df2 = pd.DataFrame.from_dict(self.shape_cal_par_errors,orient='index',columns=['Error'])
+        df = df1.join(df2)
+        df.to_csv(str(filename)+'.txt', index=True,sep='\t')
+        print('\nSaved peak shape calibration to file: '+str(filename)+'.txt')
+
+
+    def load_peak_shape_cal(self,filename):
+        """ Load peak shape from .txt file """
+        df = pd.read_csv(str(filename)+'.txt',index_col=0,sep='\t')
+        self.fit_model = df.index.name[7:]
+        df_val = df['Value']
+        df_err = df['Error']
+        self.shape_cal_pars = df_val.to_dict()
+        self.shape_cal_par_errors = df_err.to_dict()
+        print('\nLoaded peak shape calibration from '+str(filename)+'.txt')
 
 
     ##### Fit mass calibrant

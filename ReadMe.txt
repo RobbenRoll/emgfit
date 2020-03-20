@@ -46,6 +46,8 @@ Flow chart:
 Note:
 * upper limit for constant background: 4 counts/bin
 * calculation of fitted mass and AME mass errors exclude the mass uncertainty of the electron mass (negligible in virtually all practical cases)!
+* peak area (total counts in peak) = amp * bin_width
+* introduced help variables '' of third tail order requires
 
 class peak
 attributes: peak parameters
