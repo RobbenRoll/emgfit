@@ -105,6 +105,7 @@ class peak:
             self.m_AME_error = m_error
         self.extrapolated_yn = extrapol
         self.fitted = False
+        self.fit_model = None
         self.area = None
         self.area_error = None
         self.m_fit = None
@@ -321,9 +322,11 @@ class spectrum:
 
 
     ##### Define peak detection routine
-    def detect_peaks(self,window='blackman',window_len=23,thres=0.003,width=0.01,plot_smoothed_spec=True,plot_2nd_deriv=True,plot_detection_result=True):
+    def detect_peaks(self,window='blackman',window_len=23,thres=0.003,width=5e-05,plot_smoothed_spec=True,plot_2nd_deriv=True,plot_detection_result=True):
         """
         Performs automatic peak detection on spectrum object using a scaled second derivative of the spectrum.
+
+        width (float): minimal FWHM of peaks to be detected - in atomic mass units
         """
         # Smooth spectrum (moving average with window function)
         data_smooth = self.data.copy()
@@ -361,7 +364,9 @@ class spectrum:
             else:
                 data_sec_deriv_mod['Counts'].iloc[i] = 0
 
-        peak_find = sig.find_peaks(data_sec_deriv_mod['Counts'].values,height=thres,width=width)
+        bin_width = self.data.index[1] - self.data.index[0]
+        width_in_bins = int(width/bin_width) # width in units of bins, the prefactor is empirically determined and corrects for the width difference of the peak and its 2nd derivative
+        peak_find = sig.find_peaks(data_sec_deriv_mod['Counts'].values,height=thres,width=width_in_bins)
         li_peak_pos = data_sec_deriv_mod.index.values[peak_find[0]]
         #peak_widths = sig.peak_widths(data_sec_deriv_mod['Counts'].values,peak_find[0])
         if plot_2nd_deriv:
@@ -896,8 +901,9 @@ class spectrum:
                 peak_idx = self.peaks.index(p)
                 pref = 'p{0}_'.format(peak_idx)
                 p.fitted = fit_result.success
+                p.fit_model = fit_model
                 p.area = self.calc_peak_area(peak_idx,fit_result=fit_result)[0]
-                peak.area_error = self.calc_peak_area(peak_idx,fit_result=fit_result)[1]
+                p.area_error = self.calc_peak_area(peak_idx,fit_result=fit_result)[1]
                 p.m_fit = self.recal_fac*fit_result.best_values[pref+'mu']
                 if fit_model == 'Gaussian':
                     std_dev = fit_result.best_values[pref+'sigma']
@@ -929,7 +935,7 @@ class spectrum:
     #### Fit spectrum
     def fit_peaks(self, fit_model=None, x_fit_cen=None, x_fit_range=None, init_pars=None, vary_shape=False, method ='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0):
         """
-        Fit entire spectrum or part of spectrum (if x_fit_cen and x_fit_range are specified), show results and show updated peak properties
+        Fit entire spectrum or part of spectrum (if x_fit_cen and x_fit_range are specified), show fit results and show updated peak properties
 
 	    Parameters:
         -----------

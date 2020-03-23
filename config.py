@@ -15,10 +15,10 @@ u = con.u
 u_to_keV = con.physical_constants["atomic mass constant energy equivalent in MeV"][0]*1000 # conversion factor from u to keV
 
 ##### Define constant for fit routines
-A_stat = 1.25  # constant of proportionality for calculating statistical mass error of HyperEmg-fits:  stat_error = A_stat * Std. Dev. / sqrt(area)
+A_stat = 1.37  # constant of proportionality for calculating statistical mass error of HyperEmg-fits:  stat_error = A_stat * Std. Dev. / sqrt(area)
 
 ##### Import AME dataframe
-directory = Path(__file__).parent  # get directory containing this file 
+directory = Path(__file__).parent  # get directory containing this file
 filename = str(directory)+"/AME2016/AME2016_formatted.csv"
 df_AME = pd.read_csv(filename, encoding = 'unicode_escape') # C:/Users/Stefan/Dropbox/Beam time analysis/
 df_AME.set_index(['Element','A'],inplace=True)
