@@ -491,7 +491,51 @@ class spectrum:
             print('Errors occured in peak assignment!')
             raise
 
-        # Add peak markers to plot of a fit
+
+    ##### Add peak comment manually
+    def add_comment(self,peak_index,comment,overwrite=False):
+        """
+        Method for adding a comment to a peak.
+        By default the string 'comment' will be added at the end of the current peak comment (if the current comment is '-' it is overwritten with 'comment' argument).
+        If overwrite is set to 'True' the current peak comment is overwritten with the 'comment' argument.
+
+        CAUTION: It is possible to add further comments to the shape or mass calibrant peaks, however, their peak comments cannot be overwritten!
+              This protects the 'shape calibrant', 'mass calibrant' and 'shape & mass calibrant' flags. Further, these flags should not be added to comments manually by the user!
+
+        Parameters:
+        -----------
+        peak_index (int): index of peak to add comment to
+        comment (str): comment to add to peak_detect.py
+        overwrite (bool): boolean specifying whether to append to current comment or to overwrite it
+
+        Returns:
+        --------
+        None
+        """
+        peak = self.peaks[peak_index]
+        protected_flags = ('shape calibrant','shape & mass calibrant','mass calibrant') # item order matters for comment overwriting!
+        try:
+            if any(s in comment for s in ('shape calibrant','mass calibrant','shape & mass calibrant')):
+                print("ERROR: 'shape calibrant','mass calibrant' and 'shape & mass calibrant' are protected flags. User-defined comments must not contain these flags. Re-phrase comment argument!")
+                return
+            if peak.comment == '-':
+                peak.comment = comment
+            elif overwrite:
+                if any(s in peak.comment for s in protected_flags) and overwrite:
+                    print("Warning: The protected flags 'shape calibrant','mass calibrant' or 'shape & mass calibrant' cannot be overwritten.")
+                    flag = [s for s in protected_flags if s in peak.comment][0]
+                    peak.comment = peak.comment.replace(peak.comment,flag+comment)
+                else:
+                    peak.comment = comment
+            else:
+                peak.comment = peak.comment+comment
+            print("Comment of peak",peak_index,"was changed to: ",peak.comment)
+        except TypeError:
+            print("ERROR: 'comment' argument must be given as type string.")
+            pass
+
+
+    #####  Add peak markers to plot of a fit
     def add_peak_markers(self,yscale='log',ymax=None,peaks=None):
         """
         (Internal) method for adding peak markers to current figure object, place this function as self.add_peak_markers between plt.figure() and plt.show(), only for use on already fitted spectra
@@ -513,7 +557,7 @@ class spectrum:
                 plt.text(p.x_pos, 1.06*ymax, self.peaks.index(p), horizontalalignment='center', fontsize=12)
 
 
-    # Plot fit of full spectrum
+    ##### Plot fit of full spectrum
     def plot_fit(self,fit_result=None,fit_model=None,ax=None,show_peak_markers=True,sigmas_of_conf_band=0,thres=None,x_min=None,x_max=None):
         """
         Plots spectrum with fit
@@ -593,7 +637,7 @@ class spectrum:
     def peakfit(self,fit_model='emg22',x_fit_cen=None,x_fit_range=None,init_pars=None,vary_shape=False,method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,recal_fac=1.0):
         """
         Internal peak fitting routine, fits full spectrum or subrange (if x_fit_cen and x_fit_range are specified) and optionally shows results
-        This method is for internal usage, use 'fit_peaks' method to fit spectrum and update peak properties dataframe with obtained fit results
+        This method is for internal usage, use 'fit_peaks' method to fit spectrum and update peak properties dataframe with obtained fit results!
 
 	    Parameters:
         -----------
@@ -651,7 +695,6 @@ class spectrum:
         out.x = x
         out.y = y
         out.y_err = y_err
-        #print(out.fit_report())
 
         if show_plots:
             self.plot_fit(fit_result=out, fit_model=fit_model, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band, x_min=x_min, x_max=x_max)
@@ -833,18 +876,30 @@ class spectrum:
 
 
     ##### Fit mass calibrant
-    def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None, fit_model=None, fit_range=0.01, method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0):
+    def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None, fit_model=None, fit_range=0.01, method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,show_fit_report=True):
         """
         Determine mass recalibration factor for spectrum by fitting the selected mass calibrant
 
-            fit_model (str): name of fit model to use (e.g. 'Gaussian','emg12','emg33', ... - see fit_models.py for all available fit models)
+            fit_model (str): name of fit model to use (specification optional), defaults to 'fit_model' attribute of spectrum object if not specified
+                              (names of usable models: 'Gaussian','emg01', ..., 'emg33' - see fit_models.py for all available fit models)
+            show_fit_report (bool, default: True) : show detailed report with fit statistics and fit parameter results,
+
         """
         peak = self.peaks[index_mass_calib]
         self.mass_calibrant = peak # mark this peak as mass calibrant to avoid calibrant fit results from being overwritten after fit of full spectrum
-        if peak.comment == 'shape calibrant':
-            peak.comment = 'shape & mass calibrant'
-        else:
+        for p in self.peaks: # reset 'mass calibrant' flag
+            if 'shape & mass calibrant' in p.comment :
+                p.comment = p.comment.replace('shape & mass calibrant','shape calibrant')
+            elif p.comment == 'mass calibrant':
+                p.comment = '-'
+            elif 'mass calibrant' in p.comment:
+                p.comment = p.comment.replace('mass calibrant','')
+        if 'shape calibrant' in peak.comment:
+            peak.comment = peak.comment.replace('shape calibrant','shape & mass calibrant')
+        elif peak.comment == '-' or peak.comment == '' or peak.comment == None:
             peak.comment = 'mass calibrant'
+        else:
+            peak.comment = 'mass calibrant, '+peak.comment
         if index_mass_calib != None and (species_mass_calib == None):
             peak = self.peaks[index_mass_calib]
         elif species_mass_calib:
@@ -857,17 +912,21 @@ class spectrum:
         if fit_model == None:
             fit_model = self.fit_model
         out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, vary_shape=False, method=method, show_plots=show_plots, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band)
+        if show_fit_report:
+            display(out)
 
         # Update peak properties
         pref = 'p{0}_'.format(index_mass_calib)
         peak.fitted = out.success
+        peak.fit_model = fit_model
         peak.area = self.calc_peak_area(index_mass_calib,fit_result=out)[0]
         peak.area_error = self.calc_peak_area(index_mass_calib,fit_result=out)[1]
         peak.m_fit = out.best_values[pref+'mu']
-        if fit_model == 'Gaussian':
-            std_dev = out.best_values[pref+'sigma']
-        else:  # for emg models
-            std_dev = spectrum.calc_sigma_emg(peak_index=index_mass_calib,fit_model=fit_model,fit_result=out)
+        #if fit_model == 'Gaussian':
+        #    std_dev = out.best_values[pref+'sigma']
+        #else:  # for emg models
+        #    std_dev = spectrum.calc_sigma_emg(peak_index=index_mass_calib,fit_model=fit_model,fit_result=out)
+        std_dev = out.best_values[pref+'sigma']
         peak.stat_error = A_stat*std_dev/np.sqrt(peak.area) # A_stat*Std. Dev./sqrt(area), w/ A_stat from config
         peak.peakshape_error = 0 ################################# FIX
         peak.chi_sq_red = np.round(out.redchi, 2)
@@ -933,7 +992,7 @@ class spectrum:
 
 
     #### Fit spectrum
-    def fit_peaks(self, fit_model=None, x_fit_cen=None, x_fit_range=None, init_pars=None, vary_shape=False, method ='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0):
+    def fit_peaks(self, fit_model=None, x_fit_cen=None, x_fit_range=None, init_pars=None, vary_shape=False, method ='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,show_fit_report=True):
         """
         Fit entire spectrum or part of spectrum (if x_fit_cen and x_fit_range are specified), show fit results and show updated peak properties
 
@@ -961,7 +1020,8 @@ class spectrum:
             peaks_to_fit = self.peaks
         spectrum.update_peak_props(self,peaks=peaks_to_fit,fit_model=fit_model,fit_result=out)
         spectrum.peak_properties(self)
-        display(out)
+        if show_fit_report:
+            display(out)
         for p in peaks_to_fit:
             self.fit_results[self.peaks.index(p)] = out
 
