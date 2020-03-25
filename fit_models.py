@@ -282,7 +282,7 @@ def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, 
     """
     # Define model function
     def Gaussian(x, amp, mu, sigma):
-        return np.nan_to_num( amp/(sigma*np.sqrt(2*np.pi)) * np.exp(-(x-mu)**2/(2*sigma**2)) )
+        return  amp/(sigma*np.sqrt(2*np.pi)) * bounded_exp(-(x-mu)**2/(2*sigma**2)) 
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak (e.g. 'p0' for peak with index 0)
     model = fit.Model(Gaussian, prefix = pref, nan_policy='propagate')
 

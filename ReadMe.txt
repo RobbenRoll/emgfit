@@ -74,7 +74,8 @@ Parameters: df_to_fit= None, x_fit_cen = None, x_fit_range = 0.005, model = emg2
 * Using modified version of exponential function np.exp which includes bounds on the argument to prevent over- or underflow
 * initializing parameter 'mu' (Gaussian centroid) right at peak.x_pos (instead of on its closest bin), saw that sometimes the centroid of 'init_fit' is quite off
   from the peak marker at peak.x_pos. This could be due to discrepancy between the Gaussian and Hyper-EMG centroids
-* peak detection reliable for as low as 30 ions in peak 
+* peak detection reliable for as low as 30 ions in peak
+* all fit models in fit_models.py must be formulated such that the (Gaussian) peak centroid is the second parameter in the ordered parameter dictionary (important for peakshape error calculation) 
 
 TO DO:
 * add warning for eta's not summing to 1 to make_model_ ?
