@@ -99,9 +99,9 @@ class peak:
                 if mdata_AME(El,A)[3] == 1: # extrapolated mass
                     extrapol = True     """
         m, m_error, extrapol, A_tot = get_AME_values(species)
-        if self.m_AME == None: # unless m_AME has been user-defined, the mass value of the specified 'species' is calculated from AME database
+        if self.m_AME is None: # unless m_AME has been user-defined, the mass value of the specified 'species' is calculated from AME database
              self.m_AME = m
-        if self.m_AME_error == None: # unless m_AME_error has been user-defined, the mass error of the specified 'species' is calculated from AME database
+        if self.m_AME_error is None: # unless m_AME_error has been user-defined, the mass error of the specified 'species' is calculated from AME database
             self.m_AME_error = m_error
         self.extrapolated_yn = extrapol
         self.fitted = False
@@ -255,7 +255,7 @@ class spectrum:
         Plots spectrum
         - with markers for all peaks stored in peak list 'self.peaks'
         """
-        if peaks == None:
+        if peaks is None:
             peaks = self.peaks
         data = self.data # get spectrum data stored in dataframe 'self.data'
         ymax = data.max()[0]
@@ -467,7 +467,7 @@ class spectrum:
             -> the '?' argument overwrites any former species assignment to the highest-mass-peak and marks the peak as unidentified
         """
         try:
-            if peak_index != None:
+            if peak_index is not None:
                 p = self.peaks[peak_index]
                 p.species = species
                 p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated_yn attributes with AME values for specified species
@@ -478,7 +478,7 @@ class spectrum:
                 p.species = species
                 p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated_yn attributes with AME values for specified species
                 print("Species of peak",i,"assigned as",p.species)
-            elif len(species) == len(self.peaks) and peak_index == None and x_pos == None: # assignment of multiple species
+            elif len(species) == len(self.peaks) and peak_index is None and x_pos is None: # assignment of multiple species
                 for i in range(len(species)):
                     species_i = species[i]
                     if species_i: # skip peak if 'None' given as argument
@@ -541,7 +541,7 @@ class spectrum:
         """
         (Internal) method for adding peak markers to current figure object, place this function as self.add_peak_markers between plt.figure() and plt.show(), only for use on already fitted spectra
         """
-        if peaks == None:
+        if peaks is None:
             peaks = self.peaks
         data = self.data
         if yscale == 'log':
@@ -564,11 +564,11 @@ class spectrum:
         Plots spectrum with fit
         - with markers for all peaks stored in peak list 'self.peaks'
         """
-        if fit_model == None:
+        if fit_model is None:
            fit_model = self.fit_model
         peaks_to_plot = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)] # select peaks in mass range of interest
         idx_first_peak = self.peaks.index(peaks_to_plot[0])
-        if fit_result == None:
+        if fit_result is None:
            fit_result = self.fit_results[idx_first_peak]
         i_min = np.argmin(np.abs(fit_result.x - x_min))
         i_max = np.argmin(np.abs(fit_result.x - x_max))
@@ -674,7 +674,7 @@ class spectrum:
 
         if init_pars == 'default':
             init_params = None
-        elif init_pars != None:
+        elif init_pars is not None:
             init_params = init_pars
         else:
             init_params = self.shape_cal_pars # use shape parameters asociated with spectrum, unless other parameters are specified
@@ -725,7 +725,7 @@ class spectrum:
         #    area += y_i
         #    if np.isnan(y_i) == True:
         #    print("Warning: Encountered NaN values in "+str(self.peaks[peak_index].species)+"-subpeak! Those are omitted in area summation.")
-        if fit_result == None:
+        if fit_result is None:
             fit_result = self.fit_results[peak_index]
         bin_width = self.data.index[1] - self.data.index[0] # width of mass bins, needed to convert peak amplitude (peak area in units Counts/mass range) to Counts
         try:
@@ -775,7 +775,7 @@ class spectrum:
         fit_model (str): name of fit model used to obtain fit result
 
         """
-        if self.shape_cal_pars == None:
+        if self.shape_cal_pars is None:
             print('\nWARNING: Could not calculate peak-shape errors - no peak-shape calibration yet!\n')
             return
         if self.index_mass_calib in peak_indeces:
@@ -783,7 +783,7 @@ class spectrum:
 
         print('\n##### Peak-shape uncertainty evaluation #####\n')
         # Vary each shape parameter by plus and minus one sigma and sum resulting shifts of Gaussian centroid in quadrature to obtain peakshape error
-        if fit_result == None:
+        if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
         shape_pars = [key for key in self.shape_cal_pars if key.startswith( ('sigma','theta','eta','tau') )]
         if self.centroid_shifts is None:
@@ -817,7 +817,7 @@ class spectrum:
 
 
     ##### Determine peak shape
-    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', init_pars = 'default', fit_range=0.01, method='least_squares',vary_tail_order=True,show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0):
+    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', init_pars = 'default', x_fit_cen=None, x_fit_range=0.01, method='least_squares', vary_tail_order=True, show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0):
         """
         Determine optimal tail order and peak shape parameters by fitting the selected peak-shape calibrant
 
@@ -826,7 +826,7 @@ class spectrum:
 
             fit_model (str): name of fit model to use (e.g. 'Gaussian','emg12','emg33', ... - see fit_models.py for all available fit models)
         """
-        if index_shape_calib != None and (species_shape_calib == None):
+        if index_shape_calib is not None and (species_shape_calib is None):
             peak = self.peaks[index_shape_calib]
         elif species_shape_calib:
             peak = [p for p in self.peaks if species_shape_calib == p.species]
@@ -834,6 +834,9 @@ class spectrum:
         else:
             print("\nERROR: Definition of peak shape calibrant failed. Define EITHER the index OR the species name of the peak to use as shape calibrant!\n")
             return
+
+        if x_fit_cen is None:
+            x_fit_cen = peak.x_pos
 
         if vary_tail_order == True and fit_model != 'Gaussian':
             print('\n##### Determine optimal tail order #####\n')
@@ -844,7 +847,7 @@ class spectrum:
             li_fit_models = ['Gaussian','emg01','emg10','emg11','emg12','emg21','emg22','emg23','emg32','emg33']
             for model in li_fit_models:
                 try:
-                    out = spectrum.peakfit(self, fit_model=model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
+                    out = spectrum.peakfit(self, fit_model=model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
                     print()
                     display(out)
                     if out.redchi <= 1:
@@ -867,7 +870,7 @@ class spectrum:
             self.fit_model = fit_model
 
         print('\n##### Peak shape determination #####\n')
-        out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=peak.x_pos, x_fit_range=fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
+        out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
 
         peak.comment = 'shape calibrant'
         display(out)  # print(out.fit_report())
@@ -956,7 +959,7 @@ class spectrum:
         ###########
 
         """
-        if index_mass_calib != None and (species_mass_calib == None):
+        if index_mass_calib is not None and (species_mass_calib is None):
             peak = self.peaks[index_mass_calib]
         elif species_mass_calib:
             peak = [p for p in self.peaks if species_mass_calib == p.species]
@@ -973,15 +976,15 @@ class spectrum:
                 p.comment = p.comment.replace('mass calibrant','')
         if 'shape calibrant' in peak.comment:
             peak.comment = peak.comment.replace('shape calibrant','shape & mass calibrant')
-        elif peak.comment == '-' or peak.comment == '' or peak.comment == None:
+        elif peak.comment == '-' or peak.comment == '' or peak.comment is None:
             peak.comment = 'mass calibrant'
         else:
             peak.comment = 'mass calibrant, '+peak.comment
 
         print('##### Calibrant fit #####')
-        if fit_model == None:
+        if fit_model is None:
             fit_model = self.fit_model
-        if x_fit_cen == None:
+        if x_fit_cen is None:
             x_fit_cen = peak.x_pos
         out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, vary_shape=False, method=method, show_plots=show_plots, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band)
         if show_fit_report:
@@ -1028,6 +1031,11 @@ class spectrum:
         self.rel_recal_error = np.sqrt( (peak.m_AME_error/peak.m_AME)**2 + (peak.stat_error/peak.m_fit)**2 + (peak.peakshape_error/peak.m_fit)**2 )
         print("Relative recalibration error: "+str(np.round(self.rel_recal_error,9)))
         peak.recal_error = peak.m_fit * self.rel_recal_error
+        #try:
+        #    peak.m_fit_error = np.sqrt(peak.stat_error**2 + peak.peakshape_error**2 + peak.recal_error**2) # total uncertainty of mass value without systematics - includes: stat. mass uncertainty, peakshape uncertainty, calibration uncertainty
+        #except TypeError:
+        #    print('Could not calculate total fit error.')
+        #    pass
 
         # Set mass_calibrant flag attribute
         self.index_mass_calib = index_mass_calib # mark this peak as mass calibrant to avoid calibrant fit results from being overwritten during regular fits later
@@ -1090,7 +1098,7 @@ class spectrum:
         --------
         Fit model result object (further shows updated dataframe with peak properties)
         """
-        if fit_model == None:
+        if fit_model is None:
             fit_model = self.fit_model
         out = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars, vary_shape=vary_shape, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
         if x_fit_cen and x_fit_range:
@@ -1101,8 +1109,8 @@ class spectrum:
             peaks_to_fit = self.peaks
 
         peak_indeces = [self.peaks.index(p) for p in peaks_to_fit]
-        self.update_peak_props(peaks=peaks_to_fit,fit_model=fit_model,fit_result=out)
         self.calc_peakshape_errors(peak_indeces=peak_indeces,x_fit_cen=x_fit_cen,x_fit_range=x_fit_range,fit_result=out,method=method,verbose=True)
+        self.update_peak_props(peaks=peaks_to_fit,fit_model=fit_model,fit_result=out)
         self.peak_properties()
         if show_fit_report:
             display(out)
@@ -1135,7 +1143,7 @@ class spectrum:
             peak = self.peaks[peak_indeces]
             x_min = peak.x_pos - x_range/2
             x_max = peak.x_pos + x_range/2
-        elif x_center != None:
+        elif x_center is not None:
             x_min = x_center - x_range/2
             x_max = x_center + x_range/2
         else:
