@@ -635,7 +635,7 @@ class spectrum:
 
 
     ##### Fit spectrum
-    def peakfit(self,fit_model='emg22',x_fit_cen=None,x_fit_range=None,init_pars=None,vary_shape=False,method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,recal_fac=1.0):
+    def peakfit(self,fit_model='emg22',x_fit_cen=None,x_fit_range=None,init_pars=None,vary_shape=False,method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,eval_par_covar=False,recal_fac=1.0):
         """
         Internal peak fitting routine, fits full spectrum or subrange (if x_fit_cen and x_fit_range are specified) and optionally shows results
         This method is for internal usage, use 'fit_peaks' method to fit spectrum and update peak properties dataframe with obtained fit results!
@@ -668,9 +668,13 @@ class spectrum:
             x_max = df_fit.index.values[-1]
             peaks_to_fit = self.peaks
         x = df_fit.index.values
+
+        #for i in range(len(df_fit['Counts'].values)): ##
+        #    if df_fit['Counts'].iloc[i] >= 1: ##
+        #        df_fit['Counts'].iloc[i] += 1 ##
         y = df_fit['Counts'].values
         y_err = np.sqrt(y+1) # assume Poisson (counting) statistics -> standard deviation of each point approximated by sqrt(counts+1)
-        weight_facs = 1./y_err # makes sure that residuals include division by statistical error (residual = (fit_model - y) * weights)
+        weights = 1./y_err # makes sure that residuals include division by statistical error (residual = (fit_model - y) * weights)
 
         if init_pars == 'default':
             init_params = None
@@ -691,11 +695,79 @@ class spectrum:
         mod = self.comp_model(peaks_to_fit=peaks_to_fit,model=fit_model,init_pars=init_params,vary_shape=vary_shape,index_first_peak=index_first_peak) # create multi-peak fit model
         pars = mod.make_params()
 
+        ###
+        def resid(pars, x, y_data):
+            y_model = mod.eval(pars,x=x)
+            return (y_model - y_data) * weights  # / y_model
+        o1 = fit.minimize(resid, pars, args=(x, y), method=method)
+        print("# Fit using sum of squares:\n")
+        fit.report_fit(o1)
+
         # Perform fit, print fit report
-        out = mod.fit(y, x=x, params=pars, weights=weight_facs, method=method, scale_covar=False)
+        out = mod.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False)
         out.x = x
         out.y = y
         out.y_err = y_err
+
+        if eval_par_covar:
+            ## Add emcee MCMC sampling
+            emcee_kws = dict(steps=5000, burn=2500, thin=20, is_weighted=True, progress=True)
+            emcee_params = out.params.copy()
+            #emcee_params.add('__lnsigma', value=np.log(7.0), min=np.log(1.0), max=np.log(100.0))
+            result_emcee = mod.fit(y, x=x, params=emcee_params, weights=weights, method='emcee', nan_policy='omit', fit_kws=emcee_kws)
+            fit.report_fit(result_emcee)
+
+            ax = plt.figure(figsize=(12,8))
+            plt.plot(x, mod.eval(params=out.params, x=x), label='least_squares', zorder=100)
+            result_emcee.plot_fit(ax=ax, data_kws=dict(color='gray', markersize=2))
+            plt.yscale("log")
+            plt.show()
+
+            ## Check acceptance fraction of emcee
+            plt.plot(result_emcee.acceptance_fraction)
+            plt.xlabel('walker')
+            plt.ylabel('acceptance fraction')
+            plt.show()
+
+            ## Plot autocorrelation times of Parameters
+            if hasattr(result_emcee, "acor"):
+                print("Autocorrelation time for the parameters:")
+                print("----------------------------------------")
+                for i, p in enumerate(result_emcee.params):
+                    print(p, result_emcee.acor[i])
+
+            ## Plot parameter covariances returned by emcee
+            import corner
+            range = [0.8]*(out.nvarys)
+            fig_corner = corner.corner(result_emcee.flatchain, labels=result_emcee.var_names, truths=list(result_emcee.params.valuesdict().values()),range=range)
+            fig_corner.subplots_adjust(right=2,top=2)
+            for ax in fig_corner.get_axes():
+                ax.tick_params(axis='both', labelsize=17)
+                ax.xaxis.label.set_size(27)
+                ax.yaxis.label.set_size(27)
+
+
+
+            print("\nmedian of posterior probability distribution")
+            print('--------------------------------------------')
+            fit.report_fit(result_emcee.params)
+
+            ## Find the maximum likelihood solution
+            highest_prob = np.argmax(result_emcee.lnprob)
+            hp_loc = np.unravel_index(highest_prob, result_emcee.lnprob.shape)
+            mle_soln = result_emcee.chain[hp_loc]
+            print("\nMaximum likelihood Estimation")
+            print('-----------------------------')
+            for ix, param in enumerate(result_emcee.params):
+                try:
+                    print(param + ': ' + str(mle_soln[ix]))
+                except IndexError:
+                    pass
+
+            pref = 'p'+str(self.peaks.index(peaks_to_fit[0]))+'_'
+            quantiles = np.percentile(result_emcee.flatchain[pref+'mu'], [2.28, 15.9, 50, 84.2, 97.7])
+            print("\n\n1 mu spread", 0.5 * (quantiles[3] - quantiles[1]))
+            print("2 mu spread", 0.5 * (quantiles[4] - quantiles[0]))
 
         if show_plots:
             self.plot_fit(fit_result=out, fit_model=fit_model, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band, x_min=x_min, x_max=x_max)
@@ -870,7 +942,7 @@ class spectrum:
             self.fit_model = fit_model
 
         print('\n##### Peak shape determination #####\n')
-        out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
+        out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=True)
 
         peak.comment = 'shape calibrant'
         display(out)  # print(out.fit_report())
