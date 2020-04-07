@@ -128,9 +128,28 @@ Optional:
 * use F-statistics for tail order determination
 
 Installation:
-* get dependencies via pip install: lmfit (numpy,  scipy, pathlib, matplotlib, pandas, time, copy, IPython.display)
+* get dependencies via pip install: lmfit (numpy,  scipy, pathlib, matplotlib, pandas, time, copy, IPython.display, emcee (v3+), numdifftools)
 * if using anaconda: might get scipy.special import error, if so: run $conda remove --force scipy   and $pip install scipy
-* Dependencies for maximum likelihood fitting: emcee (version 3+), corner,  
+* Dependencies for maximum likelihood fitting: emcee (version 3+), corner
+* gmpy2, download suitable wheel from https://www.lfd.uci.edu/~gohlke/pythonlibs/#gmpy and pip install ***.whl
 
 NotImplementedError: emcee version 3 is required.
 *
+
+MLE only with:
+SCALAR_METHODS = {'nelder': 'Nelder-Mead',
+                  'powell': 'Powell',
+                  'cg': 'CG',
+                  'bfgs': 'BFGS',
+                  'newton': 'Newton-CG',
+                  'lbfgsb': 'L-BFGS-B',
+                  'l-bfgsb': 'L-BFGS-B',
+                  'tnc': 'TNC',
+                  'cobyla': 'COBYLA',
+                  'slsqp': 'SLSQP',
+                  'dogleg': 'dogleg',
+                  'trust-ncg': 'trust-ncg',
+                  'differential_evolution': 'differential_evolution',
+                  'trust-constr': 'trust-constr',
+                  'trust-exact': 'trust-exact',
+                  'trust-krylov': 'trust-krylov'}

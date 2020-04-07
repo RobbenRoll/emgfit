@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import scipy.signal as sig
+import scipy.special as spl
 import time
 import copy
 from IPython.display import display
@@ -194,7 +195,7 @@ class spectrum:
             plt.show()
 
 
-    ##### Define static method for smoothing spectrum before peak detection(taken from https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html)
+    ##### Define static method for smoothing spectrum before peak detection (taken from https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html)
     @staticmethod
     def smooth(x,window_len=11,window='hanning'):
         """
@@ -323,11 +324,11 @@ class spectrum:
 
 
     ##### Define peak detection routine
-    def detect_peaks(self,window='blackman',window_len=23,thres=0.003,width=5e-05,plot_smoothed_spec=True,plot_2nd_deriv=True,plot_detection_result=True):
+    def detect_peaks(self,window='blackman',window_len=23,thres=0.003,width=2e-05,plot_smoothed_spec=True,plot_2nd_deriv=True,plot_detection_result=True):
         """
         Performs automatic peak detection on spectrum object using a scaled second derivative of the spectrum.
 
-        width (float): minimal FWHM of peaks to be detected - in atomic mass units
+        width (float): minimal FWHM of peaks to be detected - in atomic mass units - Caution: To achieve maximal sensitivity for overlapping peaks this number might have to be set to less than the peak's FWHM!
         """
         # Smooth spectrum (moving average with window function)
         data_smooth = self.data.copy()
@@ -348,7 +349,7 @@ class spectrum:
         for i in range(len(data_smooth.index) - 2):
             scale = 1/(data_smooth['Counts'].iloc[i+1]+10) # scale data to decrease y range
             #dm = data_smooth.index[i+1]-data_smooth.index[i] # use dm in denominator of deriv if realistic units are desired
-            data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+1] - 2*data_smooth['Counts'].iloc[i] + data_smooth['Counts'].iloc[i-1])/1**2 # Used (second order central finite difference)
+            data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+1] - 2*data_smooth['Counts'].iloc[i] + data_smooth['Counts'].iloc[i-1])/1**2 # Used second order central finite difference
             # data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+2] - 2*data_smooth['Counts'].iloc[i+1] + data_smooth['Counts'].iloc[i])/1**2    # data_sec_deriv = data_smooth.iloc[0:-2].copy()
         if plot_2nd_deriv:
             spectrum.plot_df(data_sec_deriv,title="Scaled second derivative of spectrum - set threshold indicated",yscale='linear',thres=-thres)
@@ -620,7 +621,7 @@ class spectrum:
         """ create multi-peak composite model from single-peak model """
         model = getattr(fit_models,model) # get single peak model from fit_models.py
         mod = fit.models.ConstantModel(independent_vars='x',prefix='bkg_')
-        mod.set_param_hint('bkg_c', value= 0.3, min=0,max=4)
+        mod.set_param_hint('bkg_c', value= 0.1, min=0,max=4,vary=True) # 0.3, vary=True
         df = self.data
         for peak in peaks_to_fit:
             peak_index = self.peaks.index(peak)
@@ -669,12 +670,13 @@ class spectrum:
             peaks_to_fit = self.peaks
         x = df_fit.index.values
 
-        #for i in range(len(df_fit['Counts'].values)): ##
+        #for i in range(len(df_fit['Counts'].values)): ## chi-squared gamma dist.
         #    if df_fit['Counts'].iloc[i] >= 1: ##
         #        df_fit['Counts'].iloc[i] += 1 ##
         y = df_fit['Counts'].values
         y_err = np.sqrt(y+1) # assume Poisson (counting) statistics -> standard deviation of each point approximated by sqrt(counts+1)
-        weights = 1./y_err # makes sure that residuals include division by statistical error (residual = (fit_model - y) * weights)
+        weights = 1./y_err # np.nan_to_num(1./y_err, nan=0.0, posinf=0.0, neginf=None) # makes sure that residuals include division by statistical error (residual = (fit_model - y) * weights)
+
 
         if init_pars == 'default':
             init_params = None
@@ -695,19 +697,64 @@ class spectrum:
         mod = self.comp_model(peaks_to_fit=peaks_to_fit,model=fit_model,init_pars=init_params,vary_shape=vary_shape,index_first_peak=index_first_peak) # create multi-peak fit model
         pars = mod.make_params()
 
-        ###
-        def resid(pars, x, y_data):
-            y_model = mod.eval(pars,x=x)
-            return (y_model - y_data) * weights  # / y_model
+        ### Minimizer fitting routine
+        """from scipy.special import expi
+        def resid(pars, x, y_data): ## modified chi-square-gamma
+            y_m = mod.eval(pars,x=x)
+            mean_chi_sq_i = 1 + np.exp(-y_m)*(y_m-1)
+            var_chi_sq_i = y_m**3 *np.exp(-y_m)*( expi(y_m) - np.euler_gamma - np.log(y_m) + 4 ) - y_m**2 - y_m + np.exp(-y_m)*(-2*y_m**2 + 2*y_m + 1) + np.exp(-2*y_m)*( -y_m**2 + 2*y_m -1 )
+            return (y_m - y_data - mean_chi_sq_i)*np.sqrt(2/var_chi_sq_i)  + 1    ## (y_m - y_data)  # * weights  # / y_m
         o1 = fit.minimize(resid, pars, args=(x, y), method=method)
         print("# Fit using sum of squares:\n")
-        fit.report_fit(o1)
+        fit.report_fit(o1)"""
 
-        # Perform fit, print fit report
-        out = mod.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False)
-        out.x = x
-        out.y = y
-        out.y_err = y_err
+        if not vary_shape:
+            # ### Binned MLE fit
+            def red_fcn_MLE(r):
+                return float((r).sum())
+
+            mod_MLE = copy.deepcopy(mod)
+            def neg_log_likelihood_MLE(pars,y_data,weights,x=x):
+                """ Requires model object 'mod_MLE' to be defined as global variable above! """
+                y_m = mod_MLE.eval(pars,x=x)
+                return np.log(spl.factorial(y_data)) + y_m - y_data*np.log(y_m)
+            mod_MLE._residual = neg_log_likelihood_MLE # overwrite lmfit's least square residuals with log likelihood
+            out = mod_MLE.fit(y, pars, x=x, weights=weights, method='Nelder-Mead', calc_covar=False, nan_policy='omit',fit_kws={'reduce_fcn': red_fcn_MLE,'tol':1e-11})
+            out.x = x
+            out.y = y
+            out.y_err = y_err
+            out.residual = (out.eval()-y)*weights
+            plt.errorbar(x,y,y_err)
+            plt.plot(x,out.eval())
+            plt.yscale('log')
+            plt.show()
+            print(out.fit_report())
+        else:
+            # Perform fit, print fit report
+            out = mod.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False)
+            out.x = x
+            out.y = y
+            out.y_err = y_err
+
+        ### Binned MLE fit - initialized at chi-square fit best values
+        # if not vary_shape:
+        #     def red_fcn_MLE(r):
+        #         return float((r).sum())
+        #
+        #     mod_MLE = copy.deepcopy(mod) # ensure original model object is not altered
+        #     def neg_log_likelihood_MLE(pars,y_data,weights,x=x):
+        #         """ Requires model object 'mod_MLE' to be defined as global variable above! """
+        #         y_m = mod_MLE.eval(pars,x=x)
+        #         return np.log(spl.factorial(y_data)) + y_m - y_data*np.log(y_m)
+        #     mod_MLE._residual = neg_log_likelihood_MLE # overwrite lmfit's least square residuals with log likelihood
+        #     out_MLE = mod_MLE.fit(y, out.params, x=x, weights=weights, method='Nelder-Mead', calc_covar=False, nan_policy='omit',fit_kws={'reduce_fcn': red_fcn_MLE,'tol':1e-9})
+        #     f = plt.figure(figsize=(15,8))
+        #     #plt.errorbar(x,y,y_err)
+        #     #plt.plot(x,out_MLE.eval())
+        #     out_MLE.plot(fig=f,show_init=True)
+        #     plt.yscale('log')
+        #     plt.show()
+        #     print(out_MLE.fit_report())
 
         if eval_par_covar:
             ## Add emcee MCMC sampling
@@ -738,8 +785,8 @@ class spectrum:
 
             ## Plot parameter covariances returned by emcee
             import corner
-            range = [0.8]*(out.nvarys)
-            fig_corner = corner.corner(result_emcee.flatchain, labels=result_emcee.var_names, truths=list(result_emcee.params.valuesdict().values()),range=range)
+            percentile_range = [0.8]*(out.nvarys)
+            fig_corner = corner.corner(result_emcee.flatchain, labels=result_emcee.var_names, truths=list(result_emcee.params.valuesdict().values()),range=percentile_range)
             fig_corner.subplots_adjust(right=2,top=2)
             for ax in fig_corner.get_axes():
                 ax.tick_params(axis='both', labelsize=17)
@@ -790,8 +837,8 @@ class spectrum:
         --------
         list of two floats: [area,area_error]
         """
-
         pref = 'p'+str(peak_index)+'_'
+        area, area_err = None, None
         #area = 0
         #for y_i in fit_result.eval_components(x=fit_result.x)[pref]: # Get counts in subpeaks from best fit to data
         #    area += y_i
@@ -802,10 +849,17 @@ class spectrum:
         bin_width = self.data.index[1] - self.data.index[0] # width of mass bins, needed to convert peak amplitude (peak area in units Counts/mass range) to Counts
         try:
             area = fit_result.best_values[pref+'amp']/bin_width
-            area_err = fit_result.params[pref+'amp'].stderr/bin_width
+            area = np.round(area,decimals)
+            try:
+                area_err = fit_result.params[pref+'amp'].stderr/bin_width
+                area_err = np.round(area_err,decimals)
+            except TypeError as err:
+                    print('\nWARNING: Area error determination failed with Type error:',err,' \n')
+                    pass
         except AttributeError:
-            print('ERROR: Could not get amplitude parameter ("amp") of peak. Likely the peak has not been fitted successfully yet.')
-        return [np.round(area,decimals), np.round(area_err,decimals)]
+            print('WARNING: Area error determination failed. Could not get amplitude parameter ("amp") of peak. Likely the peak has not been fitted successfully yet.')
+            pass
+        return [area, area_err]
 
 
     ##### Internal helper function for calculating std. dev. of Hyper-EMG fit result
@@ -857,7 +911,8 @@ class spectrum:
         # Vary each shape parameter by plus and minus one sigma and sum resulting shifts of Gaussian centroid in quadrature to obtain peakshape error
         if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
-        shape_pars = [key for key in self.shape_cal_pars if key.startswith( ('sigma','theta','eta','tau') )]
+        pref = 'p{0}_'.format(peak_indeces[0])
+        shape_pars = [key for key in self.shape_cal_pars if (key.startswith(('sigma','theta','eta','tau','delta')) and fit_result.params[pref+key].expr is None )]
         if self.centroid_shifts is None:
             self.centroid_shifts_pm = np.array([{} for i in range(len(self.peaks))]) # initialize array of empty dictionaries
             self.centroid_shifts = np.array([{} for i in range(len(self.peaks))]) # initialize array of empty dictionaries
@@ -880,6 +935,35 @@ class spectrum:
                         print()  # empty line between different parameter blocks
                 self.centroid_shifts_pm[peak_idx][par+' centroid shift'] = [delta_mu_p,delta_mu_m]
                 self.centroid_shifts[peak_idx][par+' centroid shift'] = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item()
+
+        # import time
+        # t0 = time.time()
+        # from numba import jit, prange
+        # @jit(parallel=True)
+        # def vary_shape_pars(self=self):
+        #     for i in prange(len(shape_pars)):
+        #         par = shape_pars[i]
+        #         pars = copy.deepcopy(self.shape_cal_pars) # deep copy to avoid changes in original dictionary
+        #         pars[par] = self.shape_cal_pars[par] + self.shape_cal_par_errors[par]
+        #         fit_result_p = self.peakfit(fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=pars, vary_shape=False, method=method, show_plots=False)
+        #         pars[par] = self.shape_cal_pars[par] - self.shape_cal_par_errors[par]
+        #         fit_result_m = self.peakfit(fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=pars, vary_shape=False, method=method, show_plots=False)
+        #         for peak_idx in peak_indeces:
+        #             pref = 'p{0}_'.format(peak_idx)
+        #             centroid = fit_result.best_values[pref+'mu']
+        #             new_centroid_p =  fit_result_p.best_values[pref+'mu'] #[value for key, value in fit_result_p.best_values.items() if pref in key][1] # indexing makes sure that both Gaussian 'center' and Hyper-EMG 'mu' Parameters get fetched
+        #             delta_mu_p = new_centroid_p - centroid
+        #             new_centroid_m = fit_result_m.best_values[pref+'mu'] #[value for key, value in fit_result_m.best_values.items() if pref in key][1] # indexing makes sure that both Gaussian 'center' and Hyper-EMG 'mu' Parameters get fetched
+        #             delta_mu_m = new_centroid_m - centroid
+        #             if verbose:
+        #                 print('Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'+/-',np.round(self.shape_cal_par_errors[par],6),' shifts centroid of peak',peak_idx,'by ',np.round(delta_mu_p*1e06,6),'/',np.round(delta_mu_m*1e06,3),'\u03BCu.')
+        #                 if peak_idx == peak_indeces[-1]:
+        #                     print()  # empty line between different parameter blocks
+        #             self.centroid_shifts_pm[peak_idx][par+' centroid shift'] = [delta_mu_p,delta_mu_m]
+        #             self.centroid_shifts[peak_idx][par+' centroid shift'] = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item()
+        # vary_shape_pars()
+        # t1 = time.time()
+        # print("Exec. time:",t1-t0,"s")
         for peak_idx in peak_indeces:
             shape_error = np.sqrt(np.sum(np.square( list(self.centroid_shifts[peak_idx].values()) ))) # add centroid shifts in quadrature to obtain total peakshape error
             self.peaks[peak_idx].peakshape_error = shape_error
@@ -942,7 +1026,7 @@ class spectrum:
             self.fit_model = fit_model
 
         print('\n##### Peak shape determination #####\n')
-        out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=True)
+        out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=False)
 
         peak.comment = 'shape calibrant'
         display(out)  # print(out.fit_report())

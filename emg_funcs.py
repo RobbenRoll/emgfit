@@ -9,25 +9,40 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import lmfit as fit
 import scipy.constants as con
-
+from numba import jit, prange
 
 ###################################################################################################
 ##### Define general Hyper-EMG functions (with high precision math package)
+import scipy.special as spl
+from numba import vectorize, float64
+import math
+@vectorize([float64(float64)])
+def math_erfc(x):
+    return math.erfc(x)
 #import mpmath as mp
-import scipy.special as spc
-#np_exp = np.exp #np.frompyfunc(mp.exp,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
-#np_erfc = spc.erfc #np.frompyfunc(mp.erfc,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
+#import gmpy2
+#np_exp = np.frompyfunc(gmpy2.exp,1,1)   #np.frompyfunc(mp.fp.exp,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
+#np_erfc = np.frompyfunc(gmpy2.erfc,1,1)   #np.frompyfunc(mp.fp.erfc,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
 norm_precision = 6 # number of decimals on which eta parameters have to agree with unity (avoids numerical errors due to rounding)
 
 def bounded_exp(arg):
     """ Numerically stable exponential function which avoids under- or overflow by setting bounds on argument
     """
-    max_arg = 600 # max_arg = 600 results in maximal y-value of 3.7730203e+260
+    max_arg = 680 # max_arg = 600 results in maximal y-value of 3.7730203e+260
     min_arg = -1000000000000000000
     arg = np.where(arg > max_arg, max_arg, arg)
     arg = np.where(arg < min_arg, min_arg, arg)
     return np.exp(arg)
 
+# def exp_erfc_m(x,mu,sigma,tau_m):
+#     val = np_exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*np_erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) )
+#     return np.float(val)
+# vect_exp_erfc_m = np.vectorize(exp_erfc_m)
+#
+# def exp_erfc_p(x,mu,sigma,tau_p):
+#     val = np_exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*np_erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) )
+#     return np.float(val)
+# vect_exp_erfc_p = np.vectorize(exp_erfc_p)
 
 # Define negative skewed hyper-EMG particle distribution functiDon (NS-EMG PDF)
 def h_m_emg(x, mu, sigma, *t_args):
@@ -49,12 +64,24 @@ def h_m_emg(x, mu, sigma, *t_args):
         raise Exception("eta_m's don't add up to 1")
     if len(li_tau_m) != t_order_m:  # check if all arguments match tail order
         raise Exception("orders of eta_m and tau_m do not match!")
+
+    # @jit(parallel=True, fastmath=True)
+    # def calc_tails_m():
+    #     for i in prange(t_order_m):
+    #         h_m = np.array([0])
+    #         eta_m = li_eta_m[i]
+    #         tau_m = li_tau_m[i]
+    #         val = eta_m/(2*tau_m)*np.exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*math_erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) )
+    #         h_m += np.where(np.isfinite(val), val, np.zeros_like(val))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)
+    #         return h_m
+    # h_m = calc_tails_m()
+
     h_m = 0.
     for i in range(t_order_m):
         eta_m = li_eta_m[i]
         tau_m = li_tau_m[i]
-        h_m += eta_m/(2*tau_m)*bounded_exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*spc.erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) )
-    #print("h_m:"+str(h_m))
+        h_m += np.nan_to_num(eta_m/(2*tau_m)*np.exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*spl.erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) ))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)
+    # print("h_m:"+str(h_m))
     return h_m
 
 # Define positive skewed exponentially-modified Gaussian particle distribution function (PS-EMG PDF)
@@ -78,11 +105,25 @@ def h_p_emg(x, mu, sigma, *t_args):
         raise Exception("eta_p's don't add up to 1")
     if len(li_tau_p) != t_order_p:  # check if all arguments match tail order
         raise Exception("orders of eta_p and tau_p do not match!")
+
+    # @jit(parallel=True,fastmath=True)
+    # def calc_tails_p():
+    #     for i in prange(t_order_p):
+    #         h_p = np.array([0.])
+    #         eta_p = li_eta_p[i]
+    #         tau_p = li_tau_p[i]
+    #         val = eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*math_erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) )
+    #         h_p += np.where(np.isfinite(val), val, np.zeros_like(val))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)
+    #         # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)
+    #         return h_p
+    # h_p = calc_tails_p()
+
     h_p = 0.
     for i in range(t_order_p):
         eta_p = li_eta_p[i]
         tau_p = li_tau_p[i]
-        h_p += eta_p/(2*tau_p)*bounded_exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spc.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) )
+        h_p += np.nan_to_num(eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) ))  # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)
+    # print("h_p:"+str(h_p))
     return h_p
 
 # Hyper-EMG PDF
