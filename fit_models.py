@@ -325,7 +325,7 @@ def emg01(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model = fit.Model(emg01, prefix = pref, nan_policy='propagate')
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp, min=0)
+    model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, vary=vary_shape_pars)
@@ -365,7 +365,7 @@ def emg10(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model = fit.Model(emg10, prefix = pref, nan_policy='propagate')
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp, min=0)
+    model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, vary=vary_shape_pars)
@@ -405,7 +405,7 @@ def emg11(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model = fit.Model(emg11, prefix = pref, nan_policy='propagate')
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp, min=0)
+    model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -449,7 +449,7 @@ def emg12(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model = fit.Model(emg12, prefix = pref, nan_policy='propagate')
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp, min=0)
+    model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -499,7 +499,7 @@ def emg21(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model = fit.Model(emg21, prefix = pref, nan_policy='propagate')
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp, min=0)
+    model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -549,7 +549,7 @@ def emg22(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model = fit.Model(emg22, prefix = pref, nan_policy='propagate')
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp, min=0)
+    model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -610,7 +610,7 @@ def emg23(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
         init_pars['eta_p2'] = 1
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp, min=0)
+    model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -677,7 +677,7 @@ def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
         init_pars['eta_m2'] = 1
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp, min=0)
+    model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -748,7 +748,7 @@ def emg33(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
         init_pars['eta_p2'] = 1
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp, min=0)
+    model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
