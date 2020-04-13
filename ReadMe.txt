@@ -3,7 +3,7 @@
 * uncertainty of emg peak centroid obtained from sigma via standard error of mean plus add. factor: 1.25?? * sigma/sqrt(N) with N counts in peak
 * m_AME is the AME mass of the entire species (to get the ionic instead of the atomic mass ':-1e' has to be added to the species name!)
 * re-scaling of peak-shape parameters (sigma & tau's) can be neglected for isobaric species since the rel. mass differences (< 0.1%) are much smaller than the rel. shape parameter errors (~ 1-10 %)
-* final mass values of IOIs recalibrated via multiplication with calibration factor 'cal_fac' obtained from fit of mass calibrant
+* final mass values of IOIs recalibrated via multiplication with calibration factor 'cal_fac' obtained from fit of mass calibrant, errors are not recalibrated since it is assumed that |recal_fac -1| << 1e-02 (otherwise a warning will be show after calculation of recal_fac)
 * 'centroid' refers to centroid of underlying Gaussian (instead of true centroid of Hyper-EMG)
 
 Prerequisites:

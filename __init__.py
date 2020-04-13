@@ -7,6 +7,14 @@
 from emgfit.config import *
 from emgfit.spectrum import *
 
+##### Define package version
+__version__ = '0.0.0'
+
+##### Check Python version
+import sys
+min_py_version = (3, 0)
+assert sys.version_info >= min_py_version, "emgfit package requires Python versions >= "+str(min_py_version)
+
 ##### Import following modules immediately if package is loaded with import *
 __all__ = [
         #'emg_funcs',
