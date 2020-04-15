@@ -121,6 +121,7 @@ from emgfit.emg_funcs import sigma_emg
       pref = 'p{0}_'.format(self.peaks.index(p))
       print(out.best_values[pref+'sigma'],sigma_emg(out.best_values[pref+'sigma'],out.best_values[pref+'theta'],(1,),(out.best_values[pref+'tau_m1'],),(out.best_values[pref+'eta_p1'],out.best_values[pref+'eta_p2']),(out.best_values[pref+'tau_p1'],out.best_values[pref+'tau_p2'])))
 
+* clean up recal_fac arguments
 
 
 Optional:
@@ -135,6 +136,8 @@ Installation:
 
 NotImplementedError: emcee version 3 is required.
 *
+
+* tau parameters constrained with an upper bound of 0.5u (add to config?!)
 
 MLE only with:
 SCALAR_METHODS = {'nelder': 'Nelder-Mead',

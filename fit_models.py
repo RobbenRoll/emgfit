@@ -14,7 +14,7 @@ import emgfit
 from emgfit.emg_funcs import *
 u_to_keV = emgfit.u_to_keV
 m_e = emgfit.m_e
-
+upper_bound_taus = 5e-02 # prevents minimizer from running towards virtually flat tails
 
 # Define fit function
 def h_emg_m2_p2(x, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,tau_p1,tau_p2,amp):
@@ -328,12 +328,12 @@ def emg01(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
 
     if index_first_peak != None and (peak_index != index_first_peak): # enfore common shape parameters for all peaks (only needed during peak shape calibration)
         first_pref = 'p{0}_'.format(index_first_peak)
         model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, expr=first_pref+'sigma')
-        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, expr=first_pref+'tau_p1')
+        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p1')
 
     return model
 
@@ -368,12 +368,12 @@ def emg10(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model.set_param_hint(pref+'amp', value=amp, min=1e-20)
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
 
     if index_first_peak != None and (peak_index != index_first_peak): # enfore common shape parameters for all peaks (only needed during peak shape calibration)
         first_pref = 'p{0}_'.format(index_first_peak)
         model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, expr=first_pref+'sigma')
-        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, expr=first_pref+'tau_m1')
+        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m1')
 
     return model
 
@@ -409,15 +409,15 @@ def emg11(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
 
     if index_first_peak != None and (peak_index != index_first_peak): # enfore common shape parameters for all peaks (only needed during peak shape calibration)
         first_pref = 'p{0}_'.format(index_first_peak)
         model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, expr=first_pref+'sigma')
         model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, expr=first_pref+'theta')
-        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, expr=first_pref+'tau_m1')
-        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, expr=first_pref+'tau_p1')
+        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m1')
+        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p1')
 
     return model
 
@@ -453,21 +453,21 @@ def emg12(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model.set_param_hint(pref+'mu', value=x_pos, min=x_pos-0.01, max=x_pos+0.01)
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1') # ensures normalization of eta_p's
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
 
     if index_first_peak != None and (peak_index != index_first_peak): # enfore common shape parameters for all peaks (only needed during peak shape calibration)
         first_pref = 'p{0}_'.format(index_first_peak)
         model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=0, max=init_pars['sigma']+0.005, expr=first_pref+'sigma')
         model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, expr=first_pref+'theta')
-        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, expr=first_pref+'tau_m1')
+        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m1')
         model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, expr=first_pref+'eta_p1')
         model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1') # ensures normalization of eta_p's
-        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, expr=first_pref+'tau_p1')
-        model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, expr=first_pref+'tau_p2')
+        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p1')
+        model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p2')
 
     return model
 
@@ -505,9 +505,9 @@ def emg21(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1') # ensures normalization of eta_m's
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
 
     if index_first_peak != None and (peak_index != index_first_peak): # enfore common shape parameters for all peaks (only needed during peak shape calibration)
         first_pref = 'p{0}_'.format(index_first_peak)
@@ -515,9 +515,9 @@ def emg21(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
         model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, expr=first_pref+'theta')
         model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, expr=first_pref+'eta_m1' )
         model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1') # ensures normalization of eta_m's
-        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, expr=first_pref+'tau_m1')
-        model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, expr=first_pref+'tau_m2')
-        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, expr=first_pref+'tau_p1')
+        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m1')
+        model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m2')
+        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p1')
 
     return model
 
@@ -555,12 +555,12 @@ def emg22(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1') # ensures normalization of eta_m's
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1') # ensures normalization of eta_p's
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
 
     if index_first_peak != None and (peak_index != index_first_peak): # enfore common shape parameters for all peaks (only needed during peak shape calibration)
         first_pref = 'p{0}_'.format(index_first_peak)
@@ -568,12 +568,12 @@ def emg22(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
         model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, expr=first_pref+'theta')
         model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, expr=first_pref+'eta_m1' )
         model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1') # ensures normalization of eta_m's
-        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, expr=first_pref+'tau_m1')
-        model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, expr=first_pref+'tau_m2')
+        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m1')
+        model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m2')
         model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, expr=first_pref+'eta_p1')
         model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1') # ensures normalization of eta_p's
-        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, expr=first_pref+'tau_p1')
-        model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, expr=first_pref+'tau_p2')
+        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p1')
+        model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p2')
 
     return model
 
@@ -616,15 +616,15 @@ def emg23(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1') # ensures normalization of eta_m's
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'delta_p', value= init_pars['eta_p1']+init_pars['eta_p2'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, vary=vary_shape_pars, expr= pref+'delta_p-'+pref+'eta_p1')
     model.set_param_hint(pref+'eta_p3', value= 1-init_pars['eta_p1']-init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1-'+pref+'eta_p2') # ensures normalization of eta_p's
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
 
     if index_first_peak != None and (peak_index != index_first_peak): # enfore common shape parameters for all peaks (only needed during peak shape calibration)
         first_pref = 'p{0}_'.format(index_first_peak)
@@ -632,15 +632,15 @@ def emg23(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
         model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, expr=first_pref+'theta')
         model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, expr=first_pref+'eta_m1' )
         model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1') # ensures normalization of eta_m's
-        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, expr=first_pref+'tau_m1')
-        model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, expr=first_pref+'tau_m2')
+        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m1')
+        model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m2')
         model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, expr=first_pref+'eta_p1')
         model.set_param_hint(pref+'delta_p', value= init_pars['eta_p1']+init_pars['eta_p2'], min=0, max=1, expr=first_pref+'delta_p')
         model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, expr= pref+'delta_p-'+pref+'eta_p1')
         model.set_param_hint(pref+'eta_p3', value= 1-init_pars['eta_p1']-init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1-'+pref+'eta_p2') # ensures norm. of eta_p's
-        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, expr=first_pref+'tau_p1')
-        model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, expr=first_pref+'tau_p2')
-        model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=1e-12, expr=first_pref+'tau_p3')
+        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p1')
+        model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p2')
+        model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p3')
 
     return model
 
@@ -685,13 +685,13 @@ def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model.set_param_hint(pref+'delta_m', value= init_pars['eta_m1']+init_pars['eta_m2'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, vary=vary_shape_pars, expr= pref+'delta_m-'+pref+'eta_m1')
     model.set_param_hint(pref+'eta_m3', value= 1-init_pars['eta_m1']-init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1-'+pref+'eta_m2')
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p2', value= 1-init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars, expr= '1-'+pref+'eta_p1') # ensures normalization of eta_p's
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
 
     if index_first_peak != None and (peak_index != index_first_peak): # enfore common shape parameters for all peaks (only needed during peak shape calibration)
         first_pref = 'p{0}_'.format(index_first_peak)
@@ -701,13 +701,13 @@ def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
         model.set_param_hint(pref+'delta_m', value= init_pars['eta_m1']+init_pars['eta_m2'], min=0, max=1, expr= first_pref+'delta_m')
         model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, vary=vary_shape_pars, expr= pref+'delta_m-'+pref+'eta_m1')
         model.set_param_hint(pref+'eta_m3', value= 1-init_pars['eta_m1']-init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1-'+pref+'eta_m2') # ensures normalization of eta_m's
-        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, expr=first_pref+'tau_m1')
-        model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, expr=first_pref+'tau_m2')
-        model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=1e-12, expr=first_pref+'tau_m3')
+        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m1')
+        model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m2')
+        model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m3')
         model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, expr=first_pref+'eta_p1')
         model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, expr= '1-'+pref+'eta_p1') # ensures norm. of eta_p's
-        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, expr=first_pref+'tau_p1')
-        model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, expr=first_pref+'tau_p2')
+        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p1')
+        model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p2')
 
     return model
 
@@ -756,16 +756,16 @@ def emg33(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     model.set_param_hint(pref+'delta_m', value= init_pars['eta_m1']+init_pars['eta_m2'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, vary=vary_shape_pars, expr= pref+'delta_m-'+pref+'eta_m1')
     model.set_param_hint(pref+'eta_m3', value= 1-init_pars['eta_m1']-init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1-'+pref+'eta_m2') # ensures normalization of eta_m's
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'delta_p', value= init_pars['eta_p1']+init_pars['eta_p2'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, vary=vary_shape_pars, expr= pref+'delta_p-'+pref+'eta_p1')
     model.set_param_hint(pref+'eta_p3', value= 1-init_pars['eta_p1']-init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1-'+pref+'eta_p2') # ensures normalization of eta_p's
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=1e-12, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=1e-12, max=upper_bound_taus, vary=vary_shape_pars)
 
     if index_first_peak != None and (peak_index != index_first_peak): # enfore common shape parameters for all peaks (only needed during peak shape calibration)
         first_pref = 'p{0}_'.format(index_first_peak)
@@ -775,16 +775,16 @@ def emg33(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
         model.set_param_hint(pref+'delta_m', value= init_pars['eta_m1']+init_pars['eta_m2'], min=0, max=1, expr= first_pref+'delta_m')
         model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr= pref+'delta_m-'+pref+'eta_m1')
         model.set_param_hint(pref+'eta_m3', value= 1-init_pars['eta_m1']-init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1-'+pref+'eta_m2') # ensures normalization of eta_m's
-        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, expr=first_pref+'tau_m1')
-        model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, expr=first_pref+'tau_m2')
-        model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=1e-12, expr=first_pref+'tau_m3')
+        model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m1')
+        model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m2')
+        model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_m3')
         model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, expr=first_pref+'eta_p1')
         model.set_param_hint(pref+'delta_p', value= init_pars['eta_p1']+init_pars['eta_p2'], min=0, max=1, expr= first_pref+'delta_p')
         model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, expr= pref+'delta_p-'+pref+'eta_p1')
         model.set_param_hint(pref+'eta_p3', value= 1-init_pars['eta_p1']-init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1-'+pref+'eta_p2') # ensures normalization of eta_p's
-        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, expr=first_pref+'tau_p1')
-        model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, expr=first_pref+'tau_p2')
-        model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=1e-12, expr=first_pref+'tau_p3')
+        model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p1')
+        model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p2')
+        model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p3')
 
     return model
 

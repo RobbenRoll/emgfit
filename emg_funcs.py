@@ -9,20 +9,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import lmfit as fit
 import scipy.constants as con
-from numba import jit, prange
+import scipy.special as spl
+#from numba import jit, prange
 
 ###################################################################################################
 ##### Define general Hyper-EMG functions (with high precision math package)
-import scipy.special as spl
-from numba import vectorize, float64
-import math
-@vectorize([float64(float64)])
-def math_erfc(x):
-    return math.erfc(x)
-#import mpmath as mp
-#import gmpy2
-#np_exp = np.frompyfunc(gmpy2.exp,1,1)   #np.frompyfunc(mp.fp.exp,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
-#np_erfc = np.frompyfunc(gmpy2.erfc,1,1)   #np.frompyfunc(mp.fp.erfc,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
+# from numba import vectorize, float64
+# import math
+# @vectorize([float64(float64)])
+# def math_erfc(x):
+#     return math.erfc(x)
+# import mpmath as mp
+# import gmpy2
+# np_exp = np.frompyfunc(gmpy2.exp,1,1)   #np.frompyfunc(mp.fp.exp,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
+# np_erfc = np.frompyfunc(gmpy2.erfc,1,1)   #np.frompyfunc(mp.fp.erfc,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )
 norm_precision = 6 # number of decimals on which eta parameters have to agree with unity (avoids numerical errors due to rounding)
 
 def bounded_exp(arg):
@@ -151,7 +151,7 @@ def h_emg(x, mu, sigma , theta, *t_args):
         h = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
     else:
         h = theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) + (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
-    return h
+    return  np.clip(h,a_min=None,a_max=1e295) # clipping to avoid overflow errors
     """if isinstance(x,np.ndarray):
         h = np.array([])
         for x_i in x:
