@@ -18,9 +18,9 @@ import lmfit as fit
 import os
 import warnings
 # ignore irrelevant warnings by message
-warnings.filterwarnings("ignore", message="divide by zero encountered in log")
-warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
-warnings.filterwarnings("ignore", message="overflow encountered in exp")
+#warnings.filterwarnings("ignore", message="divide by zero encountered in log")
+#warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
+#warnings.filterwarnings("ignore", message="overflow encountered in exp")
 
 #u_to_keV = config.u_to_keV
 #u = config.u
@@ -170,7 +170,7 @@ class spectrum:
         self.shape_cal_pars = None
         self.shape_cal_errors = []
         self.index_mass_calib = None
-        self.A_stat_from_bootstrapping = False
+        self.determined_A_stat_emg = False
         self.A_stat_emg = A_stat_emg_default # initialize at default A_stat from config.py
         self.A_stat_emg_error = None
         self.recal_fac = 1.0
@@ -591,8 +591,6 @@ class spectrum:
         --------
             None
         """
-        if plot_title is None:
-           plot_title = self.fit_model
         if x_min is None:
             x_min = self.data.index.values[0]
         if x_max is None:
@@ -601,6 +599,8 @@ class spectrum:
         idx_first_peak = self.peaks.index(peaks_to_plot[0])
         if fit_result is None:
            fit_result = self.fit_results[idx_first_peak]
+        if plot_title is None:
+           plot_title = fit_result.fit_model+' '+fit_result.cost_func+' fit'
         i_min = np.argmin(np.abs(fit_result.x - x_min))
         i_max = np.argmin(np.abs(fit_result.x - x_max))
         y_max_log = max( max(self.data.values[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
@@ -624,7 +624,7 @@ class spectrum:
             plt.fill_between(fit_result.x, fit_result.best_fit-dely, fit_result.best_fit+dely, color="#ABABAB", label=str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band')
         plt.title(plot_title)
         plt.rcParams.update({"font.size": 15})
-        plt.xlabel('Mass [u]')
+        plt.xlabel('m/z [u]')
         plt.ylabel('Counts per bin')
         plt.yscale('log')
         plt.ylim(0.1, 2*y_max_log)
@@ -637,6 +637,35 @@ class spectrum:
         plt.show()
 
         # Plot residuals and fit result with linear y-scale
+        standardized_residual = (fit_result.best_fit - fit_result.y)/fit_result.y_err
+        f2, axs = plt.subplots(2,1,figsize=(20,12),gridspec_kw={'height_ratios': [1, 2.5]})
+        ax0 = axs[0]
+        ax0.set_title(plot_title)
+        ax0.plot(fit_result.x, standardized_residual,'.',color='royalblue',markersize=8.5,label='residuals')
+        #ax0.hlines(1,x_min,x_max,linestyle='dashed')
+        ax0.hlines(0,x_min,x_max)
+        #ax0.hlines(-1,x_min,x_max,linestyle='dashed')
+        ax0.set_ylim(-1.05*np.max(np.abs(standardized_residual)), 1.05*np.max(np.abs(standardized_residual)))
+        ax0.set_ylabel('Residual / $\sigma$')
+        ax1 = axs[1]
+        fit_result.plot_fit(ax=ax1,show_init=True,yerr=fit_result.y_err,data_kws={'color':'royalblue','marker':'.','markersize':'8.5'}, fit_kws={'color':'red','linewidth':'2'},init_kws={'linestyle':'dashdot','color':'green'})
+        ax1.set_title('')
+        ax1.set_ylim(-0.05*y_max_lin, 1.1*y_max_lin)
+        ax1.set_ylabel('Counts per bin')
+        for ax in axs:
+            ax.legend()
+            ax.set_xlim(x_min,x_max)
+        if show_peak_markers:
+            self.add_peak_markers(yscale='lin',ymax=y_max_lin,peaks=peaks_to_plot)
+        plt.xlabel('m/z [u]')
+        if plot_filename is not None:
+            try:
+                plt.savefig(plot_filename+'_lin_plot.png',dpi=500)
+            except:
+                raise
+        plt.show()
+
+        """
         f2 = plt.figure(figsize=(20,12))
         fit_result.plot(fig=f2,show_init=True,yerr=fit_result.y_err)
         if show_peak_markers:
@@ -644,7 +673,7 @@ class spectrum:
         ax_res, ax_fit = f2.axes
         ax_res.set_title(plot_title)
         ax_res.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
-        plt.xlabel('Mass [u]')
+        plt.xlabel('m/z [u]')
         plt.ylabel('Counts per bin')
         plt.xlim(x_min,x_max)
         plt.ylim(-0.05*y_max_lin, 1.1*y_max_lin)
@@ -654,6 +683,7 @@ class spectrum:
             except:
                 raise
         plt.show()
+        """
 
 
     ##### Plot fit of spectrum zoomed to specified peak or specified mass range
@@ -782,7 +812,7 @@ class spectrum:
         else:
             index_first_peak = None
 
-        model_name = str(fit_model)+' + const. background (c_bgd)'
+        model_name = str(fit_model)+' + const. background (bkg_c)'
         mod = self.comp_model(peaks_to_fit=peaks_to_fit,model=fit_model,init_pars=init_params,vary_shape=vary_shape,vary_baseline=vary_baseline,index_first_peak=index_first_peak) # create multi-peak fit model
         pars = mod.make_params()
 
@@ -824,15 +854,17 @@ class spectrum:
         # Perform fit, print fit report
 
         # Pearson's chi square with iterative weights
-        if cost_func == 'chi-square': #vary_shape:
+        if cost_func == 'chi-square': #if vary_shape:
             mod_Pearson = mod
             def resid_Pearson_chi_square(pars,y_data,weights,x=x):
                 y_m = mod_Pearson.eval(pars,x=x)
-                weights = np.where(y_m==0,1,1./np.sqrt(y_m)) ## chi-squared dist. with iteratively adapted weights 1/Sqrt(f(x_i))
+                weights = np.where(y_m<=1e-15,1,1./np.sqrt(y_m)) ## chi-squared dist. with iteratively adapted weights 1/Sqrt(f(x_i)), non-zero minimal bounds implemented for numerical stability
                 return (y_m - y_data)*weights
             mod_Pearson._residual = resid_Pearson_chi_square # overwrite lmfit's least square residuals with iterative residuals for Pearson chi-square
-            out = mod_Pearson.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False)
-
+            out = mod_Pearson.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False,nan_policy='propagate')
+            y_m = out.best_fit
+            Pearson_weights = np.where(y_m<=1e-15,1,1./np.sqrt(y_m)) # 1/Sqrt(f(x_i)) Pearson weights, non-zero minimal bounds implemented for numerical stability for
+            out.y_err = 1/Pearson_weights
             #out = mod.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False)
         elif cost_func == 'MLE':
             mod_MLE = mod
@@ -841,13 +873,16 @@ class spectrum:
                 log_likelihood_ratio = np.abs( 2*(y_m - y_data + np.nan_to_num(y_data*np.log(y_data/y_m))))
                 return np.sqrt(log_likelihood_ratio) #np.sqrt(np.log(spl.factorial(y_data)) + y_m - y_data*np.log(y_m))
             mod_MLE._residual = neg_log_likelihood_ratio_MLE_model_leastsq # overwrite lmfit's least square residuals with log likelihood
-            out = mod_MLE.fit(y, params=pars, x=x, method='least_squares', calc_covar=False) # 'user_fcn':neg_log_likelihood_MLE,
+            out = mod_MLE.fit(y, params=pars, x=x, weights=weights, method=method, calc_covar=False, nan_policy='propagate') # 'user_fcn':neg_log_likelihood_MLE,
+            out.y_err = 1/out.weights
         else:
-            print("Definition of `cost_funct` failed! Fit aborted.")
+            print("Definition of `cost_func` failed! Fit aborted.")
             return
         out.x = x
         out.y = y
-        out.y_err = y_err
+        out.cost_func = cost_func
+        out.fit_model = fit_model
+        #out.y_err = 1/out.weights #y_err
 
         ### Binned MLE fit - initialized at chi-square fit best values
         # if not vary_shape:
@@ -930,7 +965,7 @@ class spectrum:
             print("2 mu spread", 0.5 * (quantiles[4] - quantiles[0]))
 
         if show_plots:
-            self.plot_fit(fit_result=out,plot_title=fit_model, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band, x_min=x_min, x_max=x_max,plot_filename=plot_filename)
+            self.plot_fit(fit_result=out, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band, x_min=x_min, x_max=x_max,plot_filename=plot_filename)
 
         return out
 
@@ -1134,7 +1169,7 @@ class spectrum:
         plt.legend(["Standard deviations of sample means","Stat. error of Hyper-EMG","Stat. error of underlying Gaussian"])
         plt.show()
 
-        self.A_stat_from_bootstrapping = True
+        self.determined_A_stat_emg = cost_func
         self.A_stat_emg = A_stat_emg
         self.A_stat_emg_error = A_stat_emg_error
         print("A_stat of a Gaussian model:",np.round(A_stat_gauss,3))
@@ -1466,7 +1501,7 @@ class spectrum:
         peak.cost_func = cost_func
         peak.area, peak.area_error = self.calc_peak_area(index_mass_calib,fit_result=fit_result)
         peak.m_fit = fit_result.best_values[pref+'mu']
-        if fit_model == 'Gaussian':
+        if peak.fit_model == 'Gaussian':
             std_dev = fit_result.best_values[pref+'sigma']
         else:  # for emg models
             FWHM_emg = spectrum.calc_FWHM_emg(index_mass_calib,fit_result=fit_result)
@@ -1516,7 +1551,7 @@ class spectrum:
 
 
     ##### Update peak list with fit values
-    def update_peak_props(self,peaks=[],fit_model=None,cost_func=None,fit_result=None):
+    def update_peak_props(self,peaks=[],fit_result=None):
         """
         Internal routine to update peak properties DataFrame with fit results in 'fit_result'. All peaks referenced by 'peaks' parameter must belong to the same 'fit_result'. The values of the mass calibrant will not be changed by this routine.
 
@@ -1533,12 +1568,12 @@ class spectrum:
             else:
                 peak_idx = self.peaks.index(p)
                 pref = 'p{0}_'.format(peak_idx)
-                p.fit_model = fit_model
-                p.cost_func = cost_func
+                p.fit_model = fit_result.fit_model
+                p.cost_func = fit_result.cost_func
                 p.area = self.calc_peak_area(peak_idx,fit_result=fit_result)[0]
                 p.area_error = self.calc_peak_area(peak_idx,fit_result=fit_result)[1]
                 p.m_fit = self.recal_fac*fit_result.best_values[pref+'mu']
-                if fit_model == 'Gaussian':
+                if p.fit_model == 'Gaussian':
                     std_dev = fit_result.best_values[pref+'sigma']
                 else:  # for emg models
                     FWHM_emg = spectrum.calc_FWHM_emg(peak_idx,fit_result=fit_result)
@@ -1603,12 +1638,13 @@ class spectrum:
             self.calc_peakshape_errors(peak_indeces=peak_indeces,x_fit_cen=x_fit_cen,x_fit_range=x_fit_range,fit_result=fit_result,vary_baseline=vary_baseline,fit_model=fit_model,cost_func=cost_func,method=method,verbose=True,show_shape_err_fits=show_shape_err_fits)
         except KeyError:
             print("WARNING: Peak-shape error determination failed with KeyError. Likely the used fit_model collides with shape calibration model.")
-        self.update_peak_props(peaks=peaks_to_fit,fit_model=fit_model,cost_func=cost_func,fit_result=fit_result)
+        self.update_peak_props(peaks=peaks_to_fit,fit_result=fit_result)
         self.peak_properties()
         if show_fit_report:
             display(fit_result)
         for p in peaks_to_fit:
             self.fit_results[self.peaks.index(p)] = fit_result
+
 
     ##### Save all relevant results to external files
     def save_results(self,filename):
@@ -1646,7 +1682,7 @@ class spectrum:
         spec_data = np.append(spec_data, [["scipy version",scipy_version]],axis=0)
         spec_data = np.append(spec_data, [["numpy version",np.__version__]],axis=0)
         spec_data = np.append(spec_data, [["pandas version",pd.__version__]],axis=0)
-        attributes = ['fit_model','best_redchi','A_stat_from_bootstrapping','A_stat_emg','A_stat_emg_error','recal_fac','rel_recal_error']
+        attributes = ['fit_model','best_redchi','determined_A_stat_emg','A_stat_emg','A_stat_emg_error','recal_fac','rel_recal_error']
         for attr in attributes:
             attr_val = getattr(self,attr)
             spec_data = np.append(spec_data, [[attr,attr_val]],axis=0)

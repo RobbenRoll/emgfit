@@ -137,6 +137,7 @@ Installation:
 NotImplementedError: emcee version 3 is required.
 *
 
+* Pearson chi-square errorbars are calculated after the last fit iteration, in case of MLE cost func errorbars are given by sqrt(y+1) (not actually used as weights in cost_func)
 * tau parameters constrained with an upper bound of 0.5u (add to config?!)
 
 MLE only with:
