@@ -8,7 +8,7 @@ from emgfit.config import *
 from emgfit.spectrum import *
 
 ##### Define package version
-__version__ = '0.0.0'
+__version__ = '0.0.1'
 
 ##### Check Python version
 import sys
