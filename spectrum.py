@@ -92,6 +92,7 @@ class peak:
             self.m_AME_error = m_error
         self.extrapolated_yn = extrapol
         self.fit_model = None
+        self.cost_func = None # cost function used to fit peak
         self.chi_sq_red = None # chi square reduced of peak fit
         self.area = None
         self.area_error = None
@@ -637,7 +638,7 @@ class spectrum:
 
         # Plot residuals and fit result with linear y-scale
         f2 = plt.figure(figsize=(20,12))
-        fit_result.plot(fig=f2,show_init=True)
+        fit_result.plot(fig=f2,show_init=True,yerr=fit_result.y_err)
         if show_peak_markers:
             self.add_peak_markers(yscale='lin',ymax=y_max_lin,peaks=peaks_to_plot)
         ax_res, ax_fit = f2.axes
@@ -721,7 +722,7 @@ class spectrum:
 
 
     ##### Fit spectrum
-    def peakfit(self,fit_model='emg22',x_fit_cen=None,x_fit_range=0.01,init_pars=None,vary_shape=False,vary_baseline=True,method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,plot_filename=None,eval_par_covar=False,recal_fac=1.0):
+    def peakfit(self,fit_model='emg22',cost_func='chi-square',x_fit_cen=None,x_fit_range=0.01,init_pars=None,vary_shape=False,vary_baseline=True,method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,plot_filename=None,eval_par_covar=False,recal_fac=1.0):
         """
         Internal peak fitting routine, fits full spectrum or subrange (if x_fit_cen and x_fit_range are specified) and optionally shows results
         This method is for internal usage, use 'fit_peaks' method to fit spectrum and update peak properties dataframe with obtained fit results!
@@ -729,6 +730,10 @@ class spectrum:
 	    Parameters:
         -----------
         fit_model (str): name of fit model to use (e.g. 'Gaussian','emg12','emg33', ... - see fit_models.py for all available fit models)
+        cost_func : str, optional, default: 'chi-square'
+            name of cost function to use for minimization
+            if 'chi-square', the fit is performed using Pearson's chi squared statistic: cost_func = sum( (f(x_i) - y_i)**2/f(x_i)**2 )
+            if 'MLE', a binned maximum likelihood estimation is performed using the negative log likelihood ratio: cost_func = sum( f(x_i) - y_i + y_i*log(y_i/f(x_i)) )
 	    x_fit_cen (float [u], optional): center of mass range to fit (only specify if subset of spectrum is to be fitted)
 	    x_fit_range (float [u], optional): width of mass range to fit (default: 0.01, only specify if subset of spectrum is to be fitted)
 	    init_pars (dict): dictionary with initial parameters for fit (optional), if set to 'default' the default parameters from 'fit_models.py'
@@ -819,7 +824,7 @@ class spectrum:
         # Perform fit, print fit report
 
         # Pearson's chi square with iterative weights
-        if vary_shape:
+        if cost_func == 'chi-square': #vary_shape:
             mod_Pearson = mod
             def resid_Pearson_chi_square(pars,y_data,weights,x=x):
                 y_m = mod_Pearson.eval(pars,x=x)
@@ -829,7 +834,7 @@ class spectrum:
             out = mod_Pearson.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False)
 
             #out = mod.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False)
-        else:
+        elif cost_func == 'MLE':
             mod_MLE = mod
             def neg_log_likelihood_ratio_MLE_model_leastsq(pars,y_data,weights,x=x):
                 y_m = mod_MLE.eval(pars,x=x)
@@ -837,6 +842,9 @@ class spectrum:
                 return np.sqrt(log_likelihood_ratio) #np.sqrt(np.log(spl.factorial(y_data)) + y_m - y_data*np.log(y_m))
             mod_MLE._residual = neg_log_likelihood_ratio_MLE_model_leastsq # overwrite lmfit's least square residuals with log likelihood
             out = mod_MLE.fit(y, params=pars, x=x, method='least_squares', calc_covar=False) # 'user_fcn':neg_log_likelihood_MLE,
+        else:
+            print("Definition of `cost_funct` failed! Fit aborted.")
+            return
         out.x = x
         out.y = y
         out.y_err = y_err
@@ -1047,7 +1055,7 @@ class spectrum:
         return df_new
 
 
-    def determine_A_stat_emg(self,peak_index,x_range=0.01,N_spectra=1000):
+    def determine_A_stat_emg(self,peak_index,x_range=0.01,N_spectra=1000,fit_model=None,cost_func='MLE',method='least_squares',vary_baseline=True):
         """
         Determine the factor of proportionality for stat. error estimation A_stat_emg via bootstrap re-sampling from a peak in the spectrum. The relevant equation for this is: Stat. error = A_stat_emg * FWHM /np.sqrt(N_counts)
         The resulting value for A_stat_emg will be stored as spectrum attribute and will be used for all subsequent stat. error determinations.
@@ -1064,8 +1072,15 @@ class spectrum:
             mass range around peak centroid over which events will be sampled and fitted. Choose such that no secondary peaks are contained in the mass range.
         N_spectra : int, optional, default: 1000
             number of bootstrapped spectra to create at each number of ions
+        cost_func : str, optional, default: 'MLE'
+            name of cost function to use for minimization
+            if 'chi-square', the fit is performed using Pearson's chi squared statistic: cost_func = sum( (f(x_i) - y_i)**2/f(x_i)**2 )
+            if 'MLE', a binned maximum likelihood estimation is performed using the negative log likelihood ratio: cost_func = sum( f(x_i) - y_i + y_i*log(y_i/f(x_i)) )
 
+            #############
         """
+        if fit_model is None:
+            fit_model = self.fit_model
         x_cen = self.peaks[peak_index].x_pos
         no_peaks_in_range = len([p for p in self.peaks if (x_cen - x_range/2) <= p.x_pos <= (x_cen + x_range/2)])
         if no_peaks_in_range > 1:
@@ -1083,16 +1098,16 @@ class spectrum:
                 df_boot = spectrum.bootstrap_spectrum(self.data,N_events=N_counts,x_cen=x_cen,x_range=x_range) # create boostrapped spectrum data
                 spec_boot = spectrum(None,df=df_boot,show_plot=False) # create boostrapped spectrum object
                 spec_boot.add_peak(x_cen,verbose=False)
-                fit_result = spec_boot.peakfit(fit_model=self.fit_model,x_fit_cen=x_cen,x_fit_range=x_range,init_pars=self.shape_cal_pars,show_plots=False) # fit boostrapped spectrum with model and (fixed) shape parameters from peak-shape calibration
+                fit_result = spec_boot.peakfit(fit_model=self.fit_model,x_fit_cen=x_cen,x_fit_range=x_range,cost_func=cost_func,method=method,vary_baseline=vary_baseline,init_pars=self.shape_cal_pars,show_plots=False) # fit boostrapped spectrum with model and (fixed) shape parameters from peak-shape calibration
+                # Record peak centroid and area of hyper-EMG fit
                 mus = np.append(mus,fit_result.params['p0_mu'].value)
-                # Record peak area, FWHM of underlying Gaussian and FWHM of hyper-EMG fit
                 areas = np.append(areas,spec_boot.calc_peak_area(0, fit_result=fit_result, decimals=2)[0])
             std_devs_of_mus = np.append(std_devs_of_mus,np.std(mus,ddof=1))
             mean_areas = np.append(mean_areas,np.mean(areas))
         mean_mu = np.mean(mus) # from last `N_counts` step only
         FWHM_gauss = 2*np.sqrt(2*np.log(2))*fit_result.params['p0_sigma'].value
         FWHM_emg = spec_boot.calc_FWHM_emg(peak_index=0,fit_result=fit_result)
-        FWHM_emg_err = FWHM_gauss/FWHM_emg * self.shape_cal_par_errors['p0_sigma'].value
+        FWHM_emg_err = FWHM_gauss/FWHM_emg * self.shape_cal_par_errors['sigma']
         print("Done!\n")
 
         x = mean_areas # use number of detected counts instead of true number of re-sampling events (li_N_counts)
@@ -1127,7 +1142,7 @@ class spectrum:
         print("A_stat_emg for this spectrum's",self.fit_model,"fit model:",np.round(self.A_stat_emg,3),"+-",np.round(self.A_stat_emg_error,3))
 
 
-    def calc_peakshape_errors(self,peak_indeces=[],x_fit_cen=None,x_fit_range=None,fit_result=None,fit_model=None,method='least_squares',vary_baseline=True,verbose=False,show_shape_err_fits=False):
+    def calc_peakshape_errors(self,peak_indeces=[],x_fit_cen=None,x_fit_range=None,fit_result=None,fit_model=None,cost_func='MLE',method='least_squares',vary_baseline=True,verbose=False,show_shape_err_fits=False):
         """
         Calculates the relative peak-shape uncertainty of the specified peaks. This is done by re-fitting the specified peaks with each shape parameter individually varied by plus and minus sigma and recording the respective shift of the peak centroid w.r.t the original fit.
         The maximal centroid shifts obtained for each varied parameter are then added in quadrature to obtain the total peak shape uncertainty.
@@ -1140,7 +1155,9 @@ class spectrum:
         x_fit_range (float): width of mass range of fit to evaluate peak-shape error for
         fit_result (lmfit modelresult, optional): fit result object to evaluate peak-shape error for
         fit_model (str): name of fit model used to obtain fit result
-        method (str, optional): name of minimization algorithm to use (default: least_squares, for full list of options c.f. 'The minimize() function' at https://lmfit.github.io/lmfit-py/fitting.html)
+        cost_func : str, optional, default: 'MLE'
+            name of cost function used for minimization
+	   method (str, optional): name of minimization algorithm to use (default: least_squares, for full list of options c.f. 'The minimize() function' at https://lmfit.github.io/lmfit-py/fitting.html)
         vary_baseline : bool, optional, default: True
             if True, the constant background will be fitted with a varying baseline paramter bkg_c (initial value: 0.1); otherwise the beseline paremter bkg_c will be fixed to 0.
         verbose (bool, optional): if True, print all individual centroid shifts caused by varying the shape parameters (default: False)
@@ -1171,7 +1188,7 @@ class spectrum:
             elif par == 'delta_p':
                 pars['eta_p2'] = pars[par] - self.shape_cal_pars['eta_p1']
                 pars['eta_p3'] = 1 - self.shape_cal_pars['eta_p1'] + pars['eta_p2']
-            fit_result_p = self.peakfit(fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=pars, vary_shape=False, vary_baseline=vary_baseline, method=method, show_plots=False)
+            fit_result_p = self.peakfit(fit_model=self.fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=pars, vary_shape=False, vary_baseline=vary_baseline, method=method, show_plots=False)
             #display(fit_result_p) # show fit result
 
             pars[par] = self.shape_cal_pars[par] - self.shape_cal_par_errors[par]
@@ -1181,7 +1198,7 @@ class spectrum:
             elif par == 'delta_p':
                 pars['eta_p2'] =  pars[par] - self.shape_cal_pars['eta_p1']
                 pars['eta_m3'] = 1 - self.shape_cal_pars['eta_p1'] +  pars['eta_p2']
-            fit_result_m = self.peakfit(fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=pars, vary_shape=False, vary_baseline=vary_baseline, method=method, show_plots=False)
+            fit_result_m = self.peakfit(fit_model=self.fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=pars, vary_shape=False, vary_baseline=vary_baseline, method=method, show_plots=False)
             #display(fit_result_m) # show fit result
 
             if show_shape_err_fits:
@@ -1216,35 +1233,6 @@ class spectrum:
                 self.centroid_shifts_pm[peak_idx][par+' centroid shift'] = [delta_mu_p,delta_mu_m]
                 self.centroid_shifts[peak_idx][par+' centroid shift'] = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item()
 
-        ### Try parallelization
-        # import time
-        # t0 = time.time()
-        # from numba import jit, prange
-        # @jit(parallel=True)
-        # def vary_shape_pars(self=self):
-        #     for i in prange(len(shape_pars)):
-        #         par = shape_pars[i]
-        #         pars = copy.deepcopy(self.shape_cal_pars) # deep copy to avoid changes in original dictionary
-        #         pars[par] = self.shape_cal_pars[par] + self.shape_cal_par_errors[par]
-        #         fit_result_p = self.peakfit(fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=pars, vary_shape=False, method=method, show_plots=False)
-        #         pars[par] = self.shape_cal_pars[par] - self.shape_cal_par_errors[par]
-        #         fit_result_m = self.peakfit(fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=pars, vary_shape=False, method=method, show_plots=False)
-        #         for peak_idx in peak_indeces:
-        #             pref = 'p{0}_'.format(peak_idx)
-        #             centroid = fit_result.best_values[pref+'mu']
-        #             new_centroid_p =  fit_result_p.best_values[pref+'mu'] #[value for key, value in fit_result_p.best_values.items() if pref in key][1] # indexing makes sure that both Gaussian 'center' and Hyper-EMG 'mu' Parameters get fetched
-        #             delta_mu_p = new_centroid_p - centroid
-        #             new_centroid_m = fit_result_m.best_values[pref+'mu'] #[value for key, value in fit_result_m.best_values.items() if pref in key][1] # indexing makes sure that both Gaussian 'center' and Hyper-EMG 'mu' Parameters get fetched
-        #             delta_mu_m = new_centroid_m - centroid
-        #             if verbose:
-        #                 print('Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'+/-',np.round(self.shape_cal_par_errors[par],6),' shifts centroid of peak',peak_idx,'by ',np.round(delta_mu_p*1e06,6),'/',np.round(delta_mu_m*1e06,3),'\u03BCu.')
-        #                 if peak_idx == peak_indeces[-1]:
-        #                     print()  # empty line between different parameter blocks
-        #             self.centroid_shifts_pm[peak_idx][par+' centroid shift'] = [delta_mu_p,delta_mu_m]
-        #             self.centroid_shifts[peak_idx][par+' centroid shift'] = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item()
-        # vary_shape_pars()
-        # t1 = time.time()
-        # print("Exec. time:",t1-t0,"s")
         for peak_idx in peak_indeces:
             shape_error = np.sqrt(np.sum(np.square( list(self.centroid_shifts[peak_idx].values()) ))) # add centroid shifts in quadrature to obtain total peakshape error
             p = self.peaks[peak_idx]
@@ -1256,7 +1244,7 @@ class spectrum:
 
 
     ##### Determine peak shape
-    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', init_pars = 'default', x_fit_cen=None, x_fit_range=0.01, vary_baseline=True, method='least_squares', vary_tail_order=True, show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0):
+    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', cost_func='chi-square', init_pars = 'default', x_fit_cen=None, x_fit_range=0.01, vary_baseline=True, method='least_squares', vary_tail_order=True, show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0):
         """
         Determine optimal tail order and peak shape parameters by fitting the selected peak-shape calibrant.
 
@@ -1275,6 +1263,10 @@ class spectrum:
         fit_model : str, optional, default: 'emg22'
             name of fit model to use for shape calibration (e.g. 'Gaussian','emg12','emg33', ... - see fit_models.py for all available fit models))
             If the automatic model selection (`vary_tail_order=True`) fails or is turned off, `fit_model` will be used for the shape calibration and set as the spectrum's fit model (fit_model spectrum attribute)
+        cost_func : str, optional, default: 'chi-square'
+            name of cost function to use for minimization
+            if 'chi-square', the fit is performed using Pearson's chi squared statistic: cost_func = sum( (f(x_i) - y_i)**2/f(x_i)**2 )
+            if 'MLE', a binned maximum likelihood estimation is performed using the negative log likelihood ratio: cost_func = sum( f(x_i) - y_i + y_i*log(y_i/f(x_i)) )
         init_pars : dict or 'default' or None, optional, default: 'default' (default parameters defined in fit_models.py script are used)
             initial model parameters for fit,
             must be supplied as a dictionary with parameter names as keys and parameter values as values
@@ -1320,7 +1312,7 @@ class spectrum:
             for model in li_fit_models:
                 try:
                     print("\n##### Fitting data with",model,"#####--------------------------------------------------------------------------------------\n")
-                    out = spectrum.peakfit(self, fit_model=model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
+                    out = spectrum.peakfit(self, fit_model=model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
                     idx = li_fit_models.index(model)
                     li_red_chis[idx] = np.round(out.redchi,2)
                     li_red_chi_errs[idx] =  np.round(np.sqrt(2/out.nfree),2)
@@ -1370,7 +1362,7 @@ class spectrum:
             self.fit_model = fit_model
 
         print('\n##### Peak-shape determination #####\n')
-        out = spectrum.peakfit(self, fit_model=self.fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=False)
+        out = spectrum.peakfit(self, fit_model=self.fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=False)
 
         peak.comment = 'shape calibrant'
         display(out)  # print(out.fit_report())
@@ -1410,20 +1402,29 @@ class spectrum:
 
 
     ##### Fit mass calibrant
-    def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None, fit_model=None, x_fit_cen=None, x_fit_range=0.01, vary_baseline=True, method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,show_fit_report=True):
+    def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None, fit_model=None, cost_func='MLE', x_fit_cen=None, x_fit_range=0.01, vary_baseline=True, method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,show_fit_report=True):
         """
         Determine mass recalibration factor for spectrum by fitting the selected mass calibrant
 
         Parameters:
         -----------
-        fit_model (str): name of fit model to use (specification optional), defaults to 'fit_model' attribute of spectrum object if not specified
-                          (names of usable models: 'Gaussian','emg01', ..., 'emg33' - see fit_models.py for all available fit models)
-        x_fit_cen (float, [u], optional): center of mass range to fit, defaults to x-position (x_pos) of mass calibrant peak
-        x_fit_range (float, [u], optional): width of mass range to fit, defaults to 0.01 u
+        fit_model : str, optional, default: None
+            name of fit model to use, (names of usable models: 'Gaussian','emg01', ..., 'emg33' - see fit_models.py for all available fit models)
+            if None, defaults to 'fit_model' attribute of spectrum object (as determined in peak-shape calibration)
+        cost_func : str, optional, default: 'MLE'
+            name of cost function to use for minimization
+            if 'chi-square', the fit is performed using Pearson's chi squared statistic: cost_func = sum( (f(x_i) - y_i)**2/f(x_i)**2 )
+            if 'MLE', a binned maximum likelihood estimation is performed using the negative log likelihood ratio: cost_func = sum( f(x_i) - y_i + y_i*log(y_i/f(x_i)) )
+        x_fit_cen : float or None, [u], optional
+            center of mass range to fit;
+            if None, defaults to marker position (x_pos) of mass calibrant peak
+        x_fit_range : float [u], optional, default: 0.01
+            width of mass range to fit
 
         vary_baseline : bool, optional, default: True
             if True, the constant background will be fitted with a varying baseline paramter bkg_c (initial value: 0.1); otherwise the beseline paremter bkg_c will be fixed to 0.
-        show_fit_report (bool, optional, default: True) : show detailed report with fit statistics and fit parameter results
+        show_fit_report : bool, optional, default: True
+            show detailed report with fit statistics and fit parameter results
 
         ###########
 
@@ -1455,13 +1456,14 @@ class spectrum:
             fit_model = self.fit_model
         if x_fit_cen is None:
             x_fit_cen = peak.x_pos
-        fit_result = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, vary_shape=False, vary_baseline=vary_baseline, method=method, show_plots=show_plots, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band)
+        fit_result = spectrum.peakfit(self, fit_model=fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, vary_shape=False, vary_baseline=vary_baseline, method=method, show_plots=show_plots, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band)
         if show_fit_report:
             display(fit_result)
 
         # Update peak properties
         pref = 'p{0}_'.format(index_mass_calib)
         peak.fit_model = fit_model
+        peak.cost_func = cost_func
         peak.area, peak.area_error = self.calc_peak_area(index_mass_calib,fit_result=fit_result)
         peak.m_fit = fit_result.best_values[pref+'mu']
         if fit_model == 'Gaussian':
@@ -1473,7 +1475,7 @@ class spectrum:
         peak.rel_stat_error = stat_error /peak.m_fit
         peak.rel_peakshape_error = 0 # initialize at 0 to allow for calculation of rel_recal_error below in case calc_peakshpe_errors fails
         self.index_mass_calib = None # Reset index of mass calibrant to enable re-calculation of calibrant peak-shape error in case of foregoing calibration attempt
-        self.calc_peakshape_errors(peak_indeces=[index_mass_calib],x_fit_cen=x_fit_cen,x_fit_range=x_fit_range,fit_result=fit_result,vary_baseline=vary_baseline,fit_model=fit_model,method=method,verbose=True)
+        self.calc_peakshape_errors(peak_indeces=[index_mass_calib],x_fit_cen=x_fit_cen,x_fit_range=x_fit_range,fit_result=fit_result,vary_baseline=vary_baseline,fit_model=fit_model,cost_func=cost_func,method=method,verbose=True)
 
         peak.chi_sq_red = np.round(fit_result.redchi, 2)
 
@@ -1514,22 +1516,25 @@ class spectrum:
 
 
     ##### Update peak list with fit values
-    def update_peak_props(self,peaks=[],fit_model=None,fit_result=None):
+    def update_peak_props(self,peaks=[],fit_model=None,cost_func=None,fit_result=None):
         """
         Internal routine to update peak properties DataFrame with fit results in 'fit_result'. All peaks referenced by 'peaks' parameter must belong to the same 'fit_result'. The values of the mass calibrant will not be changed by this routine.
 
         peaks (list): list of indeces of peaks to update (for peak indeces, see markers in plots or consult peak proeprties list by running 'self.peak_properties', where self is your spectrum object)
         fit_model (str): name of fit model used to obtain fit_result (default: fit_model attribute of respective peak)
+        cost_func : str, optional, default: 'MLE'
+            name of cost function used for minimization
         fit_result (lmfit modelresult): modelresult object holding fit_results of all peaks properties to be updated
                                         Note: Not necessarily all peaks contained in fit_result will be updated, only the properties of peaks referenced by 'peaks' parameter will be updated.
         """
         for p in peaks:
             if self.peaks.index(p) == self.index_mass_calib:
-                pass
+                pass  # prevent overwritting of mass calibration results
             else:
                 peak_idx = self.peaks.index(p)
                 pref = 'p{0}_'.format(peak_idx)
                 p.fit_model = fit_model
+                p.cost_func = cost_func
                 p.area = self.calc_peak_area(peak_idx,fit_result=fit_result)[0]
                 p.area_error = self.calc_peak_area(peak_idx,fit_result=fit_result)[1]
                 p.m_fit = self.recal_fac*fit_result.best_values[pref+'mu']
@@ -1559,7 +1564,7 @@ class spectrum:
 
 
     #### Fit spectrum
-    def fit_peaks(self, x_fit_cen=None, x_fit_range=0.01, fit_model=None, init_pars=None, vary_shape=False, vary_baseline=True, method ='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,plot_filename=None,show_fit_report=True,show_shape_err_fits=False):
+    def fit_peaks(self, x_fit_cen=None, x_fit_range=0.01, fit_model=None, cost_func='MLE', init_pars=None, vary_shape=False, vary_baseline=True, method ='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,plot_filename=None,show_fit_report=True,show_shape_err_fits=False):
         """
         Fit entire spectrum or part of spectrum (if x_fit_cen and x_fit_range are specified), show fit results and show updated peak properties
 
@@ -1569,6 +1574,10 @@ class spectrum:
 	    x_fit_range (float [u], optional): width of mass range to fit (default: 0.01, only specify if subset of spectrum is to be fitted)
         fit_model (str, optional): name of fit model to use; if None, defaults to 'best_model' obtained with determine_peak_shape method (default: 'best_model' spectrum attribute, only specify if no best_model has been obtained or to test a specific fit model,
                                    e.g. 'Gaussian','emg12','emg33', ... - see fit_models.py for all available fit models)
+        cost_func : str, optional, default: 'MLE'
+            name of cost function to use for minimization
+            if 'chi-square', the fit is performed using Pearson's chi squared statistic: cost_func = sum( (f(x_i) - y_i)**2/f(x_i)**2 )
+            if 'MLE', a binned maximum likelihood estimation is performed using the negative log likelihood ratio: cost_func = sum( f(x_i) - y_i + y_i*log(y_i/f(x_i)) )
 	    init_pars (dict, optional): dictionary with initial parameters for fit (default: 'x_pos' from marked peaks in fit_range, shape parameters from 'self.peak_shape_pars' from foregoing peak-shape determination)
         vary_shape (bool, optional): if False, peak-shape parameters (sigma, theta, eta's and tau's) are kept fixed at initial values; if True, they are varied (default: False)
         vary_baseline : bool, optional, default: True
@@ -1581,7 +1590,7 @@ class spectrum:
         """
         if fit_model is None:
             fit_model = self.fit_model
-        fit_result = spectrum.peakfit(self, fit_model=fit_model, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars, vary_shape=vary_shape, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,plot_filename=plot_filename)
+        fit_result = spectrum.peakfit(self, fit_model=fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars, vary_shape=vary_shape, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,plot_filename=plot_filename)
         if x_fit_cen:
             x_min = x_fit_cen - x_fit_range/2
             x_max = x_fit_cen + x_fit_range/2
@@ -1591,10 +1600,10 @@ class spectrum:
 
         peak_indeces = [self.peaks.index(p) for p in peaks_to_fit]
         try:
-            self.calc_peakshape_errors(peak_indeces=peak_indeces,x_fit_cen=x_fit_cen,x_fit_range=x_fit_range,fit_result=fit_result,vary_baseline=vary_baseline,method=method,verbose=True,show_shape_err_fits=show_shape_err_fits)
+            self.calc_peakshape_errors(peak_indeces=peak_indeces,x_fit_cen=x_fit_cen,x_fit_range=x_fit_range,fit_result=fit_result,vary_baseline=vary_baseline,fit_model=fit_model,cost_func=cost_func,method=method,verbose=True,show_shape_err_fits=show_shape_err_fits)
         except KeyError:
             print("WARNING: Peak-shape error determination failed with KeyError. Likely the used fit_model collides with shape calibration model.")
-        self.update_peak_props(peaks=peaks_to_fit,fit_model=fit_model,fit_result=fit_result)
+        self.update_peak_props(peaks=peaks_to_fit,fit_model=fit_model,cost_func=cost_func,fit_result=fit_result)
         self.peak_properties()
         if show_fit_report:
             display(fit_result)
