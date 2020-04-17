@@ -18,9 +18,10 @@ import lmfit as fit
 import os
 import warnings
 # ignore irrelevant warnings by message
-#warnings.filterwarnings("ignore", message="divide by zero encountered in log")
-#warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
-#warnings.filterwarnings("ignore", message="overflow encountered in exp")
+warnings.filterwarnings("ignore", message="divide by zero encountered in log")
+warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
+warnings.filterwarnings("ignore", message="overflow encountered in exp")
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 #u_to_keV = config.u_to_keV
 #u = config.u
@@ -410,16 +411,14 @@ class spectrum:
         """
         Remove a peak manually from peak list
 
-        select peak by specifying species label, peak position 'x_pos' or peak index (0-based! Check for peak index by calling .peak_properties() method)
+        select peak by specifying species label, peak position 'x_pos' (up to 6th decimal) or peak index (0-based! Check for peak index by calling .show_peak_properties() method)
         """
         if peak_index:
             i = peak_index
         elif species != "?":
-            p = [peak for peak in self.peaks if species == peak.species] # select peak with species label 'species'
-            i = peaks.index(p)
+            i = [i for i in range(len(self.peaks)) if species == self.peaks[i].species][0] # select peak with species label 'species'
         elif x_pos:
-            p = [peak for peak in self.peaks if x_pos == peak.x_pos] # select peak at position 'x_pos'
-            i = self.peaks.index(p)
+            i = [i for i in range(len(self.peaks)) if np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)][0] # select peak at position 'x_pos'
         try:
             rem_peak = self.peaks.pop(i)
             self.fit_results.pop(i)
@@ -430,7 +429,7 @@ class spectrum:
 
 
     ##### Print peak properties
-    def peak_properties(self):
+    def show_peak_properties(self):
         """
         Print properties of all peaks in peak list
 	    """
@@ -445,7 +444,7 @@ class spectrum:
         """
         Assign a species (label) either to single selected peak or to all peaks from the peak list
         - assignment of single peak species:
-            select peak by specifying peak position 'x_pos' or peak index argument (0-based! Check for peak index by calling .peak_properties() method of spectrum object)     specify species name by assigning string to species object
+            select peak by specifying peak position 'x_pos' (up to 6th decimal) or peak index argument (0-based! Check for peak index by calling .show_peak_properties() method of spectrum object)     specify species name by assigning string to species object
 
         - assignment of multiple peak species:
             nothing should be assigned to the 'peak_index' and 'x_pos' arguments
@@ -475,8 +474,8 @@ class spectrum:
                 p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated_yn attributes with AME values for specified species
                 print("Species of peak",peak_index,"assigned as",p.species)
             elif x_pos:
-                p = [peak for peak in self.peaks if x_pos == peak.x_pos] # select peak at position 'x_pos'
-                i = self.peaks.index(p)
+                i = [i for i in range(len(self.peaks)) if  np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)][0] # select peak at position 'x_pos'
+                p = self.peaks[i]
                 p.species = species
                 p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated_yn attributes with AME values for specified species
                 print("Species of peak",i,"assigned as",p.species)
@@ -1016,14 +1015,14 @@ class spectrum:
         """ Calculates FWHM of a EMG function"""
         pars = fit_result.params
         pref = 'p{0}_'.format(peak_index)
-        mu = pars[pref+"mu"] # centroid of underlying Gaussian
-        baseline = pars['bkg_c']
+        mu = pars[pref+'mu'] # centroid of underlying Gaussian
         x_range = 0.05
         x = np.linspace(mu-x_range/2,mu+x_range/2,10000)
-        y = fit_result.eval(pars,x=x)
+        comps = fit_result.eval_components(x=x)
+        y = comps[pref] #fit_result.eval(pars,x=x)
         y_M = max(y)
         i_M = np.argmin(np.abs(y-y_M))
-        y_HM = (y_M + baseline) /2 # baseline-corrected half-maximum level
+        y_HM = y_M /2
         i_HM1 = np.argmin(np.abs(y[0:i_M]-y_HM))
         i_HM2 = i_M + np.argmin(np.abs(y[i_M:]-y_HM))
         if i_HM1 == 0 or i_HM2 == len(x):
@@ -1279,14 +1278,17 @@ class spectrum:
 
 
     ##### Determine peak shape
-    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', cost_func='chi-square', init_pars = 'default', x_fit_cen=None, x_fit_range=0.01, vary_baseline=True, method='least_squares', vary_tail_order=True, show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0):
+    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', cost_func='chi-square', init_pars = 'default', x_fit_cen=None, x_fit_range=0.01, vary_baseline=True, method='least_squares', vary_tail_order=True, show_fit_reports=True, show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0):
         """
         Determine optimal tail order and peak shape parameters by fitting the selected peak-shape calibrant.
 
         If vary_tail_order is False, the automatic tail order determination is skipped. Otherwise the routine tries to find the peak shape that minimizes chi squared reduced by succesively adding more tails on the right and left.
         Finally, the fit model is selected which gives the lowest chi-square without having any of the tail weight parameters `eta` compatible with zero within errorbars. The latter models are excluded as is this a sign of overfitting.
+        Likewise, models for which the calculation of eta parameter uncertainties fails are excluded from selection.
 
         It is further recommended to visually check whether the residuals are purely stochastic (as should be the case for a decent model).
+
+
 
         Parameters:
         -----------
@@ -1294,7 +1296,7 @@ class spectrum:
         index_shape_calib : int or None, optional
             index of shape-calibration peak (the peak to use can also be specified with `species_shape_calib`)
         species_shape_calib : str or None, optional
-            species name of shape calibrant (the peak to use can also be specified with `index_shape_calib`)
+            species name of shape calibrant (e.g. 'K39:-1e', the peak to use can also be specified with `index_shape_calib`)
         fit_model : str, optional, default: 'emg22'
             name of fit model to use for shape calibration (e.g. 'Gaussian','emg12','emg33', ... - see fit_models.py for all available fit models))
             If the automatic model selection (`vary_tail_order=True`) fails or is turned off, `fit_model` will be used for the shape calibration and set as the spectrum's fit model (fit_model spectrum attribute)
@@ -1316,6 +1318,8 @@ class spectrum:
         vary_tail_order : bool, optional, default: True
             if True, an automatic selection of the best fit model is performed
             if False, the `fit_model` parameter is used as fit model
+        show_fit_reports : bool, optional, default: True
+            whether to show fit reports for the fits in the automatic model selectio
         show_plots : bool, optional, default: 'True'
             whether to show plots with data and fit curves
         show_peak_markers : bool, optional, default: True
@@ -1327,8 +1331,8 @@ class spectrum:
         if index_shape_calib is not None and (species_shape_calib is None):
             peak = self.peaks[index_shape_calib]
         elif species_shape_calib:
-            peak = [p for p in self.peaks if species_shape_calib == p.species]
-            index_shape_calib = self.peaks.index(peak)
+            index_shape_calib = [i for i in range(len(self.peaks)) if species_shape_calib == self.peaks[i].species][0]
+            peak = self.peaks[index_shape_calib]
         else:
             print("\nERROR: Definition of peak shape calibrant failed. Define EITHER the index OR the species name of the peak to use as shape calibrant!\n")
             return
@@ -1343,10 +1347,10 @@ class spectrum:
             li_fit_models = ['Gaussian','emg01','emg10','emg11','emg12','emg21','emg22','emg23','emg32','emg33']
             li_red_chis = np.array([np.nan]*len(li_fit_models))
             li_red_chi_errs = np.array([np.nan]*len(li_fit_models))
-            li_eta_flags =np.array([False]*len(li_fit_models))
+            li_eta_flags =np.array([False]*len(li_fit_models)) # list of flags for models with eta's compatible with zero or eta's without error
             for model in li_fit_models:
                 try:
-                    print("\n##### Fitting data with",model,"#####--------------------------------------------------------------------------------------\n")
+                    print("\n##### Fitting data with",model,"#####-----------------------------------------------------------------------------------------\n")
                     out = spectrum.peakfit(self, fit_model=model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
                     idx = li_fit_models.index(model)
                     li_red_chis[idx] = np.round(out.redchi,2)
@@ -1363,12 +1367,12 @@ class spectrum:
                                 err = out.params[par_name].stderr
                                 try:
                                     if val < err:
-                                        print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within error bar.")
-                                        print("             This tail order is likely overfitting the data and will be excluded.")
+                                        print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
+                                        print("             This tail order is likely overfitting the data and will be excluded from selection.")
                                         li_eta_flags[idx] = True # mark model in order to exclude it below
                                 except TypeError:
-                                    print("WARNING: parameter uncertainty of",par_name,"could not be calculated!")
-                                    pass
+                                    print("WARNING: parameter uncertainty of",par_name,"could not be calculated! This tail order will be excluded from selection.")
+                                    li_eta_flags[idx] = True # mark model in order to exclude it below
                         if no_right_tails > 1:
                             for i in np.arange(1,no_right_tails+1):
                                 par_name = pref+"eta_p"+str(i)
@@ -1376,27 +1380,29 @@ class spectrum:
                                 err = out.params[par_name].stderr
                                 try:
                                     if val < err:
-                                        print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within error bar.")
-                                        print("             This tail order is likely overfitting the data and will be excluded.")
+                                        print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
+                                        print("             This tail order is likely overfitting the data and will be excluded from selection.")
                                         li_eta_flags[idx] = True  # mark model in order to exclude it below
                                 except TypeError:
-                                    print("WARNING: parameter uncertainty of",par_name,"could not be calculated!")
-                                    pass
+                                    print("WARNING: parameter uncertainty of",par_name,"could not be calculated! This tail order will be excluded from selection.")
+                                    li_eta_flags[idx] = True # mark model in order to exclude it below
                     print("\n"+str(model)+"-fit yields reduced chi-square of: "+str(li_red_chis[idx])+" +- "+str(li_red_chi_errs[idx]))
                     print()
-                    display(out) # show fit report
+                    if show_fit_reports:
+                        display(out) # show fit report
                 except ValueError:
-                    print('\nWARNING:',model+'-fit failed due to NaN-values and was skipped! -------------------------------------------------\n')
+                    print('\nWARNING:',model+'-fit failed due to NaN-values and was skipped! ----------------------------------------------\n')
             idx_best_model = np.nanargmin(np.where(li_eta_flags, np.inf, li_red_chis)) # exclude models with eta_flag == True
             best_model = li_fit_models[idx_best_model]
             self.fit_model = best_model
             self.best_redchi = li_red_chis[idx_best_model]
+            print('##### Result of automatic model selection: #####')
             print('\nBest fit model determined to be:',best_model)
             print('Corresponding chi²-reduced:',self.best_redchi)
         elif vary_tail_order == False:
             self.fit_model = fit_model
 
-        print('\n##### Peak-shape determination #####\n')
+        print('\n##### Peak-shape determination #####-------------------------------------------------------------------------------------------\n')
         out = spectrum.peakfit(self, fit_model=self.fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=False)
 
         peak.comment = 'shape calibrant'
@@ -1467,8 +1473,8 @@ class spectrum:
         if index_mass_calib is not None and (species_mass_calib is None):
             peak = self.peaks[index_mass_calib]
         elif species_mass_calib:
-            peak = [p for p in self.peaks if species_mass_calib == p.species]
-            index_mass_calib = self.peaks.index(peak)
+            index_mass_calib = [i for i in range(len(self.peaks)) if species_mass_calib == self.peaks[i].species][0]
+            peak = self.peaks[index_mass_calib]
         else:
             print("\nERROR: Definition of peak shape calibrant failed. Define EITHER the index OR the species name of the peak to use as shape calibrant!\n")
             return
@@ -1555,7 +1561,7 @@ class spectrum:
         """
         Internal routine to update peak properties DataFrame with fit results in 'fit_result'. All peaks referenced by 'peaks' parameter must belong to the same 'fit_result'. The values of the mass calibrant will not be changed by this routine.
 
-        peaks (list): list of indeces of peaks to update (for peak indeces, see markers in plots or consult peak proeprties list by running 'self.peak_properties', where self is your spectrum object)
+        peaks (list): list of indeces of peaks to update (for peak indeces, see markers in plots or consult peak proeprties list by running 'self.show_peak_properties', where self is your spectrum object)
         fit_model (str): name of fit model used to obtain fit_result (default: fit_model attribute of respective peak)
         cost_func : str, optional, default: 'MLE'
             name of cost function used for minimization
@@ -1639,7 +1645,7 @@ class spectrum:
         except KeyError:
             print("WARNING: Peak-shape error determination failed with KeyError. Likely the used fit_model collides with shape calibration model.")
         self.update_peak_props(peaks=peaks_to_fit,fit_result=fit_result)
-        self.peak_properties()
+        self.show_peak_properties()
         if show_fit_report:
             display(fit_result)
         for p in peaks_to_fit:
@@ -1714,6 +1720,7 @@ class spectrum:
             df_prop.to_excel(writer,sheet_name='Peak properties')
             prop_sheet = writer.sheets['Peak properties']
             prop_sheet.insert_image(len(df_prop)+2,1, filename+'_log_plot.png',{'x_scale': 0.45,'y_scale':0.45})
+            prop_sheet.insert_image(len(df_prop)+26,1, filename+'_lin_plot.png',{'x_scale': 0.45,'y_scale':0.45})
             df_centroid_shifts.to_excel(writer,sheet_name='Centroid shifts')
         print("Fit results saved to file:",str(filename)+".xlsx")
 
