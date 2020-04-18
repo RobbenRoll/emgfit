@@ -77,6 +77,7 @@ Parameters: df_to_fit= None, x_fit_cen = None, x_fit_range = 0.005, model = emg2
 * peak detection reliable for as low as 30 ions in peak
 * all fit models in fit_models.py must be formulated such that the (Gaussian) peak centroid is the second parameter in the ordered parameter dictionary (important for peakshape error calculation)
 
+
 TO DO:
 * add warning for eta's not summing to 1 to make_model_ ?
 * add uncertainty of recalibration factor
