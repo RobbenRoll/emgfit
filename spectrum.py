@@ -58,9 +58,9 @@ def get_AME_values(species):
     m = 0.0
     m_error_sq = 0.0
     A_tot = 0
+    extrapol = False # initialize boolean flag as False
     for ptype in splitspecies(species):
         n, El, A = splitparticle(ptype)
-        extrapol = False # initialize boolean flag as False
         if ptype[-1:] == '?': # unidentified species
             m = None
             m_error = None
@@ -73,7 +73,8 @@ def get_AME_values(species):
             m_error_sq += (n*mdata_AME(El,A)[3])**2
             m_error = np.sqrt(m_error_sq)
             A_tot += A
-            extrapol = mdata_AME(El,A)[4] # boolean flag for extrapolated masses
+            if  mdata_AME(El,A)[4]:
+                extrapol = True # boolean flag for any extrapolated masses contained in species
     return m, m_error, extrapol, A_tot
 
 
@@ -90,7 +91,7 @@ class peak:
              self.m_AME = m
         if self.m_AME_error is None: # unless m_AME_error has been user-defined, the mass error of the specified 'species' is calculated from AME database
             self.m_AME_error = m_error
-        self.extrapolated_yn = extrapol
+        self.extrapolated = extrapol
         self.fit_model = None
         self.cost_func = None # cost function used to fit peak
         self.chi_sq_red = None # chi square reduced of peak fit
@@ -107,11 +108,11 @@ class peak:
         self.m_dev_keV = None # TITAN - AME [keV]
 
     def update_lit_values(self):
-        """ Overwrite m_AME, m_AME_error and extrapolated_yn attributes of peak with AME values for specified species """
+        """ Overwrite m_AME, m_AME_error and extrapolated attributes of peak with AME values for specified species """
         m, m_error, extrapol, A_tot = get_AME_values(self.species) # calculate values for species
         self.m_AME = m
         self.m_AME_error = m_error
-        self.extrapolated_yn = extrapol
+        self.extrapolated = extrapol
         self.A = A_tot
 
 
@@ -121,7 +122,7 @@ class peak:
         print("Species:",self.species)
         print("AME mass:",self.m_AME,"u     (",np.round(self.m_AME*u_to_keV,3),"keV )")
         print("AME mass uncertainty:",self.m_AME_error,"u         (",np.round(self.m_AME_error*u_to_keV,3),"keV )")
-        print("AME mass extrapolated?",self.extrapolated_yn)
+        print("AME mass extrapolated?",self.extrapolated)
         if self.fit_model is not None:
             print("Peak area: "+str(self.area)+" +- "+str(self.peak_area_error)+" counts")
             print("(Ionic) mass:",self.m_fit,"u     (",np.round(self.m_fit*u_to_keV,3),"keV )")
@@ -503,13 +504,13 @@ class spectrum:
             if peak_index is not None:
                 p = self.peaks[peak_index]
                 p.species = species
-                p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated_yn attributes with AME values for specified species
+                p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated attributes with AME values for specified species
                 print("Species of peak",peak_index,"assigned as",p.species)
             elif x_pos:
                 i = [i for i in range(len(self.peaks)) if  np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)][0] # select peak at position 'x_pos'
                 p = self.peaks[i]
                 p.species = species
-                p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated_yn attributes with AME values for specified species
+                p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated attributes with AME values for specified species
                 print("Species of peak",i,"assigned as",p.species)
             elif len(species) == len(self.peaks) and peak_index is None and x_pos is None: # assignment of multiple species
                 for i in range(len(species)):
@@ -517,7 +518,7 @@ class spectrum:
                     if species_i: # skip peak if 'None' given as argument
                         p = self.peaks[i]
                         p.species = species_i
-                        p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated_yn attributes with AME values for specified species
+                        p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated attributes with AME values for specified species
                         print("Species of peak",i,"assigned as",p.species)
             else:
                 print('WARNING: Species assignment failed.')
