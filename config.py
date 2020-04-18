@@ -24,7 +24,21 @@ df_AME = pd.read_csv(filename, encoding = 'unicode_escape') # C:/Users/Stefan/Dr
 df_AME.set_index(['Element','A'],inplace=True)
 
 def mdata_AME(El,A):
-    """ Gives atomic mass from AME2016 [u] """
+    """
+    Grabs atomic mass data from AME2016 [u]
+
+    Parameters:
+    -----------
+    El : str
+        string with element name
+    A : int
+        mass number of isotope of interest
+
+    Returns:
+    --------
+    list (str,int,float,float,bool)
+    [Element name, mass number, atomic AME mass, atomic AME mass error, boolean flag for extrapolated mass (if True: extrapolated mass)]
+    """
     m_AME = df_AME['ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
     m_AME_error = df_AME['Error ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
     extrapolated_yn = df_AME['Extrapolated?'].loc[(El,A)]

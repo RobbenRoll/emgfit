@@ -60,7 +60,7 @@ def get_AME_values(species):
     A_tot = 0
     for ptype in splitspecies(species):
         n, El, A = splitparticle(ptype)
-        extrapol = False # initialize boolean flag
+        extrapol = False # initialize boolean flag as False
         if ptype[-1:] == '?': # unidentified species
             m = None
             m_error = None
@@ -73,8 +73,7 @@ def get_AME_values(species):
             m_error_sq += (n*mdata_AME(El,A)[3])**2
             m_error = np.sqrt(m_error_sq)
             A_tot += A
-            if mdata_AME(El,A)[3] == 1: # extrapolated mass
-                extrapol = True
+            extrapol = mdata_AME(El,A)[4] # boolean flag for extrapolated masses
     return m, m_error, extrapol, A_tot
 
 
@@ -166,6 +165,7 @@ class spectrum:
             data_uncut.set_index('Mass [u]',inplace =True)
         else:
             data_uncut = df
+        self.spectrum_comment = '-'
         self.fit_model = None
         self.best_redchi = None
         self.shape_cal_pars = None
@@ -196,6 +196,38 @@ class spectrum:
             plt.yscale('log')
             plt.ylabel('Counts')
             plt.show()
+
+
+    ##### Add peak comment manually
+    def add_spectrum_comment(self,comment,overwrite=False):
+        """
+        Method for adding a general comment to the spectrum.
+
+        By default the string 'comment' will be added at the end of the current spectrum comment (if the current comment is '-' it is overwritten with 'comment' argument).
+        If overwrite is set to 'True' the current peak comment is overwritten with the 'comment' argument.
+
+        This comment will be included in the EXCEL file with all fit results (if `save_results` spectrum method is used to write results to a file).
+
+        For adding comments to peaks use the `add_peak_comment` spectrum method.
+
+        Parameters:
+        -----------
+        comment (str): comment to add to spectrum
+        overwrite (bool): boolean specifying whether to append to current comment or to overwrite it
+
+        Returns:
+        --------
+        None
+        """
+        try:
+            if self.spectrum_comment == '-' or self.spectrum_comment is None or overwrite:
+                self.spectrum_comment = comment
+            else:
+                self.spectrum_comment = self.spectrum_comment+comment
+            print("Spectrum comment was changed to: ",self.spectrum_comment)
+        except TypeError:
+            print("ERROR: 'comment' argument must be given as type string.")
+            return
 
 
     ##### Define static method for smoothing spectrum before peak detection (taken from https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html)
@@ -413,7 +445,7 @@ class spectrum:
 
         select peak by specifying species label, peak position 'x_pos' (up to 6th decimal) or peak index (0-based! Check for peak index by calling .show_peak_properties() method)
         """
-        if peak_index:
+        if peak_index is not None:
             i = peak_index
         elif species != "?":
             i = [i for i in range(len(self.peaks)) if species == self.peaks[i].species][0] # select peak with species label 'species'
@@ -495,7 +527,7 @@ class spectrum:
 
 
     ##### Add peak comment manually
-    def add_comment(self,peak_index,comment,overwrite=False):
+    def add_peak_comment(self,comment,peak_index=None,x_pos=None,species="?",overwrite=False):
         """
         Method for adding a comment to a peak.
         By default the string 'comment' will be added at the end of the current peak comment (if the current comment is '-' it is overwritten with 'comment' argument).
@@ -510,11 +542,23 @@ class spectrum:
         comment (str): comment to add to peak_detect.py
         overwrite (bool): boolean specifying whether to append to current comment or to overwrite it
 
+            ################
+
         Returns:
         --------
         None
         """
+        if peak_index is not None:
+            pass
+        elif species != "?":
+            peak_index = [i for i in range(len(self.peaks)) if species == self.peaks[i].species][0] # select peak with species label 'species'
+        elif x_pos is not None:
+            peak_index = [i for i in range(len(self.peaks)) if np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)][0] # select peak at position 'x_pos'
+        else:
+            print("\nERROR: Peak specification failed. Check function documentation for details on peak selection.\n")
+            return
         peak = self.peaks[peak_index]
+
         protected_flags = ('shape calibrant','shape & mass calibrant','mass calibrant') # item order matters for comment overwriting!
         try:
             if any(s in comment for s in ('shape calibrant','mass calibrant','shape & mass calibrant')):
@@ -526,7 +570,7 @@ class spectrum:
                 if any(s in peak.comment for s in protected_flags) and overwrite:
                     print("WARNING: The protected flags 'shape calibrant','mass calibrant' or 'shape & mass calibrant' cannot be overwritten.")
                     flag = [s for s in protected_flags if s in peak.comment][0]
-                    peak.comment = peak.comment.replace(peak.comment,flag+comment)
+                    peak.comment = peak.comment.replace(peak.comment,flag+', '+comment)
                 else:
                     peak.comment = comment
             else:
@@ -585,6 +629,7 @@ class spectrum:
             if None, maximum of spectrum objects's mass data is used
         plot_filename : str or None, optional, default: None
             if not None, plot images will be saved to two separate files named '`plot_filename`_log_plot.png' and '`plot_filename`_lin_plot.png' respectively
+            Caution: Existing files of same name are overwritten.
 
         Returns:
         --------
@@ -664,26 +709,6 @@ class spectrum:
                 raise
         plt.show()
 
-        """
-        f2 = plt.figure(figsize=(20,12))
-        fit_result.plot(fig=f2,show_init=True,yerr=fit_result.y_err)
-        if show_peak_markers:
-            self.add_peak_markers(yscale='lin',ymax=y_max_lin,peaks=peaks_to_plot)
-        ax_res, ax_fit = f2.axes
-        ax_res.set_title(plot_title)
-        ax_res.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
-        plt.xlabel('m/z [u]')
-        plt.ylabel('Counts per bin')
-        plt.xlim(x_min,x_max)
-        plt.ylim(-0.05*y_max_lin, 1.1*y_max_lin)
-        if plot_filename is not None:
-            try:
-                plt.savefig(plot_filename+'_lin_plot.png',dpi=500)
-            except:
-                raise
-        plt.show()
-        """
-
 
     ##### Plot fit of spectrum zoomed to specified peak or specified mass range
     def plot_fit_zoom(self,peak_indeces=None,x_center=None,x_range=0.01,show_peak_markers=True,sigmas_of_conf_band=0,plot_filename=None):
@@ -707,6 +732,7 @@ class spectrum:
             if 0, no confidence band is shown (default)
         plot_filename : str or None, optional, default: None
             if not None, plot images will be saved to two separate files named '`plot_filename`_log_plot.png' and '`plot_filename`_lin_plot.png' respectively
+            Caution: Existing files of same name are overwritten.
 
         Returns:
         --------
@@ -795,7 +821,7 @@ class spectrum:
         #    if df_fit['Counts'].iloc[i] >= 1: ##
         #        df_fit['Counts'].iloc[i] += 1 ##
         y = df_fit['Counts'].values
-        y_err = np.sqrt(y+1) # assume Poisson (counting) statistics -> standard deviation of each point approximated by sqrt(counts+1)
+        y_err = np.maximum(1,np.sqrt(y)) #np.sqrt(y+1) # assume Poisson (counting) statistics -> standard deviation of each point approximated by sqrt(counts+1)
         weights = 1./y_err # np.nan_to_num(1./y_err, nan=0.0, posinf=0.0, neginf=None) # makes sure that residuals include division by statistical error (residual = (fit_model - y) * weights)
 
 
@@ -1089,7 +1115,7 @@ class spectrum:
         return df_new
 
 
-    def determine_A_stat_emg(self,peak_index,x_range=0.01,N_spectra=1000,fit_model=None,cost_func='MLE',method='least_squares',vary_baseline=True):
+    def determine_A_stat_emg(self,peak_index=None,species="?",x_pos=None,x_range=0.01,N_spectra=1000,fit_model=None,cost_func='MLE',method='least_squares',vary_baseline=True, plot_filename=None):
         """
         Determine the factor of proportionality for stat. error estimation A_stat_emg via bootstrap re-sampling from a peak in the spectrum. The relevant equation for this is: Stat. error = A_stat_emg * FWHM /np.sqrt(N_counts)
         The resulting value for A_stat_emg will be stored as spectrum attribute and will be used for all subsequent stat. error determinations.
@@ -1098,10 +1124,17 @@ class spectrum:
         `N_spectra` bootstrapped spectra are created for each of the following total numbers of events: [10,30,100,300,1000,3000,10000,30000]
         Each bootstrapped spectrum is fitted to determine the peak centroid. A_stat_emg is then determined from a fit to the relative standard deviation of the peak centroid as function of determined peak area.
 
+        Specify peak to use for bootstrap re-sampling by providing EITHER `peak_index`, `species` or `x_pos` of peak.
+
         Parameters:
         -----------
-        peak_index : int
+        peak_index : int or None, optional
             index of peak to use for bootstrap re-sampling (typically, the peak-shape calibrant). The peak should have high statistics and be well-separated from other peaks to be representative for all peaks in the spectrum.
+        species : str, optional
+            string with species name of peak to use for bootstrap re-sampling (typically, the peak-shape calibrant). The peak should have high statistics and be well-separated from other peaks to be representative for all peaks in the spectrum.
+        x_pos : float [u] or None, optional
+            marker position (`x_pos` attribute) of peak to use for bootstrap re-sampling (typically, the peak-shape calibrant). The peak should have high statistics and be well-separated from other peaks to be representative for all peaks in the spectrum.
+            `x_pos` must be specified up to the 6th decimal
         x_range : float [u], optional, default: 0.01
             mass range around peak centroid over which events will be sampled and fitted. Choose such that no secondary peaks are contained in the mass range.
         N_spectra : int, optional, default: 1000
@@ -1111,8 +1144,22 @@ class spectrum:
             if 'chi-square', the fit is performed using Pearson's chi squared statistic: cost_func = sum( (f(x_i) - y_i)**2/f(x_i)**2 )
             if 'MLE', a binned maximum likelihood estimation is performed using the negative log likelihood ratio: cost_func = sum( f(x_i) - y_i + y_i*log(y_i/f(x_i)) )
 
+        plot_filename : str or None, optional, default: None
+            if a string is specified, the plot for the A_stat_emg determination will be saved as: plot_filename+'_A_stat_emg_determination.png'
+            Caution: Existing files of same name are overwritten
+            if None, the plot is not saved
+
             #############
         """
+        if peak_index is not None:
+            pass
+        elif species != "?":
+            peak_index = [i for i in range(len(self.peaks)) if species == self.peaks[i].species][0] # select peak with species label 'species'
+        elif x_pos is not None:
+            peak_index = [i for i in range(len(self.peaks)) if np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)][0] # select peak at position 'x_pos'
+        else:
+            print("\nERROR: Peak specification failed. Check function documentation for details on peak selection.\n")
+            return
         if fit_model is None:
             fit_model = self.fit_model
         x_cen = self.peaks[peak_index].x_pos
@@ -1121,7 +1168,8 @@ class spectrum:
             print("WARNING: More than one peak in current mass range. This routine can only be assumed to be accurate for well-separated, single peaks. It is strongly advisable to chose a smaller `x_range`!\n")
             #return
         li_N_counts = [10,30,100,300,1000,3000,10000,30000]
-        print("Creating and fitting boostrapped spectra for A_stat determination, depending on the choice of `N_spectra` this can take a few minutes. Interrupt kernel if this takes too long.")
+        print("Creating synthetic spectra by bootstrapped re-sampling and fitting them for A_stat determination.")
+        print("Depending on the choice of `N_spectra` this can take a few minutes. Interrupt kernel if this takes too long.")
         np.random.seed(seed=0) # to make bootstrapped spectra reproducible
         std_devs_of_mus = np.array([]) # standard deviation of sample means mu
         mean_areas = np.array([]) # array for numbers of detected counts
@@ -1149,7 +1197,8 @@ class spectrum:
         pars = model.make_params()
         pars['exponent'].value = -0.5
         pars['exponent'].vary = False
-        out = model.fit(std_devs_of_mus,x=x,params=pars)
+        weights = np.sqrt(li_N_counts)
+        out = model.fit(std_devs_of_mus,x=x,params=pars,weights=weights)
         print(out.fit_report())
 
         A_stat_gauss = 1/(2*np.sqrt(2*np.log(2)))
@@ -1158,6 +1207,7 @@ class spectrum:
 
         y = std_devs_of_mus/mean_mu
         f = plt.figure(figsize=(15,8))
+        plt.title('A_stat_emg determination from bootstrapped spectra - '+fit_model+' '+cost_func+' fits')
         plt.plot(x,y,'o')
         plt.plot(x,out.best_fit/mean_mu)
         plt.plot(x,A_stat_gauss*FWHM_gauss/(np.sqrt(x)*mean_mu),'--')
@@ -1166,6 +1216,12 @@ class spectrum:
         plt.xlabel("Peak area [counts]")
         plt.ylabel("Relative statistical uncertainty")
         plt.legend(["Standard deviations of sample means","Stat. error of Hyper-EMG","Stat. error of underlying Gaussian"])
+        plt.annotate('A_stat_emg: '+str(np.round(A_stat_emg,3))+' +- '+str(np.round(A_stat_emg_error,3)), xy=(0.7, 0.75), xycoords='axes fraction')
+        if plot_filename is not None:
+            try:
+                plt.savefig(plot_filename+'_A_stat_emg_determination.png',dpi=500)
+            except:
+                raise
         plt.show()
 
         self.determined_A_stat_emg = cost_func
@@ -1289,7 +1345,6 @@ class spectrum:
         It is further recommended to visually check whether the residuals are purely stochastic (as should be the case for a decent model).
 
 
-
         Parameters:
         -----------
 
@@ -1355,43 +1410,47 @@ class spectrum:
                     idx = li_fit_models.index(model)
                     li_red_chis[idx] = np.round(out.redchi,2)
                     li_red_chi_errs[idx] =  np.round(np.sqrt(2/out.nfree),2)
-                    if model.startswith('emg') and model not in ['emg01','emg10','emg11']: # check emg models with tail orders >= 2 for overfitting (i.e. a eta parameter agress with zero within its error)
+
+                    # Check emg models with tail orders >= 2 for overfitting (i.e. a eta parameter agress with zero within its error) and check for existence of parameter uncertainties
+                    if model.startswith('emg') and model not in ['emg01','emg10','emg11']:
                         no_left_tails = int(model[3])
                         no_right_tails = int(model[4])
                         first_parname = list(out.params.keys())[2] # must use first peak to be fit, since only its shape parameters are all varying
                         pref = first_parname.split('_')[0]+'_'
                         if no_left_tails > 1:
                             for i in np.arange(1,no_left_tails+1):
+                                if not out.errorbars:
+                                    print("WARNING: parameter uncertainty determination failed! This tail order will be excluded from selection.") # TO DO: Consider adding eval_uncertainty option here.
+                                    li_eta_flags[idx] = True # mark model in order to exclude it below
+                                    break
                                 par_name = pref+"eta_m"+str(i)
                                 val = out.params[par_name].value
                                 err = out.params[par_name].stderr
-                                try:
-                                    if val < err:
-                                        print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
-                                        print("             This tail order is likely overfitting the data and will be excluded from selection.")
-                                        li_eta_flags[idx] = True # mark model in order to exclude it below
-                                except TypeError:
-                                    print("WARNING: parameter uncertainty of",par_name,"could not be calculated! This tail order will be excluded from selection.")
+                                if val < err:
+                                    print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
+                                    print("             This tail order is likely overfitting the data and will be excluded from selection.")
                                     li_eta_flags[idx] = True # mark model in order to exclude it below
                         if no_right_tails > 1:
                             for i in np.arange(1,no_right_tails+1):
+                                if not out.errorbars:
+                                    print("WARNING: parameter uncertainty determination failed! This tail order will be excluded from selection.") # TO DO: Consider adding eval_uncertainty option here.
+                                    li_eta_flags[idx] = True # mark model in order to exclude it below
+                                    break
                                 par_name = pref+"eta_p"+str(i)
                                 val = out.params[par_name].value
                                 err = out.params[par_name].stderr
-                                try:
-                                    if val < err:
-                                        print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
-                                        print("             This tail order is likely overfitting the data and will be excluded from selection.")
-                                        li_eta_flags[idx] = True  # mark model in order to exclude it below
-                                except TypeError:
-                                    print("WARNING: parameter uncertainty of",par_name,"could not be calculated! This tail order will be excluded from selection.")
-                                    li_eta_flags[idx] = True # mark model in order to exclude it below
+                                if val < err:
+                                    print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
+                                    print("             This tail order is likely overfitting the data and will be excluded from selection.")
+                                    li_eta_flags[idx] = True  # mark model in order to exclude it below
+
                     print("\n"+str(model)+"-fit yields reduced chi-square of: "+str(li_red_chis[idx])+" +- "+str(li_red_chi_errs[idx]))
                     print()
                     if show_fit_reports:
                         display(out) # show fit report
                 except ValueError:
                     print('\nWARNING:',model+'-fit failed due to NaN-values and was skipped! ----------------------------------------------\n')
+
             idx_best_model = np.nanargmin(np.where(li_eta_flags, np.inf, li_red_chis)) # exclude models with eta_flag == True
             best_model = li_fit_models[idx_best_model]
             self.fit_model = best_model
@@ -1405,7 +1464,10 @@ class spectrum:
         print('\n##### Peak-shape determination #####-------------------------------------------------------------------------------------------\n')
         out = spectrum.peakfit(self, fit_model=self.fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=False)
 
-        peak.comment = 'shape calibrant'
+        if peak.comment == '-' or peak.comment == '' or peak.comment is None:
+            peak.comment = 'shape calibrant'
+        elif 'shape calibrant' not in peak.comment:
+            peak.comment = 'shape calibrant, '+peak.comment
         display(out)  # print(out.fit_report())
         dict_pars = out.params.valuesdict()
         self.shape_cal_pars = {key.lstrip('p'+str(index_shape_calib)+'_'): val for key, val in dict_pars.items() if key.startswith('p'+str(index_shape_calib))}
@@ -1625,6 +1687,8 @@ class spectrum:
             if True, the constant background will be fitted with a varying baseline paramter bkg_c (initial value: 0.1); otherwise the beseline paremter bkg_c will be fixed to 0.
         method (str, optional): name of minimization algorithm to use (default: least_squares, for full list of options c.f. 'The minimize() function' at https://lmfit.github.io/lmfit-py/fitting.html)
 
+        plot_filename
+            Caution: Existing files of same name are overwritten
 	    Returns:
         --------
         None (updates peak properties dataframe with peak properties obtained in fit)
@@ -1669,10 +1733,10 @@ class spectrum:
         """
         # Ensure no files are overwritten
         if os.path.isfile(str(filename)+".xlsx"):
-            print ("ERROR: File "+str(filename)+".xlsx already exists. No files saved! Chose a different filename or delete the original file and re-try.")
+            print ("ERROR: File "+str(filename)+".xlsx already exists. No files saved! Choose a different filename or delete the original file and re-try.")
             return
         if os.path.isfile(str(filename)+"_peakshape_calib.txt"):
-            print ("ERROR: File "+str(filename)+"_peakshape_calib.txt already exists. No files saved! Chose a different filename or delete the original file and re-try.")
+            print ("ERROR: File "+str(filename)+"_peakshape_calib.txt already exists. No files saved! Choose a different filename or delete the original file and re-try.")
             return
 
         # Make DataFrame with spectrum propeties
@@ -1688,7 +1752,7 @@ class spectrum:
         spec_data = np.append(spec_data, [["scipy version",scipy_version]],axis=0)
         spec_data = np.append(spec_data, [["numpy version",np.__version__]],axis=0)
         spec_data = np.append(spec_data, [["pandas version",pd.__version__]],axis=0)
-        attributes = ['fit_model','best_redchi','determined_A_stat_emg','A_stat_emg','A_stat_emg_error','recal_fac','rel_recal_error']
+        attributes = ['spectrum_comment','fit_model','best_redchi','determined_A_stat_emg','A_stat_emg','A_stat_emg_error','recal_fac','rel_recal_error']
         for attr in attributes:
             attr_val = getattr(self,attr)
             spec_data = np.append(spec_data, [[attr,attr_val]],axis=0)
