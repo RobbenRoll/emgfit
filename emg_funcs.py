@@ -80,7 +80,8 @@ def h_m_emg(x, mu, sigma, *t_args):
     for i in range(t_order_m):
         eta_m = li_eta_m[i]
         tau_m = li_tau_m[i]
-        h_m += np.nan_to_num(eta_m/(2*tau_m)*np.exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*spl.erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) ))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)
+        h_m_i = eta_m/(2*tau_m)*np.exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*spl.erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) )
+        h_m += np.where(np.isfinite(h_m_i),h_m_i,0) #np.nan_to_num(eta_m/(2*tau_m)*np.exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*spl.erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) ))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)
     # print("h_m:"+str(h_m))
     return h_m
 
@@ -122,7 +123,8 @@ def h_p_emg(x, mu, sigma, *t_args):
     for i in range(t_order_p):
         eta_p = li_eta_p[i]
         tau_p = li_tau_p[i]
-        h_p += np.nan_to_num(eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) ))  # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)
+        h_p_i = eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) )
+        h_p += np.where(np.isfinite(h_p_i),h_p_i,0) #np.nan_to_num(eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) ))  # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)
     # print("h_p:"+str(h_p))
     return h_p
 
@@ -151,7 +153,7 @@ def h_emg(x, mu, sigma , theta, *t_args):
         h = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
     else:
         h = theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) + (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
-    return  np.clip(h,a_min=None,a_max=1e295) # clipping to avoid overflow errors
+    return  h #np.clip(h,a_min=None,a_max=1e295) # clipping to avoid overflow errors
     """if isinstance(x,np.ndarray):
         h = np.array([])
         for x_i in x:
