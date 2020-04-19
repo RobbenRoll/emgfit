@@ -239,6 +239,29 @@ def multi_peak_fit_emg_m2_p2(df_to_fit=None,x_fit_cen=None,x_fit_range=None,peak
 ###################################################################################################
 ###################################################################################################
 
+def create_default_init_pars(mass_number=100):
+    """ Re-scale default parameters for mass 100 to mass number of interest and store them in dictionary """
+    # Default initial parameters for peaks around mass 100 (with re-scaling factor):
+    scl_factor = mass_number/100
+    amp = 0.45*scl_factor
+    mu = None
+    sigma = 0.00014*scl_factor # [u]
+    theta = 0.5 # 0.35
+    eta_m1 = 0.85
+    eta_m2 = 0.10
+    eta_m3 = 0.05
+    tau_m1 = 50e-06*scl_factor # [u]
+    tau_m2 = 500e-06*scl_factor # [u]
+    tau_m3 = 1000e-06*scl_factor # [u]
+    eta_p1 = 0.85
+    eta_p2 = 0.10
+    eta_p3 = 0.05
+    tau_p1 = 50e-06*scl_factor # [u]
+    tau_p2 = 600e-06*scl_factor # [u]
+    tau_p3 = 1000e-06*scl_factor # [u]
+    pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta, 'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3, 'tau_m1': tau_m1, 'tau_m2': tau_m2, 'tau_m3': tau_m3, 'eta_p1': eta_p1, 'eta_p2': eta_p2, 'eta_p3': eta_p3, 'tau_p1': tau_p1, 'tau_p2': tau_p2, 'tau_p3': tau_p3}
+    return pars_dict
+
 ##### Define default initial parameters and store them in dictionary
 amp = 0.45
 mu = None
@@ -258,7 +281,6 @@ tau_p2 = 600e-06
 tau_p3 = 1000e-06
 
 pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta, 'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3, 'tau_m1': tau_m1, 'tau_m2': tau_m2, 'tau_m3': tau_m3, 'eta_p1': eta_p1, 'eta_p2': eta_p2, 'eta_p3': eta_p3, 'tau_p1': tau_p1, 'tau_p2': tau_p2, 'tau_p3': tau_p3}
-
 
 ###################################################################################################
 ##### Define Gaussian fit model ######################################################################
@@ -282,7 +304,7 @@ def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, 
     """
     # Define model function
     def Gaussian(x, amp, mu, sigma):
-        return  amp/(sigma*np.sqrt(2*np.pi)) * bounded_exp(-(x-mu)**2/(2*sigma**2))
+        return  amp/(sigma*np.sqrt(2*np.pi)) * np.exp(-(x-mu)**2/(2*sigma**2))
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak (e.g. 'p0' for peak with index 0)
     model = fit.Model(Gaussian, prefix = pref, nan_policy='propagate')
 
