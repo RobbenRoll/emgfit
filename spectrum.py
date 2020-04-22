@@ -1318,6 +1318,13 @@ class spectrum:
         print('\n##### Peak-shape determination #####-------------------------------------------------------------------------------------------')
         out = spectrum.peakfit(self, fit_model=self.fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=False)
 
+        for p in self.peaks: # reset 'shape calibrant' comment flag
+            if 'shape & mass calibrant' in p.comment :
+                p.comment = p.comment.replace('shape & mass calibrant','mass calibrant')
+            elif p.comment == 'shape calibrant':
+                p.comment = '-'
+            elif 'shape calibrant' in p.comment:
+                p.comment = p.comment.replace('shape calibrant','')
         if peak.comment == '-' or peak.comment == '' or peak.comment is None:
             peak.comment = 'shape calibrant'
         elif 'shape calibrant' not in peak.comment:
