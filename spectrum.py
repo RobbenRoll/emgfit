@@ -1318,14 +1318,19 @@ class spectrum:
         print('\n##### Peak-shape determination #####-------------------------------------------------------------------------------------------')
         out = spectrum.peakfit(self, fit_model=self.fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=False)
 
-        for p in self.peaks: # reset 'shape calibrant' comment flag
+        self.index_mass_calib = None # reset mass calibrant flag
+        for p in self.peaks: # reset 'shape calibrant' and 'mass calibrant' comment flags
             if 'shape & mass calibrant' in p.comment :
-                p.comment = p.comment.replace('shape & mass calibrant','mass calibrant')
+                p.comment = p.comment.replace('shape & mass calibrant','')
             elif p.comment == 'shape calibrant':
                 p.comment = '-'
             elif 'shape calibrant' in p.comment:
                 p.comment = p.comment.replace('shape calibrant','')
-        if peak.comment == '-' or peak.comment == '' or peak.comment is None:
+            elif p.comment == 'mass calibrant':
+                p.comment = '-'
+            elif 'mass calibrant' in p.comment:
+                p.comment = p.comment.replace('mass calibrant','')
+        if peak.comment == '-' or peak.comment == '' or peak.comment is None: # set 'shape calibrant' comment flag
             peak.comment = 'shape calibrant'
         elif 'shape calibrant' not in peak.comment:
             peak.comment = 'shape calibrant, '+peak.comment
@@ -1459,7 +1464,7 @@ class spectrum:
                 try:
                     isinstance(self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift'],list) # check if calibrant centroid shifts pre-exist, print error otherwise
                 except:
-                    raise Exception('\nERROR: No calibrant centroid shifts available for peak-shape error evaluation. Ensure that: \n (a) either the mass calibrant is in the fit range and specified with `index_mass_calib` or `species_mass_calib`, or \n (b) if the mass calibrant is not in the fit range, a successful mass calibration has been performed upfront with fit_calibrant().')
+                    raise Exception('\nERROR: No calibrant centroid shifts available for peak-shape error evaluation. Ensure that: \n (a) either the mass calibrant is in the fit range and specified with the `index_mass_calib` or `species_mass_calib` parameter, or \n (b) if the mass calibrant is not in the fit range, a successful mass calibration has been performed upfront with fit_calibrant().')
 
             # Determine centroid shifts relative to mass calibrant (if calibrant is in fit range, the newly determined calibrant centroid shifts will be used, if not the calibrant centroid shifts from a foregoing mass calibration are used)
             for peak_idx in peak_indeces:
