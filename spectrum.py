@@ -12,8 +12,9 @@ import time
 import copy
 from IPython.display import display
 from emgfit.config import *
-import emgfit.fit_models as fit_models
+from emgfit.AME_funcs import get_AME_values
 import emgfit.emg_funcs as emg_funcs
+import emgfit.fit_models as fit_models
 import lmfit as fit
 import os
 import warnings
@@ -30,52 +31,54 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 ###################################################################################################
 ##### Define peak class
 
-def splitspecies(s):
-    """ Splits ion species string into list containing constituent atom strings (e.g. '4H1:1C12' returns ['4H1','1C12'] """
-    return s.split(':')
-
-def splitparticle(s):
-    """ Extracts number, particle/element type and mass number of particle string (e.g. 1Cs133, Cs133, 1e) """
-    if s[-1:] == '?': # handle unidentified species (indicated by '?' at end of string)
-        return None, '?', None
-    tail = s.lstrip('+-0123456789')
-    head = s[:-len(tail)]
-    if head == '+' or head == '': # handle missing number (if '+' given or 1 in front of single omitted)
-        n = int(1)
-    elif head == '-': # handle missing number
-        n = int(-1)
-    else:
-        n = int(head) # leading number including sign (if present)
-    El = tail.rstrip('0123456789') # central letters
-    if El == 'e' and len(El) == len(tail): # handle electron strings, e.g. ':-1e'
-        A = 0
-    else:
-        A = int(tail[len(El):]) # trailing number
-    return n, El, A
-
-def get_AME_values(species):
-    """ Calculates the AME mass, AME mass error, the extrapolation flag and the mass number A of the given species string"""
-    m = 0.0
-    m_error_sq = 0.0
-    A_tot = 0
-    extrapol = False # initialize boolean flag as False
-    for ptype in splitspecies(species):
-        n, El, A = splitparticle(ptype)
-        if ptype[-1:] == '?': # unidentified species
-            m = None
-            m_error = None
-            A_tot = None
-        elif El == 'e': # electron
-            m += n*m_e
-            # neglect uncertainty of m_e
-        else: # regular atom
-            m += n*mdata_AME(El,A)[2]
-            m_error_sq += (n*mdata_AME(El,A)[3])**2
-            m_error = np.sqrt(m_error_sq)
-            A_tot += A
-            if  mdata_AME(El,A)[4]:
-                extrapol = True # boolean flag for any extrapolated masses contained in species
-    return m, m_error, extrapol, A_tot
+# def splitspecies(s):
+#     """ Splits ion species string into list containing constituent atom strings, e.g. '4H1:1C12' returns ['4H1','1C12']
+#
+#     """
+#     return s.split(':')
+#
+# def splitparticle(s):
+#     """ Extracts number, particle/element type and mass number of particle string (e.g. 1Cs133, Cs133, 1e) """
+#     if s[-1:] == '?': # handle unidentified species (indicated by '?' at end of string)
+#         return None, '?', None
+#     tail = s.lstrip('+-0123456789')
+#     head = s[:-len(tail)]
+#     if head == '+' or head == '': # handle missing number (if '+' given or 1 in front of single omitted)
+#         n = int(1)
+#     elif head == '-': # handle missing number
+#         n = int(-1)
+#     else:
+#         n = int(head) # leading number including sign (if present)
+#     El = tail.rstrip('0123456789') # central letters
+#     if El == 'e' and len(El) == len(tail): # handle electron strings, e.g. ':-1e'
+#         A = 0
+#     else:
+#         A = int(tail[len(El):]) # trailing number
+#     return n, El, A
+#
+# def get_AME_values(species):
+#     """ Calculates the AME mass, AME mass error, the extrapolation flag and the mass number A of the given species string"""
+#     m = 0.0
+#     m_error_sq = 0.0
+#     A_tot = 0
+#     extrapol = False # initialize boolean flag as False
+#     for ptype in splitspecies(species):
+#         n, El, A = splitparticle(ptype)
+#         if ptype[-1:] == '?': # unidentified species
+#             m = None
+#             m_error = None
+#             A_tot = None
+#         elif El == 'e': # electron
+#             m += n*m_e
+#             # neglect uncertainty of m_e
+#         else: # regular atom
+#             m += n*mdata_AME(El,A)[2]
+#             m_error_sq += (n*mdata_AME(El,A)[3])**2
+#             m_error = np.sqrt(m_error_sq)
+#             A_tot += A
+#             if  mdata_AME(El,A)[4]:
+#                 extrapol = True # boolean flag for any extrapolated masses contained in species
+#     return m, m_error, extrapol, A_tot
 
 
 class peak:
@@ -234,11 +237,11 @@ class spectrum:
             return
 
 
-    ##### Define static method for smoothing spectrum before peak detection (taken from https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html)
+    ##### Define static method for smoothing spectrum before peak detection (for internal use within class only)
     @staticmethod
-    def smooth(x,window_len=11,window='hanning'):
+    def __smooth(x,window_len=11,window='hanning'):
         """
-        smooth the data using a window with requested size.
+        Smooth the data using a window with requested width.
 
     	This method is based on the convolution of a scaled window with the signal.
     	The signal is prepared by introducing reflected copies of the signal
@@ -265,6 +268,7 @@ class spectrum:
 
     	TODO: the window parameter could be the window itself if an array instead of a string
     	NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
+        Method adapted from https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html
     	"""
         if x.ndim != 1:
             raise ValueError("smooth only accepts 1 dimension arrays.")
@@ -292,7 +296,7 @@ class spectrum:
     ##### Routine for plotting spectrum
     def plot(self,peaks=None,title="",ax=None,yscale='log',vmarkers=None,thres=None,ymin=None,xmin=None,xmax=None):
         """
-        Plots spectrum
+        Plots spectrum (without fit curve)
         - with markers for all peaks stored in peak list 'self.peaks'
         """
         if peaks is None:
@@ -332,9 +336,9 @@ class spectrum:
         plt.show()
 
 
-    ##### Define static routine for plotting spectrum data stored in dataframe df (only use for functions within this class)
+    ##### Define static routine for plotting spectrum data stored in dataframe df (only for internal use within this class)
     @staticmethod
-    def plot_df(df,title="",ax=None,yscale='log',peaks=None,vmarkers=None,thres=None,ymin=None,xmin=None,xmax=None):
+    def __plot_df(df,title="",ax=None,yscale='log',peaks=None,vmarkers=None,thres=None,ymin=None,xmin=None,xmax=None):
         """Plots spectrum data stored in dataframe 'df'
 
            - optionally with peak markers if
@@ -371,7 +375,7 @@ class spectrum:
         """
         # Smooth spectrum (moving average with window function)
         data_smooth = self.data.copy()
-        data_smooth['Counts'] = spectrum.smooth(self.data['Counts'].values,window_len=window_len,window=window)
+        data_smooth['Counts'] = spectrum.__smooth(self.data['Counts'].values,window_len=window_len,window=window)
         if plot_smoothed_spec:
             # Plot smoothed and original spectrum
             ax = self.data.plot(figsize=(20,6))
@@ -391,7 +395,7 @@ class spectrum:
             data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+1] - 2*data_smooth['Counts'].iloc[i] + data_smooth['Counts'].iloc[i-1])/1**2 # Used second order central finite difference
             # data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+2] - 2*data_smooth['Counts'].iloc[i+1] + data_smooth['Counts'].iloc[i])/1**2    # data_sec_deriv = data_smooth.iloc[0:-2].copy()
         if plot_2nd_deriv:
-            self.plot_df(data_sec_deriv,title="Scaled second derivative of spectrum - set threshold indicated",yscale='linear',thres=-thres)
+            self.__plot_df(data_sec_deriv,title="Scaled second derivative of spectrum - set threshold indicated",yscale='linear',thres=-thres)
 
         # Take only negative part of re-scaled second derivative and invert
         data_sec_deriv_mod = data_smooth.iloc[1:-1].copy()
@@ -411,7 +415,7 @@ class spectrum:
         li_peak_pos = data_sec_deriv_mod.index.values[peak_find[0]]
         #peak_widths = sig.peak_widths(data_sec_deriv_mod['Counts'].values,peak_find[0])
         if plot_2nd_deriv:
-            self.plot_df(data_sec_deriv_mod,title="Negative part of scaled second derivative, inverted - set threshold indicated",thres=thres,vmarkers=li_peak_pos,ymin=0.1*thres)
+            self.__plot_df(data_sec_deriv_mod,title="Negative part of scaled second derivative, inverted - set threshold indicated",thres=thres,vmarkers=li_peak_pos,ymin=0.1*thres)
 
         # Create list of peak objects
         for x in li_peak_pos:
@@ -472,7 +476,6 @@ class spectrum:
         dict_peaks = [p.__dict__ for p in self.peaks]
         df_prop = pd.DataFrame(dict_peaks)
         display(df_prop)
-        #return df_prop
 
 
     ##### Specify identified species
@@ -585,10 +588,12 @@ class spectrum:
             pass
 
 
-    #####  Add peak markers to plot of a fit
-    def add_peak_markers(self,yscale='log',ymax=None,peaks=None):
+    #####  Add peak markers to plot of a fit (only for internal use within class)
+    def __add_peak_markers(self,yscale='log',ymax=None,peaks=None):
         """
         (Internal) method for adding peak markers to current figure object, place this function as self.add_peak_markers between plt.figure() and plt.show(), only for use on already fitted spectra
+        ymax : float
+            ymax of spectrum data to plot (not of marker!)
         """
         if peaks is None:
             peaks = self.peaks
@@ -666,7 +671,7 @@ class spectrum:
             pref = 'p{0}_'.format(peak_index)
             plt.plot(fit_result.x, comps[pref], '--',linewidth=2)
         if show_peak_markers:
-            self.add_peak_markers(yscale='log',ymax=y_max_log,peaks=peaks_to_plot)
+            self.__add_peak_markers(yscale='log',ymax=y_max_log,peaks=peaks_to_plot)
         if sigmas_of_conf_band!=0 and fit_result.errorbars == True: # add confidence band with specified number of sigmas
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
             plt.fill_between(fit_result.x, fit_result.best_fit-dely, fit_result.best_fit+dely, color="#ABABAB", label=str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band')
@@ -707,7 +712,7 @@ class spectrum:
             ax.legend()
             ax.set_xlim(x_min,x_max)
         if show_peak_markers:
-            self.add_peak_markers(yscale='lin',ymax=y_max_lin,peaks=peaks_to_plot)
+            self.__add_peak_markers(yscale='lin',ymax=y_max_lin,peaks=peaks_to_plot)
         plt.xlabel('m/z [u]')
         if plot_filename is not None:
             try:
@@ -857,7 +862,7 @@ class spectrum:
             mod_Pearson._residual = resid_Pearson_chi_square # overwrite lmfit's least square residuals with iterative residuals for Pearson chi-square
             out = mod_Pearson.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False,nan_policy='propagate')
             y_m = out.best_fit
-            Pearson_weights = np.where(y_m<=1e-15,1,1./np.sqrt(y_m)) # 1/Sqrt(f(x_i)) Pearson weights, non-zero minimal bounds implemented for numerical stability for
+            Pearson_weights = np.where(y_m<=1e-15,1,1./np.sqrt(y_m)) # 1/Sqrt(f(x_i)) Pearson weights, non-zero minimal bounds implemented for numerical stability
             out.y_err = 1/Pearson_weights
             #out = mod.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False)
         elif cost_func == 'MLE': # binned maximum likelihood fit using likelihood ratio
@@ -884,8 +889,9 @@ class spectrum:
         #out.y_err = 1/out.weights #y_err
 
         if eval_par_covar:
+            print("\n  ### Evaluating parameter covariances using MCMC method")
             ## Add emcee MCMC sampling
-            emcee_kws = dict(steps=5000, burn=2500, thin=20, is_weighted=True, progress=True)
+            emcee_kws = dict(steps=7000, burn=2500, thin=10, is_weighted=True, progress=True)
             emcee_params = out.params.copy()
             #emcee_params.add('__lnsigma', value=np.log(7.0), min=np.log(1.0), max=np.log(100.0))
             result_emcee = mod.fit(y, x=x, params=emcee_params, weights=weights, method='emcee', nan_policy='omit', fit_kws=emcee_kws)
@@ -949,7 +955,7 @@ class spectrum:
         return out
 
 
-    ##### Internal helper function for calculating the peak area (number of counts in peak)
+    ##### Helper method for calculating the peak area (number of counts in peak)
     def calc_peak_area(self, peak_index, fit_result=None, decimals=2):
         """ Calculate peak area (total counts in peak) and its error for a given peak using the peak amplitude and the bin_width
 
@@ -984,7 +990,7 @@ class spectrum:
         return [area, area_err]
 
 
-    ##### Internal helper function for calculating FWHM of Hyper-EMG function
+    ##### Helper method for calculating FWHM of Hyper-EMG function
     @staticmethod
     def calc_FWHM_emg(peak_index,fit_result=None):
         """ Calculates FWHM of a EMG function"""
@@ -1007,7 +1013,7 @@ class spectrum:
         return FWHM
 
 
-    ##### Internal helper function for calculating std. dev. of Hyper-EMG fit result
+    ##### Helper method for calculating std. dev. of Hyper-EMG fit result
     @staticmethod
     def calc_sigma_emg(peak_index,fit_model=None,fit_result=None):
         pref = 'p{0}_'.format(peak_index)
@@ -1187,7 +1193,7 @@ class spectrum:
 
 
     ##### Determine peak shape
-    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', cost_func='chi-square', init_pars = 'default', x_fit_cen=None, x_fit_range=None, vary_baseline=True, method='least_squares', vary_tail_order=True, show_fit_reports=False, show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0):
+    def determine_peak_shape(self, index_shape_calib=None, species_shape_calib=None, fit_model='emg22', cost_func='chi-square', init_pars = 'default', x_fit_cen=None, x_fit_range=None, vary_baseline=True, method='least_squares', vary_tail_order=True, show_fit_reports=False, show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0,eval_par_covar=False):
         """
         Determine optimal tail order and peak shape parameters by fitting the selected peak-shape calibrant.
 
@@ -1235,6 +1241,7 @@ class spectrum:
         sigmas_of_conf_band : int, optional, default: 0
             coverage probability of confidence band in sigma (only for log-plot);
              if 0, no confidence band is shown (default)
+        eval_par_covar ####################
         """
         if index_shape_calib is not None and (species_shape_calib is None):
             peak = self.peaks[index_shape_calib]
@@ -1316,7 +1323,7 @@ class spectrum:
             self.fit_model = fit_model
 
         print('\n##### Peak-shape determination #####-------------------------------------------------------------------------------------------')
-        out = spectrum.peakfit(self, fit_model=self.fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=False)
+        out = spectrum.peakfit(self, fit_model=self.fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,eval_par_covar=eval_par_covar)
 
         self.index_mass_calib = None # reset mass calibrant flag
         for p in self.peaks: # reset 'shape calibrant' and 'mass calibrant' comment flags
@@ -1492,8 +1499,8 @@ class spectrum:
                 print("Relative peak-shape error of peak "+str(peak_idx)+":",np.round(p.rel_peakshape_error,9))
 
 
-    ##### Update recalibration attributes and calibrant peak properties
-    def update_calibrant_props(self,index_mass_calib=None,fit_result=None):
+    ##### Update recalibration attributes and calibrant peak properties (for interal use within class only)
+    def __update_calibrant_props(self,index_mass_calib=None,fit_result=None):
         """
         Method for determining recalibration factor and updating mass calibrant peak properties
         """
@@ -1528,6 +1535,7 @@ class spectrum:
         peak.chi_sq_red = np.round(fit_result.redchi, 2)
 
         # Print error contributions of mass calibrant:
+        print("\n##### Mass recalibration #####\n")
         print("\nRelative literature error of mass calibrant:   ",np.round(peak.m_AME_error/peak.m_fit,9))
         print("Relative statistical error of mass calibrant:  ",np.round(peak.rel_stat_error,9))
 
@@ -1601,13 +1609,13 @@ class spectrum:
             display(fit_result)
 
         # Update recalibration factor and calibrant properties
-        self.update_calibrant_props(index_mass_calib=index_mass_calib,fit_result=fit_result)
+        self.__update_calibrant_props(index_mass_calib=index_mass_calib,fit_result=fit_result)
         # Calculate absolute centroid shifts of calibrant as prep for subsequent peak-shape error determination for ions of interest
         self.eval_peakshape_errors(peak_indeces=[index_mass_calib],fit_result=fit_result,verbose=False)
 
 
     ##### Update peak list with fit values
-    def update_peak_props(self,peaks=[],fit_result=None):
+    def __update_peak_props(self,peaks=[],fit_result=None):
         """
         Internal routine to update peak properties DataFrame with fit results in 'fit_result'. All peaks referenced by 'peaks' parameter must belong to the same 'fit_result'. The values of the mass calibrant will not be changed by this routine.
 
@@ -1699,7 +1707,7 @@ class spectrum:
         fit_result = spectrum.peakfit(self, fit_model=fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars, vary_shape=vary_shape, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,plot_filename=plot_filename)
 
         if index_mass_calib is not None:
-            self.update_calibrant_props(index_mass_calib=index_mass_calib,fit_result=fit_result) # Update recalibration factor and calibrant properties
+            self.__update_calibrant_props(index_mass_calib=index_mass_calib,fit_result=fit_result) # Update recalibration factor and calibrant properties
 
         # Determine peak-shape errors
         if x_fit_cen:
@@ -1714,7 +1722,7 @@ class spectrum:
             self.eval_peakshape_errors(peak_indeces=peak_indeces,fit_result=fit_result,verbose=True,show_shape_err_fits=show_shape_err_fits)
         except KeyError:
             print("WARNING: Peak-shape error determination failed with KeyError. Likely the used fit_model collides with shape calibration model.")
-        self.update_peak_props(peaks=peaks_to_fit,fit_result=fit_result)
+        self.__update_peak_props(peaks=peaks_to_fit,fit_result=fit_result)
         self.show_peak_properties()
         if show_fit_report:
             display(fit_result)
@@ -1805,6 +1813,5 @@ class spectrum:
 
 
 
-####
 
 ###################################################################################################

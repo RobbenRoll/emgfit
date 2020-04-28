@@ -130,7 +130,10 @@ Optional:
 * use F-statistics for tail order determination
 
 Installation:
-* get dependencies via pip install: lmfit (numpy,  scipy, pathlib, matplotlib, pandas, time, copy, IPython.display, emcee (v3+), numdifftools)
+* Install or update to Python3, e.g. by installing the Anaconda distribution (Anaconda already includes almost all dependencies for emgfit)
+* Install IPython and Jupyter -  an excellent tutorial on installing and using Jupyter notebooks is available at:
+https://notebooks.gesis.org/binder/jupyter/user/ipython-ipython-in-depth-gyr1r2l5/notebooks/binder/Index.ipynb
+* get other dependencies via pip or conda install: lmfit (numpy,  scipy, pathlib, matplotlib, pandas, time, copy, IPython.display, emcee (v3+), numdifftools)
 * if using anaconda: might get scipy.special import error, if so: run $conda remove --force scipy   and $pip install scipy
 * Dependencies for maximum likelihood fitting: emcee (version 3+), corner
 * gmpy2, download suitable wheel from https://www.lfd.uci.edu/~gohlke/pythonlibs/#gmpy and pip install ***.whl
@@ -141,7 +144,7 @@ NotImplementedError: emcee version 3 is required.
 * Pearson chi-square errorbars are calculated after the last fit iteration, in case of MLE cost func errorbars are given by sqrt(y+1) (not actually used as weights in cost_func)
 * tau parameters constrained with an upper bound of 0.5u (add to config?!)
 
-MLE only with:
+Basic MLE only with:
 SCALAR_METHODS = {'nelder': 'Nelder-Mead',
                   'powell': 'Powell',
                   'cg': 'CG',

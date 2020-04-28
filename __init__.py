@@ -19,8 +19,6 @@ assert sys.version_info >= min_py_version, "emgfit package requires Python versi
 __all__ = [
         #'emg_funcs',
         'config',
-        'emg22_fit',
-        'peak_detect',
 	    'spectrum'
         ]
 
