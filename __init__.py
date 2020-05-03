@@ -1,11 +1,14 @@
 ###################################################################################################
-##### Python module for Hyper-EMG fitting of TOF mass spectra
+"""Python package for Hyper-EMG fitting of TOF mass spectra
+
+.. moduleauthor:: Stefan Paul <stefan.paul@triumf.ca>
+"""
 ##### Fitting routines taken from lmfit package
 ##### Code by Stefan Paul, 2019-12-28
 
-##### Import required subpackages
-from emgfit.config import *
-from emgfit.spectrum import *
+##### Import required modules
+from .config import *
+from .spectrum import *
 
 ##### Define package version
 __version__ = '0.0.5'

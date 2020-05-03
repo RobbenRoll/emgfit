@@ -161,3 +161,15 @@ SCALAR_METHODS = {'nelder': 'Nelder-Mead',
                   'trust-constr': 'trust-constr',
                   'trust-exact': 'trust-exact',
                   'trust-krylov': 'trust-krylov'}
+
+Note:
+* m_AME is the IONIC literature mass as calculated from species string, do not forget to include :-1e in species assigment!
+* peak comments and spectrum comments as helpful tools for post-fit-processing
+* Instatiation of peak objects via detect_peaks or manually via add_peak
+
+Documentation:
+* Docs follow numpy docstring guide (with minor exceptions): https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
+  Exceptions:
+* Use Sphinx with napoleon to create online/html documentation,
+     - Napoleon allows to autobuild docs from legible docstrings in numpy style
+       get napoleon following instructions at: https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html?highlight=napoleon

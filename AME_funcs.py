@@ -1,6 +1,6 @@
 ###################################################################################################
 ##### Module for importing and hadnling of data from the Atomic Mass Evaluation (AME) for emgfit package
-from emgfit.config import *
+from .config import *
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -13,20 +13,20 @@ df_AME.set_index(['Element','A'],inplace=True)
 
 
 def mdata_AME(El,A):
-    """
-    Grabs atomic mass data from AME2016 [u]
+    """Grabs atomic mass data from AME2016 [u].
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     El : str
         string with element name
     A : int
         mass number of isotope of interest
 
-    Returns:
-    --------
+    Returns
+    -------
     list (str,int,float,float,bool)
-    [Element name, mass number, atomic AME mass, atomic AME mass error, boolean flag for extrapolated mass (if True: extrapolated mass)]
+        [Element name, mass number, atomic AME mass, atomic AME mass error, boolean flag for extrapolated mass (if True: extrapolated mass)] ##############
+
     """
     m_AME = df_AME['ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
     m_AME_error = df_AME['Error ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
@@ -35,7 +35,21 @@ def mdata_AME(El,A):
 
 
 def splitspecies(s):
-    """ Splits ion species string into list containing constituent atom strings, e.g. '4H1:1C12' returns ['4H1','1C12']
+    """ Splits ion species string into list of constituent atom strings.
+
+    Parameters
+    ----------
+    s : str
+        Input species string.
+
+    Returns
+    -------
+    list of str
+        List of constituent atom strings contained in `s`.
+
+    Example
+    -------
+    '4H1:1C12' returns ['4H1','1C12']
 
     """
     return s.split(':')
@@ -65,13 +79,16 @@ def get_AME_values(species):
     """
     Calculates the AME mass, AME mass error, the extrapolation flag and the mass number A of the given species
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     species : str
         string with name of species to grab AME for
 
-    Returns:
-    --------
+    Returns
+    -------
+    list of [float,float,bool,int]
+        List containing relevant AME data for `species`:
+        [AME mass, AME mass uncertainty, ``True`` if extrapolated species, atomic mass number]
 
     """
     m = 0.0

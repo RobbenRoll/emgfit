@@ -1,6 +1,6 @@
 ###################################################################################################
-##### Python module for peak detection in TOF mass spectra
-##### Code by Stefan Paul, 2019-12-28
+##### Python module for peak fitting in TOF mass spectra
+##### Code by Stefan Paul, 2020-04-28
 
 ##### Import packages
 import numpy as np
@@ -11,107 +11,151 @@ import scipy.special as spl
 import time
 import copy
 from IPython.display import display
-from emgfit.config import *
-from emgfit.AME_funcs import get_AME_values
+from .config import *
+from .AME_funcs import get_AME_values
 import emgfit.emg_funcs as emg_funcs
 import emgfit.fit_models as fit_models
 import lmfit as fit
 import os
 import warnings
+
 # ignore irrelevant warnings by message
 warnings.filterwarnings("ignore", message="divide by zero encountered in log")
 warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
 warnings.filterwarnings("ignore", message="overflow encountered in exp")
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-#u_to_keV = config.u_to_keV
-#u = config.u
-#m_e = config.m_e
-
 ###################################################################################################
 ##### Define peak class
-
-# def splitspecies(s):
-#     """ Splits ion species string into list containing constituent atom strings, e.g. '4H1:1C12' returns ['4H1','1C12']
-#
-#     """
-#     return s.split(':')
-#
-# def splitparticle(s):
-#     """ Extracts number, particle/element type and mass number of particle string (e.g. 1Cs133, Cs133, 1e) """
-#     if s[-1:] == '?': # handle unidentified species (indicated by '?' at end of string)
-#         return None, '?', None
-#     tail = s.lstrip('+-0123456789')
-#     head = s[:-len(tail)]
-#     if head == '+' or head == '': # handle missing number (if '+' given or 1 in front of single omitted)
-#         n = int(1)
-#     elif head == '-': # handle missing number
-#         n = int(-1)
-#     else:
-#         n = int(head) # leading number including sign (if present)
-#     El = tail.rstrip('0123456789') # central letters
-#     if El == 'e' and len(El) == len(tail): # handle electron strings, e.g. ':-1e'
-#         A = 0
-#     else:
-#         A = int(tail[len(El):]) # trailing number
-#     return n, El, A
-#
-# def get_AME_values(species):
-#     """ Calculates the AME mass, AME mass error, the extrapolation flag and the mass number A of the given species string"""
-#     m = 0.0
-#     m_error_sq = 0.0
-#     A_tot = 0
-#     extrapol = False # initialize boolean flag as False
-#     for ptype in splitspecies(species):
-#         n, El, A = splitparticle(ptype)
-#         if ptype[-1:] == '?': # unidentified species
-#             m = None
-#             m_error = None
-#             A_tot = None
-#         elif El == 'e': # electron
-#             m += n*m_e
-#             # neglect uncertainty of m_e
-#         else: # regular atom
-#             m += n*mdata_AME(El,A)[2]
-#             m_error_sq += (n*mdata_AME(El,A)[3])**2
-#             m_error = np.sqrt(m_error_sq)
-#             A_tot += A
-#             if  mdata_AME(El,A)[4]:
-#                 extrapol = True # boolean flag for any extrapolated masses contained in species
-#     return m, m_error, extrapol, A_tot
-
-
 class peak:
+    """Object storing all relevant information about a mass peak.
+
+    Most peak attributes are intialized as None and are later automatically
+    updated by methods of the spectrum class, e.g. :meth:`spectrum.determine_peak_shape`
+    or :meth:`spectrum.fit_peaks`.
+
+    Attributes
+    ----------
+    x_pos : float [u]
+        Coarse position of peak centroid. In fits the Hyper-EMG parameter for
+        the (Gaussian) peak centroid `mu` will be initialized at this value.
+        Peak markers in plots are located at `x_pos`.
+    species : str
+        String with chemical formula of ion species asociated with peak.
+        Species strings follow the :-notation (likewise used in MAc).
+        Examples: ``'1K39:-1e'``, ``'K39:-e'``, ``'2H1:1O16:-1e'``.
+        **Do not forget to substract the electron**, otherwise the atomic not
+        the ionic mass would be used as literature value!
+        Alternatively, tentative assigments can be made by adding a ``'?'`` at
+        the end of the species string (e.g.: ``'Sn100:-1e?'``, ``'?'``, ...).
+    comment : str
+        User comment for peak.
+    m_AME : float [u], optional
+        Ionic literature mass value, from AME2016 or user-defined.
+    m_AME_error : float [u], optional
+        Literature mass uncertainty, from AME2016 or user-defined.
+    extrapolated : bool
+        Boolean flag for extrapolated AME mass values (equivalent to '#' in AME).
+    fit_model : str
+        Name of model used to fit peak.
+    cost_func : str
+        Type of cost function used to fit peak (``'chi-square'`` or ``'MLE'``).
+    red_chi : float
+        Reduced chi-squared of peak fit. If the peak was fitted using ``'MLE'``,
+        :attr:`red_chi` should be taken with caution.
+    area, area_error : float [counts]
+        Number of total counts in peak and corresponding uncertainty
+        (calculated from amplitude parameter `amp` of peak fit).
+    m_fit : float [u]
+        Ionic mass value obtained in peak fit (after mass recalibration).
+    rel_stat_error : float
+        Relative statistical uncertainty of :attr:`m_fit`.
+    rel_recal_error : float
+        Relative uncertainty of :attr:`m_fit` due to mass recalibration.
+    rel_peakshape_error : float
+        Relative peak-shape uncertainty of :attr:`m_fit`.
+    rel_mass_error : float
+        Total relative mass uncertainty of :attr:`m_fit` (excluding systematics!).
+        Includes statistical, peak-shape and recalibration uncertainty.
+    A : int
+        Atomic mass number of peak species.
+    atomic_ME_keV : float [keV]
+        (Atomic) mass excess corresponding to :attr:`m_fit`.
+    mass_error_keV : float [keV]
+        Total mass uncertainty of :attr:`m_fit` (excluding systematics!).
+    m_dev_keV : float [keV]
+        Deviation from literature value (:attr:`m_fit` - :attr:`m_AME`).
+
+    """
     def __init__(self,x_pos,species,m_AME=None,m_AME_error=None):
-        """ Create new peak object """
+        """Instantiate a new :class:`peak` object.
+
+        If a valid ion species is assigned with the `species` parameter the
+        corresponding literature values will automatically be fetched from the
+        AME2016 database. The syntax for species assignment follows that of MAc
+        (for more details see documentation for `species` parameter below).
+
+        If different literature values are to be used, the literature mass or
+        mass uncertainty can be user-defined with :attr:`m_AME` and
+        :attr:`m_AME_error`. This is useful for isomers and in cases where more
+        recent measurements haven't been included in the AME yet.
+
+        Parameters
+        ----------
+
+        x_pos : float [u]
+            Coarse position of peak centroid. In fits the Hyper-EMG parameter
+            for the (Gaussian) peak centroid `mu` will be initialized at this
+            value. Peak markers in plots are located at `x_pos`.
+        species : str
+            String with chemical formula of ion species asociated with peak.
+            Species strings follow the :-notation (likewise used in MAc).
+            Examples: ``'1K39:-1e'``, ``'K39:-e'``, ``'2H1:1O16:-1e'``.
+            **Do not forget to substract the electron from singly-charged
+            species**, otherwise the atomic not the ionic mass will be used as
+            literature value!
+            Alternatively, tentative assigments can be made by adding a ``'?'``
+            at the end of the species string (e.g.: ``'Sn100:-1e?'``, ``'?'``, ...).
+        m_AME : float [u], optional
+            User-defined literature mass value. Overwrites value fetched from
+            AME2016. Useful for isomers or to use more up-to-date values.
+        m_AME_error : float [u], optional
+            User-defined literature mass uncertainty. Overwrites value fetched
+            from AME2016.
+
+        """
         self.x_pos = x_pos
         self.species = species # e.g. '1Cs133:-1e or 'Cs133:-e' or '4H1:1C12:-1e'
         self.comment = '-'
         self.m_AME = m_AME #
         self.m_AME_error = m_AME_error
-        m, m_error, extrapol, A_tot = get_AME_values(species) # get AME values for specified species
-        if self.m_AME is None: # unless m_AME has been user-defined, the mass value of the specified 'species' is calculated from AME database
+        m, m_error, extrapol, A_tot = get_AME_values(species) # grab AME values
+        # If `m_AME` has not been user-defined, set it to AME value
+        if self.m_AME is None:
              self.m_AME = m
-        if self.m_AME_error is None: # unless m_AME_error has been user-defined, the mass error of the specified 'species' is calculated from AME database
+         # If `m_AME_error` has not been user-defined, set it to AME value
+        if self.m_AME_error is None:
             self.m_AME_error = m_error
         self.extrapolated = extrapol
         self.fit_model = None
-        self.cost_func = None # cost function used to fit peak
-        self.chi_sq_red = None # chi square reduced of peak fit
+        self.cost_func = None
+        self.red_chi = None
         self.area = None
         self.area_error = None
-        self.m_fit = None # mass value from fit [u]
-        self.rel_stat_error = None # A_stat * FWHM / sqrt(area) /m_fit, with A_stat_G = 0.42... and A_stat_emg from `determine_A_stat` method or default value from config.py
+        self.m_fit = None # ionic mass value from fit [u]
+        self.rel_stat_error = None # = A_stat * FWHM / sqrt(area) /m_fit, with A_stat_G = 0.42... and A_stat_emg from `determine_A_stat_emg` method or default value from config.py
         self.rel_recal_error = None
         self.rel_peakshape_error = None
-        self.rel_mass_error = None # total relative uncertainty of mass value - includes: stat. mass uncertainty, peakshape uncertainty, recalibration uncertainty
+        self.rel_mass_error = None
         self.A = A_tot
-        self.atomic_ME_keV = None # atomic Mass excess = atomic mass[u] - A    [keV]
-        self.mass_error_keV = None # total error of m_fit (before systematics) [keV]
+        self.atomic_ME_keV = None # (atomic) Mass excess = atomic mass[u] - A    [keV]
+        self.mass_error_keV = None
         self.m_dev_keV = None # TITAN - AME [keV]
 
     def update_lit_values(self):
-        """ Overwrite m_AME, m_AME_error and extrapolated attributes of peak with AME values for specified species """
+        """Updates :attr:`m_AME`, :attr:`m_AME_error` and :attr:`extrapolated`
+        peak attributes with AME2016 values for specified species."""
+
         m, m_error, extrapol, A_tot = get_AME_values(self.species) # calculate values for species
         self.m_AME = m
         self.m_AME_error = m_error
@@ -119,8 +163,9 @@ class peak:
         self.A = A_tot
 
 
-    def properties(self):
-        """ Print peak properties """
+    def print_properties(self):
+        """Print most relevant peak properties."""
+
         print("x_pos:",self.x_pos,"u")
         print("Species:",self.species)
         print("AME mass:",self.m_AME,"u     (",np.round(self.m_AME*u_to_keV,3),"keV )")
@@ -135,43 +180,160 @@ class peak:
             print("Total mass uncertainty (before systematics):",self.rel_mass_error*self.m_fit,"u     (",np.round(self.mass_error_keV,3),"keV )")
             print("Atomic mass excess:",np.round(self.atomic_ME_keV,3),"keV")
             print("TITAN - AME:",np.round(self.m_dev_keV,3),"keV")
-            print("χ_sq_red:",np.round(self.chi_sq_red))
+            print("χ_sq_red:",np.round(self.red_chi))
 
 
 ###################################################################################################
 ###### Define spectrum class
 class spectrum:
-    def __init__(self,filename,m_start=None,m_stop=None,skiprows = 18,show_plot=True,df=None):
-        """
-        Creates spectrum object by importing TOF data from .txt or .csv file, plotting full spectrum and then cutting spectrum to specified fit range {m_start;m_stop}
-	    Input file format: two-column .csv- or .txt-file with tab separated values (column 1: mass bin, column 2: counts per bin)
+    r"""Object storing spectrum data, associated peaks and all relevant
+    fit results - the workhorse of emgfit.
 
-        Parameters:
-        -----------
-	    filename : str or None
-            string containing (path and) filename of mass spectrum to analyze (as exported from MAc in histogram mode)
-            if None, data must be provided as DataFrame `df`
-	    m_start : float, optional, [u]
-            start of fit range, data at lower masses will be discarded
-	    m_stop : float, optional, [u]
-            stop of fit range, data at higher masses will be discarded
+    Attributes
+    ----------
+    spectrum_comment : str, default: '-'
+        User comment for entire spectrum (helpful for further processing after).
+    fit_model : str
+        Name of model used for peak-shape determination and further fitting.
+    red_chi_shape_calib : float
+        Reduced chi-squared of peak-shape determination fit.
+    fit_range_shape_calib : float [u]
+        Fit range used for peak-shape calibration.
+    shape_cal_pars : dict
+        Model parameter values obtained in peak-shape calibration.
+    shape_cal_errors : dict
+        Model parameter uncertainties obtained in peak-shape calibration.
+    index_mass_calib : int
+        Peak index of mass calibrant peak.
+    determined_A_stat_emg : bool
+        Boolean flag for whether :attr:`A_stat_emg` was determined for this
+        spectrum specifically using the :meth:`determine_A_stat_emg` method.
+        If True, :attr:`A_stat_emg` was set using :meth:`determine_A_stat_emg`,
+        otherwise the default value `emgfit.config.A_stat_emg_default`
+        from the :mod:`~emgfit.config` module was used.
+        For more details see docs of :meth:`determine_A_stat_emg` method.
+    A_stat_emg : float
+        Constant of proportionality for calculation of the statistical mass
+        uncertainties. Defaults to `emgfit.config.A_stat_emg_default`
+        as defined in the :mod:`~emgfit.config` module, unless the
+        :meth:`determine_A_stat_emg` method is run.
+    A_stat_emg_error : float
+        Uncertainty of :attr:`A_stat_emg`.
+    recal_fac : float, default: 1.0
+        Scaling factor applied to :attr:`m_fit` in mass recalibration.
+    rel_recal_error : float
+        Relative uncertainty of recalibration factor :attr:`recal_fac`.
+    centroid_shifts_pm : :class:`numpy.ndarray` of dict
+        Pos. and neg. centroid shifts relative to mass calibrant obtained in
+        peak-shape uncertainty evaluation by varying each shape parameter by
+        plus and minus 1 standard deviation, respectively.
+        The `centroid_shifts_pm` array contains a dictionary for each peak;
+        the dictionaries have the following structure:
+        {'<shape param. name> centroid shift pm' : [<pos. centroid shift>,
+        <neg. centroid shift>], ...}
+        For the mass calibrant ' calibrant centroid shift pm' is appended to
+        '<shape param. name>' and the pos. and neg. centroid shift are given by
+        the absolute centroid shifts.
+        For more details see docs of :meth:`_eval_peakshape_errors`.            #TODO: add doc on peak-shape eval.
+    centroid_shifts : :class:`numpy.ndarray` of dict
+        Maximal centroid shifts relative to mass calibrant for each peak
+        obtained in peak-shape uncertainty evaluation by varying each shape
+        parameter by plus and minus 1 standard deviation and only keeping
+        the shift with the larger absolute magnitude. The `centroid_shifts`
+        array contains a dictionary for each peak; the dictionary have the
+        following structure:
+        {'<shape param. name> centroid shift' : [<maximal centroid shift>],...}
+        For the mass calibrant ' calibrant centroid shift' is appended to
+        '<shape param. name>' and the pos. and neg. centroid shift are given by
+        the absolute centroid shifts.
+        For more details see docs of :meth:`_eval_peakshape_errors`.             #TODO: add doc on peak-shape eval.
+    peaks : list of :class:`peak`
+        List containing all peaks associated with the spectrum sorted by
+        ascending mass. The index of a peak within the `peaks` list is referred
+        to as the ``peak_index``.
+    fit_results : list of :class:`lmfit.model.ModelResult`
+        List containing fit results (:class:`lmfit.model.ModelResult` objects)
+        for peaks associated with spectrum.
+    data : :class:`pandas.DataFrame`
+        Histogrammed spectrum data.
+    mass_number : int
+        Atomic mass number associated with central bin of spectrum.
+    default_fit_range : float
+        Default mass range for fits, scaled to :attr:`mass_number` of spectrum.
+
+    Notes
+    -----
+    The :attr:`fit_model` spectrum attribute seems somewhat redundant with
+    the :attr:`peak.fit_model` peak attribute but ensures that no relevant
+    information is lost.
+
+    The :attr:`mass_number` is used for re-scaling of the default model
+    parameters to the mass of interest. It is calculated upon data import by
+    taking the median of all mass bin centers (after initial cutting of the
+    spectrum) and rounding to the closest integer. This accounts for spectra
+    potentially containing several mass units.
+
+    The :attr:`default_fit_range` is scaled to the spectrum's :attr:`mass_number`
+    using the relation:
+    .. math: \text{default_fit_range} = 0.01\,u \cdot (\text{mass_number}/100)
+
+    """
+    def __init__(self,filename=None,m_start=None,m_stop=None,skiprows = 18,
+                 show_plot=True,df=None):
+        """Create a :class:spectrum object by importing histogrammed mass data
+        from .txt or .csv file.
+
+        Input file format: two-column .csv- or .txt-file with tab-separated
+                           values (column 1: mass bin, column 2: counts in bin).
+                           This is the default format of MAc export files when
+                           histogram mode is used.
+
+        Optionally the spectrum can be cut to a specified fit range using the
+        `m_start` and `m_stop` parameters. Mass data outside this range will be
+        discarded and excluded from further analysis.
+
+        If `show_plot` is True, a plot of the spectrum is shown including
+        vertical markers for the `m_start` and `m_stop` mass cut-offs
+        (if applicable).
+
+        Parameters
+        ----------
+        filename : str, optional
+            Filename of mass spectrum to analyze (as exported with MAc's
+            histogram mode). If the input file is not located in the working
+            directory the directory path has to be included in `filename`, too.
+            If no `filename` is given, data must be provided via `df` argument.
+	    m_start : float [u], optional
+            Start of fit range, data at lower masses will be discarded.
+	    m_stop : float [u], optional
+            Stop of fit range, data at higher masses will be discarded.
         show_plot : bool, optional, default: True
-            if True, shows a plot of full spectrum with markers for `m_start` and `m_stop`
-        df : pandas DataFrame, optional
-            spectrum data, this enables the alternative creation of a spectrum object from a DataFrame instead of from an external file
+            if True, shows a plot of full spectrum with vertical markers for
+            `m_start` and `m_stop` cut-offs.
+        df : :class:`pandas.DataFrame`, optional
+            DataFrame with spectrum data to use, this enables the creation of a
+            spectrum object from a DataFrame instead of from an external file.
+            **Primarily intended for internal use.**
 
-	    Returns:
-        --------
-        Pandas dataframe 'data' containing mass data and plot of full spectrum with fit range markers
+        Notes
+        -----
+        The option to import data via the `df` argument was added to enable the
+        processing of bootstrapped spectra as regular :class:`spectrum` objects in
+        the :meth:`determine_A_stat_emg` method. This is primarily intended for
+        internal use.
+
 	    """
         if filename is not None:
-            data_uncut = pd.read_csv(filename, header = None, names= ['Mass [u]', 'Counts'], skiprows = skiprows,delim_whitespace = True,index_col=False,dtype=float)
+            data_uncut = pd.read_csv(filename,header=None,names=['Mass [u]', 'Counts'],
+                                     skiprows=skiprows,delim_whitespace=True,index_col=False,dtype=float)
             data_uncut.set_index('Mass [u]',inplace =True)
-        else:
+        elif df is not None:
             data_uncut = df
+        else:
+            raise Exception("ERROR: Import failed, since input data was neither specified with `filename` nor `df`.")
         self.spectrum_comment = '-'
         self.fit_model = None
-        self.best_redchi = None
+        self.red_chi_shape_calib = None
         self.fit_range_shape_calib = None
         self.shape_cal_pars = None
         self.shape_cal_errors = []
@@ -181,18 +343,20 @@ class spectrum:
         self.A_stat_emg_error = None
         self.recal_fac = 1.0
         self.rel_recal_error = None
-        self.centroid_shifts_pm = None # array containing a dictionary for each peak with pos. and neg. centroid shifts for each parameter varied in peak-shape error evaluation
-        self.centroid_shifts = None # array containing a dictionary for each peak with the maximal centroid shift for each parameter varied in peak-shape error evaluation
-        self.peaks = [] # list containing peaks associated with spectrum (each peak is represented by an instance of the class 'peak')
-        self.fit_results = [] # list containing fit results (lmfit modelresult objects) of peaks associated with spectrum
+        self.centroid_shifts_pm = None
+        self.centroid_shifts = None
+        self.peaks = [] # list containing peaks associated with spectrum
+        self.fit_results = [] # list containing fit results of all peaks
         plt.rcParams.update({"font.size": 15})
-        if m_start or m_stop:
-            self.data = data_uncut.loc[m_start:m_stop] # dataframe containing mass spectreum data (cut to fit range)
+        if m_start or m_stop: # cut input data to specified mass range
+            self.data = data_uncut.loc[m_start:m_stop]
             plot_title = 'Spectrum with start and stop markers'
         else:
             self.data = data_uncut # dataframe containing mass spectrum data
             plot_title = 'Spectrum (fit full range)'
-        self.mass_number = int(np.round(self.data.index.values[int(len(self.data)/2)])) # take median of mass bins after cutting spectrum and round to closest integer
+        # Set `mass_number` using median of mass bins after cutting spectrum and
+        # round to closest integer:
+        self.mass_number = int(np.round(self.data.index.values[int(len(self.data)/2)]))
         self.default_fit_range = 0.01*(self.mass_number/100)
         if show_plot:
             fig  = plt.figure(figsize=(20,8))
@@ -205,26 +369,38 @@ class spectrum:
             plt.show()
 
 
-    ##### Add peak comment manually
     def add_spectrum_comment(self,comment,overwrite=False):
         """
-        Method for adding a general comment to the spectrum.
+        Add a general comment to the spectrum.
 
-        By default the string 'comment' will be added at the end of the current spectrum comment (if the current comment is '-' it is overwritten with 'comment' argument).
-        If overwrite is set to 'True' the current peak comment is overwritten with the 'comment' argument.
+        By default the string `comment` will be added at the end of the current
+        :attr:`spectrum_comment` attribute. If `overwrite` is set to True the
+        current :attr:`spectrum_comment` is overwritten with `comment`.
 
-        This comment will be included in the EXCEL file with all fit results (if `save_results` spectrum method is used to write results to a file).
+        Parameters
+        ----------
+        comment : str
+            Comment to add to spectrum.
+        overwrite : bool
+            If True, the current :attr:`spectrum_comment` attribute will be
+            overwritten with `comment`, else `comment` is appended to the end of
+            :attr:`spectrum_comment`.
 
-        For adding comments to peaks use the `add_peak_comment` spectrum method.
+        Notes
+        -----
+        The spectrum comment will be included in the output file storing all fit
+        results and can hence be useful to pass on information for the
+        post-processing.
 
-        Parameters:
-        -----------
-        comment (str): comment to add to spectrum
-        overwrite (bool): boolean specifying whether to append to current comment or to overwrite it
-
-        Returns:
+        See also
         --------
-        None
+        For adding comments specific to peaks use the :meth:`add_peak_comment`
+        method.
+
+
+         If :attr:`spectrum_comment` is '-' (default value) it is always overwritten
+         with `comment`.
+
         """
         try:
             if self.spectrum_comment == '-' or self.spectrum_comment is None or overwrite:
@@ -237,38 +413,50 @@ class spectrum:
             return
 
 
-    ##### Define static method for smoothing spectrum before peak detection (for internal use within class only)
     @staticmethod
     def __smooth(x,window_len=11,window='hanning'):
-        """
-        Smooth the data using a window with requested width.
+        """Smooth the data for the peak detection.
 
-    	This method is based on the convolution of a scaled window with the signal.
-    	The signal is prepared by introducing reflected copies of the signal
-    	(with the window size) in both ends so that transient parts are minimized
-    	in the begining and end part of the output signal.
+        ** Intended for internal use only.**
 
-    	input:
-    	    x: the input signal
-                window_len: the dimension of the smoothing window; should be an odd integer
-    	    window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
-    		    flat window will produce a moving average smoothin
+    	This method is based on the convolution of a scaled window with the data.
+    	The data is prepared by introducing reflected copies of the data (with
+        the window size) in both ends so that transient parts are minimized
+    	in the begining and end part of the output data.
 
-    	output:
-    	    the smoothed signal
+    	Parameters
+        ----------
+        x : numpy.array
+            The input data
+        window_len : int
+            Length of the smoothing window; **should be an odd integer**!
+    	window : str
+            Type of window from 'flat', 'hanning', 'hamming', 'bartlett',
+            'blackman', flat window will produce a moving average smoothing.
 
-    	example:
+    	Returns
+        -------
+        numpy.array
+    	    The smoothed spectrum data.
+
+    	Example
+        -------
     	    t=linspace(-2,2,0.1)
     	    x=sin(t)+randn(len(t))*0.1
     	    y=smooth(x)
 
-    	see also:
-    	    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
-    	    scipy.signal.lfilter
+    	See also
+        --------
+    	    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman,
+            numpy.convolve, scipy.signal.lfilter
 
-    	TODO: the window parameter could be the window itself if an array instead of a string
-    	NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
-        Method adapted from https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html
+    	Notes
+        -----
+        length(output) != length(input), to correct this:
+        return y[(window_len/2-1):-(window_len/2)] instead of just y.
+
+        Method adapted from:
+        https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html
     	"""
         if x.ndim != 1:
             raise ValueError("smooth only accepts 1 dimension arrays.")
@@ -298,6 +486,7 @@ class spectrum:
         """
         Plots spectrum (without fit curve)
         - with markers for all peaks stored in peak list 'self.peaks'
+
         """
         if peaks is None:
             peaks = self.peaks
@@ -496,8 +685,8 @@ class spectrum:
         species (str or list):    The species name (or list of name strings) to be assigned to the selected peak (or to all peaks)
 
 
-        Examples:
-        ---------
+        Examples
+        --------
         spec.assign_species('1Cs133:-1e',peak_index = 2)
             ->  assigns peak with peak_index 2 (third-lowest-mass peak) as '1Cs133:-1e', all other peaks remain unchanged
 
@@ -540,20 +729,17 @@ class spectrum:
         By default the string 'comment' will be added at the end of the current peak comment (if the current comment is '-' it is overwritten with 'comment' argument).
         If overwrite is set to 'True' the current peak comment is overwritten with the 'comment' argument.
 
-        NOTE: It is possible to add further comments to the shape or mass calibrant peaks, however, the protected flags 'shape calibrant', 'mass calibrant' and 'shape & mass calibrant' will persist.
+        Note: It is possible to add further comments to the shape or mass calibrant peaks, however, the protected flags 'shape calibrant', 'mass calibrant' and 'shape & mass calibrant' will persist.
                  These flags are added to the peak comments automatically during the shape and mass calibration and should never be added to comments manually by the user!
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         peak_index (int): index of peak to add comment to
         comment (str): comment to add to peak_detect.py
         overwrite (bool): boolean specifying whether to append to current comment or to overwrite it
 
             ################
 
-        Returns:
-        --------
-        None
         """
         if peak_index is not None:
             pass
@@ -617,8 +803,8 @@ class spectrum:
         """
         Plots spectrum with fit in logarithmic and linear y-scale
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         fit_result : lmfit modelresult, optional, default: None
             fit result to plot
             if None, defaults to fit result of first peak in plot range (from `fit_results` list of spectrum object)
@@ -640,9 +826,6 @@ class spectrum:
             if not None, plot images will be saved to two separate files named '`plot_filename`_log_plot.png' and '`plot_filename`_lin_plot.png' respectively
             Caution: Existing files of same name are overwritten.
 
-        Returns:
-        --------
-            None
         """
         if x_min is None:
             x_min = self.data.index.values[0]
@@ -729,8 +912,8 @@ class spectrum:
         - if peak(s) of interest are specified via `peak_indeces` the mass range to plot is automatically chosen to include all specified peaks
         - otherwise, the mass range must be specified manually with `x_center` and `x_range`
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         peak_indeces : int or list of ints, optional, default: None
             index of single peak or of multiple neighboring peaks to show (peaks must belong to the same fit curve!)
         x_center : float [u], optional, default: None
@@ -746,9 +929,6 @@ class spectrum:
             if not None, plot images will be saved to two separate files named '`plot_filename`_log_plot.png' and '`plot_filename`_lin_plot.png' respectively
             Caution: Existing files of same name are overwritten.
 
-        Returns:
-        --------
-        None
         """
         if isinstance(peak_indeces,list):
             x_min = self.peaks[peak_indeces[0]].x_pos - x_range/2
@@ -794,8 +974,8 @@ class spectrum:
         Internal peak fitting routine, fits full spectrum or subrange (if x_fit_cen and x_fit_range are specified) and optionally shows results
         This method is for internal usage, use 'fit_peaks' method to fit spectrum and update peak properties dataframe with obtained fit results!
 
-	    Parameters:
-        -----------
+	    Parameters
+        ----------
         fit_model (str): name of fit model to use (e.g. 'Gaussian','emg12','emg33', ... - see fit_models.py for all available fit models)
         cost_func : str, optional, default: 'chi-square'
             name of cost function to use for minimization
@@ -814,9 +994,10 @@ class spectrum:
         method (str, optional): name of minimization algorithm to use (default: least_squares, for full list of options c.f. 'The minimize() function' at https://lmfit.github.io/lmfit-py/fitting.html)
         recal_fac (float): factor for correction of the final mass values (obtain recalibration factor from calibrant fit before fitting other peaks)
 
-	    Returns:
-        --------
-        Fit model result object
+	    Returns
+        -------
+        :class:`lmfit.model.ModelResult`
+            Fit model result.
         """
         if x_fit_range is None:
             x_fit_range = self.default_fit_range
@@ -959,16 +1140,18 @@ class spectrum:
     def calc_peak_area(self, peak_index, fit_result=None, decimals=2):
         """ Calculate peak area (total counts in peak) and its error for a given peak using the peak amplitude and the bin_width
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         peak_index (str): Index of peak of interest
         fit_result (modelresult): lmfit modelresult object to use for area calculation (optional), if 'None': use corresponding modelresult stored in list fit_results
         decimals (int): number of decimals to return outputs with
 
 
-        Returns:
-        --------
-        list of two floats: [area,area_error]
+        Returns
+        -------
+        list of floats
+            List with peak area and area error in counts [area,area_error].
+
         """
         pref = 'p'+str(peak_index)+'_'
         area, area_err = np.nan, np.nan
@@ -1042,7 +1225,21 @@ class spectrum:
     ##### Internal helper function for creating synthetic spectra via bootstrap re-sampling from experimental data
     @staticmethod
     def bootstrap_spectrum(df,N_events=None,x_cen=None,x_range=0.02):
-        """ Create new histogram dataframe with `N_events` samples via bootstrap re-sampling from `df` """
+        """ Create new histogram dataframe with `N_events` samples via bootstrap re-sampling from `df`
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            Original histogrammed spectrum data to re-sample from
+        N_events : int, optional
+            Number of events to create via bootstrap re-sampling, defaults to
+            number of events in original DataFrame `df`.
+        x_cen : float [u], optional
+            ##########
+        x_range : float [u], optional
+            ###########
+
+        """
         if x_cen:
             x_min = x_cen - x_range/2
             x_max = x_cen + x_range/2
@@ -1083,8 +1280,8 @@ class spectrum:
 
         Specify peak to use for bootstrap re-sampling by providing EITHER `peak_index`, `species` or `x_pos` of peak.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         peak_index : int or None, optional
             index of peak to use for bootstrap re-sampling (typically, the peak-shape calibrant). The peak should have high statistics and be well-separated from other peaks to be representative for all peaks in the spectrum.
         species : str, optional
@@ -1108,6 +1305,7 @@ class spectrum:
             if None, the plot is not saved
 
             #############
+
         """
         if peak_index is not None:
             pass
@@ -1204,8 +1402,8 @@ class spectrum:
         It is further recommended to visually check whether the residuals are purely stochastic (as should be the case for a decent model).
 
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
 
         index_shape_calib : int or None, optional
             index of shape-calibration peak (the peak to use can also be specified with `species_shape_calib`)
@@ -1242,6 +1440,7 @@ class spectrum:
             coverage probability of confidence band in sigma (only for log-plot);
              if 0, no confidence band is shown (default)
         eval_par_covar ####################
+
         """
         if index_shape_calib is not None and (species_shape_calib is None):
             peak = self.peaks[index_shape_calib]
@@ -1315,11 +1514,10 @@ class spectrum:
             idx_best_model = np.nanargmin(np.where(li_eta_flags, np.inf, li_red_chis)) # exclude models with eta_flag == True
             best_model = li_fit_models[idx_best_model]
             self.fit_model = best_model
-            self.best_redchi = li_red_chis[idx_best_model]
             print('\n##### RESULT OF AUTOMATIC MODEL SELECTION: #####\n')
             print('    Best fit model determined to be:',best_model)
-            print('    Corresponding chi²-reduced:',self.best_redchi,'\n')
-        elif vary_tail_order == False:
+            print('    Corresponding chi²-reduced:',li_red_chis[idx_best_model],'\n')
+        elif not vary_tail_order:
             self.fit_model = fit_model
 
         print('\n##### Peak-shape determination #####-------------------------------------------------------------------------------------------')
@@ -1342,6 +1540,7 @@ class spectrum:
         elif 'shape calibrant' not in peak.comment:
             peak.comment = 'shape calibrant, '+peak.comment
         display(out)  # print(out.fit_report())
+        self.red_chi_shape_calib = np.round(out.redchi,2)
         dict_pars = out.params.valuesdict()
         self.shape_cal_pars = {key.lstrip('p'+str(index_shape_calib)+'_'): val for key, val in dict_pars.items() if key.startswith('p'+str(index_shape_calib))}
         self.shape_cal_pars['bkg_c'] = dict_pars['bkg_c']
@@ -1355,7 +1554,7 @@ class spectrum:
 
     ##### Save shape calibration parameters to TXT file
     def save_peak_shape_cal(self,filename):
-        """ Save peak shape parameters (and their errors, if existent) to the TXT file 'filename.txt' """
+        """ Save peak shape parameters (and their errors, if existent) to the TXT file 'filename.txt'. """
         df1 = pd.DataFrame.from_dict(self.shape_cal_pars,orient='index',columns=['Value'])
         df1.index.rename('Model: '+str(self.fit_model),inplace=True)
         df2 = pd.DataFrame.from_dict(self.shape_cal_par_errors,orient='index',columns=['Error'])
@@ -1366,7 +1565,7 @@ class spectrum:
 
     ###### Load shape calibration parameters from TXT file
     def load_peak_shape_cal(self,filename):
-        """ Load peak shape from the TXT file 'filename.txt' """
+        """ Load peak shape from the TXT file 'filename.txt'. """
         df = pd.read_csv(str(filename)+'.txt',index_col=0,sep='\t')
         self.fit_model = df.index.name[7:]
         df_val = df['Value']
@@ -1377,22 +1576,36 @@ class spectrum:
 
 
     ##### Evaluate centroid shifts and calculate peak-shape errors
-    def eval_peakshape_errors(self,peak_indeces=[],fit_result=None,verbose=False,show_shape_err_fits=False):
+    def _eval_peakshape_errors(self,peak_indeces=[],fit_result=None,verbose=False,show_shape_err_fits=False):
         """
-        Calculates the relative peak-shape uncertainty of the specified peaks. This is done by re-fitting the specified peaks with each shape parameter individually varied by plus and minus sigma and recording the respective shift of the peak centroid w.r.t the original fit.
+        Calculate the relative peak-shape uncertainty of the specified peaks.
+
+        **This internal method is automatically called by the `fit_peaks` and
+        `fit_calibrant` methods and does usually not need to be run directly
+        by the user.**
+
+        This is done by re-fitting the specified peaks with each shape parameter individually varied by plus and minus sigma and recording the respective shift of the peak centroid w.r.t the original fit.
         The maximal centroid shifts obtained for each varied parameter are then added in quadrature to obtain the total peak shape uncertainty.
         NOTE: All peaks in 'peak_indeces' list must have been fitted in the same multi-peak fit (and hence have the same lmfit modelresult 'fit_result')!
 
-        This routine does not change the peak-shape error of the mass calibrant (but calculates the absolute centroid shifts for the mass calibrant).
+        This routine does not change the peak-shape error of the mass calibrant (instead it calculates the absolute centroid shifts for the mass calibrant).
 
-        Parameters:
-        -----------
+
+
+        Parameters
+        ----------
         peak_indeces (list): list containing indeces of peaks to evaluate peak-shape uncertainty for, e.g. to evaluate peak-shape error of peaks 0 and 3 use peak_indeces=[0,3]
         fit_result (lmfit modelresult, optional): fit result object to evaluate peak-shape error for
         verbose (bool, optional): if True, print all individual centroid shifts caused by varying the shape parameters (default: False)
         show_shape_err_fits (bool, optional): if True, show individual plots of re-fits for peak-shape error determination (default: False)
 
         #############
+
+        Note
+        ----
+        `sigma`,`theta`, all eta and all tau model parameters are considered
+        "shape parameters" and varied by plus and minus one standard deviation
+        in the peak-shape uncertainty evaluation.
         """
         if self.shape_cal_pars is None:
             print('\nWARNING: Could not calculate peak-shape errors - no peak-shape calibration yet!\n')
@@ -1400,12 +1613,14 @@ class spectrum:
 
         if verbose:
             print('\n##### Peak-shape uncertainty evaluation #####\n')
-        # Vary each shape parameter by plus and minus one sigma and sum resulting shifts of Gaussian centroid in quadrature to obtain peakshape error
+        # Vary each shape parameter by plus and minus one standard deviation and
+        # sum resulting shifts of Gaussian centroid `mu` in quadrature to
+        # obtain the peak-shape uncertainty
         if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
         pref = 'p{0}_'.format(peak_indeces[0])
         shape_pars = [key for key in self.shape_cal_pars if (key.startswith(('sigma','theta','eta','tau','delta')) and fit_result.params[pref+key].expr is None )] # grab shape parameters to be varied by +/- sigma
-        # Check whether fit_result contained the mass calibrant
+        # Check whether `fit_result` contained the mass calibrant
         if self.index_mass_calib in peak_indeces:
             mass_calib_in_range = True
             peak_indeces.remove(self.index_mass_calib)
@@ -1456,8 +1671,10 @@ class spectrum:
                     ax.set_ylim(0.7,)
                 plt.show()
 
-            # If mass calibrant is in fit range, determine its absolute centroid shifts first, so they can be used below
-            # (if calibrant is not in fit range, its centroid shifts must have been determined in a foregoing mass calibration)
+            # If mass calibrant is in fit range, determine its ABSOLUTE centroid shifts first,
+            # so they can be used below for the peak-shape eval. of the peaks of interest
+            # if calibrant is not in fit range, its centroid shifts must have been determined
+            # in a foregoing mass calibration
             if mass_calib_in_range:
                 pref = 'p{0}_'.format(self.index_mass_calib)
                 centroid = fit_result.best_values[pref+'mu']
@@ -1465,27 +1682,36 @@ class spectrum:
                 delta_mu_p = new_centroid_p - centroid
                 new_centroid_m = fit_result_m.best_values[pref+'mu']
                 delta_mu_m = new_centroid_m - centroid
-                self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift'] = [delta_mu_p,delta_mu_m] # absolute shifts of calibrant centroid [u]
-                self.centroid_shifts[self.index_mass_calib][par+' calibrant centroid shift'] = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item() # maximal shifts of calibrant centroid [u]
-            else:
+                 # absolute shifts of calibrant centroid [u]:
+                self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift pm'] = [delta_mu_p,delta_mu_m]
+                # maximal shifts of calibrant centroid [u]:
+                max_centroid_shifts = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item()
+                self.centroid_shifts[self.index_mass_calib][par+' calibrant centroid shift'] = max_centroid_shifts
+            else: # check if calibrant centroid shifts pre-exist, print error otherwise
                 try:
-                    isinstance(self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift'],list) # check if calibrant centroid shifts pre-exist, print error otherwise
+                    isinstance(self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift pm'],list)
                 except:
-                    raise Exception('\nERROR: No calibrant centroid shifts available for peak-shape error evaluation. Ensure that: \n (a) either the mass calibrant is in the fit range and specified with the `index_mass_calib` or `species_mass_calib` parameter, or \n (b) if the mass calibrant is not in the fit range, a successful mass calibration has been performed upfront with fit_calibrant().')
+                    raise Exception(
+                    '\nERROR: No calibrant centroid shifts available for peak-shape error evaluation. Ensure that: \n (a) either the mass calibrant is in the fit range and specified with the `index_mass_calib` or `species_mass_calib` parameter, or \n (b) if the mass calibrant is not in the fit range, a successful mass calibration has been performed upfront with fit_calibrant().'
+                    )
 
-            # Determine centroid shifts relative to mass calibrant (if calibrant is in fit range, the newly determined calibrant centroid shifts will be used, if not the calibrant centroid shifts from a foregoing mass calibration are used)
+            # Determine centroid shifts relative to mass calibrant
+            # if calibrant is in fit range, the newly determined calibrant centroid shifts will be used
+            # if not, the calibrant centroid shifts from a foregoing mass calibration are taken
             for peak_idx in peak_indeces:
                 pref = 'p{0}_'.format(peak_idx)
                 centroid = fit_result.best_values[pref+'mu']
                 new_centroid_p =  fit_result_p.best_values[pref+'mu']
-                delta_mu_p = new_centroid_p - centroid - self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift'][0] # peak_centroid_shift - calib_centroid_shift
+                # pos. peak_centroid_shift - calib_centroid_shift:
+                delta_mu_p = new_centroid_p - centroid - self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift pm'][0]
                 new_centroid_m = fit_result_m.best_values[pref+'mu']
-                delta_mu_m = new_centroid_m - centroid - self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift'][1] # peak_centroid_shift - calib_centroid_shift
+                # neg. peak_centroid_shift - calib_centroid_shift:
+                delta_mu_m = new_centroid_m - centroid - self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift pm'][1]
                 if verbose:
                     print(u'Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'+/-',np.round(self.shape_cal_par_errors[par],6),' shifts Δm of peak',peak_idx,'and mass calibrant by',np.round(delta_mu_p*1e06,6),'/',np.round(delta_mu_m*1e06,3),'\u03BCu. ')
                     if peak_idx == peak_indeces[-1]:
                         print()  # empty line between different parameter blocks
-                self.centroid_shifts_pm[peak_idx][par+' centroid shift'] = [delta_mu_p,delta_mu_m] # shifts relative to calibrant centroid
+                self.centroid_shifts_pm[peak_idx][par+' centroid shift pm'] = [delta_mu_p,delta_mu_m] # shifts relative to calibrant centroid
                 self.centroid_shifts[peak_idx][par+' centroid shift'] = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item() # maximal shifts relative to calibrant centroid
 
         # Calculate and update relative peak-shape errors
@@ -1502,7 +1728,7 @@ class spectrum:
     ##### Update recalibration attributes and calibrant peak properties (for interal use within class only)
     def __update_calibrant_props(self,index_mass_calib=None,fit_result=None):
         """
-        Method for determining recalibration factor and updating mass calibrant peak properties
+        Determine recalibration factor and update mass calibrant peak properties.
         """
         # Set 'mass calibrant' flag in peak comments
         for p in self.peaks: # reset 'mass calibrant' comment flag
@@ -1529,10 +1755,10 @@ class spectrum:
         else:  # for emg models
             FWHM_emg = spectrum.calc_FWHM_emg(index_mass_calib,fit_result=fit_result)
             std_dev = self.A_stat_emg*FWHM_emg  #spectrum.calc_sigma_emg(peak_index=index_mass_calib,fit_model=fit_model,fit_result=fit_result)
-        stat_error = std_dev/np.sqrt(peak.area) # A_stat* FWHM/sqrt(area), w/ with A_stat_G = 0.42... and A_stat_emg from `determine_A_stat` method or default value from config.py
+        stat_error = std_dev/np.sqrt(peak.area) # A_stat* FWHM/sqrt(area), w/ with A_stat_G = 0.42... and A_stat_emg from `determine_A_stat_emg` method or default value from config.py
         peak.rel_stat_error = stat_error /peak.m_fit
         peak.rel_peakshape_error = None # reset to None
-        peak.chi_sq_red = np.round(fit_result.redchi, 2)
+        peak.red_chi = np.round(fit_result.redchi, 2)
 
         # Print error contributions of mass calibrant:
         print("\n##### Mass recalibration #####\n")
@@ -1563,10 +1789,12 @@ class spectrum:
     ##### Fit mass calibrant
     def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None, fit_model=None, cost_func='MLE', x_fit_cen=None, x_fit_range=None, vary_baseline=True, method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,show_fit_report=True):
         """
-        Determine mass recalibration factor for spectrum by fitting the selected mass calibrant
+        Determine mass recalibration factor by fitting the selected calibrant.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
+        #############
+
         fit_model : str, optional, default: None
             name of fit model to use, (names of usable models: 'Gaussian','emg01', ..., 'emg33' - see fit_models.py for all available fit models)
             if None, defaults to 'fit_model' attribute of spectrum object (as determined in peak-shape calibration)
@@ -1611,20 +1839,36 @@ class spectrum:
         # Update recalibration factor and calibrant properties
         self.__update_calibrant_props(index_mass_calib=index_mass_calib,fit_result=fit_result)
         # Calculate absolute centroid shifts of calibrant as prep for subsequent peak-shape error determination for ions of interest
-        self.eval_peakshape_errors(peak_indeces=[index_mass_calib],fit_result=fit_result,verbose=False)
+        self._eval_peakshape_errors(peak_indeces=[index_mass_calib],fit_result=fit_result,verbose=False)
 
 
     ##### Update peak list with fit values
     def __update_peak_props(self,peaks=[],fit_result=None):
         """
-        Internal routine to update peak properties DataFrame with fit results in 'fit_result'. All peaks referenced by 'peaks' parameter must belong to the same 'fit_result'. The values of the mass calibrant will not be changed by this routine.
+        Update peak properties with fit results in 'fit_result'.
 
-        peaks (list): list of indeces of peaks to update (for peak indeces, see markers in plots or consult peak proeprties list by running 'self.show_peak_properties', where self is your spectrum object)
-        fit_model (str): name of fit model used to obtain fit_result (default: fit_model attribute of respective peak)
-        cost_func : str, optional, default: 'MLE'
+        **Intended for internal use only.**
+
+        All peaks referenced by 'peaks' parameter must belong to the same 'fit_result'. The values of the mass calibrant will not be changed by this routine.
+
+        Parameters
+        ----------
+        peaks : list
+            list of indeces of peaks to update (for peak indeces, see markers in plots or consult peak proeprties list by running 'self.show_peak_properties', where self is your spectrum object)
+        fit_model : str
+            name of fit model used to obtain fit_result (default: fit_model attribute of respective peak)
+        cost_func : str, optional, default: ``'MLE'``
             name of cost function used for minimization
-        fit_result (lmfit modelresult): modelresult object holding fit_results of all peaks properties to be updated
-                                        Note: Not necessarily all peaks contained in fit_result will be updated, only the properties of peaks referenced by 'peaks' parameter will be updated.
+        fit_result : :class:`lmfit.model.ModelResult`
+            :class:`~lmfit.model.ModelResult` holding fit results of all `peaks`
+            to be updated
+
+        Note
+        ----
+        Not necessarily all peaks contained in `fit_result` will be updated,
+        only the properties of peaks referenced in `peaks` argument will be
+        updated.
+
         """
         for p in peaks:
             if self.peaks.index(p) == self.index_mass_calib:
@@ -1642,7 +1886,7 @@ class spectrum:
                 else:  # for emg models
                     FWHM_emg = spectrum.calc_FWHM_emg(peak_idx,fit_result=fit_result)
                     std_dev = self.A_stat_emg*FWHM_emg  #spectrum.calc_sigma_emg(peak_index=index_mass_calib,fit_model=fit_model,fit_result=fit_result)
-                stat_error = std_dev/np.sqrt(p.area)  # stat_error = A_stat * FWHM / sqrt(peak_area), w/ with A_stat_G = 0.42... and  A_stat_emg from `determine_A_stat` method or default value from config.py
+                stat_error = std_dev/np.sqrt(p.area)  # stat_error = A_stat * FWHM / sqrt(peak_area), w/ with A_stat_G = 0.42... and  A_stat_emg from `determine_A_stat_emg` method or default value from config.py
                 p.rel_stat_error = stat_error/p.m_fit
                 if self.rel_recal_error:
                     p.rel_recal_error = self.rel_recal_error
@@ -1659,16 +1903,17 @@ class spectrum:
                     p.atomic_ME_keV = np.round((p.m_fit + m_e - p.A)*u_to_keV,3)   # atomic Mass excess (includes electron mass) [keV]
                 if p.m_AME:
                     p.m_dev_keV = np.round( (p.m_fit - p.m_AME)*u_to_keV, 3) # TITAN - AME [keV]
-                p.chi_sq_red = np.round(fit_result.redchi, 2)
+                p.red_chi = np.round(fit_result.redchi, 2)
 
 
-    #### Fit spectrum
     def fit_peaks(self, index_mass_calib=None, species_mass_calib=None, x_fit_cen=None, x_fit_range=None, fit_model=None, cost_func='MLE', init_pars=None, vary_shape=False, vary_baseline=True, method ='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,plot_filename=None,show_fit_report=True,show_shape_err_fits=False):
-        """
-        Fit entire spectrum or part of spectrum (if x_fit_cen and x_fit_range are specified), show fit results and show updated peak properties
+        """Fit peaks, update peaks properties and show results.
 
-        Parameters:
-        -----------
+        Fits peaks in either the entire spectrum or optionally only the peaks
+        in the mass range specified with `x_fit_cen` and `x_fit_range`. #########
+
+        Parameters
+        ----------
         x_fit_cen (float [u], optional): center of mass range to fit (only specify if subset of spectrum is to be fitted)
         x_fit_range (float [u], optional): width of mass range to fit (default: default_fit_range spectrum attribute, only specify if subset of spectrum is to be fitted, only relevant if `x_fit_cen` is specified)
         fit_model (str, optional): name of fit model to use; if None, defaults to 'best_model' obtained with determine_peak_shape method (default: 'best_model' spectrum attribute, only specify if no best_model has been obtained or to test a specific fit model,
@@ -1686,9 +1931,10 @@ class spectrum:
         plot_filename
             Caution: Existing files of same name are overwritten
 
-        Returns:
-        --------
-        None (updates peak properties dataframe with peak properties obtained in fit)
+        Notes
+        -------
+        Updates peak properties dataframe with peak properties obtained in fit.
+
         """
         if fit_model is None:
             fit_model = self.fit_model
@@ -1719,7 +1965,7 @@ class spectrum:
 
         peak_indeces = [self.peaks.index(p) for p in peaks_to_fit]
         try:
-            self.eval_peakshape_errors(peak_indeces=peak_indeces,fit_result=fit_result,verbose=True,show_shape_err_fits=show_shape_err_fits)
+            self._eval_peakshape_errors(peak_indeces=peak_indeces,fit_result=fit_result,verbose=True,show_shape_err_fits=show_shape_err_fits)
         except KeyError:
             print("WARNING: Peak-shape error determination failed with KeyError. Likely the used fit_model collides with shape calibration model.")
         self.__update_peak_props(peaks=peaks_to_fit,fit_result=fit_result)
@@ -1732,18 +1978,19 @@ class spectrum:
 
     ##### Save all relevant results to external files
     def save_results(self,filename):
-        """
-        Write results to an XLSX Excel file with name `filename` and save peak-shape calibration parameters to TXT file with name `filename`+"_peakshape_calib".
+        """Save fit results to a XLSX file and peak-shape calibration to a TXT file.
+
+
+        Write results to an XLSX Excel file with name `filename` and save
+        peak-shape calibration parameters to TXT file with name `filename`+"_peakshape_calib".
+
         The EXCEL file will contain critical spectrum properties and all peak properties (including mass values) in two separate sheets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         filename : string
             name of the XLSX-file to be saved to (.xlsx ending does not have to be included by user)
 
-        Returns:
-        --------
-            None
         """
         # Ensure no files are overwritten
         if os.path.isfile(str(filename)+".xlsx"):
@@ -1766,7 +2013,7 @@ class spectrum:
         spec_data = np.append(spec_data, [["scipy version",scipy_version]],axis=0)
         spec_data = np.append(spec_data, [["numpy version",np.__version__]],axis=0)
         spec_data = np.append(spec_data, [["pandas version",pd.__version__]],axis=0)
-        attributes = ['mass_number','spectrum_comment','fit_model','best_redchi','fit_range_shape_calib','determined_A_stat_emg','A_stat_emg','A_stat_emg_error','recal_fac','rel_recal_error']
+        attributes = ['mass_number','spectrum_comment','fit_model','red_chi_shape_calib','fit_range_shape_calib','determined_A_stat_emg','A_stat_emg','A_stat_emg_error','recal_fac','rel_recal_error']
         for attr in attributes:
             attr_val = getattr(self,attr)
             spec_data = np.append(spec_data, [[attr,attr_val]],axis=0)
