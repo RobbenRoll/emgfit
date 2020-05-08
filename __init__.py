@@ -3,8 +3,7 @@
 
 .. moduleauthor:: Stefan Paul <stefan.paul@triumf.ca>
 """
-##### Fitting routines taken from lmfit package
-##### Code by Stefan Paul, 2019-12-28
+##### Code by Stefan Paul
 
 ##### Import required modules
 from .config import *

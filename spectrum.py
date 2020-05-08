@@ -1,6 +1,6 @@
 ###################################################################################################
 ##### Python module for peak fitting in TOF mass spectra
-##### Code by Stefan Paul, 2020-04-28
+##### Code by Stefan Paul
 
 ##### Import packages
 import numpy as np
@@ -12,7 +12,7 @@ import time
 import copy
 from IPython.display import display
 from .config import *
-from .AME_funcs import get_AME_values
+from .ame_funcs import get_AME_values
 import emgfit.emg_funcs as emg_funcs
 import emgfit.fit_models as fit_models
 import lmfit as fit
@@ -30,7 +30,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 class peak:
     """Object storing all relevant information about a mass peak.
 
-    Most peak attributes are intialized as None and are later automatically
+    Most peak attributes are intialized as ``None`` and are later automatically
     updated by methods of the spectrum class, e.g. :meth:`spectrum.determine_peak_shape`
     or :meth:`spectrum.fit_peaks`.
 
@@ -164,7 +164,7 @@ class peak:
 
 
     def print_properties(self):
-        """Print most relevant peak properties."""
+        """Print the most relevant peak properties."""
 
         print("x_pos:",self.x_pos,"u")
         print("Species:",self.species)
@@ -318,9 +318,9 @@ class spectrum:
         Notes
         -----
         The option to import data via the `df` argument was added to enable the
-        processing of bootstrapped spectra as regular :class:`spectrum` objects in
-        the :meth:`determine_A_stat_emg` method. This is primarily intended for
-        internal use.
+        processing of bootstrapped spectra as regular :class:`spectrum` objects
+        in the :meth:`determine_A_stat_emg` method. This feature is primarily
+        intended for internal use.
 
 	    """
         if filename is not None:
@@ -339,7 +339,7 @@ class spectrum:
         self.shape_cal_errors = []
         self.index_mass_calib = None
         self.determined_A_stat_emg = False
-        self.A_stat_emg = A_stat_emg_default # initialize at default A_stat from config.py
+        self.A_stat_emg = A_stat_emg_default # initialize at default
         self.A_stat_emg_error = None
         self.recal_fac = 1.0
         self.rel_recal_error = None
@@ -373,9 +373,9 @@ class spectrum:
         """
         Add a general comment to the spectrum.
 
-        By default the string `comment` will be added at the end of the current
-        :attr:`spectrum_comment` attribute. If `overwrite` is set to True the
-        current :attr:`spectrum_comment` is overwritten with `comment`.
+        By default the `comment` argument will be appended to the end of the current
+        :attr:`spectrum_comment` attribute. If `overwrite` is set to ``True``
+        the current :attr:`spectrum_comment` is overwritten with `comment`.
 
         Parameters
         ----------
@@ -388,18 +388,16 @@ class spectrum:
 
         Notes
         -----
-        The spectrum comment will be included in the output file storing all fit
+        The :attr:`spectrum_comment` will be included in the output file storing all fit
         results and can hence be useful to pass on information for the
         post-processing.
 
+        If :attr:`spectrum_comment` is '-' (default value) it is always
+        overwritten with `comment`.
+
         See also
         --------
-        For adding comments specific to peaks use the :meth:`add_peak_comment`
-        method.
-
-
-         If :attr:`spectrum_comment` is '-' (default value) it is always overwritten
-         with `comment`.
+        :meth:`add_peak_comment`
 
         """
         try:
@@ -414,23 +412,23 @@ class spectrum:
 
 
     @staticmethod
-    def __smooth(x,window_len=11,window='hanning'):
+    def _smooth(x,window_len=11,window='hanning'):
         """Smooth the data for the peak detection.
 
         ** Intended for internal use only.**
 
-    	This method is based on the convolution of a scaled window with the data.
-    	The data is prepared by introducing reflected copies of the data (with
-        the window size) in both ends so that transient parts are minimized
-    	in the begining and end part of the output data.
+    	This method is based on the convolution of a normalized window with the
+        signal. The signal is prepared by introducing reflected copies of the
+        signal (with the window size) in both ends so that transient parts are
+        minimized in the begining and end part of the output signal.
 
     	Parameters
         ----------
         x : numpy.array
             The input data
-        window_len : int
-            Length of the smoothing window; **should be an odd integer**!
-    	window : str
+        window_len : odd int, optional
+            Length of the smoothing window; **must be an odd integer**!
+    	window : str, optional
             Type of window from 'flat', 'hanning', 'hamming', 'bartlett',
             'blackman', flat window will produce a moving average smoothing.
 
@@ -438,12 +436,6 @@ class spectrum:
         -------
         numpy.array
     	    The smoothed spectrum data.
-
-    	Example
-        -------
-    	    t=linspace(-2,2,0.1)
-    	    x=sin(t)+randn(len(t))*0.1
-    	    y=smooth(x)
 
     	See also
         --------
@@ -457,6 +449,13 @@ class spectrum:
 
         Method adapted from:
         https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html
+
+        Example
+        -------
+        >>> t=linspace(-2,2,0.1)
+    	>>> x=sin(t)+randn(len(t))*0.1
+    	>>> y=smooth(x)
+
     	"""
         if x.ndim != 1:
             raise ValueError("smooth only accepts 1 dimension arrays.")
@@ -471,7 +470,6 @@ class spectrum:
             raise ValueError("Window must be one of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
 
         s=np.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
-        #print(len(s))
         if window == 'flat': #moving average
             w=np.ones(window_len,'d')
         else:
@@ -481,11 +479,33 @@ class spectrum:
         return y[int(window_len/2+1):-int(window_len/2-1)]
 
 
-    ##### Routine for plotting spectrum
-    def plot(self,peaks=None,title="",ax=None,yscale='log',vmarkers=None,thres=None,ymin=None,xmin=None,xmax=None):
-        """
-        Plots spectrum (without fit curve)
-        - with markers for all peaks stored in peak list 'self.peaks'
+    def plot(self, peaks=None, title="", ax=None, yscale='log', vmarkers=None,
+             thres=None, ymin=None, xmin=None, xmax=None):
+        """Plot mass spectrum (without fit curve).
+
+        Vertical markers are added for all peaks specified with `peaks`.
+
+        Parameters
+        ----------
+        peaks : list of :class:`peaks`, optional
+            List of :class:`peaks` to show peak markers for. Defaults to
+            :attr:`peaks`.
+        title : str, optional
+            Optional plot title.
+        ax : :class:`matplotlib.pyplot.axes`, optional
+            Axes object to plot onto.
+        yscale : str, optional
+            Scale of y-axis (``'lin'`` for logarithmic, ``'log'`` for
+            logarithmic), defaults to ``'log'``.
+        vmarkers : list of float [u], optional
+            List with mass positions [u] to add vertical markers at.
+        thres : float, optional
+            y-level to add horizontal marker at (e.g. for indicating set
+            threshold in peak detection).
+        ymin : float, optional
+            Lower bound of y-range to plot.
+        xmin, xmax : float [u], optional
+            Lower/upper bound of mass range to plot.
 
         """
         if peaks is None:
@@ -527,12 +547,42 @@ class spectrum:
 
     ##### Define static routine for plotting spectrum data stored in dataframe df (only for internal use within this class)
     @staticmethod
-    def __plot_df(df,title="",ax=None,yscale='log',peaks=None,vmarkers=None,thres=None,ymin=None,xmin=None,xmax=None):
-        """Plots spectrum data stored in dataframe 'df'
+    def _plot_df(df,title="",ax=None,yscale='log',peaks=None,vmarkers=None,thres=None,ymin=None,xmin=None,xmax=None):
+        """Plots spectrum data stored in :class:`pandas.DataFrame` `df`.
 
-           - optionally with peak markers if
-        	(a) single x_pos or array x_pos is passed to 'vmarkers', or
-            (b) list of peak objects is passed to 'li_peaks'
+        **Intended for internal use.**
+
+        Optionally with peak markers if:
+        1. single or multiple x_pos are passed to `vmarkers`, OR
+        2. list of peak objects is passed to `peaks`.
+
+        Parameters
+        ----------
+        df : :class:`pandas.DataFrame`
+            Spectrum data to plot.
+        ax : :class:`matplotlib.pyplot.axes`, optional
+            Axes object to plot onto.
+        yscale : str, optional
+            Scale of y-axis (``'lin'`` for logarithmic, ``'log'`` for
+            logarithmic), defaults to ``'log'``.
+        peaks : list of :class:`peaks`, optional
+            List of :class:`peaks` to show peak markers for.
+        vmarkers : list of float [u], optional
+            List with mass positions [u] to add vertical markers at.
+        thres : float, optional
+            y-level to add horizontal marker at (e.g. for indicating set
+            threshold in peak detection).
+        ymin : float, optional
+            Lower bound of y-range to plot.
+        xmin, xmax : float [u], optional
+            Lower/upper bound of mass range to plot.
+
+        See also
+        --------
+        :meth:`plot`
+        :meth:`plot_fit`
+        :meth:`plot_fit_zoom`
+
         """
         df.plot(figsize=(20,6),ax=ax)
         plt.yscale(yscale)
@@ -556,15 +606,60 @@ class spectrum:
 
 
     ##### Define peak detection routine
-    def detect_peaks(self,window='blackman',window_len=23,thres=0.003,width=2e-05,plot_smoothed_spec=True,plot_2nd_deriv=True,plot_detection_result=True):
-        """
-        Performs automatic peak detection on spectrum object using a scaled second derivative of the spectrum.
+    def detect_peaks(self,thres=0.003,window_len=23,window='blackman',
+                     width=2e-05, plot_smoothed_spec=True,
+                     plot_2nd_deriv=True, plot_detection_result=True):
+        """Perform automatic peak detection.
 
-        width (float): minimal FWHM of peaks to be detected - in atomic mass units - Caution: To achieve maximal sensitivity for overlapping peaks this number might have to be set to less than the peak's FWHM!
+        The peak detection routine uses a scaled second derivative of the
+        spectrum :attr:`data` after first applying some smoothing. This enables
+        very sensitive yet robust peak detection. The parameters `thres`,
+        `window_len` & `width` can be used to tune the smoothing and peak
+        detection for maximal sensitivity.
+
+        Parameters
+        ----------
+        thres : float, optional
+            Threshold for peak detection in the inverted and scaled second
+            derivative of the smoothed spectrum.
+        window_len : odd int, optional
+            Length of window used for smoothing the spectrum (in no. of bins).
+            **Must be an ODD integer.**
+        window : str, optional
+            The window function used for smooting the spectrum. Defaults to
+            ``'blackman'``. Other options: ``'flat'``, ``'hanning'``,
+            ``'hamming'``, ``'bartlett'``. See also `NumPy window functions <https://docs.scipy.org/doc/numpy/reference/routines.window.html>`_.
+        width : float [u], optional
+            Minimal FWHM of peaks to be detected. Caution: To achieve maximal
+            sensitivity for overlapping peaks this number might have to be set
+            to less than the peak's FWHM! In challenging cases use the plot of
+            the scaled inverted second derivative (by setting `plot_2nd_deriv`
+            to ``True``) to ensure that no potential peak is missed.
+        plot_smoothed_spec : bool, optional
+            If ``True`` a plot with the original and the smoothed spectrum is
+            shown.
+        plot_2nd_deriv : bool, optional
+            If ``True`` a plot with the scaled, inverted second derivative of
+            the smoothed spectrum is shown.
+        plot_detection_result : bool, optional
+            If ``True`` a plot of the spectrum with markers for the detected
+            peaks is shown.
+
+        Notes
+        -----
+        For details on the smoothing, see docs of :meth:`_smooth` by calling:
+
+        >>> help(emgfit.spectrum._smooth)
+
+        See also
+        --------
+        :meth:`add_peak`
+        :meth:`remove_peak`
+
         """
         # Smooth spectrum (moving average with window function)
         data_smooth = self.data.copy()
-        data_smooth['Counts'] = spectrum.__smooth(self.data['Counts'].values,window_len=window_len,window=window)
+        data_smooth['Counts'] = spectrum._smooth(self.data['Counts'].values,window_len=window_len,window=window)
         if plot_smoothed_spec:
             # Plot smoothed and original spectrum
             ax = self.data.plot(figsize=(20,6))
@@ -584,7 +679,7 @@ class spectrum:
             data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+1] - 2*data_smooth['Counts'].iloc[i] + data_smooth['Counts'].iloc[i-1])/1**2 # Used second order central finite difference
             # data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+2] - 2*data_smooth['Counts'].iloc[i+1] + data_smooth['Counts'].iloc[i])/1**2    # data_sec_deriv = data_smooth.iloc[0:-2].copy()
         if plot_2nd_deriv:
-            self.__plot_df(data_sec_deriv,title="Scaled second derivative of spectrum - set threshold indicated",yscale='linear',thres=-thres)
+            self._plot_df(data_sec_deriv,title="Scaled second derivative of spectrum - set threshold indicated",yscale='linear',thres=-thres)
 
         # Take only negative part of re-scaled second derivative and invert
         data_sec_deriv_mod = data_smooth.iloc[1:-1].copy()
@@ -604,7 +699,7 @@ class spectrum:
         li_peak_pos = data_sec_deriv_mod.index.values[peak_find[0]]
         #peak_widths = sig.peak_widths(data_sec_deriv_mod['Counts'].values,peak_find[0])
         if plot_2nd_deriv:
-            self.__plot_df(data_sec_deriv_mod,title="Negative part of scaled second derivative, inverted - set threshold indicated",thres=thres,vmarkers=li_peak_pos,ymin=0.1*thres)
+            self._plot_df(data_sec_deriv_mod,title="Negative part of scaled second derivative, inverted - set threshold indicated",thres=thres,vmarkers=li_peak_pos,ymin=0.1*thres)
 
         # Create list of peak objects
         for x in li_peak_pos:
@@ -617,12 +712,51 @@ class spectrum:
             self.plot(peaks=self.peaks,title="Spectrum with detected peaks marked",ymin=0.6)
 
 
-    ##### Add peak manually
     def add_peak(self,x_pos,species="?",m_AME=None,m_AME_error=None,verbose=True):
-        """
-        Manually add a peak at position 'x_pos' to peak list of spectrum
+        """Manually add a peak to the spectrum's :attr:`peaks` list.
+
+        The position of the peak must be specified with the `x_pos` argument.
+        If a `species` identification is provided the corresponding AME
+        literature values will be added to the :attr:`peak`. Alternatively,
+        user-defined literature values can be provided with the `m_AME` and
+        `m_AME_error` arguments. This option is helpful for isomers or in case
+        of very recent measurements that haven't entered the AME yet.
+
+
+        Optionally,
+        At position 'x_pos' to peak list of spectrum:
         - optionally assign 'species' (corresponding literature mass and mass error will then automatically be calculated from AME values)
         - optionally assign user-defined m_AME and m_AME_error (this overwrites the values calculated from AME database, use e.g. for isomers)
+
+        Parameters
+        ----------
+        x_pos : float [u]
+            Position of peak to be added.
+        species : str, optional
+            :attr:`species` label for peak to be added following the :-notation
+            (likewise used in MAc). If assigned, :attr:`peak.m_AME`,
+             :attr:`peak.m_AME_error` & :attr:`peak.extrapolated` are
+             automatically updated with the corresponding AME literature values.
+        m_AME : float [u], optional
+            User-defined literature mass for peak to be added. Overwrites pre-
+            existing :attr:`peak.m_AME` value.
+        m_AME_error : float [u], optional
+            User-defined literature mass uncertainty for peak to be added.
+            Overwrites pre-existing :attr:`peak.m_AME_error`.
+        verbose : bool, optional, default: ``True``
+            If ``True``, a message is printed after successful peak addition.
+            Intended for internal use only.
+
+        Note
+        ----
+        Adding a peak will shift the peak_indeces of all peaks at higher masses
+        by ``+1``.
+
+        See also
+        --------
+        :meth:`detect_peaks`
+        :meth:`remove_peak`
+
         """
         p = peak(x_pos,species,m_AME=m_AME,m_AME_error=m_AME_error) # instantiate new peak
         self.peaks.append(p)
@@ -637,10 +771,25 @@ class spectrum:
 
     ##### Remove peak manually
     def remove_peak(self,peak_index=None,x_pos=None,species="?"):
-        """
-        Remove a peak manually from peak list
+        """Remove specified peak from the :attr:`peaks` list.
 
-        select peak by specifying species label, peak position 'x_pos' (up to 6th decimal) or peak index (0-based! Check for peak index by calling .show_peak_properties() method)
+        Select peak by specifying either `peak_index`, `species` label or peak
+        position 'x_pos'.
+
+        Parameters
+        ----------
+        peak_index : int, optional
+            Index of peak to remove from :attr:`peaks` list (0-based).
+        x_pos : float [u]
+            :attr:`x_pos` of peak to remove.
+        species : str
+            :attr:`species` label of peak to remove.
+
+        Note
+        ----
+        The current :attr:peaks list can be viewed by calling the
+        :meth:show_peak_properties spectrum method.
+
         """
         if peak_index is not None:
             i = peak_index
@@ -657,43 +806,74 @@ class spectrum:
             raise
 
 
-    ##### Print peak properties
     def show_peak_properties(self):
+        """Print properties of all peaks in :attr:`peaks` list.
+
         """
-        Print properties of all peaks in peak list
-	    """
         dict_peaks = [p.__dict__ for p in self.peaks]
         df_prop = pd.DataFrame(dict_peaks)
         display(df_prop)
 
 
-    ##### Specify identified species
     def assign_species(self,species,peak_index=None,x_pos=None):
-        """
-        Assign a species (label) either to single selected peak or to all peaks from the peak list
-        - assignment of single peak species:
-            select peak by specifying peak position 'x_pos' (up to 6th decimal) or peak index argument (0-based! Check for peak index by calling .show_peak_properties() method of spectrum object)     specify species name by assigning string to species object
+        """Assign species label(s) to a single or all peaks.
 
-        - assignment of multiple peak species:
-            nothing should be assigned to the 'peak_index' and 'x_pos' arguments
-            instead the user specficies a list of the new species strings to the species argument
-            (if there's N detected peaks, the list must have length N!)
-            Former species assignments can be kept by inserting blanks at the respective position in the new species list
-	    Otherwise former species assignments are overwritten
-            also see examples below for usage
+        If no single peak is selected with `peak_index` or `x_pos`, a list with
+        species names for all peaks in the peak list must be passed to `species`.
+        For already specified or unkown species ``None`` must be inserted as a
+        placeholder. See `Notes` and `Examples` sections below for details on usage.
 
-        species (str or list):    The species name (or list of name strings) to be assigned to the selected peak (or to all peaks)
+        Parameters
+        ----------
+        species : str or list of str
+            The species name (or list of name strings) to be assigned to the
+            selected peak (or to all peaks). For unkown or already assigned
+            species, ``None`` should be inserted as placeholder at the
+            corresponding position in the `species` list. :attr:`species` names
+            must follow the :-notation.                                          #TODO: Link to :-notation page
 
+        peak_index : int, optional
+            Index of single peak to assign `species` name to.
+         x_pos : float [u], optional
+            :attr:`x_pos` of single peak to assign `species` name to. Must be
+            specified up to 6th decimal.
+
+        Notes
+        -----
+        - Assignment of a single peak species:
+          select peak by specifying peak position `x_pos` (up to 6th decimal) or
+           `peak_index` argument (0-based! Check for peak index by calling
+           :meth:show_peak_properties() method of spectrum object).
+
+        - Assignment of multiple peak species:
+          Nothing should be passed to the 'peak_index' and 'x_pos' arguments.
+          Instead the user specifies a list of the new species strings to the
+          `species` argument (if there's N detected peaks, the list must have
+          length N). Former species assignments can be kept by inserting blanks
+          at the respective position in the `species` list, otherwise former
+          species assignments are overwritten, also see examples below for usage.
 
         Examples
         --------
-        spec.assign_species('1Cs133:-1e',peak_index = 2)
-            ->  assigns peak with peak_index 2 (third-lowest-mass peak) as '1Cs133:-1e', all other peaks remain unchanged
+        Assign the peak with peak_index 2 (third-lowest-mass peak) as '1Cs133:-1e',
+        leave all other peaks unchanged:
 
-        spec.assign_species(['1Ru102:-1e', '1Pd102:-1e', 'Rh102:-1e', None,'1Sr83:1F19:-1e', '?'])
-            -> assigns species of first, second, third and fourth peak with the species labels given in the above list
-            -> the 'None' argument leaves the species assignment of the 4th peak unchanged (a former species assignment to this peak persists!)
-            -> the '?' argument overwrites any former species assignment to the highest-mass-peak and marks the peak as unidentified
+        >>> spec = spectrum(<input_file>) # mock code for foregoing data import
+        >>> spec.detect_peaks() # mock code for foregoing peak detection
+        >>> spec.assign_species('1Cs133:-1e',peak_index = 2)
+
+        Assign multiple peaks:
+
+        >>> spec = spectrum(<input_file>) # mock code for foregoing data import
+        >>> spec.detect_peaks() # mock code for foregoing peak detection
+        >>> spec.assign_species(['1Ru102:-1e', '1Pd102:-1e', 'Rh102:-1e', None,'1Sr83:1F19:-1e', '?'])
+
+        This assigns species of first, second, third and fourth peak with the
+        species labels given in the above list. The ``None`` argument leaves the
+        species assignment of the 4th peak unchanged. The ``'?'`` argument
+        overwrites any former species assignment to the highest-mass-peak and
+        marks the peak as unidentified.
+
         """
         try:
             if peak_index is not None:
@@ -716,7 +896,7 @@ class spectrum:
                         p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated attributes with AME values for specified species
                         print("Species of peak",i,"assigned as",p.species)
             else:
-                print('WARNING: Species assignment failed.')
+                raise Exception('ERROR: Species assignment failed. Check method documentation for details on peak selection.\n')
         except:
             print('Errors occured in peak assignment!')
             raise
@@ -724,21 +904,38 @@ class spectrum:
 
     ##### Add peak comment manually
     def add_peak_comment(self,comment,peak_index=None,x_pos=None,species="?",overwrite=False):
-        """
-        Method for adding a comment to a peak.
-        By default the string 'comment' will be added at the end of the current peak comment (if the current comment is '-' it is overwritten with 'comment' argument).
-        If overwrite is set to 'True' the current peak comment is overwritten with the 'comment' argument.
+        """Add a comment to a peak.
 
-        Note: It is possible to add further comments to the shape or mass calibrant peaks, however, the protected flags 'shape calibrant', 'mass calibrant' and 'shape & mass calibrant' will persist.
-                 These flags are added to the peak comments automatically during the shape and mass calibration and should never be added to comments manually by the user!
+        By default the `comment` argument will be appended to the end of the
+        current :attr:`peak.comment` attribute (if the current comment is '-' it
+        is overwritten by the `comment` argument). If `overwrite` is set ``True``,
+        the current :attr:`peak.comment` is overwritten with the 'comment' argument.
 
         Parameters
         ----------
-        peak_index (int): index of peak to add comment to
-        comment (str): comment to add to peak_detect.py
-        overwrite (bool): boolean specifying whether to append to current comment or to overwrite it
+        comment : str
+            Comment to add to peak.
+        peak_index : int, optional
+            Index of :class:`peak` to add comment to.
+        x_pos : float [u], optional
+            :attr:`x_pos` of peak to add comment to (must be specified up to 6th
+             decimal).
+        species : str, optional
+            :attr:`species` of peak to add comment to.
+        overwrite : bool
+            If ``True`` the current peak :attr:`comment` will be overwritten
+            by `comment`, else `comment` is appended to the end of the current
+            peak :attr:`comment`.
 
-            ################
+        Note
+        ----
+        The shape and mass calibrant peaks are automatically marked during the
+        shape and mass calibration by inserting the protected flags ``'shape calibrant'``,
+        ``'mass calibrant'`` or ``'shape and mass calibrant'`` into their peak
+        comments. When user-defined comments are added to these peaks, it is
+        ensured that the protected flags cannot be overwritten. **The above
+        shape and mass calibrant flags should never be added to comments
+        manually by the user!**
 
         """
         if peak_index is not None:
@@ -748,8 +945,7 @@ class spectrum:
         elif x_pos is not None:
             peak_index = [i for i in range(len(self.peaks)) if np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)][0] # select peak at position 'x_pos'
         else:
-            print("\nERROR: Peak specification failed. Check function documentation for details on peak selection.\n")
-            return
+            raise Exception("\nERROR: Peak specification failed. Check method documentation for details on peak selection.\n")
         peak = self.peaks[peak_index]
 
         protected_flags = ('shape calibrant','shape & mass calibrant','mass calibrant') # item order matters for comment overwriting!
@@ -770,16 +966,26 @@ class spectrum:
                 peak.comment = peak.comment+comment
             print("Comment of peak",peak_index,"was changed to: ",peak.comment)
         except TypeError:
-            print("ERROR: 'comment' argument must be given as type string.")
-            pass
+            raise Exception("TYPE ERROR: 'comment' argument must be given as type string.")
 
 
     #####  Add peak markers to plot of a fit (only for internal use within class)
-    def __add_peak_markers(self,yscale='log',ymax=None,peaks=None):
-        """
-        (Internal) method for adding peak markers to current figure object, place this function as self.add_peak_markers between plt.figure() and plt.show(), only for use on already fitted spectra
+    def _add_peak_markers(self,yscale='log',ymax=None,peaks=None):
+        """Internal function for adding peak markers to current figure object.
+
+        Place this function inside spectrum methods as ``self._add_peak_markers(...)``
+        between ``plt.figure()`` and ``plt.show()``. Only for use on already
+        fitted spectra!
+
+        Parameters
+        ----------
+        yscale : str, optional
+            Scale of y-axis, either 'lin' or 'log'.
         ymax : float
-            ymax of spectrum data to plot (not of marker!)
+            Maximal y-value of spectrum data to plot. Used to set y-limits.
+        peaks : list of :class:`peak`
+            List of peaks to add peak markers for.
+
         """
         if peaks is None:
             peaks = self.peaks
@@ -794,44 +1000,45 @@ class spectrum:
             for p in peaks:
                 x_idx = np.argmin(np.abs(data.index.values - p.x_pos))
                 ymin = data.iloc[x_idx]
-                plt.vlines(x=p.x_pos,ymin=ymin,ymax=1.04*ymax,linestyles='dashed')
-                plt.text(p.x_pos, 1.06*ymax, self.peaks.index(p), horizontalalignment='center', fontsize=12)
+                plt.vlines(x=p.x_pos,ymin=ymin,ymax=1.14*ymax,linestyles='dashed')
+                plt.text(p.x_pos, 1.16*ymax, self.peaks.index(p), horizontalalignment='center', fontsize=12)
 
 
-    ##### Plot fit of full spectrum
-    def plot_fit(self,fit_result=None,plot_title=None,show_peak_markers=True,sigmas_of_conf_band=0,x_min=None,x_max=None,plot_filename=None):
-        """
-        Plots spectrum with fit in logarithmic and linear y-scale
+    def plot_fit(self,fit_result=None,plot_title=None,show_peak_markers=True,
+                 sigmas_of_conf_band=0,x_min=None,x_max=None,plot_filename=None):
+        """Plot entire spectrum with fit curve in logarithmic and linear y-scale.
+
+        Plots can be saved to a file using the `plot_filename` argument.
 
         Parameters
         ----------
-        fit_result : lmfit modelresult, optional, default: None
-            fit result to plot
-            if None, defaults to fit result of first peak in plot range (from `fit_results` list of spectrum object)
-        plot_title : str or None, optional, default :
-            titles of plots, the default ensures clear indication of the used fit model
-            if None, defaults to fit model name asociated with spectrum (`fit_model` attribute of spectrum object)
-        show_peak_markers : bool, optional, default: True
-            if True, peak markers are added to the plots
+        fit_result : :class:`lmfit.model.modelresult`, optional, default: ``None``
+            Fit result to plot. If ``None``, defaults to fit result of first
+            peak in `peaks` (taken from :attr:`fit_results` list).
+        plot_title : str or None, optional
+            Title of plots. If ``None``, defaults to a string with the fit model
+            name and cost function of the `fit_result` to ensure clear indication
+            of how the fit was obtained.
+        show_peak_markers : bool, optional, default: ``True``
+            If ``True``, peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
-            coverage probability of confidence band in sigma (only for log-plot);
-            if 0, no confidence band is shown (default)
-        x_min : float [u], optional, default: None
-            start of mass range to plot
-            if None, minimum of spectrum object's mass data is used
-        x_max : float [u], optional, default: None
-            end of mass range to plot
-            if None, maximum of spectrum objects's mass data is used
+            Coverage probability of confidence band in sigma (only shown in
+            log-plot). If ``0``, no confidence band is shown (default).
+        x_min, x_max : float [u], optional
+            Start and end of mass range to plot. If ``None``, defaults to the
+            minimum and maximum of the spectrum's mass :attr:`data` is used.
         plot_filename : str or None, optional, default: None
-            if not None, plot images will be saved to two separate files named '`plot_filename`_log_plot.png' and '`plot_filename`_lin_plot.png' respectively
-            Caution: Existing files of same name are overwritten.
+            If not ``None``, plot images will be saved to two separate files named
+            '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
+            **Caution: Existing files of same name are overwritten.**
 
         """
         if x_min is None:
             x_min = self.data.index.values[0]
         if x_max is None:
             x_max = self.data.index.values[-1]
-        peaks_to_plot = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)] # select peaks in mass range of interest
+        # Select peaks in mass range of interest:
+        peaks_to_plot = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)]
         idx_first_peak = self.peaks.index(peaks_to_plot[0])
         if fit_result is None:
            fit_result = self.fit_results[idx_first_peak]
@@ -854,7 +1061,7 @@ class spectrum:
             pref = 'p{0}_'.format(peak_index)
             plt.plot(fit_result.x, comps[pref], '--',linewidth=2)
         if show_peak_markers:
-            self.__add_peak_markers(yscale='log',ymax=y_max_log,peaks=peaks_to_plot)
+            self._add_peak_markers(yscale='log',ymax=y_max_log,peaks=peaks_to_plot)
         if sigmas_of_conf_band!=0 and fit_result.errorbars == True: # add confidence band with specified number of sigmas
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
             plt.fill_between(fit_result.x, fit_result.best_fit-dely, fit_result.best_fit+dely, color="#ABABAB", label=str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band')
@@ -889,13 +1096,13 @@ class spectrum:
         ax1.plot(x_fine, fit_result.eval(x=x_fine),'-',color='red',linewidth=2,label='best-fit')
         ax1.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',color='royalblue',linewidth=1,markersize=8.5,label='data')
         ax1.set_title('')
-        ax1.set_ylim(-0.05*y_max_lin, 1.1*y_max_lin)
+        ax1.set_ylim(-0.05*y_max_lin, 1.2*y_max_lin)
         ax1.set_ylabel('Counts per bin')
         for ax in axs:
             ax.legend()
             ax.set_xlim(x_min,x_max)
         if show_peak_markers:
-            self.__add_peak_markers(yscale='lin',ymax=y_max_lin,peaks=peaks_to_plot)
+            self._add_peak_markers(yscale='lin',ymax=y_max_lin,peaks=peaks_to_plot)
         plt.xlabel('m/z [u]')
         if plot_filename is not None:
             try:
@@ -906,28 +1113,45 @@ class spectrum:
 
 
     ##### Plot fit of spectrum zoomed to specified peak or specified mass range
-    def plot_fit_zoom(self,peak_indeces=None,x_center=None,x_range=0.01,show_peak_markers=True,sigmas_of_conf_band=0,plot_filename=None):
-        """
-        Show logarithmic and linear plots of data and fit curve zoomed to mass range of interest
-        - if peak(s) of interest are specified via `peak_indeces` the mass range to plot is automatically chosen to include all specified peaks
-        - otherwise, the mass range must be specified manually with `x_center` and `x_range`
+    def plot_fit_zoom(self,peak_indeces=None,x_center=None,x_range=0.01,plot_title=None,show_peak_markers=True,sigmas_of_conf_band=0,plot_filename=None):
+        """Show logarithmic and linear plots of data and fit curve zoomed to peaks
+        or mass range of interest.
+
+        There is two alternatives to define the plots' mass range:
+
+        1. Specifying peaks-of-interest with the `peak_indeces`
+           argument. The mass range is then automatically chosen to include all
+           peaks of interest. The minimal mass range to include around each peak of
+           interest can be adjusted using `x_range`.
+        2. Specifying a mass range of interest with the `x_center` and `x_range`
+           arguments.
 
         Parameters
         ----------
-        peak_indeces : int or list of ints, optional, default: None
-            index of single peak or of multiple neighboring peaks to show (peaks must belong to the same fit curve!)
-        x_center : float [u], optional, default: None
-            center of manually specified mass range to plot
+        peak_indeces : int or list of ints, optional
+            Index of single peak or indeces of multiple neighboring peaks to show
+            (peaks must belong to the same :attr:`fit_result`).
+        x_center : float [u], optional
+            Center of manually specified mass range to plot.
         x_range : float [u], optional, default: 0.01
-            width of mass range to plot around 'x_center' or minimal width to plot around specified peaks of interest
-        show_peak_markers : bool, optional, default: True
-            if True, peak markers are added to the plots
+            Width of mass range to plot around 'x_center' or minimal mass range
+            to include around each specified peak of interest.
+        plot_title : str or None, optional
+            Title of plots. If ``None``, defaults to a string with the fit model
+            name and cost function of the `fit_result` to ensure clear indication
+            of how the fit was obtained.
+        show_peak_markers : bool, optional, default: ``True``
+            If ``True``, peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
-            coverage probability of confidence band in sigma (only for log-plot);
-            if 0, no confidence band is shown (default)
+            Coverage probability of confidence band in sigma (only shown in
+            log-plot). If ``0``, no confidence band is shown (default).
+        x_min, x_max : float [u], optional
+            Start and end of mass range to plot. If ``None``, defaults to the
+            minimum and maximum of the spectrum's mass :attr:`data` is used.
         plot_filename : str or None, optional, default: None
-            if not None, plot images will be saved to two separate files named '`plot_filename`_log_plot.png' and '`plot_filename`_lin_plot.png' respectively
-            Caution: Existing files of same name are overwritten.
+            If not ``None``, plot images will be saved to two separate files named
+            '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
+            **Caution: Existing files of same name are overwritten.**
 
         """
         if isinstance(peak_indeces,list):
@@ -941,25 +1165,53 @@ class spectrum:
             x_min = x_center - x_range/2
             x_max = x_center + x_range/2
         else:
-            print("Mass range to plot could not be determined. Check documentation on function parameters.")
-            return
-        self.plot_fit(x_min=x_min,x_max=x_max,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,plot_filename=plot_filename)
+            raise Exception("\nMass range to plot could not be determined. Check documentation on method parameters.\n")
+        self.plot_fit(x_min=x_min,x_max=x_max,plot_title=plot_title,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,plot_filename=plot_filename)
 
 
-    ##### Internal helper function for creating multi-peak fit models
-    def comp_model(self,peaks_to_fit=None,model='emg22',init_pars=None,vary_shape=False,vary_baseline=True,index_first_peak=None):
-        """ create multi-peak composite model from single-peak model """
+    def comp_model(self,peaks_to_fit,model='emg22',init_pars=None,vary_shape=False,vary_baseline=True,index_first_peak=None):
+        """ Create a multi-peak composite model from a single-peak model.
+
+        **Primarily intended for internal usage.**
+
+        Parameters
+        ----------
+        peaks_to_fit : list of :class:`peak`
+            :class:`peaks` to be fitted with composite model.
+        model : str, optional
+            Name of fit model to use (e.g. 'Gaussian','emg12','emg33', ...
+            - see :mod:`fit_models` module for all available fit models).
+        init_pars : dict, optional, default: ``None``
+            Default initial shape parameters for fit model. If ``None`` the
+            default parameters defined in the :mod:`'fit_models'` module will be
+            used after scaling to the spectrum's :attr:`mass_number`.           #TODO: add reference to definition of 'shape parameters'
+        vary_shape : bool, optional
+            If ``False`` only the amplitude (``amp``) and Gaussian centroid (``mu``)
+            model parameters will be varied in the fit. If ``True``, the shape
+            parameters (sigma, theta, eta's, tau's) will also be varied.        #TODO: add reference to definition of 'shape parameters'
+        vary_baseline : bool, optional
+            If ``True`` a constant baseline will be added to the fit model as
+            varying model parameter ``c_bkg``.
+
+        Notes
+        -----
+        The initial amplitude for each peak is estimated by taking the counts in
+        the bin closest to the peak's :attr:`x_pos` and scaling this number with
+        an empirically determined constant and the spectrum's :attr:`mass_number`.
+
+        """
         model = getattr(fit_models,model) # get single peak model from fit_models.py
         mod = fit.models.ConstantModel(independent_vars='x',prefix='bkg_')
         if vary_baseline == True:
-            mod.set_param_hint('bkg_c', value= 0.1, min=0,max=4, vary=True) # 0.3, vary=True
+            mod.set_param_hint('bkg_c', value= 0.1, min=0,max=4, vary=True) # value=0.3
         else:
             mod.set_param_hint('bkg_c', value= 0.0, vary=False)
         df = self.data
         for peak in peaks_to_fit:
             peak_index = self.peaks.index(peak)
             x_pos = df.index[np.argmin(np.abs(df.index.values - peak.x_pos))] # x_pos of closest bin
-            amp = max(df['Counts'].loc[x_pos]/2500*(self.mass_number/100),1e-04) # estimate amplitude from peak maximum, the factor 2500 is empirically determined and shape-dependent
+            # Estimate amplitude from counts in closest bin, the scaling factor 1/2500 is empirically determined and somewhat shape-dependent
+            amp = max(df['Counts'].loc[x_pos]/2500*(self.mass_number/100),1e-04)
             if init_pars:
                 this_mod = model(peak_index, peak.x_pos, amp, init_pars=init_pars, vary_shape_pars=vary_shape, index_first_peak=index_first_peak)
             else:
@@ -970,9 +1222,12 @@ class spectrum:
 
     ##### Fit spectrum
     def peakfit(self,fit_model='emg22',cost_func='chi-square',x_fit_cen=None,x_fit_range=None,init_pars=None,vary_shape=False,vary_baseline=True,method='least_squares',show_plots=True,show_peak_markers=True,sigmas_of_conf_band=0,plot_filename=None,eval_par_covar=False,recal_fac=1.0):
-        """
-        Internal peak fitting routine, fits full spectrum or subrange (if x_fit_cen and x_fit_range are specified) and optionally shows results
-        This method is for internal usage, use 'fit_peaks' method to fit spectrum and update peak properties dataframe with obtained fit results!
+        """Internal routine for fitting peaks.
+
+        Fits full spectrum or subrange (if x_fit_cen and x_fit_range are specified)
+        and optionally shows results. **This method is for internal usage. Use
+        :meth:`fit_peaks` method to fit peaks and automatically update peak
+        properties dataframe with obtained fit results!**
 
 	    Parameters
         ----------
@@ -1726,7 +1981,7 @@ class spectrum:
 
 
     ##### Update recalibration attributes and calibrant peak properties (for interal use within class only)
-    def __update_calibrant_props(self,index_mass_calib=None,fit_result=None):
+    def _update_calibrant_props(self,index_mass_calib=None,fit_result=None):
         """
         Determine recalibration factor and update mass calibrant peak properties.
         """
@@ -1837,13 +2092,13 @@ class spectrum:
             display(fit_result)
 
         # Update recalibration factor and calibrant properties
-        self.__update_calibrant_props(index_mass_calib=index_mass_calib,fit_result=fit_result)
+        self._update_calibrant_props(index_mass_calib=index_mass_calib,fit_result=fit_result)
         # Calculate absolute centroid shifts of calibrant as prep for subsequent peak-shape error determination for ions of interest
         self._eval_peakshape_errors(peak_indeces=[index_mass_calib],fit_result=fit_result,verbose=False)
 
 
     ##### Update peak list with fit values
-    def __update_peak_props(self,peaks=[],fit_result=None):
+    def _update_peak_props(self,peaks=[],fit_result=None):
         """
         Update peak properties with fit results in 'fit_result'.
 
@@ -1953,7 +2208,7 @@ class spectrum:
         fit_result = spectrum.peakfit(self, fit_model=fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars, vary_shape=vary_shape, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,plot_filename=plot_filename)
 
         if index_mass_calib is not None:
-            self.__update_calibrant_props(index_mass_calib=index_mass_calib,fit_result=fit_result) # Update recalibration factor and calibrant properties
+            self._update_calibrant_props(index_mass_calib=index_mass_calib,fit_result=fit_result) # Update recalibration factor and calibrant properties
 
         # Determine peak-shape errors
         if x_fit_cen:
@@ -1968,7 +2223,7 @@ class spectrum:
             self._eval_peakshape_errors(peak_indeces=peak_indeces,fit_result=fit_result,verbose=True,show_shape_err_fits=show_shape_err_fits)
         except KeyError:
             print("WARNING: Peak-shape error determination failed with KeyError. Likely the used fit_model collides with shape calibration model.")
-        self.__update_peak_props(peaks=peaks_to_fit,fit_result=fit_result)
+        self._update_peak_props(peaks=peaks_to_fit,fit_result=fit_result)
         self.show_peak_properties()
         if show_fit_report:
             display(fit_result)

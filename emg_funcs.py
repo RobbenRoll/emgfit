@@ -1,7 +1,6 @@
 ###################################################################################################
-##### Python module for Hyper-EMG fitting of TOF mass spectra
-##### Fitting routines taken from lmfit package
-##### Code by Stefan Paul, 2019-12-28
+##### Module with general Hyper-EMG functions
+##### Code by Stefan Paul
 
 ##### Import packages
 import numpy as np
@@ -44,18 +43,37 @@ def bounded_exp(arg):
 #     return np.float(val)
 # vect_exp_erfc_p = np.vectorize(exp_erfc_p)
 
-# Define negative skewed hyper-EMG particle distribution functiDon (NS-EMG PDF)
 def h_m_emg(x, mu, sigma, *t_args):
-    """ Negative skewed hyper-EMG particle distribution function (NS-EMG PDF)
+    """Negative skewed exponentially-modified Gaussian (EMG) distribution.
 
-    Parameters:
-    x (float >= 0 ): abscissa values (mass or TOF data)
-    mu (float >= 0): mean value of unmodified Gaussian distribution
-    sigma (float >= 0): standard deviation of unmodified Gaussian distribution
-    t_args = (eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...):  variable-length list of tail shape arguments (length of tuples defines the tail order)
+    Parameters
+    ----------
+    x  : float >= 0
+        Abscissa data (mass data).
+    mu : float >= 0
+        Mean value of underlying Gaussian distribution.
+    sigma : float >= 0
+        Standard deviation of underlying Gaussian distribution.
+    t_args : :class:`tuple`, :class:`tuple`
+        Two variable-length tuples of neg. tail shape arguments with the
+        signature: ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...)``.
+        The length of the tuples must match and defines the order of neg. tails.
 
-    Returns:
-    float: ordinate values of NS-EMG PDF
+    Returns
+    -------
+    float
+        Ordinate values of the negative skewed EMG distribution.
+
+    Note
+    ----
+    Depending on the choice of parameters, numerical artifacts (multiplications
+    by infinity due to overflow of :func:`numpy.exp` for arguments > 709.7) can
+    result in non-finite values for ``h_m`` (see code below).
+    These numerical artifacts are handled by setting non-finite ``h_m`` values
+    to ``0``. A different option would be the usage of a package with arbitrary
+    precision float numbers (e.g. mpmath). However, the latter would yield
+    extremely long computation times.
+
     """
     li_eta_m = t_args[0]
     li_tau_m = t_args[1]
@@ -87,17 +105,37 @@ def h_m_emg(x, mu, sigma, *t_args):
 
 # Define positive skewed exponentially-modified Gaussian particle distribution function (PS-EMG PDF)
 def h_p_emg(x, mu, sigma, *t_args):
-    # variable-length list of tail arguments: t_args = (eta_p1, eta_p2), (tau_p1, tau_p2), ...
-    """ Negative skewed hyper-EMG particle distribution function (NS-EMG PDF)
+    """Positive skewed exponentially-modified Gaussian (EMG) distribution.
 
-    Parameters:
-    x (float >= 0 ): abscissa (mass or TOF data)
-    mu (float >= 0): mean value of unmodified Gaussian distribution
-    sigma (float > 0): standard deviation of unmodified Gaussian distribution
-    t_args = (eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...):  variable-length list of tail shape arguments (length of tuples defines the tail order)
+    Parameters
+    ----------
+    x  : float >= 0
+        Abscissa data (mass data).
+    mu : float >= 0
+        Mean value of underlying Gaussian distribution.
+    sigma : float >= 0
+        Standard deviation of underlying Gaussian distribution.
+    t_args : :class:`tuple`, :class:`tuple`
+        Two variable-length tuples of pos. tail shape arguments with
+        the signature:
+        ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...)``.
+        The length of the tuples must match and defines the order of pos. tails.
 
-    Returns:
-    float: ordinate of NS-EMG PDF
+    Returns
+    -------
+    float
+        Ordinate values of the positive skewed EMG distribution.
+
+    Note
+    ----
+    Depending on the choice of parameters, numerical artifacts (multiplications
+    by infinity due to overflow of :func:`numpy.exp` for arguments > 709.7) can
+    result in non-finite values for ``h_p`` (see code below).
+    These numerical artifacts are handled by setting non-finite ``h_p`` values
+    to ``0``. A different option would be the usage of a package with arbitrary
+    precision float numbers (e.g. mpmath). However, the latter would yield
+    extremely long computation times.
+
     """
     li_eta_p = t_args[0]
     li_tau_p = t_args[1]
@@ -128,20 +166,45 @@ def h_p_emg(x, mu, sigma, *t_args):
     # print("h_p:"+str(h_p))
     return h_p
 
-# Hyper-EMG PDF
+
 def h_emg(x, mu, sigma , theta, *t_args):
-    """ Hyper-EMG particle distribution function (hyper-EMG PDF)
+    """Hyper-exponentially-modified Gaussian distribution (hyper-EMG).
 
-    Parameters:
-    x (float >= 0 ): abscissa (mass or TOF data)
-    mu (float >= 0): mean value of unmodified Gaussian distribution
-    sigma (float > 0): standard deviation of unmodified Gaussian distribution
-    theta (float 0 <= theta <= 1): left-right-weight factor (NS EMG weight: theta; PS EMG weight: 1 - theta)
-    t_args = (eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...),  (eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...):
-            variable-length list of tail shape arguments (length of respective tuples defines the PS and NS tail orders)
+    Parameters
+    ----------
+    x  : float >= 0
+        Abscissa data (mass data).
+    mu : float >= 0
+        Mean value of underlying Gaussian distribution.
+    sigma : float >= 0
+        Standard deviation of underlying Gaussian distribution.
+    theta : float, 0 <= theta <= 1
+        Left-right-weight factor (negative-skewed EMG weight: theta;
+        positive-skewed EMG weight: 1 - theta).
+    t_args : :class:`tuple`, :class:`tuple`, :class:`tuple`, :class:`tuple`
+        Four variable-length tuples of neg. and pos. tail shape arguments with
+        the signature: ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...), (eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...)``.
+        The length of the first and last two tuples defines the order of neg.
+        and pos. tails, respectively.
 
-    Returns:
-    float: ordinate of hyper-EMG PDF
+    Returns
+    -------
+    float
+        Ordinate of hyper-EMG distribution.
+
+    Note
+    ----
+    Depending on the choice of parameters, numerical artifacts (due to overflow
+    of :func:`numpy.exp` for arguments >709.7) could result in non-finite return
+    values for :func:`h_m_emg` and :func:`h_p_emg` (and thus for :func:`h_emg`).
+    See docs of :func:`h_m_emg` & :func:`h_p_emg` for how those artifacts are
+    handled.
+
+    See also
+    --------
+    :func:`h_m_emg`
+    :func:`h_p_emg`
+
     """
     li_eta_m = t_args[0]
     li_tau_m = t_args[1]
@@ -168,16 +231,23 @@ def h_emg(x, mu, sigma , theta, *t_args):
         return h"""
 
 def mu_emg(mu,theta,*t_args):
-    """ Calculates mean of hyper-EMG particle distribution function (hyper-EMG PDF)
+    """Calculate mean of hyper-EMG distribution.
 
-    Parameters:
-    mu (float >= 0): mean value of unmodified Gaussian distribution
-    theta (float 0 <= theta <= 1): left-right-weight factor (NS EMG weight: theta; PS EMG weight: 1 - theta)
-    t_args = (eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...),  (eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...):
-            variable-length list of tail shape arguments (length of respective tuples defines the PS and NS tail orders)
+    Parameters
+    ----------
+    mu : float >= 0
+        Mean value of underlying Gaussian distribution.
+    theta : float, 0 <= theta <= 1
+        Left-right-weight factor (negative-skewed EMG weight: theta;
+        positive-skewed EMG weight: 1 - theta).
+    t_args : :class:`tuple`, :class:`tuple`, :class:`tuple`, :class:`tuple`
+        Four variable-length tuples of neg. and pos. tail shape arguments with
+        the signature: ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...), (eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...)``.
 
-    Returns:
-    float: mean of hyper-EMG PDF
+    Returns
+    -------
+    float
+        Mean of hyper-EMG distribution.
 
     """
     li_eta_m = t_args[0]
@@ -202,16 +272,23 @@ def mu_emg(mu,theta,*t_args):
 
 
 def sigma_emg(sigma,theta,*t_args):
-    """ Calculates standard deviation of hyper-EMG particle distribution function (hyper-EMG PDF)
+    """Calculate standard deviation of hyper-EMG distribution.
 
-    Parameters:
-    sigma (float > 0): standard deviation of unmodified Gaussian distribution
-    theta (float 0 <= theta <= 1): left-right-weight factor (NS EMG weight: theta; PS EMG weight: 1 - theta)
-    t_args = (eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...),  (eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...):
-            variable-length list of tail shape arguments (length of respective tuples defines the PS and NS tail orders)
+    Parameters
+    ----------
+    sigma : float >= 0
+        Standard deviation of underlying Gaussian distribution.
+    theta : float, 0 <= theta <= 1
+        Left-right-weight factor (negative-skewed EMG weight: theta;
+        positive-skewed EMG weight: 1 - theta).
+    t_args : :class:`tuple`, :class:`tuple`, :class:`tuple`, :class:`tuple`
+        Four variable-length tuples of neg. and pos. tail shape arguments with
+        the signature: ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...), (eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...)``.
 
-    Returns:
-    float: standard deviation of hyper-EMG PDF
+    Returns
+    -------
+    float
+        Standard deviation of hyper-EMG distribution.
 
     """
     li_eta_m = t_args[0]

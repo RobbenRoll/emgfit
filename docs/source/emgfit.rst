@@ -5,10 +5,10 @@ Submodules
 ----------
 
 
-emgfit.AME\_funcs module
+emgfit.ame\_funcs module
 ------------------------
 
-.. automodule:: emgfit.AME_funcs
+.. automodule:: emgfit.ame_funcs
    :members:
    :undoc-members:
    :show-inheritance:
@@ -25,22 +25,6 @@ emgfit.emg\_funcs module
 ------------------------
 
 .. automodule:: emgfit.emg_funcs
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-emgfit.emg\_funcs\_mpmath module
---------------------------------
-
-.. automodule:: emgfit.emg_funcs_mpmath
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-emgfit.emg\_funcs\_mpmath\_approx module
-----------------------------------------
-
-.. automodule:: emgfit.emg_funcs_mpmath_approx
    :members:
    :undoc-members:
    :show-inheritance:

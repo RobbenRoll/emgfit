@@ -25,7 +25,7 @@ def mdata_AME(El,A):
     Returns
     -------
     list (str,int,float,float,bool)
-        [Element name, mass number, atomic AME mass, atomic AME mass error, boolean flag for extrapolated mass (if True: extrapolated mass)] ##############
+        [Element name, mass number, atomic AME mass, atomic AME mass error, boolean flag for extrapolated AME mass] 
 
     """
     m_AME = df_AME['ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
@@ -49,7 +49,7 @@ def splitspecies(s):
 
     Example
     -------
-    '4H1:1C12' returns ['4H1','1C12']
+    ``'4H1:1C12'`` returns ``['4H1','1C12']``
 
     """
     return s.split(':')

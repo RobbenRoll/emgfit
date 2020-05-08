@@ -1,23 +1,38 @@
 ###################################################################################################
-##### Python module for Hyper-EMG fitting of TOF mass spectra
-##### Fitting routines taken from lmfit package
-##### Code by Stefan Paul, 2019-12-28
+##### Module with lmfit models for Gaussian and Hyper-EMG distributions
+##### Code by Stefan Paul
 
-
-###################################################################################################
-##### Define Hyper-EMG(2,2) single peak fitting routine
+##### Import dependencies
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import lmfit as fit
 from .config import *
 from .emg_funcs import *
-upper_bound_taus = 5e-02 # prevents minimizer from running towards virtually flat tails
+upper_bound_taus = 5e-02 # prevents minimizer from running towards virtually flat tails #TODO: COnsider moving to config for user control
 
 ###################################################################################################
 
-def create_default_init_pars(mass_number=100):
-    """ Re-scale default parameters for mass 100 to mass number of interest and store them in dictionary """
+def create_default_init_pars(mass_number=100): #TODO: COnsider moving to config for user control
+    """Scale default parameters to mass of interest and return parameter dictionary.
+
+    Parameters
+    ----------
+    mass_number : int, optional
+        Atomic mass number of peaks of interest, defaults to 100.
+
+    Returns
+    -------
+    dict
+        Dictionary with default initial parameters (scaled to `mass_number`).
+
+    Notes
+    -----
+    **The default parameters were defined for mass 100**, hence the scaling of
+    all mass-dependent parameters (i.e. shape parameters & ``amp``) with
+    ``mass_number``/100.
+
+    """
     # Default initial parameters for peaks around mass 100 (with re-scaling factor):
     scl_factor = mass_number/100
     amp = 0.45*scl_factor
@@ -39,25 +54,28 @@ def create_default_init_pars(mass_number=100):
     pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta, 'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3, 'tau_m1': tau_m1, 'tau_m2': tau_m2, 'tau_m3': tau_m3, 'eta_p1': eta_p1, 'eta_p2': eta_p2, 'eta_p3': eta_p3, 'tau_p1': tau_p1, 'tau_p2': tau_p2, 'tau_p3': tau_p3}
     return pars_dict
 
-##### Define default initial parameters and store them in dictionary
-amp = 0.45
-mu = None
-sigma = 0.00018 #0.00017
-theta = 0.5 # 0.35
-eta_m1 = 0.85
-eta_m2 = 0.10
-eta_m3 = 0.05
-tau_m1 = 50e-06 #[u]
-tau_m2 = 500e-06
-tau_m3 = 1000e-06
-eta_p1 = 0.85
-eta_p2 = 0.10
-eta_p3 = 0.05
-tau_p1 = 50e-06
-tau_p2 = 600e-06
-tau_p3 = 1000e-06
 
-pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta, 'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3, 'tau_m1': tau_m1, 'tau_m2': tau_m2, 'tau_m3': tau_m3, 'eta_p1': eta_p1, 'eta_p2': eta_p2, 'eta_p3': eta_p3, 'tau_p1': tau_p1, 'tau_p2': tau_p2, 'tau_p3': tau_p3}
+pars_dict = create_default_init_pars()
+
+##### Define default initial parameters and store them in dictionary
+# amp = 0.45
+# mu = None
+# sigma = 0.00018 #0.00017
+# theta = 0.5 # 0.35
+# eta_m1 = 0.85
+# eta_m2 = 0.10
+# eta_m3 = 0.05
+# tau_m1 = 50e-06 #[u]
+# tau_m2 = 500e-06
+# tau_m3 = 1000e-06
+# eta_p1 = 0.85
+# eta_p2 = 0.10
+# eta_p3 = 0.05
+# tau_p1 = 50e-06
+# tau_p2 = 600e-06
+# tau_p3 = 1000e-06
+#
+# pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta, 'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3, 'tau_m1': tau_m1, 'tau_m2': tau_m2, 'tau_m3': tau_m3, 'eta_p1': eta_p1, 'eta_p2': eta_p2, 'eta_p3': eta_p3, 'tau_p1': tau_p1, 'tau_p2': tau_p2, 'tau_p3': tau_p3}
 
 ###################################################################################################
 ##### Define Gaussian fit model ######################################################################
@@ -77,7 +95,9 @@ def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, 
 
     Returns
     -------
-    lmfit model object
+    :class:`lmfit.model`
+        `lmfit` model object
+
     """
     # Define model function
     def Gaussian(x, amp, mu, sigma):
@@ -113,9 +133,11 @@ def emg01(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
         index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
                                 common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
 
-    Returns:
-    --------
-    lmfit model object
+    Returns
+    -------
+    :class:`lmfit.model`
+        `lmfit` model object
+
     """
     # Define model function
     def emg01(x, amp, mu, sigma, tau_p1):
@@ -155,7 +177,9 @@ def emg10(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
 
     Returns
     -------
-    lmfit model object
+    :class:`lmfit.model`
+        `lmfit` model object
+
     """
     # Define model function
     def emg10(x, amp, mu, sigma, tau_m1):
@@ -195,7 +219,9 @@ def emg11(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
 
     Returns
     -------
-    lmfit model object
+    :class:`lmfit.model`
+        `lmfit` model object
+
     """
     # Define model function
     def emg11(x, amp, mu, sigma, theta, tau_m1, tau_p1):
@@ -239,7 +265,9 @@ def emg12(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
 
     Returns
     -------
-    lmfit model object
+    :class:`lmfit.model`
+        `lmfit` model object
+
     """
     # Define model function
     def emg12(x, amp, mu, sigma, theta, tau_m1,eta_p1,eta_p2,tau_p1,tau_p2):
@@ -289,7 +317,9 @@ def emg21(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
 
     Returns
     -------
-    lmfit model object
+    :class:`lmfit.model`
+        `lmfit` model object
+
     """
     # Define model function
     def emg21(x, amp, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,tau_p1):
@@ -339,7 +369,9 @@ def emg22(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
 
     Returns
     -------
-    lmfit model object
+    :class:`lmfit.model`
+        `lmfit` model object
+
     """
     # Define model function
     def emg22(x, amp, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,tau_p1,tau_p2):
@@ -395,7 +427,9 @@ def emg23(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
 
     Returns
     -------
-    lmfit model object
+    :class:`lmfit.model`
+        `lmfit` model object
+
     """
     # Define model function
     def emg23(x, amp, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,eta_p3,delta_p,tau_p1,tau_p2,tau_p3):
@@ -462,7 +496,8 @@ def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
 
     Returns
     -------
-    lmfit model object
+    :class:`lmfit.model`
+        `lmfit` model object
 
     """
     # Define model function
@@ -530,7 +565,8 @@ def emg33(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
 
     Returns
     -------
-    lmfit model object
+    :class:`lmfit.model`
+        `lmfit` model object
 
     """
     # Define model function

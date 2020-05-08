@@ -35,7 +35,7 @@ version = release = emgfit.__version__.split('+', 1)[0]
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-    'numpydoc',
+    #'numpydoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
 ] # enable napoleon ('sphinxcontrib.napoleon')
@@ -45,7 +45,7 @@ intersphinx_mapping = {
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'pandas': ('http://pandas.pydata.org/pandas-docs/dev', None),
     'scipy': ('http://docs.scipy.org/doc/scipy/reference', None),
-    'lmfit': ('https://lmfit.github.io/lmfit-py', None)	
+    'lmfit': ('https://lmfit.github.io/lmfit-py', None)
 }
 
 #numpydoc_show_class_members = True
