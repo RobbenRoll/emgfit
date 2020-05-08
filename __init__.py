@@ -10,7 +10,7 @@ from .config import *
 from .spectrum import *
 
 ##### Define package version
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 
 ##### Check Python version
 import sys
