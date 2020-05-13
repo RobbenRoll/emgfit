@@ -9,6 +9,8 @@ import pandas as pd
 import lmfit as fit
 import scipy.constants as con
 import scipy.special as spl
+#import numexpr as ne
+#ne.set_vml_accuracy_mode('high')
 #from numba import jit, prange
 
 ###################################################################################################
@@ -79,7 +81,7 @@ def h_m_emg(x, mu, sigma, *t_args):
     li_tau_m = t_args[1]
     t_order_m = len(li_eta_m) # order of negative tail exponentials
     if np.round(np.sum(li_eta_m), decimals=norm_precision) != 1.0:  # check normalization of eta_m's
-        raise Exception("eta_m's don't add up to 1")
+        raise Exception("eta_m's don't add up to 1.")
     if len(li_tau_m) != t_order_m:  # check if all arguments match tail order
         raise Exception("orders of eta_m and tau_m do not match!")
 
@@ -99,6 +101,8 @@ def h_m_emg(x, mu, sigma, *t_args):
         eta_m = li_eta_m[i]
         tau_m = li_tau_m[i]
         h_m_i = eta_m/(2*tau_m)*np.exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*spl.erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) )
+        #erfc_i = spl.erfc(sigma/(np.sqrt(2)*tau_m))
+        #h_m_i = ne.evaluate('eta_m/(2*tau_m)*exp( (sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*erfc_i + (x-mu)/(sqrt(2)*sigma)',optimization='moderate')
         h_m += np.where(np.isfinite(h_m_i),h_m_i,0) #np.nan_to_num(eta_m/(2*tau_m)*np.exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*spl.erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) ))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)
     # print("h_m:"+str(h_m))
     return h_m
@@ -141,7 +145,7 @@ def h_p_emg(x, mu, sigma, *t_args):
     li_tau_p = t_args[1]
     t_order_p = len(li_eta_p) # order of positive tails
     if np.round(np.sum(li_eta_p), decimals=norm_precision) != 1.0:  # check normalization of eta_p's
-        raise Exception("eta_p's don't add up to 1")
+        raise Exception("eta_p's don't add up to 1.")
     if len(li_tau_p) != t_order_p:  # check if all arguments match tail order
         raise Exception("orders of eta_p and tau_p do not match!")
 
@@ -162,6 +166,8 @@ def h_p_emg(x, mu, sigma, *t_args):
         eta_p = li_eta_p[i]
         tau_p = li_tau_p[i]
         h_p_i = eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) )
+        #erfc_i = spl.erfc(sigma/(np.sqrt(2)*tau_p))
+        #h_p_i = ne.evaluate('eta_p/(2*tau_p)*exp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc_i - (x-mu)/(sqrt(2)*sigma)',optimization='moderate')
         h_p += np.where(np.isfinite(h_p_i),h_p_i,0) #np.nan_to_num(eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) ))  # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)
     # print("h_p:"+str(h_p))
     return h_p
@@ -216,6 +222,9 @@ def h_emg(x, mu, sigma , theta, *t_args):
         h = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
     else:
         h = theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) + (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
+        #h_m = h_m_emg(x, mu, sigma, li_eta_m, li_tau_m)
+        #h_p = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
+        #h = ne.evaluate('theta*h_m + (1-theta)*h_p',optimization='moderate')
     return  h #np.clip(h,a_min=None,a_max=1e295) # clipping to avoid overflow errors
     """if isinstance(x,np.ndarray):
         h = np.array([])

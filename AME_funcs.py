@@ -18,20 +18,41 @@ def mdata_AME(El,A):
     Parameters
     ----------
     El : str
-        string with element name
+        String with element symbol.
     A : int
-        mass number of isotope of interest
+        Mass number of isotope of interest.
 
     Returns
     -------
     list (str,int,float,float,bool)
-        [Element name, mass number, atomic AME mass, atomic AME mass error, boolean flag for extrapolated AME mass] 
+        [Element, Z, A, atomic AME mass, atomic AME mass error, boolean flag for extrapolated AME mass]
 
     """
+    Z = df_AME['Z'].loc[(El,A)]
     m_AME = df_AME['ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
     m_AME_error = df_AME['Error ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
     extrapolated_yn = df_AME['Extrapolated?'].loc[(El,A)]
-    return [El, A, m_AME, m_AME_error, extrapolated_yn]
+    return [El, Z, A, m_AME, m_AME_error, extrapolated_yn]
+
+
+def get_El_from_Z(Z):
+    """ Convenience function to grab element symbol from given proton number.
+
+    Parameters
+    ----------
+    Z : int
+        Proton number.
+
+    Returns
+    -------
+    str
+        Symbol of element with specified proton number.
+    """
+    if isinstance(Z, (list, tuple, np.ndarray)):
+        El = np.array([df_AME.index[df_AME['Z'] == Z_i][0][0] for Z_i in Z])
+    else:
+        El = df_AME.index[df_AME['Z'] == Z][0][0]
+    return El
 
 
 def splitspecies(s):
@@ -105,10 +126,10 @@ def get_AME_values(species):
             m += n*m_e
             # neglect uncertainty of m_e
         else: # regular atom
-            m += n*mdata_AME(El,A)[2]
-            m_error_sq += (n*mdata_AME(El,A)[3])**2
+            m += n*mdata_AME(El,A)[3]
+            m_error_sq += (n*mdata_AME(El,A)[4])**2
             m_error = np.sqrt(m_error_sq)
             A_tot += A
-            if  mdata_AME(El,A)[4]:
+            if  mdata_AME(El,A)[5]:
                 extrapol = True # boolean flag for any extrapolated masses contained in species
     return m, m_error, extrapol, A_tot

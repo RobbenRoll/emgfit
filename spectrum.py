@@ -634,7 +634,7 @@ class spectrum:
             sensitivity for overlapping peaks this number might have to be set
             to less than the peak's FWHM! In challenging cases use the plot of
             the scaled inverted second derivative (by setting `plot_2nd_deriv`
-            to ``True``) to ensure that no potential peak is missed.
+            to ``True``) to ensure that the detection threshold is set properly.
         plot_smoothed_spec : bool, optional
             If ``True`` a plot with the original and the smoothed spectrum is
             shown.
@@ -709,7 +709,9 @@ class spectrum:
 
         # Plot raw spectrum with detected peaks marked
         if plot_detection_result:
-            self.plot(peaks=self.peaks,title="Spectrum with detected peaks marked",ymin=0.6)
+            self.plot(peaks=self.peaks,title="Spectrum with detected peaks marked")
+            print("Peak properties list after peak detection:")
+            self.show_peak_properties()
 
 
     def add_peak(self,x_pos,species="?",m_AME=None,m_AME_error=None,verbose=True):
@@ -759,6 +761,8 @@ class spectrum:
 
         """
         p = peak(x_pos,species,m_AME=m_AME,m_AME_error=m_AME_error) # instantiate new peak
+        if m_AME is not None: # set mass number to closest integer of m_AME value
+            p.A = int(np.round(m_AME,0))
         self.peaks.append(p)
         self.fit_results.append(None)
         ##### Helper function for sorting list of peaks by marker positions 'x_pos'
@@ -1603,7 +1607,7 @@ class spectrum:
         FWHM_gauss = 2*np.sqrt(2*np.log(2))*fit_result.params['p0_sigma'].value
         FWHM_emg = spec_boot.calc_FWHM_emg(peak_index=0,fit_result=fit_result)
         FWHM_emg_err = FWHM_gauss/FWHM_emg * self.shape_cal_par_errors['sigma']
-        print("Done!\n")
+        print("\nDone!\n")
 
         x = mean_areas # use number of detected counts instead of true number of re-sampling events (li_N_counts)
         model = fit.models.PowerLawModel()
@@ -2289,13 +2293,14 @@ class spectrum:
         df_centroid_shifts = pd.concat(frames, keys=keys)
         df_centroid_shifts.index.names = ['Peak index','Parameter']
 
-        # Save lin. and log. plots of full fitted spectrum to file
+        # Save lin. and log. plots of full fitted spectrum to temporary files
+        # so they can be inserted into the XLSX file
         from IPython.utils import io
         with io.capture_output() as captured: # suppress function output to Jupyter notebook
             self.plot_fit(plot_filename=filename)
 
         # Write DataFrames to separate sheets of EXCEL file and save peak-shape calibration to TXT-file
-        with pd.ExcelWriter(filename+'.xlsx') as writer:
+        with pd.ExcelWriter(filename+'.xlsx',engine='xlsxwriter') as writer:
             df_spec.to_excel(writer,sheet_name='Spectrum properties')
             df_prop.to_excel(writer,sheet_name='Peak properties')
             prop_sheet = writer.sheets['Peak properties']
@@ -2304,7 +2309,7 @@ class spectrum:
             df_centroid_shifts.to_excel(writer,sheet_name='Centroid shifts')
         print("Fit results saved to file:",str(filename)+".xlsx")
 
-        # Clean up images
+        # Clean up temporary image files
         os.remove(filename+'_log_plot.png')
         os.remove(filename+'_lin_plot.png')
 

@@ -133,7 +133,7 @@ Installation:
 * Install or update to Python3, e.g. by installing the Anaconda distribution (Anaconda already includes almost all dependencies for emgfit)
 * Install IPython and Jupyter -  an excellent tutorial on installing and using Jupyter notebooks is available at:
 https://notebooks.gesis.org/binder/jupyter/user/ipython-ipython-in-depth-gyr1r2l5/notebooks/binder/Index.ipynb
-* get other dependencies via pip or conda install: lmfit (numpy,  scipy, pathlib, matplotlib, pandas, time, copy, IPython.display, emcee (v3+), numdifftools)
+* get other dependencies via pip or conda install: lmfit, emcee (v3+), numdifftools, uncertainties, corner (numpy,  scipy, pathlib, matplotlib, pandas, time, copy, IPython.display)
 * if using anaconda: might get scipy.special import error, if so: run $conda remove --force scipy   and $pip install scipy
 * Dependencies for maximum likelihood fitting: emcee (version 3+), corner
 * gmpy2, download suitable wheel from https://www.lfd.uci.edu/~gohlke/pythonlibs/#gmpy and pip install ***.whl
@@ -173,3 +173,28 @@ Documentation:
 * Use Sphinx with napoleon to create online/html documentation,
      - Napoleon allows to autobuild docs from legible docstrings in numpy style
        get napoleon following instructions at: https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html?highlight=napoleon
+
+Installed anaconda 64bit for Windows 
+Check versions with:
+> conda -V
+> python -V
+
+Update conda and anaconda:
+> conda update conda
+> conda update anaconda 
+> conda install nb_conda_kernels
+
+(>conda config --append channels conda-forge
+>conda config --set channel_priority strict)
+
+> conda create env --name emgfit-py38
+> conda activate emgfit-py38
+> conda install lmfit
+> conda install ipykernel
+> conda install matplotlib
+> conda install emcee
+> conda install corner
+> conda install numdifftools
+
+
+
