@@ -36,7 +36,7 @@ def mdata_AME(El,A):
 
 
 def get_El_from_Z(Z):
-    """ Convenience function to grab element symbol from given proton number.
+    """Convenience function to grab element symbol from given proton number.
 
     Parameters
     ----------
@@ -56,7 +56,7 @@ def get_El_from_Z(Z):
 
 
 def splitspecies(s):
-    """ Splits ion species string into list of constituent atom strings.
+    """Splits ion species string into list of constituent atom strings.
 
     Parameters
     ----------
@@ -68,27 +68,31 @@ def splitspecies(s):
     list of str
         List of constituent atom strings contained in `s`.
 
-    Example
+    Examples
     -------
-    ``'4H1:1C12'`` returns ``['4H1','1C12']``
+    ``splitspecies('4H1:1C12')`` returns ``['4H1','1C12']``
+    ``splitspecies('H1:O16')`` returns ``['H1','O16']``
 
     """
     return s.split(':')
 
 
 def splitparticle(s):
-    """ Extracts number, particle/element type and mass number of particle string (e.g. 1Cs133, Cs133, 1e) """
+    """Extracts number, particle/element type and mass number of particle string
+    (e.g. 1Cs133, Cs133, 1e).
+
+    """
     if s[-1:] == '?': # handle unidentified species (indicated by '?' at end of string)
         return None, '?', None
     tail = s.lstrip('+-0123456789')
     head = s[:-len(tail)]
-    if head == '+' or head == '': # handle missing number (if '+' given or 1 in front of single omitted)
+    if head == '+' or head == '': # handle missing number (if '+' given or 1 in front of symbol omitted)
         n = int(1)
     elif head == '-': # handle missing number
         n = int(-1)
     else:
         n = int(head) # leading number including sign (if present)
-    El = tail.rstrip('0123456789') # central letters
+    El = tail.rstrip('0123456789') # get central letters
     if El == 'e' and len(El) == len(tail): # handle electron strings, e.g. ':-1e'
         A = 0
     else:
@@ -97,8 +101,8 @@ def splitparticle(s):
 
 
 def get_AME_values(species):
-    """
-    Calculates the AME mass, AME mass error, the extrapolation flag and the mass number A of the given species
+    """Calculates the AME mass, AME mass error, the extrapolation flag and the
+    mass number A of the given species.
 
     Parameters
     ----------

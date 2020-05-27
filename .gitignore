@@ -1,6 +1,10 @@
 __pycache__
 docs/build
+examples/tutorial/outputs
+
 
 # Compiled python modules.
 *.pyc
 
+
+*.ipynb_checkpoints* 

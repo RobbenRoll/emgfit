@@ -13,8 +13,9 @@ Table of contents:
   :maxdepth: 2
 
   intro
-  setup
+  .. setup
   tutorial
+  concepts
   modules
   contact
 

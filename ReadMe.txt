@@ -173,15 +173,16 @@ Documentation:
 * Use Sphinx with napoleon to create online/html documentation,
      - Napoleon allows to autobuild docs from legible docstrings in numpy style
        get napoleon following instructions at: https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html?highlight=napoleon
+     -  embeding jupyter notebook in docs, requires nbsphinx and nbsphinx-link extensions https://github.com/PyPSA/atlite/issues/38
 
-Installed anaconda 64bit for Windows 
+Installed anaconda 64bit for Windows
 Check versions with:
 > conda -V
 > python -V
 
 Update conda and anaconda:
 > conda update conda
-> conda update anaconda 
+> conda update anaconda
 > conda install nb_conda_kernels
 
 (>conda config --append channels conda-forge
@@ -195,6 +196,3 @@ Update conda and anaconda:
 > conda install emcee
 > conda install corner
 > conda install numdifftools
-
-
-
