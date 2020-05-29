@@ -173,7 +173,15 @@ Documentation:
 * Use Sphinx with napoleon to create online/html documentation,
      - Napoleon allows to autobuild docs from legible docstrings in numpy style
        get napoleon following instructions at: https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html?highlight=napoleon
-     -  embeding jupyter notebook in docs, requires nbsphinx and nbsphinx-link extensions https://github.com/PyPSA/atlite/issues/38
+     (-  embeding jupyter notebook in docs, requires nbsphinx and nbsphinx-link extensions https://github.com/PyPSA/atlite/issues/38
+
+      pip install nbsphinx-link)
+     - executing code within docs with a jupyter kernel: conda install jupyter_sphinx
+     - create code example galleries with sphinx-gallery: conda install sphinx-gallery
+     - build docs by navigating to emgfit/docs with a command shell and running
+        >make html
+
+https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow
 
 Installed anaconda 64bit for Windows
 Check versions with:
@@ -196,3 +204,18 @@ Update conda and anaconda:
 > conda install emcee
 > conda install corner
 > conda install numdifftools
+
+Develop env:
+   - python38
+   -  corner
+   - emcee
+   - ipykernel
+   - jupyter_sphinx
+   - lmfit
+   - matplotlib
+   - numdifftools
+   - ptemcee
+   - sphinx
+   - sphinx_rtd_theme
+   - xlrd
+   - xlsxwriter

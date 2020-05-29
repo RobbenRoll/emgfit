@@ -14,8 +14,10 @@ Table of contents:
 
   intro
   .. setup
+  emgfit_tutorial
   tutorial
   concepts
+  auto_examples/index
   modules
   contact
 

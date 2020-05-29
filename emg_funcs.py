@@ -1,6 +1,6 @@
-###################################################################################################
+################################################################################
 ##### Module with general Hyper-EMG functions
-##### Code by Stefan Paul
+##### Author: Stefan Paul
 
 ##### Import packages
 import numpy as np
@@ -13,8 +13,8 @@ import scipy.special as spl
 #ne.set_vml_accuracy_mode('high')
 #from numba import jit, prange
 
-###################################################################################################
-##### Define general Hyper-EMG functions (with high precision math package)
+################################################################################
+##### Define general Hyper-EMG functions 
 # from numba import vectorize, float64
 # import math
 # @vectorize([float64(float64)])
@@ -327,4 +327,4 @@ def sigma_emg(sigma,theta,*t_args):
     return np.sqrt(S_h)
 
 
-###################################################################################################
+################################################################################

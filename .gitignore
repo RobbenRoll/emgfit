@@ -8,3 +8,4 @@ examples/tutorial/outputs
 
 
 *.ipynb_checkpoints* 
+.goutputstream*

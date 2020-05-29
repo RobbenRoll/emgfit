@@ -1,6 +1,6 @@
-###################################################################################################
+################################################################################
 ##### Module with lmfit models for Gaussian and Hyper-EMG distributions
-##### Code by Stefan Paul
+##### Author: Stefan Paul
 
 ##### Import dependencies
 import numpy as np
@@ -9,9 +9,8 @@ import pandas as pd
 import lmfit as fit
 from .config import *
 from .emg_funcs import *
-upper_bound_taus = 5e-02 # prevents minimizer from running towards virtually flat tails #TODO: COnsider moving to config for user control
+upper_bound_taus = 5e-02 # keeps minimizer from running towards virtually flat tails #TODO: COnsider moving to config for user control
 
-###################################################################################################
 
 def create_default_init_pars(mass_number=100): #TODO: COnsider moving to config for user control
     """Scale default parameters to mass of interest and return parameter dictionary.
@@ -33,12 +32,13 @@ def create_default_init_pars(mass_number=100): #TODO: COnsider moving to config 
     ``mass_number``/100.
 
     """
-    # Default initial parameters for peaks around mass 100 (with re-scaling factor):
+    # Default initial parameters for peaks around mass 100 (with
+    # mass scaling factor):
     scl_factor = mass_number/100
     amp = 0.45*scl_factor
     mu = None
     sigma = 0.00014*scl_factor # [u]
-    theta = 0.5 # 0.35
+    theta = 0.5 
     eta_m1 = 0.85
     eta_m2 = 0.10
     eta_m3 = 0.05
@@ -77,8 +77,8 @@ pars_dict = create_default_init_pars()
 #
 # pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta, 'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3, 'tau_m1': tau_m1, 'tau_m2': tau_m2, 'tau_m3': tau_m3, 'eta_p1': eta_p1, 'eta_p2': eta_p2, 'eta_p3': eta_p3, 'tau_p1': tau_p1, 'tau_p2': tau_p2, 'tau_p3': tau_p3}
 
-###################################################################################################
-##### Define Gaussian fit model ######################################################################
+################################################################################
+##### Define emgfit fit models
 def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
     """
     Gaussian lmfit model (single-peak Gaussian fit model)
@@ -117,8 +117,6 @@ def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, 
     return model
 
 
-###################################################################################################
-##### Define emg01 fit model ######################################################################
 def emg01(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
     """
     Hyper-EMG(0,1) lmfit model (single-peak fit model with one exponential tail on the right)
@@ -159,8 +157,6 @@ def emg01(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-###################################################################################################
-##### Define emg10 fit model ######################################################################
 def emg10(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
     """
     Hyper-EMG(1,0) lmfit model (single-peak fit model with one exponential tail on the left)
@@ -201,8 +197,6 @@ def emg10(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-###################################################################################################
-##### Define emg11 fit model ######################################################################
 def emg11(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
     """
     Hyper-EMG(1,1) lmfit model (single-peak fit model with one exponential tail on the left and one exponential tail on the right)
@@ -247,8 +241,6 @@ def emg11(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-###################################################################################################
-##### Define emg12 fit model
 def emg12(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
     """
     Hyper-EMG(1,2) lmfit model (single-peak fit model with one exponential tail on the left and two exponential tails on the right)
@@ -299,8 +291,6 @@ def emg12(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-###################################################################################################
-##### Define emg21 fit model
 def emg21(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
     """
     Hyper-EMG(2,1) lmfit model (single-peak fit model with two exponential tails on the left and one exponential tail on the right)
@@ -351,8 +341,6 @@ def emg21(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-###################################################################################################
-##### Define emg22 fit model
 def emg22(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
     """
     Hyper-EMG(2,2) lmfit model (single-peak fit model with two exponential tails on the left and two exponential tails on the right)
@@ -409,8 +397,6 @@ def emg22(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-###################################################################################################
-##### Define emg23 fit model
 def emg23(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
     """
     Hyper-EMG(2,3) lmfit model (single-peak fit model with two exponential tails on the left and three exponential tails on the right)
@@ -478,8 +464,6 @@ def emg23(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-###################################################################################################
-##### Define emg32 fit model
 def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
     """
     Hyper-EMG(3,2) lmfit model (single-peak fit model with three exponential tails on the left and two exponential tails on the right)
@@ -547,8 +531,6 @@ def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-###################################################################################################
-##### Define emg33 fit model
 def emg33(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
     """
     Hyper-EMG(3,3) lmfit model (single-peak fit model with three exponential tails on the left and three exponential tails on the right)
@@ -628,44 +610,3 @@ def emg33(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
 # expr= pref+'delta-'+pref+'eta_p1 if ('+pref+'eta_p1 <='+pref+'delta) else '+pref+'eta_p1-'+pref+'delta'
 #1 - init_pars['eta_p3']
 # init_pars['eta_p3']
-
-
-
-"""
-#### Define emg22 model class
-# Define model function
-def h_emg_m2_p2(x, amp, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,tau_p1,tau_p2):
-    return amp*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2),(tau_m1,tau_m2),(eta_p1,eta_p2),(tau_p1,tau_p2)) # from emg_funcs.py
-
-#####
-def peak_fit_emg22(spectrum, x_fit_cen=None, x_fit_range=None, init_pars=None, vary_shape_pars=False, scl_fac=1):
-    x_min = x_fit_cen - x_fit_range/2
-    x_max = x_fit_cen + x_fit_range/2
-    df_fit = spectrum.data[x_min:x_max] # cut data to fit range
-    peaks_to_fit = [peak for peak in spectrum.peaks if (x_min < peak.x_pos < x_max)] # select peak at position 'x_pos'
-    print(peaks_to_fit)
-    x = df_fit.index.values
-    y = df_fit['Counts'].values
-    y_err = np.sqrt(y+1) # assume Poisson (counting) statistics -> standard deviation of each point approximated by sqrt(counts+1)
-    weight_facs = 1./y_err # makes sure that residuals include division by statistical error (residual = (fit_model - y) * weights)
-
-    make_model = emg22_fit.make_model_emg22 # define single-peak fit model
-
-    # create multi-peak composite model from single-peak model
-    mod = fit.models.ConstantModel(independent_vars='x',prefix='bkg_') # Background
-    mod.set_param_hint('bkg_c', value= 0.3, min=0)
-    for peak in peaks_to_fit: # loop over peaks to fit
-        peak_index = spectrum.peaks.index(peak)
-        x_pos = peak.x_pos
-        amp = df_fit['Counts'].loc[x_pos]/2200 # estimate amplitude from peak maximum, the factor 2235 is empirically determined and shape-dependent
-        this_mod = make_model(peak_index, x_pos, amp, vary_shape_pars=vary_shape)
-        if mod is None:
-            mod = this_mod
-        else:
-            mod = mod + this_mod
-    pars = mod.make_params()
-
-    # Perform fit, print fit report and plot resulting fit
-    out = mod.fit(y, x=x, params=pars, weights = weight_facs,method='leastsq',scale_covar=False)
-    return out
-"""

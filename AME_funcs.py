@@ -1,5 +1,8 @@
 ###################################################################################################
-##### Module for importing and hadnling of data from the Atomic Mass Evaluation (AME) for emgfit package
+##### Module for importing and handling of data from the Atomic Mass Evaluation
+##### (AME) for emgfit package
+##### Author: Stefan Paul
+
 from .config import *
 from pathlib import Path
 import pandas as pd
@@ -11,7 +14,7 @@ filename = str(directory)+"/AME2016/AME2016_formatted.csv"
 df_AME = pd.read_csv(filename, encoding = 'unicode_escape')
 df_AME.set_index(['Element','A'],inplace=True)
 
-
+##### Define functions
 def mdata_AME(El,A):
     """Grabs atomic mass data from AME2016 [u].
 

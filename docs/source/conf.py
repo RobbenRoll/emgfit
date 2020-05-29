@@ -13,7 +13,7 @@
 import os
 import emgfit
 import sys
-sys.path.insert(0, os.path.abspath('../emgfit'))
+sys.path.insert(0, os.path.abspath('../../emgfit/examples/tutorial'))
 
 
 # -- Project information -----------------------------------------------------
@@ -38,6 +38,11 @@ extensions = [
     #'numpydoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
+    'sphinx_gallery.gen_gallery', # creates example galleries
+    'jupyter_sphinx', # executes code within the docs with a jupyter kernel
+    'nbsphinx',
+    'sphinx.ext.mathjax',
+    'nbsphinx_link', # for linking to notebooks outside source directory
 ] # enable napoleon ('sphinxcontrib.napoleon')
 
 # Add mappings to other package docs
@@ -104,3 +109,32 @@ html_static_path = ['_static']
 #}
 #to a _static/custom.css file and activated it here by adding:
 html_css_files = ['custom.css']
+
+"""import shutil
+print("Copy example notebooks into docs/_examples")
+def all_but_ipynb(dir, contents):
+    result = []
+    for c in contents:
+        if os.path.isfile(os.path.join(dir,c)) and (not c.endswith(".ipynb")):
+            result += [c]
+    return result
+
+shutil.rmtree(os.path.join(project_root, "docs/build/_examples"),
+              ignore_errors=True)
+shutil.copytree(os.path.join(project_root, "examples"),
+                os.path.join(project_root, "docs/_examples"),
+                ignore=all_but_ipynb)
+"""
+
+# Set location of directories for sphinx gallery
+sphinx_gallery_conf = {
+     'examples_dirs': '../../examples',   # path example scripts
+     'gallery_dirs': 'auto_examples',  # path for gallery output
+     'filename_pattern': '\\\\example_', # only execute files with this prefix
+     'image_scrapers': ('matplotlib'), # embeds matplotlib images into docs
+}
+# Suppress agg backend warning for plots in shinx-galleries
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning,
+                        message='Matplotlib is currently using agg, which is a'
+                                ' non-GUI backend, so cannot show the figure.')

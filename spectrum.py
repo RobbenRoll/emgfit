@@ -1,6 +1,6 @@
-###################################################################################################
+################################################################################
 ##### Python module for peak fitting in TOF mass spectra
-##### Code by Stefan Paul
+##### Author: Stefan Paul
 
 ##### Import packages
 import numpy as np
@@ -25,14 +25,14 @@ warnings.filterwarnings("ignore", message="invalid value encountered in multiply
 warnings.filterwarnings("ignore", message="overflow encountered in exp")
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-###################################################################################################
+################################################################################
 ##### Define peak class
 class peak:
     """Object storing all relevant information about a mass peak.
 
     Most peak attributes are intialized as ``None`` and are later automatically
-    updated by methods of the spectrum class, e.g. :meth:`spectrum.determine_peak_shape`
-    or :meth:`spectrum.fit_peaks`.
+    updated by methods of the spectrum class, e.g.
+    :meth:`spectrum.determine_peak_shape` or :meth:`spectrum.fit_peaks`.
 
     Attributes
     ----------
@@ -69,7 +69,11 @@ class peak:
     m_fit : float [u]
         Ionic mass value obtained in peak fit (after mass recalibration).
     rel_stat_error : float
-        Relative statistical uncertainty of :attr:`m_fit`.
+        Relative statistical uncertainty of :attr:`m_fit`. Calculated using:
+        ..math:: $\sigma_{stat}/m_{fit} = A_{stat} \cdot \frac{\text{FWHM}}{sqrt(area)} /m_{fit}$,
+        with A_{stat,G} = 0.42... for Gaussians and for emg-models A_{stat,emg}
+        from :meth:`spectrum.determine_A_stat_emg` method or default value from
+        :mod:`config` module.
     rel_recal_error : float
         Relative uncertainty of :attr:`m_fit` due to mass recalibration.
     rel_peakshape_error : float
@@ -143,7 +147,7 @@ class peak:
         self.area = None
         self.area_error = None
         self.m_fit = None # ionic mass value from fit [u]
-        self.rel_stat_error = None # = A_stat * FWHM / sqrt(area) /m_fit, with A_stat_G = 0.42... and A_stat_emg from `determine_A_stat_emg` method or default value from config.py
+        self.rel_stat_error = None #
         self.rel_recal_error = None
         self.rel_peakshape_error = None
         self.rel_mass_error = None
@@ -183,7 +187,7 @@ class peak:
             print("χ_sq_red:",np.round(self.red_chi))
 
 
-###################################################################################################
+################################################################################
 ###### Define spectrum class
 class spectrum:
     r"""Object storing spectrum data, associated peaks and all relevant
@@ -1832,7 +1836,7 @@ class spectrum:
             print("WARNING: More than one peak in current mass range. This routine can only be assumed to be accurate for well-separated, single peaks. It is strongly advisable to chose a smaller `x_range`!\n")
             #return
         li_N_counts = [10,30,100,300,1000,3000,10000,30000]
-        print("Creating synthetic spectra by bootstrapped re-sampling and fitting them for A_stat determination.")
+        print("Creating synthetic spectra via bootstrap re-sampling and fitting them for A_stat determination.")
         print("Depending on the choice of `N_spectra` this can take a few minutes. Interrupt kernel if this takes too long.")
         np.random.seed(seed=0) # to make bootstrapped spectra reproducible
         std_devs_of_mus = np.array([]) # standard deviation of sample means mu
@@ -1841,10 +1845,24 @@ class spectrum:
             mus = np.array([])
             areas = np.array([])
             for i in range(N_spectra):
-                df_boot = spectrum.bootstrap_spectrum(self.data,N_events=N_counts,x_cen=x_cen,x_range=x_range) # create boostrapped spectrum data
-                spec_boot = spectrum(None,df=df_boot,show_plot=False) # create boostrapped spectrum object
+                # create boostrapped spectrum data
+                df_boot = spectrum.bootstrap_spectrum(self.data,
+                                                      N_events=N_counts,
+                                                      x_cen=x_cen,
+                                                      x_range=x_range)
+                # create boostrapped spectrum object
+                spec_boot = spectrum(None,df=df_boot,show_plot=False)
                 spec_boot.add_peak(x_cen,verbose=False)
-                fit_result = spec_boot.peakfit(fit_model=self.fit_model,x_fit_cen=x_cen,x_fit_range=x_range,cost_func=cost_func,method=method,vary_baseline=vary_baseline,init_pars=self.shape_cal_pars,show_plots=False) # fit boostrapped spectrum with model and (fixed) shape parameters from peak-shape calibration
+                # fit boostrapped spectrum with model and (fixed) shape
+                # parameters from peak-shape calibration
+                fit_result = spec_boot.peakfit(fit_model=self.fit_model,
+                                               x_fit_cen=x_cen,
+                                               x_fit_range=x_range,
+                                               cost_func=cost_func,
+                                               method=method,
+                                               vary_baseline=vary_baseline,
+                                               init_pars=self.shape_cal_pars,
+                                               show_plots=False)
                 # Record peak centroid and area of hyper-EMG fit
                 mus = np.append(mus,fit_result.params['p0_mu'].value)
                 areas = np.append(areas,spec_boot.calc_peak_area(0, fit_result=fit_result, decimals=2)[0])
@@ -1856,7 +1874,9 @@ class spectrum:
         FWHM_emg_err = FWHM_gauss/FWHM_emg * self.shape_cal_par_errors['sigma']
         print("\nDone!\n")
 
-        x = mean_areas # use number of detected counts instead of true number of re-sampling events (li_N_counts)
+        # Use no. of detected counts instead of true no. of re-sampling
+        # events (i.e. li_N_counts) as x values
+        x = mean_areas
         model = fit.models.PowerLawModel()
         pars = model.make_params()
         pars['exponent'].value = -0.5
@@ -2065,23 +2085,34 @@ class spectrum:
             li_eta_flags =np.array([False]*len(li_fit_models)) # list of flags for models with eta's compatible with zero or eta's without error
             for model in li_fit_models:
                 try:
-                    print("\n##### Fitting data with",model,"#####-----------------------------------------------------------------------------------------\n")
-                    out = spectrum.peakfit(self, fit_model=model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars ,vary_shape=True, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band)
+                    print("\n### Fitting data with",model,"###---------------------------------------------------------------------------------------------\n")
+                    out = spectrum.peakfit(self, fit_model=model, cost_func=cost_func,
+                                           x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
+                                           init_pars=init_pars, vary_shape=True,
+                                           vary_baseline=vary_baseline, method=method,
+                                           show_plots=show_plots,
+                                           show_peak_markers=show_peak_markers,
+                                           sigmas_of_conf_band=sigmas_of_conf_band)
                     idx = li_fit_models.index(model)
                     li_red_chis[idx] = np.round(out.redchi,2)
                     li_red_chi_errs[idx] =  np.round(np.sqrt(2/out.nfree),2)
 
-                    # Check emg models with tail orders >= 2 for overfitting (i.e. a eta parameter agress with zero within its error) and check for existence of parameter uncertainties
+                    # Check emg models with tail orders >= 2 for overfitting
+                    # (i.e. a eta parameter agress with zero within its error)
+                    # and check for existence of parameter uncertainties
                     if model.startswith('emg') and model not in ['emg01','emg10','emg11']:
                         no_left_tails = int(model[3])
                         no_right_tails = int(model[4])
-                        first_parname = list(out.params.keys())[2] # must use first peak to be fit, since only its shape parameters are all varying
+                        # Must use first peak to be fit, since only its shape
+                        # parameters are all unconstrained:
+                        first_parname = list(out.params.keys())[2]
                         pref = first_parname.split('_')[0]+'_'
                         if no_left_tails > 1:
                             for i in np.arange(1,no_left_tails+1):
                                 if not out.errorbars:
                                     print("WARNING: parameter uncertainty determination failed! This tail order will be excluded from selection.") # TO DO: Consider adding eval_uncertainty option here.
-                                    li_eta_flags[idx] = True # mark model in order to exclude it below
+                                    # Mark model in order to exclude it below
+                                    li_eta_flags[idx] = True
                                     break
                                 par_name = pref+"eta_m"+str(i)
                                 val = out.params[par_name].value
@@ -2089,12 +2120,14 @@ class spectrum:
                                 if val < err:
                                     print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
                                     print("             This tail order is likely overfitting the data and will be excluded from selection.")
-                                    li_eta_flags[idx] = True # mark model in order to exclude it below
+                                    # Mark model in order to exclude it below
+                                    li_eta_flags[idx] = True
                         if no_right_tails > 1:
                             for i in np.arange(1,no_right_tails+1):
                                 if not out.errorbars:
                                     print("WARNING: parameter uncertainty determination failed! This tail order will be excluded from selection.") # TO DO: Consider adding eval_uncertainty option here.
-                                    li_eta_flags[idx] = True # mark model in order to exclude it below
+                                    # Mark model in order to exclude it below
+                                    li_eta_flags[idx] = True
                                     break
                                 par_name = pref+"eta_p"+str(i)
                                 val = out.params[par_name].value
@@ -2111,7 +2144,8 @@ class spectrum:
                 except ValueError:
                     print('\nWARNING:',model+'-fit failed due to NaN-values and was skipped! ----------------------------------------------\n')
 
-            idx_best_model = np.nanargmin(np.where(li_eta_flags, np.inf, li_red_chis)) # exclude models with eta_flag == True
+            # Select best model, models with eta_flag == True are excluded
+            idx_best_model = np.nanargmin(np.where(li_eta_flags, np.inf, li_red_chis))
             best_model = li_fit_models[idx_best_model]
             self.fit_model = best_model
             print('\n##### RESULT OF AUTOMATIC MODEL SELECTION: #####\n')
@@ -2901,4 +2935,4 @@ class spectrum:
 
 
 
-###################################################################################################
+################################################################################
