@@ -69,11 +69,7 @@ class peak:
     m_fit : float [u]
         Ionic mass value obtained in peak fit (after mass recalibration).
     rel_stat_error : float
-        Relative statistical uncertainty of :attr:`m_fit`. Calculated using:
-        ..math:: $\sigma_{stat}/m_{fit} = A_{stat} \cdot \frac{\text{FWHM}}{sqrt(area)} /m_{fit}$,
-        with A_{stat,G} = 0.42... for Gaussians and for emg-models A_{stat,emg}
-        from :meth:`spectrum.determine_A_stat_emg` method or default value from
-        :mod:`config` module.
+        Relative statistical uncertainty of :attr:`m_fit`.
     rel_recal_error : float
         Relative uncertainty of :attr:`m_fit` due to mass recalibration.
     rel_peakshape_error : float
@@ -2597,8 +2593,23 @@ class spectrum:
         recalibration (or precision calibration) factor is usually very close to
         unity. An error will be raised by the :meth:`spectrum._update_calibrant_props`
         method if :attr:`spectrum.recal_fac` deviates from unity by more than a
-        permille since this causes some approximations for the calculation of
-        the final mass values and their uncertainties to break down.
+        permille since this causes some implicit approximations for the
+        calculation of the final mass values and their uncertainties to break
+        down.
+
+        The statistical uncertainty of the peak is calculated via the following
+        relation:
+
+        .. math:
+        \\sigma_{stat} = A_{stat} \\frac{FWHM}{\\sqrt(N_counts)}
+
+        For Gaussians the constant of proportionality :math:`A_{stat}` is always
+        given by :math:`A_{stat,G}` = 0.425. For Hyper-EMG models
+        :math:`A_{stat}=A_{stat,emg}` is either set to the default value
+        `A_stat_emg_default` defined in the :mod:`~emgfit.config` module or
+        determined by running the :meth:`spectrum.determine_A_stat_emg` method.
+        The latter is usually preferable since this accounts for the specifics
+        of the given peak shape.
 
         See also
         --------
