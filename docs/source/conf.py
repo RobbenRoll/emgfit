@@ -41,9 +41,40 @@ extensions = [
     'IPython.sphinxext.ipython_directive',
     'IPython.sphinxext.ipython_console_highlighting',
     'matplotlib.sphinxext.plot_directive',
-    'numpydoc',
+    #'numpydoc',
+    'sphinx.ext.napoleon',
     'sphinx_copybutton',
+    #'sphinx_gallery.gen_gallery', # creates example galleries
+    'jupyter_sphinx', # executes code within the docs with a jupyter kernel
+    'nbsphinx',
+    'nbsphinx_link', # for linking to notebooks outside source directory
 ]
+
+# Add mappings to other package docs
+intersphinx_mapping = {
+    'py': ('http://docs.python.org/3', None),
+    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+    'pandas': ('http://pandas.pydata.org/pandas-docs/dev', None),
+    'scipy': ('http://docs.scipy.org/doc/scipy/reference', None),
+    'lmfit': ('https://lmfit.github.io/lmfit-py', None)
+}
+
+#numpydoc_show_class_members = True
+
+# Napoleon settings
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = True
+napoleon_include_private_with_doc = True
+napoleon_include_special_with_doc = False
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = True
+napoleon_use_param = True
+napoleon_use_rtype = True
+napoleon_use_keyword = True
+napoleon_custom_sections = None
 
 # Configuration options for plot_directive. See:
 # https://github.com/matplotlib/matplotlib/blob/f3ed922d935751e08494e5fb5311d3050a3b637b/lib/matplotlib/sphinxext/plot_directive.py#L81
@@ -119,6 +150,15 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# Fixed missing separation between parameter names and types by adding:
+#.classifier:before {
+#    font-style: normal;
+#    margin: 0.5em;
+#    content: ":";
+#}
+#to a _static/custom.css file and activated it here by adding:
+#html_css_files = ['custom.css']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

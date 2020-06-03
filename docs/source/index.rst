@@ -9,7 +9,13 @@ emgfit Documentation
 .. toctree::
    :maxdepth: 2
 
+   intro
    installation
-   usage
+   emgfit_tutorial
+   .. tutorial
+   concepts
+    .. auto_examples/index
+   modules
    release-history
    min_versions
+   contact

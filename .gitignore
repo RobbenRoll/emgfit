@@ -82,4 +82,4 @@ target/
 .ipynb_checkpoints
 
 #Data files
-examples/tutorial/outputs
+examples/tutorial/outputs/

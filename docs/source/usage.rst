@@ -1,9 +1,0 @@
-=====
-Usage
-=====
-
-Start by importing emgfit.
-
-.. code-block:: python
-
-    import emgfit
