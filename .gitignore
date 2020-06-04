@@ -83,4 +83,5 @@ target/
 
 # Data files
 emgfit/examples/tutorial/outputs/*.xlsx
+emgfit/examples/tutorial/outputs/*.png
 !emgfit/examples/tutorial/outputs/readme.txt
