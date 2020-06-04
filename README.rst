@@ -39,4 +39,6 @@ Amongst other features, the `emgfit` toolbox includes:
 `emgfit` is designed to be used within Jupyter Notebooks which have become a
 standard tool in the data science community. The usage and capabilities of
 `emgfit` are best explored by looking at the tutorial. The tutorial and much
-more details can be found in the [html documentation of emgfit](emgfit/docs/build/html/index.html).
+more details can be found in the `documentation of emgfit`_.
+
+.. _documentation of emgfit: docs/source/index.rst

@@ -49,14 +49,20 @@ setup(
             # 'command = some.module:some_function',
         ],
     },
-    include_package_data=True,
+    #include_package_data=True, # had to be commented out to copy files
     package_data={
         'emgfit': [
             # When adding files here, remember to update MANIFEST.in as well,
             # or else they will not be included in the distribution on PyPI!
-            # 'path/to/data_file',
+            'AME2016/AME 2016 dataframe.ipynb',
+            'AME2016/ame16.txt',
+            'AME2016/AME2016_formatted.csv',
+            'examples/tutorial/*.txt',
+            'examples/tutorial/*.ipynb',
+            'examples/tutorial/outputs/readme.txt',
         ]
     },
+    data_files = [('emgfit', ['LICENSE.txt','requirements.txt','README.rst'])],
     install_requires=requirements,
     license="BSD (3-clause)",
     classifiers=[
