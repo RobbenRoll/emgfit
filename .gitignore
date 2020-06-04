@@ -68,18 +68,19 @@ target/
 .DS_Store
 *~
 
-#vim
+# vim
 *.swp
 *.swo
 
-#pycharm
+# pycharm
 .idea/
 
 #VSCode
 .vscode/
 
-#Ipython Notebook
+# Ipython Notebook
 .ipynb_checkpoints
 
-#Data files
-examples/tutorial/outputs/
+# Data files
+emgfit/examples/tutorial/outputs/*.xlsx
+!emgfit/examples/tutorial/outputs/readme.txt

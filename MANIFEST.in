@@ -1,16 +1,23 @@
-include AUTHORS.rst
-include CONTRIBUTING.rst
-include LICENSE
+# Specifies files to include in the emgfit distribution to be accesible for
+# end users. Ensure that the files below are also specified in setup.py's
+# package_data or data_files parameters
+ 
+#include AUTHORS.rst
+#include CONTRIBUTING.rst
+include LICENSE.txt
 include README.rst
 include requirements.txt
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
-recursive-include docs *.rst conf.py Makefile make.bat
+#recursive-include docs *.rst conf.py Makefile make.bat
+recursive-include emgfit/AME2016 *.txt *.csv *.ipynb
 
 include versioneer.py
-include emgfit/_version.py
 
 # If including data files in the package, add them like:
 # include path/to/data_file
+include emgfit/examples/tutorial/*.txt
+include emgfit/examples/tutorial/*.ipynb
+include emgfit/examples/tutorial/outputs/readme.txt
