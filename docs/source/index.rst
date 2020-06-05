@@ -13,7 +13,6 @@ emgfit Documentation
    installation
    emgfit_tutorial
    concepts
-    .. auto_examples/index
    modules
    release-history
    min_versions
