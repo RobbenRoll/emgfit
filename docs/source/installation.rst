@@ -120,4 +120,4 @@ This will make a window pop up in your default browser. In there, you can
 navigate to different directories and create new notebooks (using the `new`
 panel on the top right) or open existing ones. Make sure that you use the
 default kernel (usually called `Python3`). Once you have imported the `emgfit`
-package (`import emgfit`) you should be ready to analyze some data.
+package you should be ready to analyze some data.
