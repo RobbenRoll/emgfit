@@ -16,8 +16,7 @@ a more rigorous analysis process.
 Amongst other features, the `emgfit` toolbox includes:
 
 * Automatic and sensitive peak detection
-* Automatic import of relevant literature values from the AME2016_ database 
-.. _AME2016: http://amdc.in2p3.fr/web/masseval.html
+* Automatic import of relevant literature values from the AME2016_ database
 * Automatic selection of the best suited peak-shape model
 * Fitting of low-statistics peaks with a binned maximum likelihood method
 * Simultaneous fitting of an entire spectrum with a large number of peaks
@@ -27,3 +26,5 @@ Amongst other features, the `emgfit` toolbox includes:
 `emgfit` is designed to be used within Jupyter Notebooks which have become a
 standard tool in the data science community. The usage and capabilities of
 `emgfit` are best explored by looking at the introductory examples.
+
+.. _AME2016: http://amdc.in2p3.fr/web/masseval.html

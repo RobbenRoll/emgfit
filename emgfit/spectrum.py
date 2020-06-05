@@ -734,8 +734,8 @@ class spectrum:
         species : str, optional
             :attr:`species` label for peak to be added following the :-notation
             (likewise used in MAc). If assigned, :attr:`peak.m_AME`,
-             :attr:`peak.m_AME_error` & :attr:`peak.extrapolated` are
-             automatically updated with the corresponding AME literature values.
+            :attr:`peak.m_AME_error` & :attr:`peak.extrapolated` are
+            automatically updated with the corresponding AME literature values.
         m_AME : float [u], optional
             User-defined literature mass for peak to be added. Overwrites pre-
             existing :attr:`peak.m_AME` value.
@@ -832,11 +832,10 @@ class spectrum:
             selected peak (or to all peaks). For unkown or already assigned
             species, ``None`` should be inserted as placeholder at the
             corresponding position in the `species` list. :attr:`species` names
-            must follow the :-notation.                                          #TODO: Link to :-notation page
-
+            must follow the :-notation.                                         #TODO: Link to :-notation page
         peak_index : int, optional
             Index of single peak to assign `species` name to.
-         x_pos : float [u], optional
+        x_pos : float [u], optional
             :attr:`x_pos` of single peak to assign `species` name to. Must be
             specified up to 6th decimal.
 
@@ -844,8 +843,8 @@ class spectrum:
         -----
         - Assignment of a single peak species:
           select peak by specifying peak position `x_pos` (up to 6th decimal) or
-           `peak_index` argument (0-based! Check for peak index by calling
-           :meth:show_peak_properties() method of spectrum object).
+          `peak_index` argument (0-based! Check for peak index by calling
+          :meth:show_peak_properties() method of spectrum object).
 
         - Assignment of multiple peak species:
           Nothing should be passed to the 'peak_index' and 'x_pos' arguments.
@@ -2230,7 +2229,7 @@ class spectrum:
         **This internal method is automatically called by the :meth:`fit_peaks`
         and :meth:`fit_calibrant` methods and does not need to be run directly
         by the user.**
-                                                                                #TODO: Improve description of procedure
+
         The peak-shape uncertainties are obtained by re-fitting the specified
         peaks with each shape parameter individually varied by plus and minus 1
         sigma and recording the respective shift of the peak centroids w.r.t the
@@ -2295,7 +2294,7 @@ class spectrum:
           - If the calibrant is not included in the `peak_indeces` list, the
             calibrant centroid shifts must have been obtained in a foregoing
             mass re-calibration and the calibrant centroid shifts are taken from
-            :attr:`centroid_shifts_pm`.                                                    #TODO add reference to mass re-calibration article!
+            :attr:`centroid_shifts_pm`.                                         #TODO add reference to mass re-calibration article!
 
         - All non-calibrant peaks referenced in `peak_indeces` are treated in a
           similar way. The original fit that yielded the specified `fit_result`
@@ -2309,7 +2308,7 @@ class spectrum:
           spectrum's :attr:`centroid_shifts` dictionary.
         - The estimates for the total peak-shape uncertainty of each peak are
           obtained by adding the relative centroid shifts stored in
-          :attr:`centroid_shifts in quadrature.
+          :attr:`centroid_shifts in quadrature`.
 
         """
         if self.shape_cal_pars is None:
@@ -2548,7 +2547,7 @@ class spectrum:
 
               where the last term is zero for :math:`y_i=0`.
 
-            See `Notes` of :meth:`spectrum.peakfit`for more details.
+            See `Notes` of :meth:`spectrum.peakfit` for more details.
         x_fit_cen : float or None, [u], optional
             center of mass range to fit;
             if None, defaults to marker position (x_pos) of mass calibrant peak
@@ -2601,7 +2600,8 @@ class spectrum:
         relation:
 
         .. math:
-        \\sigma_{stat} = A_{stat} \\frac{FWHM}{\\sqrt(N_counts)}
+
+            \\sigma_{stat} = A_{stat} \\frac{FWHM}{\\sqrt(N_counts)}
 
         For Gaussians the constant of proportionality :math:`A_{stat}` is always
         given by :math:`A_{stat,G}` = 0.425. For Hyper-EMG models
@@ -2862,18 +2862,21 @@ class spectrum:
 
     ##### Save all relevant results to external files
     def save_results(self,filename):
-        """Save fit results to a XLSX file and peak-shape calibration to a TXT file.
+        """Write the fit results to a XLSX file and the peak-shape calibration
+        to a TXT file.
 
+        Write results to an XLSX Excel file named `'filename'` and save
+        peak-shape calibration parameters to TXT file named
+        `'<filename>_peakshape_calib'`.
 
-        Write results to an XLSX Excel file with name `filename` and save
-        peak-shape calibration parameters to TXT file with name `filename`+"_peakshape_calib".
-
-        The EXCEL file will contain critical spectrum properties and all peak properties (including mass values) in two separate sheets.
+        The EXCEL file will contain critical spectrum properties and all peak
+        properties (including the mass values) in two separate sheets.
 
         Parameters
         ----------
         filename : string
-            name of the XLSX-file to be saved to (.xlsx ending does not have to be included by user)
+            Prefix of the files to be saved to (the .xlsx & .txt file endings
+            are automatically appended).
 
         """
         # Ensure no files are overwritten

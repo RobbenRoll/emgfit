@@ -13,13 +13,15 @@ install:
   - pip install -r requirements-dev.txt
 
 sudo: true
-before_script:
+before_script: 
   - sudo apt-get -qq update
-  - sudo apt-get install -y pandoc
+  - sudo apt-get install -y pandoc  # Install pandoc for markdown notebook cells
 
 script:
   - coverage run -m pytest  # Run the tests and check for test coverage.
   - coverage report -m  # Generate test coverage report.
   - codecov  # Upload the report to codecov.
-  - flake8  # Enforce code style ('relaxed' line length limit is set in .flake8 config file).
+  # Enforce code style ('relaxed' line length limit is set in .flake8 config file).
+  - git diff -U0 $TRAVIS_COMMIT_RANGE | flake8 --diff # raise errors only for recent changes
+  - flake8 . --exit-zero # Exit with status code "0" even if there are errors.
   - make -C docs html  # Build the documentation.
