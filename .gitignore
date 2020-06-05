@@ -82,6 +82,5 @@ target/
 .ipynb_checkpoints
 
 # Data files
-emgfit/examples/tutorial/outputs/*.xlsx
-emgfit/examples/tutorial/outputs/*.png
+emgfit/examples/tutorial/outputs/**
 !emgfit/examples/tutorial/outputs/readme.txt

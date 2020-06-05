@@ -11,5 +11,5 @@ numdifftools >= 0.9.39
 jupyter
 emcee >= 3.0
 corner
+xlsxwriter >= 1.2.8
 #xlrd >= 1.2.0
-#xlsxwriter >= 1.2.8
