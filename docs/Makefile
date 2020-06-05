@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    ="-W --keep-going -n"  # -W turns warnings into errors, -n checks for broken links.
+SPHINXOPTS    = "-W -n"  # -W turns warnings into errors, -n checks for broken links.
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = emgfit
 SOURCEDIR     = source
