@@ -12,7 +12,6 @@ emgfit Documentation
    intro
    installation
    emgfit_tutorial
-   .. tutorial
    concepts
     .. auto_examples/index
    modules
