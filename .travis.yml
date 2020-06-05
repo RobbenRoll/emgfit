@@ -12,6 +12,11 @@ install:
   # Install extra requirements for running tests and building docs.
   - pip install -r requirements-dev.txt
 
+sudo: true
+before_script:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y pandoc
+
 script:
   - coverage run -m pytest  # Run the tests and check for test coverage.
   - coverage report -m  # Generate test coverage report.
