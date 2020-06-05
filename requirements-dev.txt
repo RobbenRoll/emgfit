@@ -21,6 +21,7 @@ emcee >= 3.0
 corner
 xlsxwriter >= 1.2.8
 #xlrd >= 1.2.0
+pandoc
 
 # These are dependencies of various sphinx extensions for documentation.
 ipython
