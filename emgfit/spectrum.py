@@ -1363,6 +1363,8 @@ class spectrum:
             x_min = df_fit.index.values[0]
             x_max = df_fit.index.values[-1]
             peaks_to_fit = self.peaks
+        if len(peaks_to_fit) == 0:
+            raise Exception("Fit failed. No peaks in specified mass range.")
         x = df_fit.index.values
         y = df_fit['Counts'].values
         y_err = np.maximum(1,np.sqrt(y)) # assume Poisson (counting) statistics
@@ -2834,7 +2836,14 @@ class spectrum:
             raise Exception("\nERROR: Definition of mass calibrant peak failed. Define EITHER the index OR the species name of the peak to use as mass calibrant!\n")
 
         # FIT ALL PEAKS
-        fit_result = spectrum.peakfit(self, fit_model=fit_model, cost_func=cost_func, x_fit_cen=x_fit_cen, x_fit_range=x_fit_range, init_pars=init_pars, vary_shape=vary_shape, vary_baseline=vary_baseline, method=method,show_plots=show_plots,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,plot_filename=plot_filename)
+        fit_result = spectrum.peakfit(self, fit_model=fit_model, cost_func=cost_func,
+                                      x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
+                                      init_pars=init_pars, vary_shape=vary_shape,
+                                      vary_baseline=vary_baseline, method=method,
+                                      show_plots=show_plots,
+                                      show_peak_markers=show_peak_markers,
+                                      sigmas_of_conf_band=sigmas_of_conf_band,
+                                      plot_filename=plot_filename)
 
         if index_mass_calib is not None:
             self._update_calibrant_props(index_mass_calib,fit_result) # Update recalibration factor and calibrant properties
@@ -2851,7 +2860,7 @@ class spectrum:
         try:
             self._eval_peakshape_errors(peak_indeces=peak_indeces,fit_result=fit_result,verbose=True,show_shape_err_fits=show_shape_err_fits)
         except KeyError:
-            print("WARNING: Peak-shape error determination failed with KeyError. Likely the used fit_model collides with shape calibration model.")
+            print("WARNING: Peak-shape error determination failed with KeyError. Likely the used fit_model is inconsitent with the shape calibration model.")
         self._update_peak_props(peaks_to_fit,fit_result)
         self.show_peak_properties()
         if show_fit_report:

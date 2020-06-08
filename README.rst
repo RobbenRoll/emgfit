@@ -2,7 +2,7 @@
 emgfit
 ======
 
-.. image:: https://img.shields.io/travis/RobbenRoll/emgfit.svg
+.. image:: https://travis-ci.org/RobbenRoll/emgfit.svg
         :target: https://travis-ci.org/RobbenRoll/emgfit
 
 .. image:: https://img.shields.io/pypi/v/emgfit.svg
