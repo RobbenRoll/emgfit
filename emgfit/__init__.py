@@ -16,7 +16,7 @@ del get_versions
 
 ##### Check Python version
 import sys
-min_py_version = (3, 7)  # TODO: grab min py version automatically
+min_py_version = (3, 7)  
 assert sys.version_info >= min_py_version, "emgfit package requires Python versions >= "+str(min_py_version)
 
 ##### Import following modules immediately if package is loaded with import *

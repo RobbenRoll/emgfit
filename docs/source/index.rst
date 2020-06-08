@@ -15,5 +15,4 @@ emgfit Documentation
    concepts
    modules
    release-history
-   min_versions
    contact
