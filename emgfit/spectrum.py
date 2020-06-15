@@ -1058,6 +1058,7 @@ class spectrum:
         y_max_res = max(np.abs(fit_result.residual[i_min:i_max]/weights)) + max(fit_result.y_err[i_min:i_max])
 
         # Plot fit result with logarithmic y-scale
+        plt.rcParams["errorbar.capsize"] = 0.5
         f1 = plt.figure(figsize=(20,12))
         plt.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',color='royalblue',linewidth=0.5)
         plt.plot(fit_result.x, fit_result.best_fit,'-',color='red',linewidth=2)
@@ -1451,12 +1452,36 @@ class spectrum:
         #out.y_err = 1/out.weights #y_err
 
         if eval_par_covar:
-            print("\n  ### Evaluating parameter covariances using MCMC method")
-            ## Add emcee MCMC sampling
-            emcee_kws = dict(steps=7000, burn=2500, thin=10, is_weighted=True, progress=True)
+            print("\n### Evaluating parameter covariances using MCMC method\n")
+            ## Perform emcee MCMC sampling
+            ndim = out.nvarys # dimension of parameter space to explore
+            print("Number of varied parameters: ndim =",out.nvarys)
+            nwalkers = 20*out.nvarys # total number of MCMC walkers
             emcee_params = out.params.copy()
+
+            varied_pars = emcee_params.copy()
+            for key, p in emcee_params.items():
+                if p.vary is False or p.expr is not None:
+                    del varied_pars[key]
+            assert len(varied_pars.values()) == ndim, "Length of varied_pars != ndim"
+            varied_par_names = [p.name for p in varied_pars.values()]
+            varied_par_vals = [p.value for p in varied_pars.values()]  #[p.value for p in emcee_params.values() if p.vary is True and p.expr is None]  # best fit values
+            varied_par_errs = [p.stderr for p in varied_pars.values()]
+
+            # Initialize the walkers.
+            r0 = np.array(varied_par_errs) # sigma of initial Gaussian PDFs # 1e-06
+            p0 = [varied_par_vals + r0*np.random.randn(ndim) for i in range(nwalkers)]
+
+            ## Set emcee options
+            ## It is advisable to thin by about half the autocorrelation time
+            emcee_kws = dict(steps=4000, burn=200, thin=40, nwalkers=nwalkers,
+                             float_behavior='chi2',is_weighted=True, pos=p0,
+                             progress=True) # steps=700, burn=250,
+
             #emcee_params.add('__lnsigma', value=np.log(7.0), min=np.log(1.0), max=np.log(100.0))
-            result_emcee = mod.fit(y, x=x, params=emcee_params, weights=weights, method='emcee', nan_policy='omit', fit_kws=emcee_kws)
+            result_emcee = mod.fit(y, x=x, params=emcee_params, weights=weights,
+                                   method='emcee', nan_policy='propagate',
+                                   fit_kws=emcee_kws)
             fit.report_fit(result_emcee)
 
             plt.figure(figsize=(12,8))
@@ -1465,7 +1490,32 @@ class spectrum:
             plt.yscale("log")
             plt.show()
 
+            ## Plot MCMC chain
+            pref = 'p'+str(self.peaks.index(peaks_to_fit[0]))+'_' # Use mu of first peak to fit #TODO: set to shape calib. if available
+            #steps = result_emcee.flatchain[pref+'mu'].index.values
+            #mu_vals = result_emcee.flatchain[pref+'mu'].values
+            #plt.plot(steps,mu_vals,'.')
+            result_emcee.flatchain[pref+'mu'].plot(style='.')
+            plt.xlabel('sample number')
+            plt.ylabel(pref+'mu')
+            plt.show()
+
+            fig, axes = plt.subplots(ndim, figsize=(10, 3*ndim), sharex=True)
+            plt.title('MCMC chains before thinning with burn-in cut-off marker')
+            samples = result_emcee.sampler.get_chain()[..., :, :] #result_emcee.chain # thinned chain without burn-in
+            print(samples.shape)
+            for i in range(ndim):
+                par_chains = samples[:, :, i] # chains for i-th varied parameter
+                ax = axes[i]
+                ax.plot(par_chains, 'k', alpha=0.3)
+                #ax.set_xlim(0, len(result_emcee.chain))
+                ax.set_ylabel(varied_par_names[i])
+                ax.axvline(emcee_kws['burn'])
+                #ax.yaxis.set_label_coords(-0.1, 0.5)
+            axes[-1].set_xlabel('steps')
+
             ## Check acceptance fraction of emcee
+            plt.figure()
             plt.plot(result_emcee.acceptance_fraction)
             plt.xlabel('walker')
             plt.ylabel('acceptance fraction')
@@ -1475,42 +1525,54 @@ class spectrum:
             if hasattr(result_emcee, "acor"):
                 print("Autocorrelation time for the parameters:")
                 print("----------------------------------------")
-                for i, p in enumerate(result_emcee.params):
-                    print(p, result_emcee.acor[i])
+                for i, p in enumerate(varied_pars):
+                    try:
+                        print(p, result_emcee.acor[i])
+                    except IndexError:
+                        print("\nEncountered index error in autocorrelation print.")
+                        pass
 
             ## Plot parameter covariances returned by emcee
             import corner
-            percentile_range = [0.8]*(out.nvarys)
-            fig_corner = corner.corner(result_emcee.flatchain, labels=result_emcee.var_names, truths=list(result_emcee.params.valuesdict().values()),range=percentile_range)
+            percentile_range = [0.95]*ndim  # percentile of samples to plot
+            fig_corner = corner.corner(result_emcee.flatchain, labels=result_emcee.var_names,
+                                       bins=40, truths=list(out.params.valuesdict().values()),
+                                       hist_bin_factor=2,
+                                       range=percentile_range,
+                                       levels=(1-np.exp(-0.5),),
+                                       quantiles=[0.1587, 0.5, 0.8413])  # 1-sigma level contour assumes Gaussian PDFs # truths=list(result_emcee.params.valuesdict().values())
             fig_corner.subplots_adjust(right=2,top=2)
             for ax in fig_corner.get_axes():
                 ax.tick_params(axis='both', labelsize=17)
                 ax.xaxis.label.set_size(27)
                 ax.yaxis.label.set_size(27)
 
-            print("\nmedian of posterior probability distribution")
-            print('--------------------------------------------')
-            fit.report_fit(result_emcee.params)
+            #print("\nmedian of posterior probability distribution")
+            #print('--------------------------------------------')
+            #fit.report_fit(result_emcee.params)
 
             ## Find the maximum likelihood solution
             highest_prob = np.argmax(result_emcee.lnprob)
             hp_loc = np.unravel_index(highest_prob, result_emcee.lnprob.shape)
             mle_soln = result_emcee.chain[hp_loc]
-            print("\nMaximum likelihood Estimation")
-            print('-----------------------------')
-            for ix, param in enumerate(result_emcee.params):
+            print("\nMaximum likelihood Estimation from MCMC")
+            print("---------------------------------------")
+            for ix, param in enumerate(varied_pars):
                 try:
                     print(param + ': ' + str(mle_soln[ix]))
                 except IndexError:
+                    print("\nEncountered index error in MLE result print.")
                     pass
 
-            pref = 'p'+str(self.peaks.index(peaks_to_fit[0]))+'_'
+            #pref = 'p'+str(self.peaks.index(peaks_to_fit[0]))+'_'
             quantiles = np.percentile(result_emcee.flatchain[pref+'mu'], [2.28, 15.9, 50, 84.2, 97.7])
-            print("\n\n1 mu spread", 0.5 * (quantiles[3] - quantiles[1]))
-            print("2 mu spread", 0.5 * (quantiles[4] - quantiles[0]))
+            print("\n 1-sigma spread of mu:", 0.5 * (quantiles[3] - quantiles[1]))
+            print(" 2-sigma spread of mu:",  0.5 * (quantiles[4] - quantiles[0]))
 
         if show_plots:
-            self.plot_fit(fit_result=out, show_peak_markers=show_peak_markers, sigmas_of_conf_band=sigmas_of_conf_band, x_min=x_min, x_max=x_max,plot_filename=plot_filename)
+            self.plot_fit(fit_result=out, show_peak_markers=show_peak_markers,
+                          sigmas_of_conf_band=sigmas_of_conf_band, x_min=x_min,
+                          x_max=x_max,plot_filename=plot_filename)
 
         return out
 
@@ -2360,6 +2422,7 @@ class spectrum:
             #display(fit_result_m) # show fit result
 
             if show_shape_err_fits:
+                plt.rcParams["errorbar.capsize"] = 0.5
                 fig, axs = plt.subplots(1,2,figsize=(20,6))
                 ax0 = axs[0]
                 ax0.set_title("Re-fit with ("+str(par)+" + 1 sigma) = {:.4E}".format(self.shape_cal_pars[par]+self.shape_cal_par_errors[par]))

@@ -43,7 +43,7 @@ def get_El_from_Z(Z):
 
     Parameters
     ----------
-    Z : int
+    Z : int or array-like of int
         Proton number.
 
     Returns
