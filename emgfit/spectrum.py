@@ -1683,13 +1683,11 @@ class spectrum:
             x_max = x_cen + x_range/2
             df = df[x_min:x_max]
         mass_bins = df.index.values
-        counts = df['Counts'].values
+        counts = df['Counts'].values.astype(int)
 
         # Convert histogrammed spectrum (equivalent to MAc HIST export mode) to
         # list of events (equivalent to MAc LIST export mode)
-        orig_events = np.array([])
-        for i in range(len(mass_bins)):
-            orig_events = np.append(orig_events,[mass_bins[i]]*int(counts[i]))
+        orig_events =  np.repeat(mass_bins,counts,axis=0)
 
         # Create new DataFrame of events by bootstrapping from `orig_events`
         if N_events == None:
