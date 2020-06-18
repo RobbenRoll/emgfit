@@ -12,7 +12,7 @@ import numpy as np
 directory = Path(__file__).parent  # get directory containing this file
 filename = str(directory)+"/AME2016/AME2016_formatted.csv"
 df_AME = pd.read_csv(filename, encoding = 'unicode_escape')
-df_AME.set_index(['Element','A'],inplace=True)
+df_AME.set_index(['A','Element'],inplace=True)
 
 ##### Define functions
 def mdata_AME(El,A):
@@ -31,10 +31,10 @@ def mdata_AME(El,A):
         [Element, Z, A, atomic AME mass, atomic AME mass error, boolean flag for extrapolated AME mass]
 
     """
-    Z = df_AME['Z'].loc[(El,A)]
-    m_AME = df_AME['ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
-    m_AME_error = df_AME['Error ATOMIC MASS [µu]'].loc[(El,A)]*1e-06
-    extrapolated_yn = df_AME['Extrapolated?'].loc[(El,A)]
+    Z = df_AME['Z'].loc[(A,El)]
+    m_AME = df_AME['ATOMIC MASS [µu]'].loc[(A,El)]*1e-06
+    m_AME_error = df_AME['Error ATOMIC MASS [µu]'].loc[(A,El)]*1e-06
+    extrapolated_yn = df_AME['Extrapolated?'].loc[(A,El)]
     return [El, Z, A, m_AME, m_AME_error, extrapolated_yn]
 
 
