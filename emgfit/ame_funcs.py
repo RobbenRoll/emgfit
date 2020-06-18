@@ -52,9 +52,10 @@ def get_El_from_Z(Z):
         Symbol of element with specified proton number.
     """
     if isinstance(Z, (list, tuple, np.ndarray)):
-        El = np.array([df_AME.index[df_AME['Z'] == Z_i][0][0] for Z_i in Z])
+        li = [df_AME.index[df_AME['Z'] == Z_i].get_level_values('Element')[0] for Z_i in Z]
+        El = np.array(li)
     else:
-        El = df_AME.index[df_AME['Z'] == Z][0][0]
+        El = df_AME.index[df_AME['Z'] == Z].get_level_values('Element')[0]
     return El
 
 
