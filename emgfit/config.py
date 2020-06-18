@@ -4,11 +4,16 @@
 
 # Load packages
 import scipy.constants as con
+import matplotlib as mpl
 
+##### Set image resolution
+mpl.rcParams['figure.dpi'] = 500
 
 ##### Define fundamental constants
 global m_e, u, u_to_keV
 m_e = con.physical_constants["electron mass in u"][0]  # or 548.5799.0907e-06 # electron mass [u] (from AME2016, Huang2017)
+m_p = con.physical_constants["proton mass in u"][0]
+m_n = con.physical_constants["neutron mass in u"][0]
 u = con.u
 u_to_keV = con.physical_constants["atomic mass constant energy equivalent in MeV"][0]*1000 # conversion factor from u to keV
 
