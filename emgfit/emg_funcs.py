@@ -14,7 +14,7 @@ import scipy.special as spl
 #from numba import jit, prange
 
 ################################################################################
-##### Define general Hyper-EMG functions 
+##### Define general Hyper-EMG functions
 # from numba import vectorize, float64
 # import math
 # @vectorize([float64(float64)])
