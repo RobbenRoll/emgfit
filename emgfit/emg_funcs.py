@@ -14,7 +14,7 @@ import scipy.special as spl
 #from numba import jit, prange
 
 ################################################################################
-##### Define general Hyper-EMG functions 
+##### Define general Hyper-EMG functions
 # from numba import vectorize, float64
 # import math
 # @vectorize([float64(float64)])
@@ -106,6 +106,7 @@ def h_m_emg(x, mu, sigma, *t_args):
         h_m += np.where(np.isfinite(h_m_i),h_m_i,0) #np.nan_to_num(eta_m/(2*tau_m)*np.exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*spl.erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) ))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)
     # print("h_m:"+str(h_m))
     return h_m
+#h_m_emg = np.vectorize(h_m_emg,excluded=['mu','sigma','*t_args'])
 
 # Define positive skewed exponentially-modified Gaussian particle distribution function (PS-EMG PDF)
 def h_p_emg(x, mu, sigma, *t_args):
@@ -141,6 +142,7 @@ def h_p_emg(x, mu, sigma, *t_args):
     extremely long computation times.
 
     """
+    print(t_args)
     li_eta_p = t_args[0]
     li_tau_p = t_args[1]
     t_order_p = len(li_eta_p) # order of positive tails
@@ -171,6 +173,7 @@ def h_p_emg(x, mu, sigma, *t_args):
         h_p += np.where(np.isfinite(h_p_i),h_p_i,0) #np.nan_to_num(eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) ))  # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)
     # print("h_p:"+str(h_p))
     return h_p
+#h_p_emg = np.vectorize(h_p_emg,excluded=['mu','sigma','t_args'])
 
 
 def h_emg(x, mu, sigma , theta, *t_args):
