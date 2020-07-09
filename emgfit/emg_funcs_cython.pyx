@@ -4,10 +4,8 @@
 
 ##### Import packages
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import lmfit as fit
-import scipy.constants as con
+cimport numpy as np
+cimport cython
 import scipy.special as spl
 #import numexpr as ne
 #ne.set_vml_accuracy_mode('high')
@@ -109,7 +107,8 @@ def h_m_emg(x, mu, sigma, *t_args):
 #h_m_emg = np.vectorize(h_m_emg,excluded=['mu','sigma','*t_args'])
 
 # Define positive skewed exponentially-modified Gaussian particle distribution function (PS-EMG PDF)
-def h_p_emg(x, mu, sigma, *t_args):
+@cython.boundscheck(False)
+def h_p_emg(np.ndarray[np.float_t, ndim=1] x, np.float_t mu, np.float_t sigma, *t_args):
     """Positive skewed exponentially-modified Gaussian (EMG) distribution.
 
     Parameters
@@ -142,6 +141,10 @@ def h_p_emg(x, mu, sigma, *t_args):
     extremely long computation times.
 
     """
+    cdef np.ndarray[np.float64_t, ndim=1] li_eta_p, li_tau_p
+    cdef int t_order_p
+    cdef float h_p, eta_p, tau_p, h_p_i
+
     li_eta_p = t_args[0]
     li_tau_p = t_args[1]
     t_order_p = len(li_eta_p) # order of positive tails
