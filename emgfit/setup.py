@@ -1,8 +1,10 @@
 # Setup file for compiling .pyx module with cython
-import distutils.core
-import Cython.Build
+from setuptools import Extension, setup
+from Cython.Build import cythonize
 import numpy
 
-distutils.core.setup(
-    ext_modules = Cython.Build.cythonize("emg_funcs_cython.pyx"),
-    include_dirs = numpy.get_include())
+setup(
+    name = "emg_funcs_cython",
+    ext_modules = cythonize("emg_funcs_cython.pyx", language_level = "3"),
+    include_dirs = numpy.get_include(),
+    )

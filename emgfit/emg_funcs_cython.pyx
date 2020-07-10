@@ -1,10 +1,11 @@
+# cython: infer_types=True
 ################################################################################
 ##### Module with general Hyper-EMG functions
 ##### Author: Stefan Paul
 
 ##### Import packages
 import numpy as np
-cimport numpy as np
+cimport numpy as cnp
 cimport cython
 import scipy.special as spl
 #import numexpr as ne
@@ -106,9 +107,11 @@ def h_m_emg(x, mu, sigma, *t_args):
     return h_m
 #h_m_emg = np.vectorize(h_m_emg,excluded=['mu','sigma','*t_args'])
 
+
+from libc.math cimport exp, erfc, sqrt, pow
 # Define positive skewed exponentially-modified Gaussian particle distribution function (PS-EMG PDF)
 @cython.boundscheck(False)
-def h_p_emg(np.ndarray[np.float_t, ndim=1] x, np.float_t mu, np.float_t sigma, *t_args):
+def h_p_emg(cnp.ndarray[cnp.float_t, ndim=1] x, cnp.float_t mu, cnp.float_t sigma, *t_args):
     """Positive skewed exponentially-modified Gaussian (EMG) distribution.
 
     Parameters
@@ -141,42 +144,75 @@ def h_p_emg(np.ndarray[np.float_t, ndim=1] x, np.float_t mu, np.float_t sigma, *
     extremely long computation times.
 
     """
-    cdef np.ndarray[np.float64_t, ndim=1] li_eta_p, li_tau_p
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] li_eta_p, li_tau_p
     cdef int t_order_p
-    cdef float h_p, eta_p, tau_p, h_p_i
+    cdef cnp.float64_t h_p, eta_p, tau_p, h_p_i
 
     li_eta_p = t_args[0]
     li_tau_p = t_args[1]
     t_order_p = len(li_eta_p) # order of positive tails
-    if np.round(np.sum(li_eta_p), decimals=norm_precision) != 1.0:  # check normalization of eta_p's
-        raise Exception("eta_p's don't add up to 1.")
+    assert (np.sum(li_eta_p) - 1) < norm_precision, "eta_p's don't add up to 1."
     if len(li_tau_p) != t_order_p:  # check if all arguments match tail order
         raise Exception("orders of eta_p and tau_p do not match!")
-
-    # @jit(parallel=True,fastmath=True)
-    # def calc_tails_p():
-    #     for i in prange(t_order_p):
-    #         h_p = np.array([0.])
-    #         eta_p = li_eta_p[i]
-    #         tau_p = li_tau_p[i]
-    #         val = eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*math_erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) )
-    #         h_p += np.where(np.isfinite(val), val, np.zeros_like(val))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)
-    #         # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)
-    #         return h_p
-    # h_p = calc_tails_p()
 
     h_p = 0.
     for i in range(t_order_p):
         eta_p = li_eta_p[i]
         tau_p = li_tau_p[i]
-        h_p_i = eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) )
+        h_p_i = eta_p/(2*tau_p)*exp( pow(sigma/(sqrt(2)*tau_p),2.0) - (x-mu)/tau_p )*erfc( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
         #erfc_i = spl.erfc(sigma/(np.sqrt(2)*tau_p))
         #h_p_i = ne.evaluate('eta_p/(2*tau_p)*exp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc_i - (x-mu)/(sqrt(2)*sigma)',optimization='moderate')
-        h_p += np.where(np.isfinite(h_p_i),h_p_i,0) #np.nan_to_num(eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) ))  # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)
+        h_p += h_p_i # np.where(np.isfinite(h_p_i),h_p_i,0) #np.nan_to_num(eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) ))  # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)
     # print("h_p:"+str(h_p))
     return h_p
 #h_p_emg = np.vectorize(h_p_emg,excluded=['mu','sigma','t_args'])
 
+cdef double sq(double x):
+    return x * x
+
+cdef extern from "fast_exp.c":
+    double exp_fast_schraudolph( double )
+
+cdef double fast_exp(double a):
+    exp_fast_schraudolph(a)
+
+@cython.cdivision(True)     # Deactivate Zero Division Exception checking
+cdef double expa(double  x, int terms = 30):
+    cdef double sum, power, fact
+    cdef int i
+    sum = 0.
+    power = 1.
+    fact = 1.
+    for i in range(terms):
+        sum += power/fact
+        power *= x
+        fact *= i+1
+    return sum
+
+from cython. parallel import prange
+
+@cython.cdivision(True)     # Deactivate Zero Division Exception checking
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing
+def h_p_emg2(double[:] x, double mu, double sigma, double eta_p1, double eta_p2, double eta_p3, double tau_p1, double tau_p2, double tau_p3): # cnp.ndarray[double, ndim=1]
+    assert (eta_p1 + eta_p2 + eta_p3 - 1) < norm_precision, "eta_p's don't add up to 1."
+    #if len(arr_eta_p) != len(arr_tau_p):  # check if all arguments match tail order
+    #    raise Exception("orders of eta_p and tau_p do not match!")
+    cdef Py_ssize_t n = x.size
+    cdef double h_p1, h_p2, h_p3
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] h_p
+    h_p = np.zeros(n, dtype=np.float64)
+    cdef double[:] h_p_view = h_p
+    cdef double sqrt2 = sqrt(2)
+    cdef double prefac_p1 =  eta_p1/(2*tau_p1)*exp(0.5*sq(sigma/tau_p1))
+    cdef double prefac_p2 = eta_p2/(2*tau_p2)*exp(0.5*sq(sigma/tau_p2))
+    cdef double prefac_p3 = eta_p3/(2*tau_p3)*exp(0.5*sq(sigma/tau_p3))
+    for i in range(n):
+        h_p1 = prefac_p1*exp( - (x[i]-mu)/tau_p1 )*erfc( sigma/(sqrt2*tau_p1) - (x[i]-mu)/(sqrt2*sigma) )
+        h_p2 = prefac_p2*exp( - (x[i]-mu)/tau_p2 )*erfc( sigma/(sqrt2*tau_p2) - (x[i]-mu)/(sqrt2*sigma) )
+        h_p3 = prefac_p3*exp( - (x[i]-mu)/tau_p3 )*erfc( sigma/(sqrt2*tau_p3) - (x[i]-mu)/(sqrt2*sigma) )
+        h_p_view[i] = h_p1 + h_p2 + h_p3
+    return h_p
 
 def h_emg(x, mu, sigma , theta, *t_args):
     """Hyper-exponentially-modified Gaussian distribution (hyper-EMG).
