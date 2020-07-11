@@ -1,0 +1,12 @@
+ 
+
+
+
+Changes to current develop branch:
+
+* Added upper bound of 1 to pearson weights for increased numerical stability, i.e. now Pearson_weights =  np.minimum(1.,1./np.sqrt(y_m)) where y_m is the model y-value in the foregoing fit iteration (2020-07-11)
+* Improved handling of NaN values in calculation of negative log-likelihood ratio for MLE fit residuals (2020-07-11.
+* Made determine_A_stat_emg() method more robust (better handling of ValueErrors due to NaNs in fit model y-values). (2020-07-11)
+
+
+v0.1.0 Initial release (2020-06-08)

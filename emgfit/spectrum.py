@@ -1271,8 +1271,6 @@ class spectrum:
 
                   L = \\sum_i f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)
 
-              where the last term is zero for :math:`y_i=0`.
-
             See `Notes` below for details.
         x_fit_cen : float [u], optional
             Center of mass range to fit (only specify if subset of spectrum is
@@ -1402,9 +1400,9 @@ class spectrum:
             mod_Pearson = mod
             def resid_Pearson_chi_square(pars,y_data,weights,x=x):
                 y_m = mod_Pearson.eval(pars,x=x)
-                # Calculate weights for current iteration,
-                # non-zero minimal bounds implemented for numerical stability:
-                weights = np.where(y_m<=1e-15,1,1./np.sqrt(y_m))
+                # Calculate weights for current iteration, non-zero upper
+                # bound of 1 implemented for numerical stability:
+                weights = np.minimum(1.,1./np.sqrt(y_m))
                 return (y_m - y_data)*weights
             # Overwrite lmfit's standard least square residuals with iterative
             # residuals for Pearson chi-square fit
@@ -1412,31 +1410,32 @@ class spectrum:
             out = mod_Pearson.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False,nan_policy='propagate')
             y_m = out.best_fit
             # Calculate final weights
-            Pearson_weights = np.where(y_m<=1e-15,1,1./np.sqrt(y_m))
-            out.y_err = 1/Pearson_weights
+            Pearson_weights = np.minimum(1.,1./np.sqrt(y_m))
+            out.y_err = 1./Pearson_weights
         elif cost_func == 'MLE':
             ## Binned max. likelihood fit using negative log-likelihood ratio
             mod_MLE = mod
             if method != 'least_squares':
                 raise Exception("Error: Fits with 'MLE' cost function are currently only compatible with the 'least_squares' method.")
-            def sqrt_neg_log_likelihood_ratio(pars,y_data,weights,x=x):
+            # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
+            def sqrt_NLLR(pars,y_data,weights,x=x):
                 y_m = mod_MLE.eval(pars,x=x)
-                import warnings
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    neg_log_likelihood_ratio = np.nan_to_num(2*(y_m - y_data + y_data*np.log(y_data/y_m)))   #np.abs(2*(y_m - y_data + np.nan_to_num(y_data*np.log(y_data/y_m))))
+                # Define NLLR using np.nan_to_num to prevent non-finite values
+                # for (y_m,y_data) = (1,0), (0,0), (0,1)
+                # Set posinf = 1e300 (instead of largest float of ~1e308) to
+                # prevent overflow in subsequent calculations
+                NLLR = 2*(y_m - y_data) + np.nan_to_num(2*y_data*(np.log(y_data)-np.log(y_m)),posinf=1e300)
                 #neg_log_likelihood = np.sqrt(np.log(spl.factorial(y_data)) + y_m - y_data*np.log(y_m))
-                if np.isfinite(neg_log_likelihood_ratio).any() is False:
+                if np.isfinite(NLLR).any() is False:
                     print("WARNING: Sqrt(Neg. log likelihood ratio) contains NaNs.")
-                return np.sqrt(neg_log_likelihood_ratio)
+                return np.sqrt(NLLR)
             # Overwrite lmfit's standard least square residuals with the
-            # square-root of the negative log likelihood ratio, using the
-            # square-root and the `least_squares` minimizer enables a much
-            # faster minimization of the neg likelihood ratio than with
-            # scalar minimizers
-            mod_MLE._residual = sqrt_neg_log_likelihood_ratio
+            # square-root of the NLLR terms, this enables usage of scipy's
+            # `least_squares` minimizer and yields much faster optimization
+            # than with scalar minimizers
+            mod_MLE._residual = sqrt_NLLR
             out = mod_MLE.fit(y, params=pars, x=x, weights=weights, method=method, calc_covar=False, nan_policy='propagate')
-            out.y_err = 1/out.weights
+            out.y_err = 1./out.weights
         else:
             raise Exception("Error: Definition of `cost_func` failed!")
         out.x = x
@@ -1558,7 +1557,7 @@ class spectrum:
         except TypeError or AttributeError:
             print('WARNING: Area error determination failed. Could not get amplitude parameter (`amp`) of peak. Likely the peak has not been fitted successfully yet.')
             raise
-        return [area, area_err]
+        return area, area_err
 
 
     def calc_FWHM_emg(self,peak_index,fit_result=None):
@@ -1754,7 +1753,7 @@ class spectrum:
             spectrum attribute.
         N_spectra : int, optional, default: 1000
             Number of bootstrapped spectra to create at each number of ions.
-        cost_func : str, optional, default: 'chi-square'
+        cost_func : str, optional, default: 'MLE'
             Name of cost function to use for minimization.
 
             - If ``'chi-square'``, the fit is performed by minimizing Pearson's
@@ -1771,8 +1770,7 @@ class spectrum:
 
                   L = \\sum_i f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)
 
-              where the last term is zero for :math:`y_i=0`. For details see
-              `Notes` section of :meth:`peakfit` method documentation .
+            For details see `Notes` section of :meth:`peakfit` method documentation.
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
@@ -1819,8 +1817,8 @@ class spectrum:
         elif x_pos is not None:
             peak_index = [i for i in range(len(self.peaks)) if np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)][0] # select peak at position 'x_pos'
         else:
-            print("\nERROR: Peak specification failed. Check function documentation for details on peak selection.\n")
-            return
+            raise Exception("Peak specification failed. Check function"
+                            "documentation for details on peak selection.\n")
         if fit_model is None:
             fit_model = self.fit_model
         if x_range is None:
@@ -1828,17 +1826,21 @@ class spectrum:
         x_cen = self.peaks[peak_index].x_pos
         no_peaks_in_range = len([p for p in self.peaks if (x_cen - x_range/2) <= p.x_pos <= (x_cen + x_range/2)])
         if no_peaks_in_range > 1:
-            print("WARNING: More than one peak in current mass range. This routine can only be assumed to be accurate for well-separated, single peaks. It is strongly advisable to chose a smaller `x_range`!\n")
-            #return
+            raise Exception("More than one peak in current mass range. "
+                            "This routine only works on well-separated, single "
+                            "peaks. Please chose a smaller `x_range`!\n")
         li_N_counts = [10,30,100,300,1000,3000,10000,30000]
-        print("Creating synthetic spectra via bootstrap re-sampling and fitting them for A_stat determination.")
-        print("Depending on the choice of `N_spectra` this can take a few minutes. Interrupt kernel if this takes too long.")
-        np.random.seed(seed=0) # to make bootstrapped spectra reproducible
+        print("Creating synthetic spectra via bootstrap re-sampling and "
+              "fitting  them for A_stat determination.")
+        print("Depending on the choice of `N_spectra` this can take a few "
+              "minutes. Interrupt kernel if this takes too long.")
+        np.random.seed(seed=34) # to make bootstrapped spectra reproducible
         std_devs_of_mus = np.array([]) # standard deviation of sample means mu
         mean_areas = np.array([]) # array for numbers of detected counts
         for N_counts in li_N_counts:
             mus = np.array([])
             areas = np.array([])
+
             for i in range(N_spectra):
                 # create boostrapped spectrum data
                 df_boot = spectrum.bootstrap_spectrum(self.data,
@@ -1850,19 +1852,26 @@ class spectrum:
                 spec_boot.add_peak(x_cen,verbose=False)
                 # fit boostrapped spectrum with model and (fixed) shape
                 # parameters from peak-shape calibration
-                fit_result = spec_boot.peakfit(fit_model=self.fit_model,
-                                               x_fit_cen=x_cen,
-                                               x_fit_range=x_range,
-                                               cost_func=cost_func,
-                                               method=method,
-                                               vary_baseline=vary_baseline,
-                                               init_pars=self.shape_cal_pars,
-                                               show_plots=False)
-                # Record peak centroid and area of hyper-EMG fit
-                mus = np.append(mus,fit_result.params['p0_mu'].value)
-                areas = np.append(areas,spec_boot.calc_peak_area(0, fit_result=fit_result, decimals=2)[0])
+                try:
+                    fit_result = spec_boot.peakfit(fit_model=self.fit_model,
+                                                   x_fit_cen=x_cen,
+                                                   x_fit_range=x_range,
+                                                   cost_func=cost_func,
+                                                   method=method,
+                                                   vary_baseline=vary_baseline,
+                                                   init_pars=self.shape_cal_pars,
+                                                   show_plots=False)
+                    # Record centroid and area of peak 0
+                    mus = np.append(mus,fit_result.params['p0_mu'].value)
+                    area_i = spec_boot.calc_peak_area(0, fit_result=fit_result, decimals=2)[0]
+                    areas = np.append(areas,area_i)
+                except ValueError:
+                    print("Fit #{1} for N_counts = {0} failed with ValueError "
+                          "(likely NaNs in y-model array).".format(N_counts,i))
+
             std_devs_of_mus = np.append(std_devs_of_mus,np.std(mus,ddof=1))
             mean_areas = np.append(mean_areas,np.mean(areas))
+
         mean_mu = np.mean(mus) # from last `N_counts` step only
         FWHM_gauss = 2*np.sqrt(2*np.log(2))*fit_result.params['p0_sigma'].value
         FWHM_emg = spec_boot.calc_FWHM_emg(peak_index=0,fit_result=fit_result)
@@ -1969,8 +1978,7 @@ class spectrum:
 
                   L = \\sum_i f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)
 
-              where the last term is zero for :math:`y_i=0`. For details see
-              `Notes` section of :meth:`peakfit` method documentation.
+            For details see `Notes` section of :meth:`peakfit` method documentation.
         init_pars : dict, optional
             Dictionary with initial shape parameter values for fit (optional).
 
@@ -2545,8 +2553,6 @@ class spectrum:
 
                   L = \\sum_i f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)
 
-              where the last term is zero for :math:`y_i=0`.
-
             See `Notes` of :meth:`spectrum.peakfit` for more details.
         x_fit_cen : float or None, [u], optional
             center of mass range to fit;
@@ -2756,8 +2762,6 @@ class spectrum:
 
                   L = \\sum_i f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)
 
-              where the last term is zero for :math:`y_i=0`.
-
             See `Notes` of :meth:`peakfit` method for details.
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
@@ -2858,7 +2862,7 @@ class spectrum:
         try:
             self._eval_peakshape_errors(peak_indeces=peak_indeces,fit_result=fit_result,verbose=True,show_shape_err_fits=show_shape_err_fits)
         except KeyError:
-            print("WARNING: Peak-shape error determination failed with KeyError. Likely the used fit_model is inconsitent with the shape calibration model.")
+            print("WARNING: Peak-shape error determination failed with KeyError. Likely the used fit_model is inconsistent with the shape calibration model.")
         self._update_peak_props(peaks_to_fit,fit_result)
         self.show_peak_properties()
         if show_fit_report:
