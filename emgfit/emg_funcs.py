@@ -14,7 +14,7 @@ import scipy.special as spl
 #from numba import jit, prange
 
 ################################################################################
-##### Define general Hyper-EMG functions 
+##### Define general Hyper-EMG functions
 # from numba import vectorize, float64
 # import math
 # @vectorize([float64(float64)])
@@ -122,7 +122,7 @@ def h_p_emg(x, mu, sigma, *t_args):
     t_args : :class:`tuple`, :class:`tuple`
         Two variable-length tuples of pos. tail shape arguments with
         the signature:
-        ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...)``.
+        ``(eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...)``.
         The length of the tuples must match and defines the order of pos. tails.
 
     Returns

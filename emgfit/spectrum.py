@@ -1837,6 +1837,8 @@ class spectrum:
         np.random.seed(seed=34) # to make bootstrapped spectra reproducible
         std_devs_of_mus = np.array([]) # standard deviation of sample means mu
         mean_areas = np.array([]) # array for numbers of detected counts
+        from tqdm.auto import tqdm # add progress bar with tqdm
+        t = tqdm(total=len(li_N_counts)*N_spectra)
         for N_counts in li_N_counts:
             mus = np.array([])
             areas = np.array([])
@@ -1868,15 +1870,16 @@ class spectrum:
                 except ValueError:
                     print("Fit #{1} for N_counts = {0} failed with ValueError "
                           "(likely NaNs in y-model array).".format(N_counts,i))
-
+                t.update()
             std_devs_of_mus = np.append(std_devs_of_mus,np.std(mus,ddof=1))
             mean_areas = np.append(mean_areas,np.mean(areas))
 
+        t.close()
         mean_mu = np.mean(mus) # from last `N_counts` step only
         FWHM_gauss = 2*np.sqrt(2*np.log(2))*fit_result.params['p0_sigma'].value
         FWHM_emg = spec_boot.calc_FWHM_emg(peak_index=0,fit_result=fit_result)
         FWHM_emg_err = FWHM_gauss/FWHM_emg * self.shape_cal_par_errors['sigma']
-        print("\nDone!\n")
+        print("Done!\n")
 
         # Use no. of detected counts instead of true no. of re-sampling
         # events (i.e. li_N_counts) as x values
