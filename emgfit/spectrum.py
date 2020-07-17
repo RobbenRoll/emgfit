@@ -1554,7 +1554,10 @@ class spectrum:
             ## Plot parameter covariances returned by emcee
             import corner
             percentile_range = [0.99]*ndim  # percentile of samples to plot
-            fig_corner = corner.corner(result_emcee.flatchain, labels=result_emcee.var_names,
+            fig_corner = plt.figure()
+            corner.corner(result_emcee.flatchain,
+                            fig=fig_corner,
+                        labels=result_emcee.var_names,
                                        bins=30, truths=list(out.params.valuesdict().values()),
                                        hist_bin_factor=2,
                                        range=percentile_range,
@@ -1565,6 +1568,8 @@ class spectrum:
                 ax.tick_params(axis='both', labelsize=17)
                 ax.xaxis.label.set_size(27)
                 ax.yaxis.label.set_size(27)
+            plt.savefig("covariance map.png",dpi=350)
+            plt.show()
 
             #print("\nmedian of posterior probability distribution")
             #print('--------------------------------------------')
