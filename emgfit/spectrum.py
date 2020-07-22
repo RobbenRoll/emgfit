@@ -225,30 +225,33 @@ class spectrum:
         Scaling factor applied to :attr:`m_fit` in mass recalibration.
     rel_recal_error : float
         Relative uncertainty of recalibration factor :attr:`recal_fac`.
-    centroid_shifts_pm : :class:`numpy.ndarray` of dict
-        Pos. and neg. centroid shifts relative to mass calibrant obtained in
-        peak-shape uncertainty evaluation by varying each shape parameter by
-        plus and minus 1 standard deviation, respectively.
-        The `centroid_shifts_pm` array contains a dictionary for each peak;
+    recal_facs_pm : dict
+        Modified recalibration factors obtained in peak-shape uncertainty
+        evaluation by varying each shape parameter by plus and minus 1 standard
+        deviation, respectively.
+    eff_mass_shifts_pm : :class:`numpy.ndarray` of dict
+        Effective mass shift obtained in peak-shape uncertainty evaluation by
+        varying each shape parameter by plus and minus 1 standard deviation,
+        respectively. The mass shifts are effective in the sense that they are
+        corrected for the corresponding shifts of the calibrant peak centroid.
+        The `eff_mass_shifts_pm` array contains a dictionary for each peak;
         the dictionaries have the following structure:
-        {'<shape param. name> centroid shift pm' : [<pos. centroid shift>,
-        <neg. centroid shift>], ...}
-        For the mass calibrant ' calibrant centroid shift pm' is appended to
-        '<shape param. name>' and the pos. and neg. centroid shift are given by
-        the absolute centroid shifts.
-        For more details see docs of :meth:`_eval_peakshape_errors`.            #TODO: add doc on peak-shape eval.
-    centroid_shifts : :class:`numpy.ndarray` of dict
-        Maximal centroid shifts relative to mass calibrant for each peak
-        obtained in peak-shape uncertainty evaluation by varying each shape
-        parameter by plus and minus 1 standard deviation and only keeping
-        the shift with the larger absolute magnitude. The `centroid_shifts`
-        array contains a dictionary for each peak; the dictionary have the
-        following structure:
-        {'<shape param. name> centroid shift' : [<maximal centroid shift>],...}
-        For the mass calibrant ' calibrant centroid shift' is appended to
-        '<shape param. name>' and the pos. and neg. centroid shift are given by
-        the absolute centroid shifts.
-        For more details see docs of :meth:`_eval_peakshape_errors`.             #TODO: add doc on peak-shape eval.
+        {'<shape param. name> eff. mass shift pm' :
+        [<eff. mass shift for shape param. value +1 sigma>,
+        <eff. mass shift for shape param. value -1 sigma>], ...}
+        For the mass calibrant the dictionary holds the absolute shifts of the
+        calibrant peak centroid (`calibrant centroid shift pm`). For more
+        details see docs of :meth:`_eval_peakshape_errors`.
+    eff_mass_shifts : :class:`numpy.ndarray` of dict
+        Maximal effective mass shifts for each peak obtained in peak-shape
+        uncertainty evaluation by varying each shape parameter by plus and minus
+        1 standard deviation and only keeping the shift with the larger absolute
+        magnitude. The `eff_mass_shifts` array contains a dictionary for each
+        peak; the dictionaries have the following structure:
+        {'<shape param. name> eff. mass shift' : [<maximal eff. mass shift>],...}
+        For the mass calibrant the dictionary holds the absolute shifts of the
+        calibrant peak centroid (`calibrant centroid shift`). For more
+        details see docs of :meth:`_eval_peakshape_errors`.
     peaks : list of :class:`peak`
         List containing all peaks associated with the spectrum sorted by
         ascending mass. The index of a peak within the `peaks` list is referred
@@ -346,8 +349,9 @@ class spectrum:
         self.A_stat_emg_error = None
         self.recal_fac = 1.0
         self.rel_recal_error = None
-        self.centroid_shifts_pm = None
-        self.centroid_shifts = None
+        self.recal_facs_pm = None
+        self.eff_mass_shifts_pm = None
+        self.eff_mass_shifts = None
         self.peaks = [] # list containing peaks associated with spectrum
         self.fit_results = [] # list containing fit results of all peaks
         plt.rcParams.update({"font.size": 15})
@@ -2232,7 +2236,7 @@ class spectrum:
         print('\nLoaded peak shape calibration from '+str(filename)+'.txt')
 
 
-    ##### Evaluate centroid shifts and calculate peak-shape errors
+    ##### Evaluate eff. mass shifts and calculate peak-shape errors
     def _eval_peakshape_errors(self,peak_indeces=[],fit_result=None,
                                verbose=False,show_shape_err_fits=False):
         """Calculate the relative peak-shape uncertainty of the specified peaks.
@@ -2244,10 +2248,12 @@ class spectrum:
         The peak-shape uncertainties are obtained by re-fitting the specified
         peaks with each shape parameter individually varied by plus and minus 1
         sigma and recording the respective shift of the peak centroids w.r.t the
-        original fit. For each varied parameter, the larger of the two centroid
-        shifts relative to the calibrant centroid are then added in quadrature
-        to obtain the total peak-shape uncertainty. See `Notes` section below
-        for a detailed explanation of the peak-shape error evaluation scheme.
+        original fit. From the shifted IOI centroids and the corresponding
+        shifts of the calibrant centroid effective mass shifts are determined.
+        For each varied parameter, the larger of the two eff. mass shifts are
+        then added in quadrature to obtain the total peak-shape uncertainty.
+        See `Notes` section below for a detailed explanation of the peak-shape
+        error evaluation scheme.
 
         Note: All peaks in the specified `peak_indeces` list must
         have been fitted in the same multi-peak fit (and hence have the same
@@ -2255,7 +2261,7 @@ class spectrum:
 
         This routine does not yield a peak-shape error for the mass calibrant,
         since this is zero by definition. Instead, for the mass calibrant the
-        absolute centroid shifts are calculated.
+        absolute shifts of the peak centroid are calculated.
 
         Parameters
         ----------
@@ -2266,7 +2272,7 @@ class spectrum:
         fit_result : lmfit modelresult, optional
             Fit result object to evaluate peak-shape error for.
         verbose : bool, optional, default: False                                #TODO use ``False``?
-            If ``True``, print all individual centroid shifts obtained by
+            If ``True``, print all individual eff. mass shifts obtained by
             varying the shape parameters.
         show_shape_err_fits : bool, optional, default: False                    #TODO use ``False``?
             If ``True``, show individual plots of re-fits for peak-shape error
@@ -2276,7 +2282,8 @@ class spectrum:
         -----
         `sigma`,`theta`, all `eta` and all `tau` model parameters are considered
         "shape parameters" and varied by plus and minus one standard deviation
-        in the peak-shape uncertainty evaluation.
+        in the peak-shape uncertainty evaluation. The peak amplitude, centroids
+        and the baseline are always freely varying.
 
         The "peak-shape uncertainty" refers to the mass error resulting from
         uncertainties in the determination of the peak-shape parameters. Simply
@@ -2284,70 +2291,85 @@ class spectrum:
         a given peak centroid is shifted when the shape parameters are varied
         by plus or minus their 1-sigma uncertainty. A peculiarity of emgfit's
         peak-shape error estimation routine is that only the centroid shifts
-        **relative to the calibrant** are taken into account.
+        **relative to the calibrant** are taken into account ('effective mass
+        shifts').
 
         The peak-shape uncertainties are obtained via the following procedure:
 
-        - Since only centroid shifts relative to the calibrant enter the
-          peak-shape uncertainty, at first, the absolute centroid shifts of the
-          mass calibrant must be evaluated. There are two options:
+        - Since only effective mass shifts corrected for the corresponding
+          shifts of the calibrant peak enter the peak-shape uncertainty,
+          at first, the absolute centroid shifts of the mass calibrant must be
+          evaluated. There are two options for this:
 
           - If the calibrant index is included in the `peak_indeces` argument,
-            the original fit that yielded the `fit_result` argument is
-            re-performed with each shape parameter varied by plus and minus
-            its 1-sigma confidence respectively while all other shape
-            parameters are kept fixed at the original best-fit values. The
-            resulting absolute "calibrant centroid shifts" are recorded and
-            stored in the spectrum's :attr:`centroid_shifts_pm` dictionary. Only
-            the larger of the two centroid shifts due to the +/-1-sigma
-            variation of each shape parameter are stored in the spectrum's
-            :attr:`centroid_shifts` dictionary.
+            the original calibrant fit is re-performed with each shape parameter
+            varied by plus and minus its 1-sigma confidence respectively while
+            all other shape parameters are kept fixed at the original best-fit
+            values. The resulting absolute "calibrant centroid shifts" are
+            recorded and stored in the spectrum's :attr:`eff_mass_shifts_pm`
+            dictionary. The shifted calibrant centroids are further used to
+            calculate updated mass re-calibration factors. These are stored in
+            the :attr:`recal_facs_pm` dictionary. Only the larger of the two
+            centroid shifts due to the +/-1-sigma variation of each shape
+            parameter are stored in the spectrum's :attr:`eff_mass_shifts`
+            dictionary.
           - If the calibrant is not included in the `peak_indeces` list, the
             calibrant centroid shifts must have been obtained in a foregoing
             mass re-calibration and the calibrant centroid shifts are taken from
-            :attr:`centroid_shifts_pm`.                                         #TODO add reference to mass re-calibration article!
+            :attr:`eff_mass_shifts_pm`.                                         #TODO add reference to mass re-calibration article!
 
         - All non-calibrant peaks referenced in `peak_indeces` are treated in a
           similar way. The original fit that yielded the specified `fit_result`
           is re-performed with each shape parameter varied by plus and minus its
           1-sigma confidence respectively while all other shape parameters are
-          kept fixed at the original best-fit values. However now, the resulting
-          **shifts relative to the corresponding shifted calibrant centroid**
-          are recorded and stored in the spectrum's :attr:`centroid_shifts_pm`
-          dictionary. Only the larger of the two relative centroid shifts caused
-          by the +/-1-sigma variation of each shape parameter are stored in the
-          spectrum's :attr:`centroid_shifts` dictionary.
+          kept fixed at the original best-fit values. However now, the effective
+          mass shifts **after correction with the corresponding updated
+          recalibration factor** are recorded and stored in the spectrum's
+          :attr:`eff_mass_shifts_pm` dictionary. Only the larger of the two
+          eff. mass shifts caused by the +/-1-sigma variation of each shape
+          parameter are stored in the spectrum's :attr:`eff_mass_shifts`
+          dictionary.
         - The estimates for the total peak-shape uncertainty of each peak are
-          obtained by adding the relative centroid shifts stored in
-          :attr:`centroid_shifts in quadrature`.
+          finally obtained by adding the eff. mass shifts stored in
+          :attr:`eff_mass_shifts` in quadrature.
 
         """
         if self.shape_cal_pars is None:
-            print('\nWARNING: Could not calculate peak-shape errors - no peak-shape calibration yet!\n')
+            print('\nWARNING: Could not calculate peak-shape errors - '
+                  'no peak-shape calibration yet!\n')
             return
 
         if verbose:
             print('\n##### Peak-shape uncertainty evaluation #####\n')
-        # Vary each shape parameter by plus and minus one standard deviation and
-        # sum resulting shifts of Gaussian centroid `mu` in quadrature to
-        # obtain the peak-shape uncertainty
+            print('All mass shifts below are corrected for the corresponding'
+                  'shifts of the calibrant peak.')
         if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
         pref = 'p{0}_'.format(peak_indeces[0])
-        shape_pars = [key for key in self.shape_cal_pars if (key.startswith(('sigma','theta','eta','tau','delta')) and fit_result.params[pref+key].expr is None )] # grab shape parameters to be varied by +/- sigma
+        # grab shape parameters to be varied by +/- sigma:
+        shape_pars = [key for key in self.shape_cal_pars
+                      if (key.startswith(('sigma','theta','eta','tau','delta'))
+                      and fit_result.params[pref+key].expr is None )]
         # Check whether `fit_result` contained the mass calibrant
         if self.index_mass_calib in peak_indeces:
             mass_calib_in_range = True
+            # initialize empty dictionary
+            self.recal_facs_pm = {}
             peak_indeces.remove(self.index_mass_calib)
             print('Determining absolute centroid shifts of mass calibrant.\n')
         else:
             mass_calib_in_range = False
-        if self.centroid_shifts is None:
-            self.centroid_shifts_pm = np.array([{} for i in range(len(self.peaks))]) # initialize array of empty dictionaries
-            self.centroid_shifts = np.array([{} for i in range(len(self.peaks))]) # initialize array of empty dictionaries
+        if self.eff_mass_shifts is None:
+            # initialize arrays of empty dictionaries
+            self.eff_mass_shifts_pm = np.array([{} for i in range(len(self.peaks))])
+            self.eff_mass_shifts = np.array([{} for i in range(len(self.peaks))])
 
+        # Vary each shape parameter by plus and minus one standard deviation and
+        # re-fit with all other shape parameters held fixed. Record the
+        # corresponding fit results including the shifts of the (Gaussian) peak
+        # centroids `mu`
         for par in shape_pars:
-            pars = copy.deepcopy(self.shape_cal_pars) # deep copy to avoid changes in original dictionary
+            pars = copy.deepcopy(self.shape_cal_pars) # deepcopy to avoid changes in original dictionary
             pars[par] = self.shape_cal_pars[par] + self.shape_cal_par_errors[par]
             if par == 'delta_m':
                 pars['eta_m2'] = pars[par] - self.shape_cal_pars['eta_m1']
@@ -2355,7 +2377,14 @@ class spectrum:
             elif par == 'delta_p':
                 pars['eta_p2'] = pars[par] - self.shape_cal_pars['eta_p1']
                 pars['eta_p3'] = 1 - self.shape_cal_pars['eta_p1'] + pars['eta_p2']
-            fit_result_p = self.peakfit(fit_model=fit_result.fit_model, cost_func=fit_result.cost_func, x_fit_cen=fit_result.x_fit_cen, x_fit_range=fit_result.x_fit_range, init_pars=pars, vary_shape=False, vary_baseline=fit_result.vary_baseline, method=fit_result.method, show_plots=False)
+            fit_result_p = self.peakfit(fit_model=fit_result.fit_model,
+                                        cost_func=fit_result.cost_func,
+                                        x_fit_cen=fit_result.x_fit_cen,
+                                        x_fit_range=fit_result.x_fit_range,
+                                        init_pars=pars, vary_shape=False,
+                                        vary_baseline=fit_result.vary_baseline,
+                                        method=fit_result.method,
+                                        show_plots=False)
             #display(fit_result_p) # show fit result
 
             pars[par] = self.shape_cal_pars[par] - self.shape_cal_par_errors[par]
@@ -2365,7 +2394,14 @@ class spectrum:
             elif par == 'delta_p':
                 pars['eta_p2'] =  pars[par] - self.shape_cal_pars['eta_p1']
                 pars['eta_m3'] = 1 - self.shape_cal_pars['eta_p1'] +  pars['eta_p2']
-            fit_result_m = self.peakfit(fit_model=fit_result.fit_model, cost_func=fit_result.cost_func, x_fit_cen=fit_result.x_fit_cen, x_fit_range=fit_result.x_fit_range, init_pars=pars, vary_shape=False, vary_baseline=fit_result.vary_baseline, method=fit_result.method, show_plots=False)
+            fit_result_m = self.peakfit(fit_model=fit_result.fit_model,
+                                        cost_func=fit_result.cost_func,
+                                        x_fit_cen=fit_result.x_fit_cen,
+                                        x_fit_range=fit_result.x_fit_range,
+                                        init_pars=pars, vary_shape=False,
+                                        vary_baseline=fit_result.vary_baseline,
+                                        method=fit_result.method,
+                                        show_plots=False)
             #display(fit_result_m) # show fit result
 
             if show_shape_err_fits:
@@ -2392,48 +2428,69 @@ class spectrum:
             # if calibrant is not in fit range, its centroid shifts must have
             # been determined in a foregoing mass re-calibration
             if mass_calib_in_range:
-                pref = 'p{0}_'.format(self.index_mass_calib)
-                centroid = fit_result.best_values[pref+'mu']
-                new_centroid_p =  fit_result_p.best_values[pref+'mu']
-                delta_mu_p = new_centroid_p - centroid
-                new_centroid_m = fit_result_m.best_values[pref+'mu']
-                delta_mu_m = new_centroid_m - centroid
+                cal_idx = self.index_mass_calib
+                cal_peak = self.peaks[cal_idx]
+                pref = 'p{0}_'.format(cal_idx)
+                cen = fit_result.best_values[pref+'mu']
+                new_cen_p =  fit_result_p.best_values[pref+'mu']
+                delta_mu_p = new_cen_p - cen
+                new_cen_m = fit_result_m.best_values[pref+'mu']
+                delta_mu_m = new_cen_m - cen
+                # recalibration factors obtained with shifted calib. centroids:
+                recal_fac_p = cal_peak.m_AME/new_cen_p
+                recal_fac_m = cal_peak.m_AME/new_cen_m
+                self.recal_facs_pm[par+' recal facs pm'] = [recal_fac_p,recal_fac_m]
                  # absolute shifts of calibrant centroid [u]:
-                self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift pm'] = [delta_mu_p,delta_mu_m]
+                self.eff_mass_shifts_pm[cal_idx][par+' calibrant centroid shift pm'] = [delta_mu_p,delta_mu_m]
                 # maximal shifts of calibrant centroid [u]:
-                max_centroid_shifts = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item()
-                self.centroid_shifts[self.index_mass_calib][par+' calibrant centroid shift'] = max_centroid_shifts
+                max_eff_mass_shifts = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item()
+                self.eff_mass_shifts[cal_idx][par+' calibrant centroid shift'] = max_eff_mass_shifts
             else: # check if calibrant centroid shifts pre-exist, print error otherwise
                 try:
-                    isinstance(self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift pm'],list)
+                    isinstance(self.eff_mass_shifts_pm[cal_idx][par+' calibrant centroid shift pm'],list)
                 except:
                     raise Exception(
-                    '\nERROR: No calibrant centroid shifts available for peak-shape error evaluation. Ensure that: \n (a) either the mass calibrant is in the fit range and specified with the `index_mass_calib` or `species_mass_calib` parameter, or \n (b) if the mass calibrant is not in the fit range, a successful mass calibration has been performed upfront with fit_calibrant().'
-                    )
+                    '\nERROR: No calibrant centroid shifts available for '
+                    'peak-shape error evaluation. Ensure that: \n'
+                    '(a) either the mass calibrant is in the fit range and specified '
+                    'with the `index_mass_calib` or `species_mass_calib` parameter, or\n'
+                    '(b) if the mass calibrant is not in the fit range, a successful '
+                    'mass calibration has been performed upfront with fit_calibrant().')
 
-            # Determine centroid shifts relative to mass calibrant
+            # Determine effective mass shifts
             # If calibrant is in fit range, the newly determined calibrant
-            # centroid shifts will be used. Otherwise, the calibrant centroid
-            # shifts from a foregoing mass calibration are taken
-            for peak_idx in peak_indeces:
+            # centroid shifts will be used calculate the shifted recalibration
+            # factors. Otherwise, the shifted re-calibration factors from a
+            # foregoing mass calibration are used
+            for peak_idx in peak_indeces: # IOIs only, mass calibrant excluded
                 pref = 'p{0}_'.format(peak_idx)
-                centroid = fit_result.best_values[pref+'mu']
-                new_centroid_p =  fit_result_p.best_values[pref+'mu']
-                # pos. peak_centroid_shift - calib_centroid_shift:
-                delta_mu_p = new_centroid_p - centroid - self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift pm'][0]
-                new_centroid_m = fit_result_m.best_values[pref+'mu']
-                # neg. peak_centroid_shift - calib_centroid_shift:
-                delta_mu_m = new_centroid_m - centroid - self.centroid_shifts_pm[self.index_mass_calib][par+' calibrant centroid shift pm'][1]
+                cen = fit_result.best_values[pref+'mu']
+
+                new_cen_p =  fit_result_p.best_values[pref+'mu']
+                recal_fac_p = self.recal_facs_pm[par+' recal facs pm'][0]
+                # effective mass shift for +1 sigma parameter variation:
+                delta_mu_p = recal_fac_p*new_cen_p - self.recal_fac*cen
+
+                new_cen_m = fit_result_m.best_values[pref+'mu']
+                recal_fac_m = self.recal_facs_pm[par+' recal facs pm'][1]
+                # effective mass shift for -1 sigma parameter variation:
+                delta_mu_m = recal_fac_m*new_cen_m - self.recal_fac*cen
                 if verbose:
-                    print(u'Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'+/-',np.round(self.shape_cal_par_errors[par],6),' shifts Δm of peak',peak_idx,'and mass calibrant by',np.round(delta_mu_p*1e06,6),'/',np.round(delta_mu_m*1e06,3),'\u03BCu. ')
+                    print(u'Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'+/-',
+                          np.round(self.shape_cal_par_errors[par],6),' shifts peak',peak_idx,' by',
+                          np.round(delta_mu_p*1e06,6),'/',np.round(delta_mu_m*1e06,3),'\u03BCu. ')
                     if peak_idx == peak_indeces[-1]:
                         print()  # empty line between different parameter blocks
-                self.centroid_shifts_pm[peak_idx][par+' centroid shift pm'] = [delta_mu_p,delta_mu_m] # shifts relative to calibrant centroid
-                self.centroid_shifts[peak_idx][par+' centroid shift'] = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item() # maximal shifts relative to calibrant centroid
+                # shifts relative to calibrant centroid
+                self.eff_mass_shifts_pm[peak_idx][par+' eff. mass shift pm'] = [delta_mu_p,delta_mu_m]
+                # maximal shifts relative to calibrant centroid
+                self.eff_mass_shifts[peak_idx][par+' eff. mass shift'] = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item()
 
-        # Calculate and update relative peak-shape errors
+        # Calculate and update relative peak-shape errors by summing effective
+        # mass shifts in quadrature
         for peak_idx in peak_indeces:
-            shape_error = np.sqrt(np.sum(np.square( list(self.centroid_shifts[peak_idx].values()) ))) # add centroid shifts in quadrature to obtain total peakshape error
+            # Add eff. mass shifts in quadrature to get total peakshape error:
+            shape_error = np.sqrt(np.sum(np.square( list(self.eff_mass_shifts[peak_idx].values()) )))
             p = self.peaks[peak_idx]
             m_fit = fit_result.best_values[pref+'mu']*self.recal_fac
             p.rel_peakshape_error = shape_error/m_fit
@@ -2498,7 +2555,7 @@ class spectrum:
         if np.abs(self.recal_fac - 1) > 1e-02:
             print("\nWARNING: recalibration factor `recal_fac` deviates from unity by more than a permille.-----------------------------------------------")
             print(  "         Potentially, mass errors should also be re-scaled with `recal_fac` (currently not implemented)!-----------------------------")
-        self.index_mass_calib = index_mass_calib # set mass calibrant flag to prevent overwritting of mass calibration results
+        self.index_mass_calib = index_mass_calib # set mass calibrant flag to prevent overwriting of mass calibration results
 
         # Update peak properties with new calibrant centroid
         peak.m_fit = self.recal_fac*peak.m_fit # update centroid mass of calibrant peak
@@ -2647,7 +2704,9 @@ class spectrum:
 
         # Update recalibration factor and calibrant properties
         self._update_calibrant_props(index_mass_calib,fit_result)
-        # Calculate absolute centroid shifts of calibrant as prep for subsequent peak-shape error determination for ions of interest
+        # Calculate updated recalibration factors from absolute centroid shifts
+        # of calibrant and as prep for subsequent peak-shape error determination
+        # for ions of interest
         self._eval_peakshape_errors(peak_indeces=[index_mass_calib],fit_result=fit_result,verbose=False)
 
 
@@ -2921,19 +2980,19 @@ class spectrum:
         df_spec = pd.DataFrame(data=spec_data)
         df_spec.set_index(df_spec.columns[0],inplace=True)
 
-        # Make peak properties DataFrame
+        # Make peak properties & eff. mass shifts DataFrames
         dict_peaks = [p.__dict__ for p in self.peaks]
         df_prop = pd.DataFrame(dict_peaks)
         df_prop.index.name = "Peak index"
         frames = []
         keys = []
-        for peak_idx in range(len(self.centroid_shifts)):
-            df = pd.DataFrame.from_dict(self.centroid_shifts[peak_idx], orient='index')
-            df.columns = ['Value']
+        for peak_idx in range(len(self.eff_mass_shifts)):
+            df = pd.DataFrame.from_dict(self.eff_mass_shifts[peak_idx], orient='index')
+            df.columns = ['Value [u]']
             frames.append(df)
             keys.append(str(peak_idx))
-        df_centroid_shifts = pd.concat(frames, keys=keys)
-        df_centroid_shifts.index.names = ['Peak index','Parameter']
+        df_eff_mass_shifts = pd.concat(frames, keys=keys)
+        df_eff_mass_shifts.index.names = ['Peak index','Parameter']
 
         # Save lin. and log. plots of full fitted spectrum to temporary files
         # so they can be inserted into the XLSX file
@@ -2948,7 +3007,7 @@ class spectrum:
             prop_sheet = writer.sheets['Peak properties']
             prop_sheet.insert_image(len(df_prop)+2,1, filename+'_log_plot.png',{'x_scale': 0.45,'y_scale':0.45})
             prop_sheet.insert_image(len(df_prop)+26,1, filename+'_lin_plot.png',{'x_scale': 0.45,'y_scale':0.45})
-            df_centroid_shifts.to_excel(writer,sheet_name='Centroid shifts')
+            df_eff_mass_shifts.to_excel(writer,sheet_name='Mass shifts in PS error eval.')
         print("Fit results saved to file:",str(filename)+".xlsx")
 
         # Clean up temporary image files
