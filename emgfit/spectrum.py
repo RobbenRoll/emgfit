@@ -22,8 +22,9 @@ import warnings
 # ignore irrelevant warnings by message
 warnings.filterwarnings("ignore", message="divide by zero encountered in log")
 warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
+warnings.filterwarnings("ignore", message="overflow encountered in multiply")
 warnings.filterwarnings("ignore", message="overflow encountered in exp")
-warnings.filterwarnings("ignore", category=RuntimeWarning)
+#warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 ################################################################################
 ##### Define peak class
@@ -66,25 +67,25 @@ class peak:
     area, area_error : float [counts]
         Number of total counts in peak and corresponding uncertainty
         (calculated from amplitude parameter `amp` of peak fit).
-    m_fit : float [u]
+    m_ion : float [u]
         Ionic mass value obtained in peak fit (after mass recalibration).
     rel_stat_error : float
-        Relative statistical uncertainty of :attr:`m_fit`.
+        Relative statistical uncertainty of :attr:`m_ion`.
     rel_recal_error : float
-        Relative uncertainty of :attr:`m_fit` due to mass recalibration.
+        Relative uncertainty of :attr:`m_ion` due to mass recalibration.
     rel_peakshape_error : float
-        Relative peak-shape uncertainty of :attr:`m_fit`.
+        Relative peak-shape uncertainty of :attr:`m_ion`.
     rel_mass_error : float
-        Total relative mass uncertainty of :attr:`m_fit` (excluding systematics!).
+        Total relative mass uncertainty of :attr:`m_ion` (excluding systematics!).
         Includes statistical, peak-shape and recalibration uncertainty.
     A : int
         Atomic mass number of peak species.
     atomic_ME_keV : float [keV]
-        (Atomic) mass excess corresponding to :attr:`m_fit`.
+        (Atomic) mass excess corresponding to :attr:`m_ion`.
     mass_error_keV : float [keV]
-        Total mass uncertainty of :attr:`m_fit` (excluding systematics!).
+        Total mass uncertainty of :attr:`m_ion` (excluding systematics!).
     m_dev_keV : float [keV]
-        Deviation from literature value (:attr:`m_fit` - :attr:`m_AME`).
+        Deviation from literature value (:attr:`m_ion` - :attr:`m_AME`).
 
     """
     def __init__(self,x_pos,species,m_AME=None,m_AME_error=None):
@@ -142,7 +143,7 @@ class peak:
         self.red_chi = None
         self.area = None
         self.area_error = None
-        self.m_fit = None # ionic mass value from fit [u]
+        self.m_ion = None # ionic mass value from fit [u]
         self.rel_stat_error = None #
         self.rel_recal_error = None
         self.rel_peakshape_error = None
@@ -173,11 +174,11 @@ class peak:
         print("AME mass extrapolated?",self.extrapolated)
         if self.fit_model is not None:
             print("Peak area: "+str(self.area)+" +- "+str(self.peak_area_error)+" counts")
-            print("(Ionic) mass:",self.m_fit,"u     (",np.round(self.m_fit*u_to_keV,3),"keV )")
-            print("Stat. mass uncertainty:",self.rel_stat_error*self.m_fit,"u     (",np.round(self.rel_stat_error*self.m_fit*u_to_keV,3),"keV )")
-            print("Peakshape uncertainty:",self.rel_peakshape_error*self.m_fit,"u     (",np.round(self.rel_peakshape_error*self.m_fit*u_to_keV,3),"keV )")
-            print("Re-calibration uncertainty:",self.rel_recal_error*self.m_fit,"u     (",np.round(self.rel_recal_error*self.m_fit*u_to_keV,3),"keV )")
-            print("Total mass uncertainty (before systematics):",self.rel_mass_error*self.m_fit,"u     (",np.round(self.mass_error_keV,3),"keV )")
+            print("(Ionic) mass:",self.m_ion,"u     (",np.round(self.m_ion*u_to_keV,3),"keV )")
+            print("Stat. mass uncertainty:",self.rel_stat_error*self.m_ion,"u     (",np.round(self.rel_stat_error*self.m_ion*u_to_keV,3),"keV )")
+            print("Peakshape uncertainty:",self.rel_peakshape_error*self.m_ion,"u     (",np.round(self.rel_peakshape_error*self.m_ion*u_to_keV,3),"keV )")
+            print("Re-calibration uncertainty:",self.rel_recal_error*self.m_ion,"u     (",np.round(self.rel_recal_error*self.m_ion*u_to_keV,3),"keV )")
+            print("Total mass uncertainty (before systematics):",self.rel_mass_error*self.m_ion,"u     (",np.round(self.mass_error_keV,3),"keV )")
             print("Atomic mass excess:",np.round(self.atomic_ME_keV,3),"keV")
             print("TITAN - AME:",np.round(self.m_dev_keV,3),"keV")
             print("χ_sq_red:",np.round(self.red_chi))
@@ -222,7 +223,7 @@ class spectrum:
     A_stat_emg_error : float
         Uncertainty of :attr:`A_stat_emg`.
     recal_fac : float, default: 1.0
-        Scaling factor applied to :attr:`m_fit` in mass recalibration.
+        Scaling factor applied to :attr:`m_ion` in mass recalibration.
     rel_recal_error : float
         Relative uncertainty of recalibration factor :attr:`recal_fac`.
     recal_facs_pm : dict
@@ -354,7 +355,6 @@ class spectrum:
         self.eff_mass_shifts = None
         self.peaks = [] # list containing peaks associated with spectrum
         self.fit_results = [] # list containing fit results of all peaks
-        plt.rcParams.update({"font.size": 15})
         if m_start or m_stop: # cut input data to specified mass range
             self.data = data_uncut.loc[m_start:m_stop]
             plot_title = 'Spectrum with start and stop markers'
@@ -366,6 +366,7 @@ class spectrum:
         self.mass_number = int(np.round(self.data.index.values[int(len(self.data)/2)]))
         self.default_fit_range = 0.01*(self.mass_number/100)
         if show_plot:
+            plt.rcParams.update({"font.size": 16})
             fig  = plt.figure(figsize=(20,8))
             plt.title(plot_title)
             data_uncut.plot(ax=fig.gca())
@@ -1076,7 +1077,6 @@ class spectrum:
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
             plt.fill_between(fit_result.x, fit_result.best_fit-dely, fit_result.best_fit+dely, color="#ABABAB", label=str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band')
         plt.title(plot_title)
-        plt.rcParams.update({"font.size": 15})
         plt.xlabel('m/z [u]')
         plt.ylabel('Counts per bin')
         plt.yscale('log')
@@ -2476,9 +2476,7 @@ class spectrum:
                 # effective mass shift for -1 sigma parameter variation:
                 delta_mu_m = recal_fac_m*new_cen_m - self.recal_fac*cen
                 if verbose:
-                    print(u'Re-fitting with ',par,' = ',np.round(self.shape_cal_pars[par],6),'+/-',
-                          np.round(self.shape_cal_par_errors[par],6),' shifts peak',peak_idx,' by',
-                          np.round(delta_mu_p*1e06,6),'/',np.round(delta_mu_m*1e06,3),'\u03BCu. ')
+                    print(u'Re-fitting with {0} = {1: .2e} +/- {2: .2e} shifts peak {3} by {4: .3f} / {5: .3f} \u03BCu.'.format(par,self.shape_cal_pars[par],self.shape_cal_par_errors[par],peak_idx,delta_mu_p*1e06,delta_mu_m*1e06))
                     if peak_idx == peak_indeces[-1]:
                         print()  # empty line between different parameter blocks
                 # shifts relative to calibrant centroid
@@ -2492,8 +2490,8 @@ class spectrum:
             # Add eff. mass shifts in quadrature to get total peakshape error:
             shape_error = np.sqrt(np.sum(np.square( list(self.eff_mass_shifts[peak_idx].values()) )))
             p = self.peaks[peak_idx]
-            m_fit = fit_result.best_values[pref+'mu']*self.recal_fac
-            p.rel_peakshape_error = shape_error/m_fit
+            m_ion = fit_result.best_values[pref+'mu']*self.recal_fac
+            p.rel_peakshape_error = shape_error/m_ion
             if verbose:
                 pref = 'p{0}_'.format(peak_idx)
                 print("Relative peak-shape error of peak "+str(peak_idx)+":",np.round(p.rel_peakshape_error,9))
@@ -2533,24 +2531,24 @@ class spectrum:
         peak.cost_func = fit_result.cost_func
         peak.area, peak.area_error = self.calc_peak_area(index_mass_calib,fit_result=fit_result)
         pref = 'p{0}_'.format(index_mass_calib)
-        peak.m_fit = fit_result.best_values[pref+'mu']
+        peak.m_ion = fit_result.best_values[pref+'mu']
         if peak.fit_model == 'Gaussian':
             std_dev = fit_result.best_values[pref+'sigma']
         else:  # for emg models
             FWHM_emg = self.calc_FWHM_emg(index_mass_calib,fit_result=fit_result)
             std_dev = self.A_stat_emg*FWHM_emg
         stat_error = std_dev/np.sqrt(peak.area) # A_stat* FWHM/sqrt(area), w/ with A_stat_G = 0.42... and A_stat_emg from `determine_A_stat_emg` method or default value from config.py
-        peak.rel_stat_error = stat_error /peak.m_fit
+        peak.rel_stat_error = stat_error /peak.m_ion
         peak.rel_peakshape_error = None # reset to None
         peak.red_chi = np.round(fit_result.redchi, 2)
 
         # Print error contributions of mass calibrant:
         print("\n##### Mass recalibration #####\n")
-        print("\nRelative literature error of mass calibrant:   ",np.round(peak.m_AME_error/peak.m_fit,9))
+        print("\nRelative literature error of mass calibrant:   ",np.round(peak.m_AME_error/peak.m_ion,9))
         print("Relative statistical error of mass calibrant:  ",np.round(peak.rel_stat_error,9))
 
         # Determine recalibration factor
-        self.recal_fac = peak.m_AME/peak.m_fit
+        self.recal_fac = peak.m_AME/peak.m_ion
         print("\nRecalibration factor:      {:06.9f} = 1 {:=+1.2e}".format(self.recal_fac,self.recal_fac-1))
         if np.abs(self.recal_fac - 1) > 1e-02:
             print("\nWARNING: recalibration factor `recal_fac` deviates from unity by more than a permille.-----------------------------------------------")
@@ -2558,11 +2556,11 @@ class spectrum:
         self.index_mass_calib = index_mass_calib # set mass calibrant flag to prevent overwriting of mass calibration results
 
         # Update peak properties with new calibrant centroid
-        peak.m_fit = self.recal_fac*peak.m_fit # update centroid mass of calibrant peak
+        peak.m_ion = self.recal_fac*peak.m_ion # update centroid mass of calibrant peak
         if peak.A:
-            peak.atomic_ME_keV = np.round((peak.m_fit + m_e - peak.A)*u_to_keV,3)   # atomic Mass excess (includes electron mass) [keV]
+            peak.atomic_ME_keV = np.round((peak.m_ion + m_e - peak.A)*u_to_keV,3)   # atomic Mass excess (includes electron mass) [keV]
         if peak.m_AME:
-            peak.m_dev_keV = np.round( (peak.m_fit - peak.m_AME)*u_to_keV, 3) # TITAN - AME [keV]
+            peak.m_dev_keV = np.round( (peak.m_ion - peak.m_AME)*u_to_keV, 3) # TITAN - AME [keV]
 
         # Determine rel. recalibration error and update recalibration error attribute
         peak.rel_recal_error = np.sqrt( (peak.m_AME_error/peak.m_AME)**2 + peak.rel_stat_error**2)/self.recal_fac
@@ -2747,29 +2745,29 @@ class spectrum:
                 p.cost_func = fit_result.cost_func
                 p.area = self.calc_peak_area(peak_idx,fit_result=fit_result)[0]
                 p.area_error = self.calc_peak_area(peak_idx,fit_result=fit_result)[1]
-                p.m_fit = self.recal_fac*fit_result.best_values[pref+'mu']
+                p.m_ion = self.recal_fac*fit_result.best_values[pref+'mu']
                 if p.fit_model == 'Gaussian':
                     std_dev = fit_result.best_values[pref+'sigma']
                 else:  # for emg models
                     FWHM_emg = self.calc_FWHM_emg(peak_idx,fit_result=fit_result)
                     std_dev = self.A_stat_emg*FWHM_emg
                 stat_error = std_dev/np.sqrt(p.area)  # stat_error = A_stat * FWHM / sqrt(peak_area), w/ with A_stat_G = 0.42... and  A_stat_emg from `determine_A_stat_emg` method or default value from config.py
-                p.rel_stat_error = stat_error/p.m_fit
+                p.rel_stat_error = stat_error/p.m_ion
                 if self.rel_recal_error:
                     p.rel_recal_error = self.rel_recal_error
                 elif p==peaks[0]: # only print once
                     print('WARNING: Could not set mass recalibration errors. No successful mass recalibration performed on spectrum yet.')
                 try:
                     p.rel_mass_error = np.sqrt(p.rel_stat_error**2 + p.rel_peakshape_error**2 + p.rel_recal_error**2) # total relative uncertainty of mass value without systematics - includes: stat. mass uncertainty, peakshape uncertainty, recalibration uncertainty
-                    p.mass_error_keV = p.rel_mass_error*p.m_fit*u_to_keV
+                    p.mass_error_keV = p.rel_mass_error*p.m_ion*u_to_keV
                 except TypeError:
                     if p==peaks[0]:
                         print('Could not calculate total mass error.')
                     pass
                 if p.A:
-                    p.atomic_ME_keV = np.round((p.m_fit + m_e - p.A)*u_to_keV,3)   # atomic Mass excess (includes electron mass) [keV]
+                    p.atomic_ME_keV = np.round((p.m_ion + m_e - p.A)*u_to_keV,3)   # atomic Mass excess (includes electron mass) [keV]
                 if p.m_AME:
-                    p.m_dev_keV = np.round( (p.m_fit - p.m_AME)*u_to_keV, 3) # TITAN - AME [keV]
+                    p.m_dev_keV = np.round( (p.m_ion - p.m_AME)*u_to_keV, 3) # TITAN - AME [keV]
                 p.red_chi = np.round(fit_result.redchi, 2)
 
 
