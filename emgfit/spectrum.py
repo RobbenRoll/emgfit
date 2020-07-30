@@ -22,9 +22,10 @@ import warnings
 # ignore irrelevant warnings by message
 warnings.filterwarnings("ignore", message="divide by zero encountered in log")
 warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
+warnings.filterwarnings("ignore", message="invalid value encountered in sqrt")
 warnings.filterwarnings("ignore", message="overflow encountered in multiply")
 warnings.filterwarnings("ignore", message="overflow encountered in exp")
-#warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 ################################################################################
 ##### Define peak class
@@ -1269,11 +1270,11 @@ class spectrum:
                   \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)^2}.
 
             - If ``'MLE'``, a binned maximum likelihood estimation is performed
-              by minimizing the negative log likelihood ratio:
+              by minimizing the (doubled) negative log likelihood ratio:
 
               .. math::
 
-                  L = \\sum_i f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)
+                  L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]
 
             See `Notes` below for details.
         x_fit_cen : float [u], optional
@@ -1343,7 +1344,21 @@ class spectrum:
 
         Notes
         -----
+
+        When performing ``MLE`` fits including bins with low statistics the
+        value for chi-squared and the parameter uncertainty estimations in the
+        lmfit fit report should be taken with caution. This is because emgfit's
+        `MLE` cost function only approximates a chi-squared distribution in the
+        limit of a large number of counts in every bin ("Wick's theorem"). For
+        a detailed derivation of this statement see pp. 94-95 of these
+        `lecture slides by Mark Thompson`_.
+
+        .. _`lecture slides by Mark Thompson`: https://www.hep.phy.cam.ac.uk/~thomson/lectures/statistics/Fitting_Handout.pdf
+
         Still                                                                   #TODO
+
+
+
 
         See also
         --------
@@ -1527,6 +1542,14 @@ class spectrum:
         only the counts within the fit component of the specified peak are
         returned.
 
+        Note
+        ----
+        This routine assumes the bin width to be uniform across the spectrum.
+        The mass binning of a MAc mass spectrum is not perfectly uniform
+        (only time bins are uniform, mass bins have a marginal quadratic scaling
+        with mass). However, for isobaric species the quadratic term should
+        usually be so small that it can safely be neglected.
+
 
         Parameters
         ----------
@@ -1548,7 +1571,9 @@ class spectrum:
         area, area_err = np.nan, np.nan
         if fit_result is None:
             fit_result = self.fit_results[peak_index]
-        bin_width = self.data.index[1] - self.data.index[0] # width of mass bins, needed to convert peak amplitude (peak area in units Counts/mass range) to Counts
+        # get width of mass bins, needed to convert peak amplitude (peak area in
+        # units Counts/mass range) to Counts
+        bin_width = self.data.index[1] - self.data.index[0]
         try:
             area = fit_result.best_values[pref+'amp']/bin_width
             area = np.round(area,decimals)
@@ -1768,11 +1793,11 @@ class spectrum:
                   \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)^2}.
 
             - If ``'MLE'``, a binned maximum likelihood estimation is performed
-              by minimizing the negative log likelihood ratio:
+              by minimizing the (doubled) negative log likelihood ratio:
 
               .. math::
 
-                  L = \\sum_i f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)
+                  L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]
 
             For details see `Notes` section of :meth:`peakfit` method documentation.
         method : str, optional, default: `'least_squares'`
@@ -1979,11 +2004,11 @@ class spectrum:
                   \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)^2}.
 
             - If ``'MLE'``, a binned maximum likelihood estimation is performed
-              by minimizing the negative log likelihood ratio:
+              by minimizing the (doubled) negative log likelihood ratio:
 
               .. math::
 
-                  L = \\sum_i f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)
+                  L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]
 
             For details see `Notes` section of :meth:`peakfit` method documentation.
         init_pars : dict, optional
@@ -2236,7 +2261,6 @@ class spectrum:
         print('\nLoaded peak shape calibration from '+str(filename)+'.txt')
 
 
-    ##### Evaluate eff. mass shifts and calculate peak-shape errors
     def _eval_peakshape_errors(self,peak_indeces=[],fit_result=None,
                                verbose=False,show_shape_err_fits=False):
         """Calculate the relative peak-shape uncertainty of the specified peaks.
@@ -2257,11 +2281,12 @@ class spectrum:
 
         Note: All peaks in the specified `peak_indeces` list must
         have been fitted in the same multi-peak fit (and hence have the same
-        lmfit modelresult 'fit_result')!
+        lmfit modelresult `fit_result`)!
 
         This routine does not yield a peak-shape error for the mass calibrant,
         since this is zero by definition. Instead, for the mass calibrant the
-        absolute shifts of the peak centroid are calculated.
+        absolute shifts of the peak centroid are calculated and stored in the
+        :attr:`eff_mass_shifts_pm` and :attr:`eff_mass_shifts` dictionaries.
 
         Parameters
         ----------
@@ -2285,14 +2310,15 @@ class spectrum:
         in the peak-shape uncertainty evaluation. The peak amplitude, centroids
         and the baseline are always freely varying.
 
-        The "peak-shape uncertainty" refers to the mass error resulting from
-        uncertainties in the determination of the peak-shape parameters. Simply
-        put, the peak-shape uncertainties are estimated by evaluating how much
-        a given peak centroid is shifted when the shape parameters are varied
-        by plus or minus their 1-sigma uncertainty. A peculiarity of emgfit's
-        peak-shape error estimation routine is that only the centroid shifts
-        **relative to the calibrant** are taken into account ('effective mass
-        shifts').
+        The "peak-shape uncertainty" refers to the mass uncertainty due to
+        uncertainties in the determination of the peak-shape parameters and due
+        to deviations between the shape-calibrant and IOI peak shapes.
+        Simply put, the peak-shape uncertainties are estimated by evaluating how
+        much a given peak centroid is shifted when the shape parameters are
+        varied by plus or minus their 1-sigma uncertainty. A peculiarity of
+        emgfit's peak-shape error estimation routine is that only the centroid
+        shifts **relative to the calibrant** are taken into account (hence
+        '**effective** mass shifts').
 
         The peak-shape uncertainties are obtained via the following procedure:
 
@@ -2314,9 +2340,9 @@ class spectrum:
             parameter are stored in the spectrum's :attr:`eff_mass_shifts`
             dictionary.
           - If the calibrant is not included in the `peak_indeces` list, the
-            calibrant centroid shifts must have been obtained in a foregoing
-            mass re-calibration and the calibrant centroid shifts are taken from
-            :attr:`eff_mass_shifts_pm`.                                         #TODO add reference to mass re-calibration article!
+            calibrant centroid shifts and the corresponding shifted
+            recalibration factors must already have been obtained in a foregoing
+            mass recalibration.                                                 #TODO: add reference to mass re-calibration article!
 
         - All non-calibrant peaks referenced in `peak_indeces` are treated in a
           similar way. The original fit that yielded the specified `fit_result`
@@ -2330,8 +2356,8 @@ class spectrum:
           parameter are stored in the spectrum's :attr:`eff_mass_shifts`
           dictionary.
         - The estimates for the total peak-shape uncertainty of each peak are
-          finally obtained by adding the eff. mass shifts stored in
-          :attr:`eff_mass_shifts` in quadrature.
+          finally obtained by adding the eff. mass shifts stored in the
+          :attr:`eff_mass_shifts` dictionary in quadrature.
 
         """
         if self.shape_cal_pars is None:
@@ -2341,7 +2367,7 @@ class spectrum:
 
         if verbose:
             print('\n##### Peak-shape uncertainty evaluation #####\n')
-            print('All mass shifts below are corrected for the corresponding'
+            print('All mass shifts below are corrected for the corresponding '
                   'shifts of the calibrant peak.')
         if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
@@ -2423,8 +2449,10 @@ class spectrum:
                 plt.show()
 
             # If mass calibrant is in fit range, determine its ABSOLUTE centroid
-            # shifts first, so they can be used below for the peak-shape eval.
-            # of the peaks of interest
+            # shifts first and use them to calculate 'shifted' mass
+            # recalibration factors. The shifted recalibration factors are then
+            # used to correct IOI centroid shifts for the corresponding shifts
+            # of the mass calibrant
             # if calibrant is not in fit range, its centroid shifts must have
             # been determined in a foregoing mass re-calibration
             if mass_calib_in_range:
@@ -2440,22 +2468,22 @@ class spectrum:
                 recal_fac_p = cal_peak.m_AME/new_cen_p
                 recal_fac_m = cal_peak.m_AME/new_cen_m
                 self.recal_facs_pm[par+' recal facs pm'] = [recal_fac_p,recal_fac_m]
-                 # absolute shifts of calibrant centroid [u]:
+                 # plus and minus 1 sigma shifts of calibrant centroid [u]:
                 self.eff_mass_shifts_pm[cal_idx][par+' calibrant centroid shift pm'] = [delta_mu_p,delta_mu_m]
                 # maximal shifts of calibrant centroid [u]:
                 max_eff_mass_shifts = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item()
                 self.eff_mass_shifts[cal_idx][par+' calibrant centroid shift'] = max_eff_mass_shifts
-            else: # check if calibrant centroid shifts pre-exist, print error otherwise
+            else: # check if shifted recal. factors pre-exist, print error otherwise
                 try:
                     isinstance(self.eff_mass_shifts_pm[cal_idx][par+' calibrant centroid shift pm'],list)
                 except:
                     raise Exception(
                     '\nERROR: No calibrant centroid shifts available for '
                     'peak-shape error evaluation. Ensure that: \n'
-                    '(a) either the mass calibrant is in the fit range and specified '
-                    'with the `index_mass_calib` or `species_mass_calib` parameter, or\n'
-                    '(b) if the mass calibrant is not in the fit range, a successful '
-                    'mass calibration has been performed upfront with fit_calibrant().')
+                    '(a) either the mass calibrant is in the fit range and specified\n'
+                    '    with the `index_mass_calib` or `species_mass_calib` parameter, or\n'
+                    '(b) if the mass calibrant is not in the fit range, a successful\n'
+                    '    mass calibration has been performed upfront with fit_calibrant().')
 
             # Determine effective mass shifts
             # If calibrant is in fit range, the newly determined calibrant
@@ -2605,11 +2633,11 @@ class spectrum:
                   \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)^2}.
 
             - If ``'MLE'``, a binned maximum likelihood estimation is performed
-              by minimizing the negative log likelihood ratio:
+              by minimizing the (doubled) negative log likelihood ratio:
 
               .. math::
 
-                  L = \\sum_i f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)
+                  L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]
 
             See `Notes` of :meth:`spectrum.peakfit` for more details.
         x_fit_cen : float or None, [u], optional
@@ -2816,11 +2844,11 @@ class spectrum:
                   \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)^2}.
 
             - If ``'MLE'``, a binned maximum likelihood estimation is performed
-              by minimizing the negative log likelihood ratio:
+              by minimizing the (doubled) negative log likelihood ratio:
 
               .. math::
 
-                  L = \\sum_i f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)
+                  L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]
 
             See `Notes` of :meth:`peakfit` method for details.
         method : str, optional, default: `'least_squares'`
@@ -2926,6 +2954,12 @@ class spectrum:
         self._update_peak_props(peaks_to_fit,fit_result)
         self.show_peak_properties()
         if show_fit_report:
+            if cost_func is 'MLE':
+                print("The value for chi-squared (reduced) and the parameter "
+                      "uncertainties given below should be taken with caution "
+                      "when your MLE fit includes bins with low statistics. "
+                      "For details see Notes section in the peakfit() method "
+                      "documentation.")
             display(fit_result)
         for p in peaks_to_fit:
             self.fit_results[self.peaks.index(p)] = fit_result

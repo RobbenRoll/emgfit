@@ -7,6 +7,12 @@ cache:
     - $HOME/.cache/pip
     - $HOME/.ccache  # https://github.com/travis-ci/travis-ci/issues/5853
 
+# For automatic publishing of docs with doctr
+env:
+  global:
+    # Doctr deploy key for RobbenRoll/emgfit
+    - secure: "dcAwtAKK84p3sAGOVHCY+amQpNUzbglreiIginVJJMAyiKQFkiucFQhdRlcXbV++adt5niuxHdzZtGGtyo6rcS5ACEzibOYcvasCeJro1mshoqBXcLD4EY65+j25ooPbvDdupuACANf6sjqttjb5QgbR6pE/OBzDkVyrR/SBov3Jp8q5I5AYbD9hCqWPfzxamvZvG0k3jcSZoYN+Q/bsS46fFN7UXYZxRcn5LgNaOU9Eg6H6SJ+5y9scYKCJ1JWWnwgjdK1vdCsDLSfoqg7CS2eEzH81bCtGXD19eiKdLQfrgjb7tzGIxjhRsFQvnJ7GDpcj/2NsxQShiA21TEcqtvnhuLKKonLIHYSxIxJ5Ac+7hFUcXpjb0xyZ8S8Ue3XEdc9zWiV4UJsLzxNICau/zmcPk+pySrB0osYeIf8dBUfn8t+KgB7gIdVatg2I43ZHvZHTUnEIweKZhtrEJBgnrdEfKf5xOLDg89yE5LxgY6nKglKKyGMV5/PZrzOn2gU1Mdj/sANR5m0xBU3WZHVsyoTp0TGicMQIuWdLOWC0PPvll9HhndfwlEvkChPaQcWGtCHNUYWItd8Px/jB79G7PyyHz7FW5xRE2LkCbWdbFFF6XFlJptExHZTGBt6jPbD5az3SI9x5GHFEQk4O13M1T6co4O98GeVlsR/hpZSie4g="
+
 install:
   # Install this package and the packages listed in requirements.txt.
   - pip install .
@@ -24,4 +30,7 @@ script:
   - codecov  # Upload the report to codecov.
   # Enforce code style ('relaxed' line length limit is set in .flake8 config file).
   - flake8 . --exit-zero # Exit with status code "0" even if there are errors.
+  - set -e # exit if building docs fails
   - make -C docs html  # Build the documentation.
+  - pip install doctr
+  - doctr deploy --built-docs docs/build/html .  # Publish the documentation.      
