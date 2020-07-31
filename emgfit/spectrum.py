@@ -776,41 +776,103 @@ class spectrum:
             print("Added peak at ",x_pos," u")
 
 
-    ##### Remove peak manually
-    def remove_peak(self,peak_index=None,x_pos=None,species="?"):
-        """Remove specified peak from the :attr:`peaks` list.
+    def to_list(arg):
+        """Helper function to convert `arg` to a list
 
-        Select peak by specifying either `peak_index`, `species` label or peak
-        position `x_pos`.
+        If `arg` is already a list, it will be returned without change.
 
         Parameters
         ----------
-        peak_index : int, optional
-            Index of peak to remove from :attr:`peaks` list (0-based).
-        x_pos : float [u]
-            :attr:`x_pos` of peak to remove.
-        species : str
-            :attr:`species` label of peak to remove.
+        arg : object
+            object to convert into iterable.
+
+        Returns
+        -------
+        list
+            [arg]
+
+        """
+        try:
+            if len(arg) >= 0:
+                return arg
+        except TypeError:
+            return [arg]
+
+
+    def remove_peaks(self,peak_indeces=None,x_pos=None,species="?"):
+        """Remove specified peak(s) from the spectrum's :attr:`peaks` list.
+
+        Select the peak to be removed by specifying either the respective
+        `peak_index`, `species` label or peak marker position `x_pos`. To remove
+        multiple peaks at once, pass a list to one of the above arguments.
+
+        Parameters
+        ----------
+        peak_indeces : int or list of int, optional
+            Indeces of peak(s) to remove from the spectrum's :attr:`peaks` list
+            (0-based!).
+        x_pos : float or list of float [u]
+            :attr:`x_pos` of peak(s) to remove from the spectrum's :attr:`peaks`
+            list. Peak marker positions must be specified up to the 6th decimal.
+        species : str or list of str
+            :attr:`species` label(s) of peak(s) to remove from the spectrum's
+            :attr:`peaks` list.
 
         Note
         ----
         The current :attr:`peaks` list can be viewed by calling the
         :meth:`~spectrum.show_peak_properties` spectrum method.
 
+        Added in version 0.2.0 (as successor method to `remove_peak`)
+
         """
-        if peak_index is not None:
-            i = peak_index
-        elif species != "?":
-            i = [i for i in range(len(self.peaks)) if species == self.peaks[i].species][0] # select peak with species label 'species'
+        # Get indeces of peaks to remove
+        if peak_indeces is not None:
+            indeces = spectrum.to_list(peak_indeces)
+        elif species is not "?":
+            peaks = self.peaks
+            indeces = [i for i in range(len(peaks)) if species == peaks[i].species]
         elif x_pos:
-            i = [i for i in range(len(self.peaks)) if np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)][0] # select peak at position 'x_pos'
-        try:
-            rem_peak = self.peaks.pop(i)
-            self.fit_results.pop(i)
-            print("Removed peak at ",rem_peak.x_pos," u")
-        except:
-            print("Peak removal failed!")
-            raise
+            indeces = [i for i in range(len(self.peaks)) if np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)]
+        for i in indeces:
+            try:
+                rem_peak = self.peaks.pop(i)
+                self.fit_results.pop(i)
+                print("Removed peak at ",rem_peak.x_pos," u")
+            except:
+                print("Removal of peak {0} failed!".format(i))
+                raise
+                # TODO: Revert previous peak removals if an error is occurs
+
+
+    def remove_peak(self,peak_index=None,x_pos=None,species="?"):
+        """Remove specified peak from the spectrum's :attr:`peaks` list.
+
+        Select the peak to be removed by specifying either the respective
+        `peak_index`, `species` label or peak marker position `x_pos`.
+
+        Parameters
+        ----------
+        peak_index : int or list of int, optional
+            Indeces of peak(s) to remove from the spectrum's :attr:`peaks` list
+            (0-based!).
+        x_pos : float or list of float [u]
+            :attr:`x_pos` of peak(s) to remove from the spectrum's :attr:`peaks`
+            list. Peak marker positions must be specified up to the 6th decimal.
+        species : str or list of str
+            :attr:`species` label(s) of peak(s) to remove from the spectrum's
+            :attr:`peaks` list.
+
+        *This method is deprecated in v0.1.1 and will likely be removed in
+        future versions, use :meth:`~spectrum.remove_peaks` instead!*
+
+        """
+        import warnings
+        warnings.simplefilter('default')
+        msg = str("remove_peak is deprecated in v0.1.1 and will likely be "
+                  "removed in future versions, use remove_peaks instead!")
+        warnings.warn(msg, PendingDeprecationWarning)
+        self.remove_peaks(peak_indeces=peak_index,x_pos=x_pos,species=species)
 
 
     def show_peak_properties(self):
@@ -2368,7 +2430,7 @@ class spectrum:
         if verbose:
             print('\n##### Peak-shape uncertainty evaluation #####\n')
             print('All mass shifts below are corrected for the corresponding '
-                  'shifts of the calibrant peak.')
+                  'shifts of the calibrant peak.\n')
         if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
         pref = 'p{0}_'.format(peak_indeces[0])
@@ -2504,7 +2566,7 @@ class spectrum:
                 # effective mass shift for -1 sigma parameter variation:
                 delta_mu_m = recal_fac_m*new_cen_m - self.recal_fac*cen
                 if verbose:
-                    print(u'Re-fitting with {0} = {1: .2e} +/- {2: .2e} shifts peak {3} by {4: .3f} / {5: .3f} \u03BCu.'.format(par,self.shape_cal_pars[par],self.shape_cal_par_errors[par],peak_idx,delta_mu_p*1e06,delta_mu_m*1e06))
+                    print(u'Re-fitting with {0} ={1: .2e} +/-{2: .2e} shifts peak {3} by {4: .3f} / {5: .3f} \u03BCu.'.format(par,self.shape_cal_pars[par],self.shape_cal_par_errors[par],peak_idx,delta_mu_p*1e06,delta_mu_m*1e06))
                     if peak_idx == peak_indeces[-1]:
                         print()  # empty line between different parameter blocks
                 # shifts relative to calibrant centroid
