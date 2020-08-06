@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore", message="invalid value encountered in multiply
 warnings.filterwarnings("ignore", message="invalid value encountered in sqrt")
 warnings.filterwarnings("ignore", message="overflow encountered in multiply")
 warnings.filterwarnings("ignore", message="overflow encountered in exp")
-warnings.filterwarnings("ignore", category=RuntimeWarning)
+fwarnings.filterwarnings("ignore", category=RuntimeWarning)
 
 ################################################################################
 ##### Define peak class
@@ -282,12 +282,12 @@ class spectrum:
 
     The :attr:`default_fit_range` is scaled to the spectrum's :attr:`mass_number`
     using the relation:
-    .. math: \text{default_fit_range} = 0.01\,u \cdot (\text{mass_number}/100)
+    :math:`\text{default_fit_range} = 0.01\,u \cdot (\text{mass_number}/100)`
 
     """
     def __init__(self,filename=None,m_start=None,m_stop=None,skiprows = 18,
                  show_plot=True,df=None):
-        """Create a :class:spectrum object by importing histogrammed mass data
+        """Create a :class:`spectrum` object by importing histogrammed mass data
         from .txt or .csv file.
 
         Input file format: two-column .csv- or .txt-file with tab-separated
@@ -776,29 +776,6 @@ class spectrum:
             print("Added peak at ",x_pos," u")
 
 
-    def to_list(arg):
-        """Helper function to convert `arg` to a list
-
-        If `arg` is already a list, it will be returned without change.
-
-        Parameters
-        ----------
-        arg : object
-            object to convert into iterable.
-
-        Returns
-        -------
-        list
-            [arg]
-
-        """
-        try:
-            if len(arg) >= 0:
-                return arg
-        except TypeError:
-            return [arg]
-
-
     def remove_peaks(self,peak_indeces=None,x_pos=None,species="?"):
         """Remove specified peak(s) from the spectrum's :attr:`peaks` list.
 
@@ -818,8 +795,8 @@ class spectrum:
             :attr:`species` label(s) of peak(s) to remove from the spectrum's
             :attr:`peaks` list.
 
-        Note
-        ----
+        Notes
+        -----
         The current :attr:`peaks` list can be viewed by calling the
         :meth:`~spectrum.show_peak_properties` spectrum method.
 
@@ -828,7 +805,7 @@ class spectrum:
         """
         # Get indeces of peaks to remove
         if peak_indeces is not None:
-            indeces = spectrum.to_list(peak_indeces)
+            indeces = np.atleast_1d(peak_indeces)
         elif species is not "?":
             peaks = self.peaks
             indeces = [i for i in range(len(peaks)) if species == peaks[i].species]
@@ -863,6 +840,8 @@ class spectrum:
             :attr:`species` label(s) of peak(s) to remove from the spectrum's
             :attr:`peaks` list.
 
+        Note
+        ----
         *This method is deprecated in v0.1.1 and will likely be removed in
         future versions, use :meth:`~spectrum.remove_peaks` instead!*
 
@@ -975,7 +954,6 @@ class spectrum:
             raise
 
 
-    ##### Add peak comment manually
     def add_peak_comment(self,comment,peak_index=None,x_pos=None,species="?",
                          overwrite=False):
         """Add a comment to a peak.
@@ -1043,7 +1021,6 @@ class spectrum:
             raise Exception("TYPE ERROR: 'comment' argument must be given as type string.")
 
 
-    #####  Add peak markers to plot of a fit (only for internal use within class)
     def _add_peak_markers(self,yscale='log',ymax=None,peaks=None):
         """Internal function for adding peak markers to current figure object.
 
@@ -1185,7 +1162,6 @@ class spectrum:
         plt.show()
 
 
-    ##### Plot fit of spectrum zoomed to specified peak or specified mass range
     def plot_fit_zoom(self,peak_indeces=None,x_center=None,x_range=0.01,
                       plot_title=None,show_peak_markers=True,
                       sigmas_of_conf_band=0,plot_filename=None):
@@ -1332,7 +1308,7 @@ class spectrum:
                   \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)^2}.
 
             - If ``'MLE'``, a binned maximum likelihood estimation is performed
-              by minimizing the (doubled) negative log likelihood ratio:
+              by minimizing the (doubled) negative log-likelihood ratio:
 
               .. math::
 
@@ -1407,20 +1383,53 @@ class spectrum:
         Notes
         -----
 
+        In fits with the ``chi-square`` cost function the variance weights
+        :math:`w_i` for the residuals are estimated as the square of the model
+        predictions: :math:`w_i = 1/\sigma_i = 1/f(x_i)^2`. On each iteration
+        the weights are updated with the new values of the model function. 
+
         When performing ``MLE`` fits including bins with low statistics the
-        value for chi-squared and the parameter uncertainty estimations in the
-        lmfit fit report should be taken with caution. This is because emgfit's
-        `MLE` cost function only approximates a chi-squared distribution in the
-        limit of a large number of counts in every bin ("Wick's theorem"). For
-        a detailed derivation of this statement see pp. 94-95 of these
-        `lecture slides by Mark Thompson`_.
+        value for chi-squared as well as the parameter standard errors and
+        correlations in the lmfit fit report should be taken with caution.
+        This is because strictly speaking emgfit's ``MLE`` cost function only
+        approximates a chi-squared distribution in the limit of a large number
+        of counts in every bin ("Wick's theorem"). For a detailed derivation of
+        this statement see pp. 94-95 of these `lecture slides by Mark Thompson`_.
+        In practice and if needed, one can simply test the validity of the
+        reported fit statistic as well as parameter standard errors &
+        correlations by re-performing the same fit with `cost_func='chi-square'`
+        and comparing the results. In all tested cases decent agreement was
+        found even if the fit range contained low-statistics bins. Even if a
+        deviation occurs this is irrelevant in most pratical cases since the
+        mass errors reported in emgfit's peak properties table are independent
+        of the lmfit parameter standard errors given as additional information
+        below. Only the peak area errors are calculated using the standard
+        errors of the `amp` parameters reported by lmfit.
 
         .. _`lecture slides by Mark Thompson`: https://www.hep.phy.cam.ac.uk/~thomson/lectures/statistics/Fitting_Handout.pdf
 
-        Still                                                                   #TODO
+        Besides the asymptotic concergence to a chi-squared distribution
+        emgfit's ``MLE`` cost function has a second handy property - all
+        summands in the log-likelihood ratio are positive semi-definite:
+        :math:`L_i = f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right) \\geq 0`.
+        Exploiting this property, the minimization of the log-likelihood ratio
+        can be re-formulated into a least-squares problem:
+
+        .. math::
+
+            L = 2\\sum_i L_i = 2\\sum_i \\left( \\sqrt{ L_i } \\right)^2.
 
 
-
+        Instead of minimizing the scalar log-likelihood ratio, the sum-of-squares
+        of the square-root of the summands :math:`L_i` in the log-likelihood
+        ratio is minimized in emgfit. This facilitates the usage of Scipy's
+        highly efficient least-squares optimizers ('least_squares' & 'leastsq')
+        and leads to significant speed-ups compared to scalar optimizers such as
+        Scipy's 'Nelder-Mead' or 'Powell' methods. By default, emgfit's 'MLE'
+        fits are performed with Scipy's 'least_squares' optimizer, a variant of
+        a Levenberg-Marquardt algorithm for bound-constrained problems. For more
+        details on these optimizers see the docs of
+        :func:`lmfit.minimizer.minimize` and :class:`scipy.optimize`.
 
         See also
         --------
@@ -1483,24 +1492,25 @@ class spectrum:
                 y_m = mod_Pearson.eval(pars,x=x)
                 # Calculate weights for current iteration, non-zero upper
                 # bound of 1 implemented for numerical stability:
-                weights = np.minimum(1.,1./np.sqrt(y_m))
+                weights = 1./np.maximum(1.,np.sqrt(y_m))
                 return (y_m - y_data)*weights
             # Overwrite lmfit's standard least square residuals with iterative
             # residuals for Pearson chi-square fit
             mod_Pearson._residual = resid_Pearson_chi_square
-            out = mod_Pearson.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False,nan_policy='propagate')
+            out = mod_Pearson.fit(y, params=pars, x=x, weights=weights,
+                                  method=method, scale_covar=False,
+                                  nan_policy='propagate')
             y_m = out.best_fit
-            # Calculate final weights
-            Pearson_weights = np.minimum(1.,1./np.sqrt(y_m))
+            # Calculate final weights for plotting
+            Pearson_weights = 1./np.maximum(1.,np.sqrt(y_m))
             out.y_err = 1./Pearson_weights
         elif cost_func == 'MLE':
             ## Binned max. likelihood fit using negative log-likelihood ratio
             mod_MLE = mod
-            if method != 'least_squares':
-                raise Exception("Error: Fits with 'MLE' cost function are currently only compatible with the 'least_squares' method.")
             # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
+            # summands:
             def sqrt_NLLR(pars,y_data,weights,x=x):
-                y_m = mod_MLE.eval(pars,x=x)
+                y_m = mod_MLE.eval(pars,x=x) # model
                 # Define NLLR using np.nan_to_num to prevent non-finite values
                 # for (y_m,y_data) = (1,0), (0,0), (0,1)
                 # Set posinf = 1e300 (instead of largest float of ~1e308) to
@@ -1511,11 +1521,13 @@ class spectrum:
                     print("WARNING: Sqrt(Neg. log likelihood ratio) contains NaNs.")
                 return np.sqrt(NLLR)
             # Overwrite lmfit's standard least square residuals with the
-            # square-root of the NLLR terms, this enables usage of scipy's
+            # square-roots of the NLLR summands, this enables usage of scipy's
             # `least_squares` minimizer and yields much faster optimization
             # than with scalar minimizers
             mod_MLE._residual = sqrt_NLLR
-            out = mod_MLE.fit(y, params=pars, x=x, weights=weights, method=method, calc_covar=False, nan_policy='propagate')
+            out = mod_MLE.fit(y, params=pars, x=x, weights=weights,
+                              method=method, scale_covar=False,
+                              calc_covar=False, nan_policy='propagate')
             out.y_err = 1./out.weights
         else:
             raise Exception("Error: Definition of `cost_func` failed!")
@@ -1617,9 +1629,9 @@ class spectrum:
         ----------
         peak_index : str
             Index of peak of interest.
-        fit_result : :class:`lmfit.model.modelresult`, optional
+        fit_result : :class:`lmfit.model.ModelResult`, optional
             Fit result object to use for area calculation. If ``None`` (default)
-            use corresponding fit result stored in :attr:`fit_results` list.
+            use corresponding fit result stored in :attr:`~emgfit.spectrum.spectrum.fit_results` list.
         decimals : int
             Number of decimals of returned output values.
 
@@ -1855,7 +1867,7 @@ class spectrum:
                   \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)^2}.
 
             - If ``'MLE'``, a binned maximum likelihood estimation is performed
-              by minimizing the (doubled) negative log likelihood ratio:
+              by minimizing the (doubled) negative log-likelihood ratio:
 
               .. math::
 
@@ -2358,10 +2370,10 @@ class spectrum:
             ``peak_indeces=[0,3]``.
         fit_result : lmfit modelresult, optional
             Fit result object to evaluate peak-shape error for.
-        verbose : bool, optional, default: False                                #TODO use ``False``?
+        verbose : bool, optional, default: ``False``
             If ``True``, print all individual eff. mass shifts obtained by
             varying the shape parameters.
-        show_shape_err_fits : bool, optional, default: False                    #TODO use ``False``?
+        show_shape_err_fits : bool, optional, default: ``False``
             If ``True``, show individual plots of re-fits for peak-shape error
             determination.
 
@@ -2602,6 +2614,11 @@ class spectrum:
             for updating the calibrant properties.
 
         """
+        peak = self.peaks[index_mass_calib]
+        if peak.m_AME is None or peak.m_AME_error is None:
+            raise Exception("Mass calibration failed due to missing literature "
+                            "values for calibrant. Ensure the species of the "
+                            "calibrant peak has been assigned!")
         # Set 'mass calibrant' flag in peak comments
         for p in self.peaks: # reset 'mass calibrant' comment flag
             if 'shape & mass calibrant' in p.comment :
@@ -2610,7 +2627,6 @@ class spectrum:
                 p.comment = '-'
             elif 'mass calibrant' in p.comment:
                 p.comment = p.comment.replace('mass calibrant','')
-        peak = self.peaks[index_mass_calib]
         if 'shape calibrant' in peak.comment: # set flag
             peak.comment = peak.comment.replace('shape calibrant','shape & mass calibrant')
         elif peak.comment == '-' or peak.comment == '' or peak.comment is None:
@@ -3017,11 +3033,11 @@ class spectrum:
         self.show_peak_properties()
         if show_fit_report:
             if cost_func is 'MLE':
-                print("The value for chi-squared (reduced) and the parameter "
-                      "uncertainties given below should be taken with caution "
-                      "when your MLE fit includes bins with low statistics. "
-                      "For details see Notes section in the peakfit() method "
-                      "documentation.")
+                print("The values for chi-squared as well as the parameter "
+                      "uncertainties and correlations reported by lmfit below "
+                      "should be taken with caution when your MLE fit includes "
+                      "bins with low statistics. For details see Notes section "
+                      "in the spectrum.peakfit() method documentation.")
             display(fit_result)
         for p in peaks_to_fit:
             self.fit_results[self.peaks.index(p)] = fit_result
