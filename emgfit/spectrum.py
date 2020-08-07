@@ -20,12 +20,13 @@ import os
 import warnings
 
 # ignore irrelevant warnings by message
-warnings.filterwarnings("ignore", message="divide by zero encountered in log")
-warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
-warnings.filterwarnings("ignore", message="invalid value encountered in sqrt")
-warnings.filterwarnings("ignore", message="overflow encountered in multiply")
-warnings.filterwarnings("ignore", message="overflow encountered in exp")
-fwarnings.filterwarnings("ignore", category=RuntimeWarning)
+#warnings.filterwarnings("ignore", message="divide by zero encountered in log")
+#warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
+#warnings.filterwarnings("ignore", message="invalid value encountered in sqrt")
+#warnings.filterwarnings("ignore", message="overflow encountered in multiply")
+#warnings.filterwarnings("ignore", message="overflow encountered in exp")
+#fwarnings.filterwarnings("ignore", category=RuntimeWarning)
+
 
 ################################################################################
 ##### Define peak class
@@ -1386,7 +1387,7 @@ class spectrum:
         In fits with the ``chi-square`` cost function the variance weights
         :math:`w_i` for the residuals are estimated as the square of the model
         predictions: :math:`w_i = 1/\sigma_i = 1/f(x_i)^2`. On each iteration
-        the weights are updated with the new values of the model function. 
+        the weights are updated with the new values of the model function.
 
         When performing ``MLE`` fits including bins with low statistics the
         value for chi-squared as well as the parameter standard errors and
@@ -1493,6 +1494,7 @@ class spectrum:
                 # Calculate weights for current iteration, non-zero upper
                 # bound of 1 implemented for numerical stability:
                 weights = 1./np.maximum(1.,np.sqrt(y_m))
+
                 return (y_m - y_data)*weights
             # Overwrite lmfit's standard least square residuals with iterative
             # residuals for Pearson chi-square fit

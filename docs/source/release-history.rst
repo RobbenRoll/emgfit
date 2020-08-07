@@ -18,6 +18,8 @@ Change to current develop branch:
   ratio for MLE fit residuals (2020-07-11).
 * Made determine_A_stat_emg() method more robust (better handling of ValueErrors
   due to NaNs in fit model y-values). (2020-07-11)
+* Optimize and clean up emg_funcs, add support for Numba njit. Turn on all
+  runtime warnings.
 
 v0.1.0 (2020-06-08)
 -------------------
