@@ -20,10 +20,10 @@ import os
 import warnings
 
 # ignore irrelevant warnings by message
-warnings.filterwarnings("ignore", message="divide by zero encountered in log")
-warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
-warnings.filterwarnings("ignore", message="overflow encountered in exp")
-warnings.filterwarnings("ignore", category=RuntimeWarning)
+#warnings.filterwarnings("ignore", message="divide by zero encountered in log")
+#warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
+#warnings.filterwarnings("ignore", message="overflow encountered in exp")
+#warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 ################################################################################
 ##### Define peak class
@@ -1404,7 +1404,7 @@ class spectrum:
                 y_m = mod_Pearson.eval(pars,x=x)
                 # Calculate weights for current iteration,
                 # non-zero minimal bounds implemented for numerical stability:
-                weights = np.where(y_m<=1e-15,1,1./np.sqrt(y_m))
+                weights = 1./np.sqrt(np.maximum(1.,y_m)) #np.where(y_m<=1e-15,1,1./np.sqrt(y_m))
                 return (y_m - y_data)*weights
             # Overwrite lmfit's standard least square residuals with iterative
             # residuals for Pearson chi-square fit
@@ -1412,7 +1412,7 @@ class spectrum:
             out = mod_Pearson.fit(y, params=pars, x=x, weights=weights, method=method, scale_covar=False,nan_policy='propagate')
             y_m = out.best_fit
             # Calculate final weights
-            Pearson_weights = np.where(y_m<=1e-15,1,1./np.sqrt(y_m))
+            Pearson_weights = 1./np.sqrt(np.maximum(1.,y_m)) #np.where(y_m<=1e-15,1,1./np.sqrt(y_m))
             out.y_err = 1/Pearson_weights
         elif cost_func == 'MLE':
             ## Binned max. likelihood fit using negative log-likelihood ratio
