@@ -13,7 +13,9 @@ from numpy import exp, nan_to_num, clip, where, isfinite
 from spycial import erfc
 from math import sqrt
 from numba import njit
-
+import mpmath as mp
+erfc_mp = np.frompyfunc(mp.erfc,1,1)
+exp_mp = np.frompyfunc(mp.exp,1,1)
 ################################################################################
 ##### Define general Hyper-EMG functions
 
@@ -30,9 +32,14 @@ norm_precision = 1e-06 # level on which eta parameters must agree with unity
 
 @njit #(parallel=True)
 def h_m_i(x,mu,sigma,eta_m,tau_m):
-    """Helper function for  h_m_emg """
+    """Helper function for h_m_emg """
     ret = eta_m/(2*tau_m)*exp( (sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*erfc( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
     return ret
+
+def h_m_i_prec(x,mu,sigma,eta_m,tau_m):
+    """mpmath version of helper function for h_m_emg """
+    ret = eta_m/(2*tau_m)*exp_mp( (sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*erfc_mp( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
+    return ret.astype(float)
 
 def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
     """Negative skewed exponentially-modified Gaussian (EMG) distribution.
@@ -84,15 +91,26 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
         eta_m = li_eta_m[i]
         tau_m = li_tau_m[i]
         h_i = h_m_i(x,mu,sigma,eta_m,tau_m)
-        h_m += where(isfinite(h_i),h_i,0.)  #np.where(np.isfinite(h_m_i),h_m_i,0)
+        if np.all(np.isfinite(h_i)):
+            h_m += h_i #nan_to_num(h_i) #where(isfinite(h_i),h_i,0.)
+        else:
+            h_m += h_m_i_prec(x,mu,sigma,eta_m,tau_m)
+            print("h_m_i_prec")
+        #if not np.all(np.isfinite(h_i)):
+        #    print("m",i,h_i)
     return h_m
 
 
 @njit #(parallel=True)
 def h_p_i(x,mu,sigma,eta_p,tau_p):
-    """Helper function for  h_p_emg """
+    """Helper function for h_p_emg """
     ret = eta_p/(2*tau_p)*exp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
     return ret
+
+def h_p_i_prec(x,mu,sigma,eta_p,tau_p):
+    """mpmath version of helper function for h_p_emg """
+    ret = eta_p/(2*tau_p)*exp_mp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc_mp( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
+    return ret.astype(float)
 
 
 def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
@@ -143,7 +161,11 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
         eta_p = li_eta_p[i]
         tau_p = li_tau_p[i]
         h_i = h_p_i(x,mu,sigma,eta_p,tau_p)
-        h_p += where(isfinite(h_i),h_i,0.) #np.where(np.isfinite(h_p_i),h_p_i,0)
+        if np.all(np.isfinite(h_i)):
+            h_p += h_i #nan_to_num(h_i) #where(isfinite(h_i),h_i,0.)
+        else:
+            h_p += h_p_i_prec(x,mu,sigma,eta_p,tau_p)
+            print("h_p_i_prec")
     return h_p
 
 
@@ -203,7 +225,7 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
         h = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
     else:
         h = theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) + (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
-    return h  #clip(h,a_min=0,a_max=1e295) # clipping to avoid overflow errors
+    return h #clip(h,a_min=0,a_max=1e290) # clipping to avoid overflow errors
 
 
 def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
