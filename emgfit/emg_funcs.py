@@ -13,26 +13,28 @@ from numpy import exp, nan_to_num, clip, where, isfinite
 from spycial import erfc
 from math import sqrt
 from numba import njit
-
+import mpmath as mp
+erfc_mp = np.frompyfunc(mp.erfc,1,1)
+exp_mp = np.frompyfunc(mp.exp,1,1)
 ################################################################################
 ##### Define general Hyper-EMG functions
 
 norm_precision = 1e-06 # level on which eta parameters must agree with unity
 
-# def bounded_exp(arg):
-#     """ Numerically stable exponential function which avoids under- or overflow by setting bounds on argument
-#     """
-#     max_arg = 680 # max_arg = 600 results in maximal y-value of 3.7730203e+260
-#     min_arg = -1000000000000000000
-#     arg = np.where(arg > max_arg, max_arg, arg)
-#     arg = np.where(arg < min_arg, min_arg, arg)
-#     return np.exp(arg)
+from warnings import warn
+trunc_range = 40*2.355 # truncation range in units of sigma
+trunc_ymax = 1e-05 # maximal y-value to be truncated, raises warning if normalized y-values are lower at edges of truncation range
 
 @njit #(parallel=True)
 def h_m_i(x,mu,sigma,eta_m,tau_m):
-    """Helper function for  h_m_emg """
+    """Helper function for h_m_emg """
     ret = eta_m/(2*tau_m)*exp( (sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*erfc( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
     return ret
+
+def h_m_i_prec(x,mu,sigma,eta_m,tau_m):
+    """mpmath version of helper function for h_m_emg """
+    ret = eta_m/(2*tau_m)*exp_mp( (sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*erfc_mp( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
+    return ret.astype(float)
 
 def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
     """Negative skewed exponentially-modified Gaussian (EMG) distribution.
@@ -77,20 +79,34 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
     if len(li_tau_m) != t_order_m:  # check if all arguments match tail order
         raise Exception("orders of eta_m and tau_m do not match!")
 
+    # Create mask
+    mask = (np.abs(x - mu) < 0.5*trunc_range*sigma)
     h_m = 0.
     for i in range(t_order_m):
         eta_m = li_eta_m[i]
         tau_m = li_tau_m[i]
-        h_i = h_m_i(x,mu,sigma,eta_m,tau_m)
-        h_m += where(isfinite(h_i),h_i,0.)  #np.where(np.isfinite(h_m_i),h_m_i,0)
+        h_i = np.zeros_like(x)
+        h_i[mask] = h_m_i(x[mask],mu,sigma,eta_m,tau_m)
+        if not np.all(np.isfinite(h_i)):
+            h_i[mask] = h_m_i_prec(x[mask],mu,sigma,eta_m,tau_m)
+        if len(mask) < len(x) and np.any(h_i[mask][[0,-1]] > trunc_ymax):
+            msg = str("WARNING: h_m_emg values at edges of truncation range are > {0}. "
+                  "Consider increasing the mask range.").format(trunc_ymax)
+            warn(msg)
+        h_m += h_i
     return h_m
 
 
 @njit #(parallel=True)
 def h_p_i(x,mu,sigma,eta_p,tau_p):
-    """Helper function for  h_p_emg """
+    """Helper function for h_p_emg """
     ret = eta_p/(2*tau_p)*exp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
     return ret
+
+def h_p_i_prec(x,mu,sigma,eta_p,tau_p):
+    """mpmath version of helper function for h_p_emg """
+    ret = eta_p/(2*tau_p)*exp_mp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc_mp( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
+    return ret.astype(float)
 
 
 def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
@@ -136,12 +152,21 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
     if len(li_tau_p) != t_order_p:  # check if all arguments match tail order
         raise Exception("orders of eta_p and tau_p do not match!")
 
+   # Create mask
+    mask = (np.abs(x - mu) < 0.5*trunc_range*sigma)
     h_p = 0.
     for i in range(t_order_p):
         eta_p = li_eta_p[i]
         tau_p = li_tau_p[i]
-        h_i = h_p_i(x,mu,sigma,eta_p,tau_p)
-        h_p += where(isfinite(h_i),h_i,0.) #np.where(np.isfinite(h_p_i),h_p_i,0)
+        h_i = np.zeros_like(x)
+        h_i[mask] = h_p_i(x[mask],mu,sigma,eta_p,tau_p)
+        if not np.all(np.isfinite(h_i)):
+            h_i[mask] = h_p_i_prec(x[mask],mu,sigma,eta_p,tau_p)
+        if len(mask) < len(x) and np.any(h_i[mask][[0,-1]] > trunc_ymax):
+            msg = str("WARNING: h_p_emg values at edges of truncation range are > {0}. "
+                  "Consider increasing the mask range.").format(trunc_ymax)
+            warn(msg)
+        h_p += h_i
     return h_p
 
 
@@ -201,7 +226,7 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
         h = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
     else:
         h = theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) + (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
-    return h  #clip(h,a_min=0,a_max=1e295) # clipping to avoid overflow errors
+    return h #clip(h,a_min=0,a_max=1e290) # clipping to avoid overflow errors
 
 
 def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):

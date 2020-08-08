@@ -1101,7 +1101,8 @@ class spectrum:
         y_max_log = max( max(self.data.values[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
         y_max_lin = max( max(self.data.values[i_min:i_max]), max(fit_result.init_fit[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
         weights = 1/fit_result.y_err[i_min:i_max]
-        y_max_res = max(np.abs(fit_result.residual[i_min:i_max]/weights)) + max(fit_result.y_err[i_min:i_max])
+        print(fit_result.residual)
+        print(fit_result.best_fit)
 
         # Plot fit result with logarithmic y-scale
         f1 = plt.figure(figsize=(20,12))
@@ -1132,7 +1133,10 @@ class spectrum:
 
         # Plot residuals and fit result with linear y-scale
         standardized_residual = (fit_result.best_fit - fit_result.y)/fit_result.y_err
+        y_max_res = np.max(np.abs(standardized_residual))
         x_fine = np.arange(x_min,x_max,0.2*(fit_result.x[1]-fit_result.x[0]))
+        y_fine = fit_result.eval(x=x_fine)
+        print(y_fine)
         f2, axs = plt.subplots(2,1,figsize=(20,12),gridspec_kw={'height_ratios': [1, 2.5]})
         ax0 = axs[0]
         ax0.set_title(plot_title)
@@ -1140,7 +1144,7 @@ class spectrum:
         #ax0.hlines(1,x_min,x_max,linestyle='dashed')
         ax0.hlines(0,x_min,x_max)
         #ax0.hlines(-1,x_min,x_max,linestyle='dashed')
-        ax0.set_ylim(-1.05*np.max(np.abs(standardized_residual)), 1.05*np.max(np.abs(standardized_residual)))
+        ax0.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
         ax0.set_ylabel('Residual / $\sigma$')
         ax1 = axs[1]
         ax1.plot(x_fine, fit_result.eval(params=fit_result.init_params,x=x_fine),linestyle='dashdot',color='green',label='init-fit')
