@@ -1101,7 +1101,6 @@ class spectrum:
         y_max_log = max( max(self.data.values[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
         y_max_lin = max( max(self.data.values[i_min:i_max]), max(fit_result.init_fit[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
         weights = 1/fit_result.y_err[i_min:i_max]
-        print(fit_result.residual)
         print(fit_result.best_fit)
 
         # Plot fit result with logarithmic y-scale
@@ -1515,16 +1514,16 @@ class spectrum:
             mod_MLE = mod
             # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
             # summands:
+            tiny = np.finfo(float).tiny # get smallest pos. float in numpy
             def sqrt_NLLR(pars,y_data,weights,x=x):
                 y_m = mod_MLE.eval(pars,x=x) # model
                 # Define NLLR using np.nan_to_num to prevent non-finite values
                 # for (y_m,y_data) = (1,0), (0,0), (0,1)
-                # Set posinf = 1e300 (instead of largest float of ~1e308) to
-                # prevent overflow in subsequent calculations
-                NLLR = 2*(y_m - y_data) + np.nan_to_num(2*y_data*(np.log(y_data)-np.log(y_m)),posinf=1e300)
-                #neg_log_likelihood = np.sqrt(np.log(spl.factorial(y_data)) + y_m - y_data*np.log(y_m))
+                # Add tiniest pos. float representable by numpy to arguments of
+                # np.log to smoothly handle divergences for log(arg -> 0)
+                NLLR = 2*(y_m - y_data) + 2*y_data*(np.log(y_data+tiny)-np.log(y_m+tiny))
                 if np.isfinite(NLLR).any() is False:
-                    print("WARNING: Sqrt(Neg. log likelihood ratio) contains NaNs.")
+                    print("WARNING: Sqrt(Neg. log likelihood ratio) contains inexact values (NaN or inf).")
                 return np.sqrt(NLLR)
             # Overwrite lmfit's standard least square residuals with the
             # square-roots of the NLLR summands, this enables usage of scipy's
