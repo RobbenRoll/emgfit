@@ -9,40 +9,31 @@ import pandas as pd
 import lmfit as fit
 import scipy.constants as con
 #import scipy.special as spl
+import mpmath as mp
 from numba import njit, prange
 from spycial import erfc
 from numpy import exp
 from math import sqrt
-from numba import njit
+erfc_mp = np.frompyfunc(mp.erfc,1,1)
+exp_mp = np.frompyfunc(mp.exp,1,1)
+
 ################################################################################
 ##### Define general Hyper-EMG functions
-max_float = np.finfo(float).max
-logmax_float = np.log(max_float)
+min_yprec = 1e-06 # relative precision needed along y-axis relative to peak max.
 norm_precision = 1e-06 # level on which eta parameters must agree with unity
 
 
 @njit
-def bexp(x):
-    """exponential with upper bound to avoid overflow
-
-    `x` is limited to the value that yields the largest float representable by
-    Numpy (`max_float`), for larger `x` :func:`numpy.exp` would yield `inf`
-    whereas this function yields `max_float` (i.e. ~ 1.7e308 on usual 64-bit
-    systems.)"""
-    x = np.minimum(x,logmax_float)
-    return exp(x)
-
-@njit
 def h_m_i(x,mu,sigma,eta_m,tau_m):
     """Helper function to calculate single EMG tail for h_m_emg """
-    exp_erfc = bexp((sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m)*erfc(sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma))
-    ret = eta_m/(2*tau_m)*exp_erfc
+    ret = eta_m/(2*tau_m)*exp( (sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*erfc( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
     return ret
 
-from scipy.stats import exponnorm
-def h_m_i_stats(x,mu,sigma,eta_m,tau_m):
-    ret =  eta_m*exponnorm.pdf(x=-x,loc=-mu,scale=sigma,K=tau_m/sigma)
-    return ret
+
+def h_m_i_prec(x,mu,sigma,eta_m,tau_m):
+    """mpmath version of helper function for h_m_emg """
+    ret = eta_m/(2*tau_m)*exp_mp( (sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*erfc_mp( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
+    return ret.astype(float)
 
 
 def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
@@ -88,20 +79,39 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
     for i in prange(t_order_m):
         eta_m = li_eta_m[i]
         tau_m = li_tau_m[i]
-        h_m += h_m_i_stats(x,mu,sigma,eta_m,tau_m)
+        yvals = h_m_i(x,mu,sigma,eta_m,tau_m)
+        inexact = np.logical_or(~np.isfinite(yvals), yvals==0.)
+        if inexact.any():
+            yvals[inexact] = 0.
+            xstep = 2.355*sigma
+            n = int(np.min(np.abs(x[inexact]-mu))/xstep) + 1
+            while inexact.any():
+                #print(n)
+                mask = np.logical_and( np.abs(x - mu) < n*xstep, inexact) # select elements to handle in this iteration
+                n += 1
+                if not mask.any():
+                    continue
+                yvals[mask] = h_m_i_prec(x[mask],mu,sigma,eta_m,tau_m) # calculate precision values
+                #print(np.max(yvals[mask])/np.max(yvals))
+                if np.max(yvals[mask])/np.max(yvals) < min_yprec:
+                    #print("BREAK")
+                    break # all values in step below truncation limit
+                inexact[mask] = False # set handled elements to False to exclude them from further iterations
+        h_m += yvals #nan_to_num(h_m_i(x,mu,sigma,eta_m,tau_m)) #np.where(np.isfinite(h_m_i),h_m_i,0)
     return h_m
 
 
 @njit
 def h_p_i(x,mu,sigma,eta_p,tau_p):
     """Helper function for h_p_emg """
-    exp_erfc = bexp((sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p)*erfc(sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma))
-    ret = eta_p/(2*tau_p)*exp_erfc
+    ret = eta_p/(2*tau_p)*exp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
     return ret
 
-def h_p_i_stats(x,mu,sigma,eta_p,tau_p):
-    ret = eta_p*exponnorm.pdf(x=x,loc=mu,scale=sigma,K=tau_p/sigma)
-    return ret
+
+def h_p_i_prec(x,mu,sigma,eta_p,tau_p):
+    """mpmath version of helper function for h_p_emg """
+    ret = eta_p/(2*tau_p)*exp_mp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc_mp( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
+    return ret.astype(float)
 
 
 def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
@@ -147,7 +157,27 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
     for i in prange(t_order_p):
         eta_p = li_eta_p[i]
         tau_p = li_tau_p[i]
-        h_p += h_p_i_stats(x,mu,sigma,eta_p,tau_p)
+        yvals = h_p_i(x,mu,sigma,eta_p,tau_p)
+        inexact = np.logical_or(~np.isfinite(yvals), yvals==0.)
+        if inexact.any():
+            yvals[inexact] = 0.
+            xstep = 2.355*sigma
+            n = int(np.min(np.abs(x[inexact]-mu))/xstep) + 1
+            while inexact.any():
+                #print(n)
+                mask = np.logical_and( np.abs(x - mu) < n*xstep, inexact) # mask for elements to handle in this iteration
+                n += 1
+                if not mask.any():
+                    continue
+                yvals[mask] = h_p_i_prec(x[mask],mu,sigma,eta_p,tau_p) # calculate precision values
+                #print(np.max(yvals))
+                #print(yvals[mask])
+                #print(np.max(yvals[mask])/np.max(yvals))
+                if np.max(yvals[mask])/np.max(yvals) < min_yprec:
+                    #print("BREAK")
+                    break # all values in step below truncation limit
+                inexact[mask] = False # set handled elements to False to exclude them from further iterations
+        h_p += yvals #nan_to_num(h_m_i(x,mu,sigma,eta_m,tau_m)) #np.where(np.isfinite(h_m_i),h_m_i,0)
     return h_p
 
 
