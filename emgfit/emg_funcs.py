@@ -4,38 +4,81 @@
 
 ##### Import packages
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
 import lmfit as fit
-import scipy.constants as con
-#import scipy.special as spl
-import mpmath as mp
-from numba import njit, prange
-from spycial import erfc
 from numpy import exp
 from math import sqrt
+import scipy.special.cython_special
+from scipy.special import erfc, erfcx
+from numba.extending import get_cython_function_address
+from numba import vectorize, njit
+import ctypes
+import mpmath as mp
 erfc_mp = np.frompyfunc(mp.erfc,1,1)
 exp_mp = np.frompyfunc(mp.exp,1,1)
 
-################################################################################
-##### Define general Hyper-EMG functions
-min_yprec = 1e-06 # relative precision needed along y-axis relative to peak max.
 norm_precision = 1e-06 # level on which eta parameters must agree with unity
 
+################################################################################
+##### Define numba versions of scipy.special's erfc and erfcx functions using
+##### the corresponding C functions from scipy.special.cython_special
+erfc_addr = get_cython_function_address("scipy.special.cython_special",
+                                        "__pyx_fuse_1erfc")
+erfc_functype = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double)
+c_erfc = erfc_functype(erfc_addr)
+
+@vectorize('float64(float64)')
+def _vec_erfc(x):
+    return c_erfc(x)
+
+@njit
+def _erfc_jit(arg):
+    return _vec_erfc(arg)
+
+erfcx_addr = get_cython_function_address("scipy.special.cython_special",
+                                         "__pyx_fuse_1erfcx")
+erfcx_functype = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double)
+c_erfcx = erfcx_functype(erfcx_addr)
+
+@vectorize('float64(float64)')
+def _vec_erfcx(x):
+    return c_erfcx(x)
+
+@njit
+def _erfcx_jit(arg):
+    return _vec_erfcx(arg)
+
+
+################################################################################
+##### Define general Hyper-EMG functions
 
 @njit
 def h_m_i(x,mu,sigma,eta_m,tau_m):
-    """Helper function to calculate single EMG tail for h_m_emg """
-    ret = eta_m/(2*tau_m)*exp( (sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*erfc( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
+    """Internal helper function to calculate single negative EMG tail for
+    h_m_emg."""
+    erfcarg = np.atleast_1d(sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma))
+    mask = (erfcarg < 0)
+    ret = np.empty_like(x)
+    # Use Gauss*erfcx formulation to avoid overflow of exp and underflow of
+    # erfc at larger pos. arguments:
+    Gauss_erfcx = exp( -0.5*((x[~mask]-mu)/sigma)**2 )*_erfcx_jit(erfcarg[~mask])
+    ret[~mask] = eta_m/(2*tau_m)*Gauss_erfcx
+    # Use exp*erfc formulation to avoid overflow of erfcx at larger neg.
+    # arguments:
+    exp_erfc = exp(0.5*(sigma/tau_m)**2 + (x[mask]-mu)/tau_m)*_erfc_jit(erfcarg[mask])
+    ret[mask] = 0.5*eta_m/tau_m*exp_erfc
+
     return ret
 
 
 def h_m_i_prec(x,mu,sigma,eta_m,tau_m):
-    """mpmath version of helper function for h_m_emg """
-    ret = eta_m/(2*tau_m)*exp_mp( (sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*erfc_mp( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
+    """Arbitrary precision version of internal helper function for h_m_emg."""
+    expval = exp_mp( 0.5*(sigma/tau_m)**2 + (x-mu)/tau_m )
+    erfcval = erfc_mp( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
+    ret = 0.5*eta_m/tau_m*expval*erfcval
     return ret.astype(float)
 
 
+@njit
 def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
     """Negative skewed exponentially-modified Gaussian (EMG) distribution.
 
@@ -62,58 +105,78 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
     float
         Ordinate values of the negative skewed EMG distribution.
 
-    Note
-    ----
-    A bounded version of the exponential function is used to avoid numerical
-    overflow. This is fine in this context since the erfc-term lifts the
-    divergence of the exponential.
+    Notes
+    -----
+    Each negative tail of a Hyper-EMG function can be expressed in two
+    equivalent ways:
+
+    .. math::
+
+        h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(\\left(\\frac{x-\mu}{2\\sigma}\\right)^2)} \mathrm{erfcx}(v)
+        = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(u)} \mathrm{erfc}(v),
+
+    where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\tau_{-i}}`
+    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
+    The `exp(u)`_ routine overflows if u > 709.78. The complementary error
+    function `erfc(v)`_ underflows to 0.0 if v > 26.54. The scaled complementary
+    error function `erfcx(v)`_ overflows if v < -26.62. To circumvent those
+    scenarios and always ensure an exact result, the underlying helper function
+    for the calculation of a negative EMG tail :func:`h_m_i` uses the
+    formulation in terms of `erfcx` whenever v >= 0 and switches to the
+    `erfc`-formulation when v < 0.
+
+    .. _`exp(u)`: https://numpy.org/doc/stable/reference/generated/numpy.exp.html#numpy.exp
+    .. _`erfc(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfc.html
+    .. _`erfcx(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfcx.html
 
     """
+    li_eta_m = np.array(li_eta_m).astype(np.float_)
+    li_tau_m = np.array(li_tau_m).astype(np.float_)
     t_order_m = len(li_eta_m) # order of negative tail exponentials
-    if abs(sum(li_eta_m) - 1) > norm_precision:  # check normalization of eta_m's
+    sum_eta_m = 0.
+    for i in range(t_order_m):
+        sum_eta_m += li_eta_m[i]
+    if abs(sum_eta_m - 1) > norm_precision:  # check normalization of eta_m's
         raise Exception("eta_m's don't add up to 1.")
     if len(li_tau_m) != t_order_m:  # check if all arguments match tail order
         raise Exception("orders of eta_m and tau_m do not match!")
 
-    h_m = 0.
-    for i in prange(t_order_m):
+    h_m = np.zeros_like(x)
+    for i in range(t_order_m):
         eta_m = li_eta_m[i]
         tau_m = li_tau_m[i]
-        yvals = h_m_i(x,mu,sigma,eta_m,tau_m)
-        inexact = np.logical_or(~np.isfinite(yvals), yvals==0.)
-        if inexact.any():
-            yvals[inexact] = 0.
-            xstep = 2.355*sigma
-            n = int(np.min(np.abs(x[inexact]-mu))/xstep) + 1
-            while inexact.any():
-                #print(n)
-                mask = np.logical_and( np.abs(x - mu) < n*xstep, inexact) # select elements to handle in this iteration
-                n += 1
-                if not mask.any():
-                    continue
-                yvals[mask] = h_m_i_prec(x[mask],mu,sigma,eta_m,tau_m) # calculate precision values
-                #print(np.max(yvals[mask])/np.max(yvals))
-                if np.max(yvals[mask])/np.max(yvals) < min_yprec:
-                    #print("BREAK")
-                    break # all values in step below truncation limit
-                inexact[mask] = False # set handled elements to False to exclude them from further iterations
-        h_m += yvals #nan_to_num(h_m_i(x,mu,sigma,eta_m,tau_m)) #np.where(np.isfinite(h_m_i),h_m_i,0)
+        h_m += h_m_i(x,mu,sigma,eta_m,tau_m)
     return h_m
 
 
 @njit
 def h_p_i(x,mu,sigma,eta_p,tau_p):
-    """Helper function for h_p_emg """
-    ret = eta_p/(2*tau_p)*exp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
+    """Internal helper function to calculate single positive EMG tail for
+    h_p_emg."""
+    erfcarg = np.atleast_1d(sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma))
+    mask = (erfcarg < 0)
+    ret = np.empty_like(x)
+    # Use Gauss*erfcx formulation to avoid overflow of exp and underflow of
+    # erfc at larger pos. arguments:
+    Gauss_erfcx = exp( -0.5*((x[~mask]-mu)/sigma)**2 )*_erfcx_jit(erfcarg[~mask])
+    ret[~mask] = eta_p/(2*tau_p)*Gauss_erfcx
+    # Use exp*erfc formulation to avoid overflow of erfcx at larger neg.
+    # arguments:
+    exp_erfc = exp(0.5*(sigma/tau_p)**2 - (x[mask]-mu)/tau_p)*_erfc_jit(erfcarg[mask])
+    ret[mask] = 0.5*eta_p/tau_p*exp_erfc
+
     return ret
 
 
 def h_p_i_prec(x,mu,sigma,eta_p,tau_p):
-    """mpmath version of helper function for h_p_emg """
-    ret = eta_p/(2*tau_p)*exp_mp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc_mp( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
+    """Arbitrary precision version of internal helper function for h_p_emg."""
+    expval = exp_mp( 0.5*(sigma/tau_p)**2 - (x-mu)/tau_p )
+    erfcval = erfc_mp( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
+    ret = 0.5*eta_p/tau_p*expval*erfcval
     return ret.astype(float)
 
 
+@njit
 def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
     """Positive skewed exponentially-modified Gaussian (EMG) distribution.
 
@@ -140,47 +203,51 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
     float
         Ordinate values of the positive skewed EMG distribution.
 
-    Note
-    ----
-    A bounded version of the exponential function is used to avoid numerical
-    overflow. This is fine in this context since the erfc-term lifts the
-    divergence of the exponential.
+    Notes
+    -----
+    Each positive tail of a Hyper-EMG function can be expressed in two
+    equivalent ways:
+
+    .. math::
+
+        h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(\\left(\\frac{x-\mu}{2\\sigma}\\right)^2)} \mathrm{erfcx}(v)
+        = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(u)} \mathrm{erfc}(v),
+
+    where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\tau_{+i}}`
+    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
+    The `exp(u)`_ routine overflows if u > 709.78. The complementary error
+    function `erfc(v)`_ underflows to 0.0 if v > 26.54. The scaled complementary
+    error function `erfcx(v)`_ overflows if v < -26.62. To circumvent those
+    scenarios and always ensure an exact result, the underlying helper function
+    for the calculation of a negative EMG tail :func:`h_m_i` uses the
+    formulation in terms of `erfcx` whenever v >= 0 and switches to the
+    `erfc`-formulation when v < 0.
+
+    .. _`exp(u)`: https://numpy.org/doc/stable/reference/generated/numpy.exp.html#numpy.exp
+    .. _`erfc(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfc.html
+    .. _`erfcx(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfcx.html
 
     """
+    li_eta_p = np.array(li_eta_p).astype(np.float_)
+    li_tau_p = np.array(li_tau_p).astype(np.float_)
     t_order_p = len(li_eta_p) # order of positive tails
-    if abs(sum(li_eta_p) - 1) > norm_precision:  # check normalization of eta_p's
+    sum_eta_p = 0.
+    for i in range(t_order_p):
+        sum_eta_p += li_eta_p[i]
+    if abs(sum_eta_p - 1) > norm_precision:  # check normalization of eta_p's
         raise Exception("eta_p's don't add up to 1.")
     if len(li_tau_p) != t_order_p:  # check if all arguments match tail order
         raise Exception("orders of eta_p and tau_p do not match!")
 
-    h_p = 0.
-    for i in prange(t_order_p):
+    h_p = np.zeros_like(x)
+    for i in range(t_order_p):
         eta_p = li_eta_p[i]
         tau_p = li_tau_p[i]
-        yvals = h_p_i(x,mu,sigma,eta_p,tau_p)
-        inexact = np.logical_or(~np.isfinite(yvals), yvals==0.)
-        if inexact.any():
-            yvals[inexact] = 0.
-            xstep = 2.355*sigma
-            n = int(np.min(np.abs(x[inexact]-mu))/xstep) + 1
-            while inexact.any():
-                #print(n)
-                mask = np.logical_and( np.abs(x - mu) < n*xstep, inexact) # mask for elements to handle in this iteration
-                n += 1
-                if not mask.any():
-                    continue
-                yvals[mask] = h_p_i_prec(x[mask],mu,sigma,eta_p,tau_p) # calculate precision values
-                #print(np.max(yvals))
-                #print(yvals[mask])
-                #print(np.max(yvals[mask])/np.max(yvals))
-                if np.max(yvals[mask])/np.max(yvals) < min_yprec:
-                    #print("BREAK")
-                    break # all values in step below truncation limit
-                inexact[mask] = False # set handled elements to False to exclude them from further iterations
-        h_p += yvals #nan_to_num(h_m_i(x,mu,sigma,eta_m,tau_m)) #np.where(np.isfinite(h_m_i),h_m_i,0)
+        h_p += h_p_i(x,mu,sigma,eta_p,tau_p)
     return h_p
 
 
+@njit
 def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     """Hyper-exponentially-modified Gaussian distribution (hyper-EMG).
 
@@ -212,16 +279,21 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
         Tuple containing the pos. tail decay constants with the signature:
         ``(tau_p1, tau_p2, ...)``.
 
+    Notes
+    -----
+    The total hyper-EMG distribution `h_m_emg` is comprised of the negative- and
+    positive-skewed EMG distributions `h_m_emg` and `h_p_emg` respectively and
+    is calculated as:
+    ``h_emg(x, mu, sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p) =``
+    ``theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) +
+    (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)``.
+
+    For algorithmic details, see `Notes` of :func:`h_m_emg` and :func:`h_p_emg`.
+
     Returns
     -------
     float
-        Ordinate of hyper-EMG distribution.
-
-    Note
-    ----
-    A bounded version of the exponential function is used to avoid numerical
-    overflow. This is fine in this context since the erfc-term lifts the
-    divergence of the exponential.
+        Ordinate of hyper-EMG distribution
 
     See also
     --------
@@ -234,7 +306,9 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     elif theta == 0:
         h = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
     else:
-        h = theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) + (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
+        neg_tail = h_m_emg(x, mu, sigma, li_eta_m, li_tau_m)
+        pos_tail = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
+        h = theta*neg_tail + (1-theta)*pos_tail
     return h
 
 
@@ -302,18 +376,18 @@ def sigma_emg(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     theta : float, 0 <= theta <= 1
         Left-right-weight factor (negative-skewed EMG weight: theta;
         positive-skewed EMG weight: 1 - theta).
-        li_eta_m : tuple
-            Tuple containing the neg. tail weights with the signature:
-            ``(eta_m1, eta_m2, ...)``.
-        li_tau_m : tuple
-            Tuple containing the neg. tail decay constants with the signature:
-            ``(tau_m1, tau_m2, ...)``.
-        li_eta_p : tuple
-            Tuple containing the pos. tail weights with the signature:
-            ``(eta_p1, eta_p2, ...)``.
-        li_tau_p : tuple
-            Tuple containing the pos. tail decay constants with the signature:
-            ``(tau_p1, tau_p2, ...)``.
+    li_eta_m : tuple
+        Tuple containing the neg. tail weights with the signature:
+        ``(eta_m1, eta_m2, ...)``.
+    li_tau_m : tuple
+        Tuple containing the neg. tail decay constants with the signature:
+        ``(tau_m1, tau_m2, ...)``.
+    li_eta_p : tuple
+        Tuple containing the pos. tail weights with the signature:
+        ``(eta_p1, eta_p2, ...)``.
+    li_tau_p : tuple
+        Tuple containing the pos. tail decay constants with the signature:
+        ``(tau_p1, tau_p2, ...)``.
 
     Returns
     -------
