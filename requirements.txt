@@ -9,6 +9,7 @@ ipython
 ipykernel
 numdifftools >= 0.9.39
 jupyter
+numba
 emcee >= 3.0
 corner
 tqdm

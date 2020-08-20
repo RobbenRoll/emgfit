@@ -17,16 +17,6 @@ import emgfit.emg_funcs as emg_funcs
 import emgfit.fit_models as fit_models
 import lmfit as fit
 import os
-import warnings
-
-# ignore irrelevant warnings by message
-#warnings.filterwarnings("ignore", message="divide by zero encountered in log")
-#warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
-#warnings.filterwarnings("ignore", message="invalid value encountered in sqrt")
-#warnings.filterwarnings("ignore", message="overflow encountered in multiply")
-#warnings.filterwarnings("ignore", message="overflow encountered in exp")
-#fwarnings.filterwarnings("ignore", category=RuntimeWarning)
-
 
 ################################################################################
 ##### Define peak class
@@ -1101,8 +1091,6 @@ class spectrum:
         y_max_log = max( max(self.data.values[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
         y_max_lin = max( max(self.data.values[i_min:i_max]), max(fit_result.init_fit[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
         weights = 1/fit_result.y_err[i_min:i_max]
-        print(fit_result.residual)
-        print(fit_result.best_fit)
 
         # Plot fit result with logarithmic y-scale
         f1 = plt.figure(figsize=(20,12))
@@ -1136,7 +1124,6 @@ class spectrum:
         y_max_res = np.max(np.abs(standardized_residual))
         x_fine = np.arange(x_min,x_max,0.2*(fit_result.x[1]-fit_result.x[0]))
         y_fine = fit_result.eval(x=x_fine)
-        print(y_fine)
         f2, axs = plt.subplots(2,1,figsize=(20,12),gridspec_kw={'height_ratios': [1, 2.5]})
         ax0 = axs[0]
         ax0.set_title(plot_title)
@@ -1492,6 +1479,7 @@ class spectrum:
         # Perform fit, print fit report
         if cost_func == 'chi-square':
             ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x_i))
+            ## Weights have a lower bound of 1
             mod_Pearson = mod
             def resid_Pearson_chi_square(pars,y_data,weights,x=x):
                 y_m = mod_Pearson.eval(pars,x=x)
@@ -1515,17 +1503,16 @@ class spectrum:
             mod_MLE = mod
             # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
             # summands:
+            tiny = np.finfo(float).tiny # get smallest pos. float in numpy
             def sqrt_NLLR(pars,y_data,weights,x=x):
                 y_m = mod_MLE.eval(pars,x=x) # model
                 # Define NLLR using np.nan_to_num to prevent non-finite values
                 # for (y_m,y_data) = (1,0), (0,0), (0,1)
-                # Set posinf = 1e300 (instead of largest float of ~1e308) to
-                # prevent overflow in subsequent calculations
-                NLLR = 2*(y_m - y_data) + np.nan_to_num(2*y_data*(np.log(y_data)-np.log(y_m)),posinf=1e300)
-                #neg_log_likelihood = np.sqrt(np.log(spl.factorial(y_data)) + y_m - y_data*np.log(y_m))
-                if np.isfinite(NLLR).any() is False:
-                    print("WARNING: Sqrt(Neg. log likelihood ratio) contains NaNs.")
-                return np.sqrt(NLLR)
+                # Add tiniest pos. float representable by numpy to arguments of
+                # np.log to smoothly handle divergences for log(arg -> 0)
+                NLLR = 2*(y_m-y_data) + 2*y_data*(np.log(y_data+tiny)-np.log(y_m+tiny))
+                ret = np.sqrt(NLLR)
+                return ret
             # Overwrite lmfit's standard least square residuals with the
             # square-roots of the NLLR summands, this enables usage of scipy's
             # `least_squares` minimizer and yields much faster optimization

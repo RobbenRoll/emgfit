@@ -3,7 +3,7 @@ Release History
 ===============
 
 Change to current develop branch:
---------------------------------
+---------------------------------
 * Improved calculation of effective mass shifts in peak-shape error
   determination (_eval_peak_shape_errors() method). The IOI mass shifts are now
   corrected for shifts of the calibrant mass using shifted mass re-calibration
