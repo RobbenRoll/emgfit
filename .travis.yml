@@ -34,5 +34,5 @@ script:
   - make -C docs html  # Build the documentation.
   - pip install doctr
   - DEPLOY_DIR="$TRAVIS_TAG";
-  - doctr deploy $DEPLOY_DIR --built-docs docs/build/ --build-tags --branch-whitelist # Publish the documentation, only for new version tags.      
+  - doctr deploy --build-tags --built-docs docs/build/ $DEPLOY_DIR --branch-whitelist # Publish the documentation, only for new version tags.     
 
