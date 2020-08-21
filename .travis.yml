@@ -33,5 +33,5 @@ script:
   - set -e # exit if building docs fails
   - make -C docs html  # Build the documentation.
   - pip install doctr
-  - DEPLOY_DIR="version-$TRAVIS_TAG";
-  - doctr deploy --build-tags --built-docs docs/build/html . # Publish the documentation, only for new version tags.      
+  - DEPLOY_DIR="$TRAVIS_TAG";
+  - doctr deploy $DEPLOY_DIR --built-docs docs/build/ --build-tags --branch-whitelist # Publish the documentation, only for new version tags.      
