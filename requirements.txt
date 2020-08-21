@@ -9,8 +9,10 @@ ipython
 ipykernel
 numdifftools >= 0.9.39
 jupyter
+numba
+mpmath
 emcee >= 3.0
 corner
 tqdm
 xlsxwriter >= 1.2.8
-#xlrd >= 1.2.0
+xlrd >= 1.0.0
