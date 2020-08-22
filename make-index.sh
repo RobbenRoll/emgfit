@@ -1,8 +1,6 @@
 #!/bin/bash
 
-ROOT=/
-HTTP="/"
-OUTPUT="index.html" 
+OUTPUT="index.html"
 
 
 echo "<!DOCTYPE html><html lang="en"><head><title>emgfit documentation</title><link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet"><style type="text/css">body {" > $OUTPUT
@@ -22,9 +20,10 @@ echo "}</style></head><body><h1>emgfit documentation</h1>" >> $OUTPUT
 
 i=0
 echo "<UL>" >> $OUTPUT
-for filepath in `find "$ROOT" -maxdepth 1 -mindepth 1 -type d| sort`; do
+for filepath in `find . -maxdepth 1 -mindepth 1 -type d \( ! -path '*/.*' \)| sort`; do
   path=`basename "$filepath"`
-  echo "  <LI><a href=\"/$path\">$path</a></LI>" >> $OUTPUT
+  echo $filepath
+  echo "  <LI><a href=\"./$path/index.html\">$path</a></LI>" >> $OUTPUT
 done
 echo "</UL>" >> $OUTPUT
 echo "</ul></body></html>" >> $OUTPUT
