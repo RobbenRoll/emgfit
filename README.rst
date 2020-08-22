@@ -12,7 +12,7 @@ emgfit
 Fitting of MR-TOF mass spectra with Hyper-EMG models
 
 * Free software: 3-clause BSD license
-* Online documentation: (COMING SOON!) https://RobbenRoll.github.io/emgfit.
+* Online documentation: https://RobbenRoll.github.io/emgfit.
 
 `emgfit` is a Python package for peak fitting of MR-TOF mass spectra with
 hyper-exponentially modified Gaussian (Hyper-EMG) model functions. `emgfit` is a
@@ -41,4 +41,4 @@ standard tool in the data science community. The usage and capabilities of
 `emgfit` are best explored by looking at the tutorial. The tutorial and more
 details can be found in the `documentation of emgfit`_.
 
-.. _documentation of emgfit: docs/source/index.rst
+.. _documentation of emgfit: https://RobbenRoll.github.io/emgfit
