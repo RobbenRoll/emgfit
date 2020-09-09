@@ -2,10 +2,10 @@
 Release History
 ===============
 
-v0.2.0 (2020-08-20):
----------------------------------
+v0.2.0 (2020-09-08):
+--------------------
 * Improved numerical robustness and speed of Hyper-EMG functions in emg_funcs
-  module. The improved routines avoid arithmetic overflow of exp() or underflow 
+  module. The improved routines avoid arithmetic overflow of exp() or underflow
   of erfc().
 * Improved calculation of effective mass shifts in peak-shape error
   determination (_eval_peak_shape_errors() method). The IOI mass shifts are now
