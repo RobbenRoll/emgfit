@@ -1,0 +1,536 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>emgfit.emg_funcs &mdash; emgfit 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> emgfit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Getting started with emgfit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../emgfit_tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Central concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">emgfit API docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">emgfit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>emgfit.emg_funcs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for emgfit.emg_funcs</h1><div class="highlight"><pre>
+<span></span><span class="c1">################################################################################</span>
+<span class="c1">##### Module with general Hyper-EMG functions</span>
+<span class="c1">##### Author: Stefan Paul</span>
+
+<span class="c1">##### Import packages</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">lmfit</span> <span class="k">as</span> <span class="nn">fit</span>
+<span class="kn">import</span> <span class="nn">scipy.constants</span> <span class="k">as</span> <span class="nn">con</span>
+<span class="kn">import</span> <span class="nn">scipy.special</span> <span class="k">as</span> <span class="nn">spl</span>
+<span class="c1">#import numexpr as ne</span>
+<span class="c1">#ne.set_vml_accuracy_mode(&#39;high&#39;)</span>
+<span class="c1">#from numba import jit, prange</span>
+
+<span class="c1">################################################################################</span>
+<span class="c1">##### Define general Hyper-EMG functions </span>
+<span class="c1"># from numba import vectorize, float64</span>
+<span class="c1"># import math</span>
+<span class="c1"># @vectorize([float64(float64)])</span>
+<span class="c1"># def math_erfc(x):</span>
+<span class="c1">#     return math.erfc(x)</span>
+<span class="c1"># import mpmath as mp</span>
+<span class="c1"># import gmpy2</span>
+<span class="c1"># np_exp = np.frompyfunc(gmpy2.exp,1,1)   #np.frompyfunc(mp.fp.exp,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )</span>
+<span class="c1"># np_erfc = np.frompyfunc(gmpy2.erfc,1,1)   #np.frompyfunc(mp.fp.erfc,1,1) # convert mp.exp function to numpy function, avoids error in lmfit.Model( ... )</span>
+<span class="n">norm_precision</span> <span class="o">=</span> <span class="mi">6</span> <span class="c1"># number of decimals on which eta parameters have to agree with unity (avoids numerical errors due to rounding)</span>
+
+<div class="viewcode-block" id="bounded_exp"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.bounded_exp">[docs]</a><span class="k">def</span> <span class="nf">bounded_exp</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Numerically stable exponential function which avoids under- or overflow by setting bounds on argument</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">max_arg</span> <span class="o">=</span> <span class="mi">680</span> <span class="c1"># max_arg = 600 results in maximal y-value of 3.7730203e+260</span>
+    <span class="n">min_arg</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1000000000000000000</span>
+    <span class="n">arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">arg</span> <span class="o">&gt;</span> <span class="n">max_arg</span><span class="p">,</span> <span class="n">max_arg</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span>
+    <span class="n">arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">arg</span> <span class="o">&lt;</span> <span class="n">min_arg</span><span class="p">,</span> <span class="n">min_arg</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span></div>
+
+<span class="c1"># def exp_erfc_m(x,mu,sigma,tau_m):</span>
+<span class="c1">#     val = np_exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*np_erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) )</span>
+<span class="c1">#     return np.float(val)</span>
+<span class="c1"># vect_exp_erfc_m = np.vectorize(exp_erfc_m)</span>
+<span class="c1">#</span>
+<span class="c1"># def exp_erfc_p(x,mu,sigma,tau_p):</span>
+<span class="c1">#     val = np_exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*np_erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) )</span>
+<span class="c1">#     return np.float(val)</span>
+<span class="c1"># vect_exp_erfc_p = np.vectorize(exp_erfc_p)</span>
+
+<div class="viewcode-block" id="h_m_emg"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.h_m_emg">[docs]</a><span class="k">def</span> <span class="nf">h_m_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="o">*</span><span class="n">t_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Negative skewed exponentially-modified Gaussian (EMG) distribution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x  : float &gt;= 0</span>
+<span class="sd">        Abscissa data (mass data).</span>
+<span class="sd">    mu : float &gt;= 0</span>
+<span class="sd">        Mean value of underlying Gaussian distribution.</span>
+<span class="sd">    sigma : float &gt;= 0</span>
+<span class="sd">        Standard deviation of underlying Gaussian distribution.</span>
+<span class="sd">    t_args : :class:`tuple`, :class:`tuple`</span>
+<span class="sd">        Two variable-length tuples of neg. tail shape arguments with the</span>
+<span class="sd">        signature: ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...)``.</span>
+<span class="sd">        The length of the tuples must match and defines the order of neg. tails.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Ordinate values of the negative skewed EMG distribution.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Depending on the choice of parameters, numerical artifacts (multiplications</span>
+<span class="sd">    by infinity due to overflow of :func:`numpy.exp` for arguments &gt; 709.7) can</span>
+<span class="sd">    result in non-finite values for ``h_m`` (see code below).</span>
+<span class="sd">    These numerical artifacts are handled by setting non-finite ``h_m`` values</span>
+<span class="sd">    to ``0``. A different option would be the usage of a package with arbitrary</span>
+<span class="sd">    precision float numbers (e.g. mpmath). However, the latter would yield</span>
+<span class="sd">    extremely long computation times.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">li_eta_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">li_tau_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">t_order_m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span> <span class="c1"># order of negative tail exponentials</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="n">norm_precision</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>  <span class="c1"># check normalization of eta_m&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_m&#39;s don&#39;t add up to 1.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_tau_m</span><span class="p">)</span> <span class="o">!=</span> <span class="n">t_order_m</span><span class="p">:</span>  <span class="c1"># check if all arguments match tail order</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;orders of eta_m and tau_m do not match!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># @jit(parallel=True, fastmath=True)</span>
+    <span class="c1"># def calc_tails_m():</span>
+    <span class="c1">#     for i in prange(t_order_m):</span>
+    <span class="c1">#         h_m = np.array([0])</span>
+    <span class="c1">#         eta_m = li_eta_m[i]</span>
+    <span class="c1">#         tau_m = li_tau_m[i]</span>
+    <span class="c1">#         val = eta_m/(2*tau_m)*np.exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*math_erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) )</span>
+    <span class="c1">#         h_m += np.where(np.isfinite(val), val, np.zeros_like(val))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)</span>
+    <span class="c1">#         return h_m</span>
+    <span class="c1"># h_m = calc_tails_m()</span>
+
+    <span class="n">h_m</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_m</span><span class="p">):</span>
+        <span class="n">eta_m</span> <span class="o">=</span> <span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">tau_m</span> <span class="o">=</span> <span class="n">li_tau_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">h_m_i</span> <span class="o">=</span> <span class="n">eta_m</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">tau_m</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span> <span class="p">(</span><span class="n">sigma</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">tau_m</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">tau_m</span> <span class="p">)</span><span class="o">*</span><span class="n">spl</span><span class="o">.</span><span class="n">erfc</span><span class="p">(</span> <span class="n">sigma</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">tau_m</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="p">)</span> <span class="p">)</span>
+        <span class="c1">#erfc_i = spl.erfc(sigma/(np.sqrt(2)*tau_m))</span>
+        <span class="c1">#h_m_i = ne.evaluate(&#39;eta_m/(2*tau_m)*exp( (sigma/(sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*erfc_i + (x-mu)/(sqrt(2)*sigma)&#39;,optimization=&#39;moderate&#39;)</span>
+        <span class="n">h_m</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">h_m_i</span><span class="p">),</span><span class="n">h_m_i</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="c1">#np.nan_to_num(eta_m/(2*tau_m)*np.exp( (sigma/(np.sqrt(2)*tau_m))**2 + (x-mu)/tau_m )*spl.erfc( sigma/(np.sqrt(2)*tau_m) + (x-mu)/(np.sqrt(2)*sigma) ))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)</span>
+    <span class="c1"># print(&quot;h_m:&quot;+str(h_m))</span>
+    <span class="k">return</span> <span class="n">h_m</span></div>
+
+<span class="c1"># Define positive skewed exponentially-modified Gaussian particle distribution function (PS-EMG PDF)</span>
+<div class="viewcode-block" id="h_p_emg"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.h_p_emg">[docs]</a><span class="k">def</span> <span class="nf">h_p_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="o">*</span><span class="n">t_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Positive skewed exponentially-modified Gaussian (EMG) distribution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x  : float &gt;= 0</span>
+<span class="sd">        Abscissa data (mass data).</span>
+<span class="sd">    mu : float &gt;= 0</span>
+<span class="sd">        Mean value of underlying Gaussian distribution.</span>
+<span class="sd">    sigma : float &gt;= 0</span>
+<span class="sd">        Standard deviation of underlying Gaussian distribution.</span>
+<span class="sd">    t_args : :class:`tuple`, :class:`tuple`</span>
+<span class="sd">        Two variable-length tuples of pos. tail shape arguments with</span>
+<span class="sd">        the signature:</span>
+<span class="sd">        ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...)``.</span>
+<span class="sd">        The length of the tuples must match and defines the order of pos. tails.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Ordinate values of the positive skewed EMG distribution.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Depending on the choice of parameters, numerical artifacts (multiplications</span>
+<span class="sd">    by infinity due to overflow of :func:`numpy.exp` for arguments &gt; 709.7) can</span>
+<span class="sd">    result in non-finite values for ``h_p`` (see code below).</span>
+<span class="sd">    These numerical artifacts are handled by setting non-finite ``h_p`` values</span>
+<span class="sd">    to ``0``. A different option would be the usage of a package with arbitrary</span>
+<span class="sd">    precision float numbers (e.g. mpmath). However, the latter would yield</span>
+<span class="sd">    extremely long computation times.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">li_eta_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">li_tau_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">t_order_p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span> <span class="c1"># order of positive tails</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="n">norm_precision</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>  <span class="c1"># check normalization of eta_p&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_p&#39;s don&#39;t add up to 1.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_tau_p</span><span class="p">)</span> <span class="o">!=</span> <span class="n">t_order_p</span><span class="p">:</span>  <span class="c1"># check if all arguments match tail order</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;orders of eta_p and tau_p do not match!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># @jit(parallel=True,fastmath=True)</span>
+    <span class="c1"># def calc_tails_p():</span>
+    <span class="c1">#     for i in prange(t_order_p):</span>
+    <span class="c1">#         h_p = np.array([0.])</span>
+    <span class="c1">#         eta_p = li_eta_p[i]</span>
+    <span class="c1">#         tau_p = li_tau_p[i]</span>
+    <span class="c1">#         val = eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*math_erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) )</span>
+    <span class="c1">#         h_p += np.where(np.isfinite(val), val, np.zeros_like(val))  # eta_m/(2*tau_m)*vect_exp_erfc_m(x,mu,sigma,tau_m)</span>
+    <span class="c1">#         # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)</span>
+    <span class="c1">#         return h_p</span>
+    <span class="c1"># h_p = calc_tails_p()</span>
+
+    <span class="n">h_p</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_p</span><span class="p">):</span>
+        <span class="n">eta_p</span> <span class="o">=</span> <span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">tau_p</span> <span class="o">=</span> <span class="n">li_tau_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">h_p_i</span> <span class="o">=</span> <span class="n">eta_p</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">tau_p</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span> <span class="p">(</span><span class="n">sigma</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">tau_p</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">tau_p</span> <span class="p">)</span><span class="o">*</span><span class="n">spl</span><span class="o">.</span><span class="n">erfc</span><span class="p">(</span> <span class="n">sigma</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">tau_p</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="p">)</span> <span class="p">)</span>
+        <span class="c1">#erfc_i = spl.erfc(sigma/(np.sqrt(2)*tau_p))</span>
+        <span class="c1">#h_p_i = ne.evaluate(&#39;eta_p/(2*tau_p)*exp( (sigma/(sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*erfc_i - (x-mu)/(sqrt(2)*sigma)&#39;,optimization=&#39;moderate&#39;)</span>
+        <span class="n">h_p</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">h_p_i</span><span class="p">),</span><span class="n">h_p_i</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="c1">#np.nan_to_num(eta_p/(2*tau_p)*np.exp( (sigma/(np.sqrt(2)*tau_p))**2 - (x-mu)/tau_p )*spl.erfc( sigma/(np.sqrt(2)*tau_p) - (x-mu)/(np.sqrt(2)*sigma) ))  # eta_p/(2*tau_p)*vect_exp_erfc_p(x,mu,sigma,tau_p)</span>
+    <span class="c1"># print(&quot;h_p:&quot;+str(h_p))</span>
+    <span class="k">return</span> <span class="n">h_p</span></div>
+
+
+<div class="viewcode-block" id="h_emg"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.h_emg">[docs]</a><span class="k">def</span> <span class="nf">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span> <span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="o">*</span><span class="n">t_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Hyper-exponentially-modified Gaussian distribution (hyper-EMG).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x  : float &gt;= 0</span>
+<span class="sd">        Abscissa data (mass data).</span>
+<span class="sd">    mu : float &gt;= 0</span>
+<span class="sd">        Mean value of underlying Gaussian distribution.</span>
+<span class="sd">    sigma : float &gt;= 0</span>
+<span class="sd">        Standard deviation of underlying Gaussian distribution.</span>
+<span class="sd">    theta : float, 0 &lt;= theta &lt;= 1</span>
+<span class="sd">        Left-right-weight factor (negative-skewed EMG weight: theta;</span>
+<span class="sd">        positive-skewed EMG weight: 1 - theta).</span>
+<span class="sd">    t_args : :class:`tuple`, :class:`tuple`, :class:`tuple`, :class:`tuple`</span>
+<span class="sd">        Four variable-length tuples of neg. and pos. tail shape arguments with</span>
+<span class="sd">        the signature: ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...), (eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...)``.</span>
+<span class="sd">        The length of the first and last two tuples defines the order of neg.</span>
+<span class="sd">        and pos. tails, respectively.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Ordinate of hyper-EMG distribution.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Depending on the choice of parameters, numerical artifacts (due to overflow</span>
+<span class="sd">    of :func:`numpy.exp` for arguments &gt;709.7) could result in non-finite return</span>
+<span class="sd">    values for :func:`h_m_emg` and :func:`h_p_emg` (and thus for :func:`h_emg`).</span>
+<span class="sd">    See docs of :func:`h_m_emg` &amp; :func:`h_p_emg` for how those artifacts are</span>
+<span class="sd">    handled.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :func:`h_m_emg`</span>
+<span class="sd">    :func:`h_p_emg`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">li_eta_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">li_tau_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">li_eta_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">li_tau_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">theta</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">h_m_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">theta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">h_p_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">theta</span><span class="o">*</span><span class="n">h_m_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="n">h_p_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span><span class="p">)</span>
+        <span class="c1">#h_m = h_m_emg(x, mu, sigma, li_eta_m, li_tau_m)</span>
+        <span class="c1">#h_p = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)</span>
+        <span class="c1">#h = ne.evaluate(&#39;theta*h_m + (1-theta)*h_p&#39;,optimization=&#39;moderate&#39;)</span>
+    <span class="k">return</span>  <span class="n">h</span> <span class="c1">#np.clip(h,a_min=None,a_max=1e295) # clipping to avoid overflow errors</span>
+    <span class="sd">&quot;&quot;&quot;if isinstance(x,np.ndarray):</span>
+<span class="sd">        h = np.array([])</span>
+<span class="sd">        for x_i in x:</span>
+<span class="sd">            if (x_i - mu)/sigma &lt; 5:</span>
+<span class="sd">                li_eta_m = t_args[0]</span>
+<span class="sd">                li_tau_m = t_args[1]</span>
+<span class="sd">                li_eta_p = t_args[2]</span>
+<span class="sd">                li_tau_p = t_args[3]</span>
+<span class="sd">                h = np.append(h ,theta*h_m_emg(x_i, mu, sigma, li_eta_m, li_tau_m) + (1-theta)*h_p_emg(x_i, mu, sigma, li_eta_p, li_tau_p) )</span>
+<span class="sd">            else:</span>
+<span class="sd">                h = np.append(h, 0)</span>
+<span class="sd">        return h&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="mu_emg"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.mu_emg">[docs]</a><span class="k">def</span> <span class="nf">mu_emg</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">theta</span><span class="p">,</span><span class="o">*</span><span class="n">t_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate mean of hyper-EMG distribution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mu : float &gt;= 0</span>
+<span class="sd">        Mean value of underlying Gaussian distribution.</span>
+<span class="sd">    theta : float, 0 &lt;= theta &lt;= 1</span>
+<span class="sd">        Left-right-weight factor (negative-skewed EMG weight: theta;</span>
+<span class="sd">        positive-skewed EMG weight: 1 - theta).</span>
+<span class="sd">    t_args : :class:`tuple`, :class:`tuple`, :class:`tuple`, :class:`tuple`</span>
+<span class="sd">        Four variable-length tuples of neg. and pos. tail shape arguments with</span>
+<span class="sd">        the signature: ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...), (eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Mean of hyper-EMG distribution.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">li_eta_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="n">norm_precision</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>  <span class="c1"># check normalization of eta_m&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_m&#39;s don&#39;t add up to 1&quot;</span><span class="p">)</span>
+    <span class="n">li_tau_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">t_order_m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span>
+    <span class="n">sum_M_mh</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_m</span><span class="p">):</span>
+        <span class="n">sum_M_mh</span> <span class="o">+=</span> <span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">li_tau_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="n">li_eta_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="n">norm_precision</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>  <span class="c1"># check normalization of eta_p&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_p&#39;s don&#39;t add up to 1&quot;</span><span class="p">)</span>
+    <span class="n">li_tau_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">t_order_p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span>
+    <span class="n">sum_M_ph</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_p</span><span class="p">):</span>
+        <span class="n">sum_M_ph</span> <span class="o">+=</span> <span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">li_tau_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">mu</span> <span class="o">-</span> <span class="n">theta</span><span class="o">*</span><span class="n">sum_M_mh</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="n">sum_M_ph</span></div>
+
+
+<div class="viewcode-block" id="sigma_emg"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.sigma_emg">[docs]</a><span class="k">def</span> <span class="nf">sigma_emg</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span><span class="n">theta</span><span class="p">,</span><span class="o">*</span><span class="n">t_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate standard deviation of hyper-EMG distribution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sigma : float &gt;= 0</span>
+<span class="sd">        Standard deviation of underlying Gaussian distribution.</span>
+<span class="sd">    theta : float, 0 &lt;= theta &lt;= 1</span>
+<span class="sd">        Left-right-weight factor (negative-skewed EMG weight: theta;</span>
+<span class="sd">        positive-skewed EMG weight: 1 - theta).</span>
+<span class="sd">    t_args : :class:`tuple`, :class:`tuple`, :class:`tuple`, :class:`tuple`</span>
+<span class="sd">        Four variable-length tuples of neg. and pos. tail shape arguments with</span>
+<span class="sd">        the signature: ``(eta_m1, eta_m2, ...), (tau_m1, tau_m2, ...), (eta_p1, eta_p2, ...), (tau_p1, tau_p2, ...)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Standard deviation of hyper-EMG distribution.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">li_eta_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="n">norm_precision</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>  <span class="c1"># check normalization of eta_m&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_m&#39;s don&#39;t add up to 1&quot;</span><span class="p">)</span>
+    <span class="n">li_tau_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">t_order_m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span>
+
+    <span class="n">sum_M_mh</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">sum_S_mh</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_m</span><span class="p">):</span>
+        <span class="n">sum_M_mh</span> <span class="o">+=</span> <span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span> <span class="n">li_tau_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">sum_S_mh</span> <span class="o">+=</span> <span class="p">(</span><span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">li_tau_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="n">li_eta_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="n">norm_precision</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>  <span class="c1"># check normalization of eta_p&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_p&#39;s don&#39;t add up to 1&quot;</span><span class="p">)</span>
+    <span class="n">li_tau_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">t_order_p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span>
+    <span class="n">sum_M_ph</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">sum_S_ph</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_p</span><span class="p">):</span>
+        <span class="n">sum_M_ph</span> <span class="o">+=</span> <span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span> <span class="n">li_tau_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">sum_S_ph</span> <span class="o">+=</span> <span class="p">(</span><span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">li_tau_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="n">S_h</span> <span class="o">=</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">theta</span><span class="o">*</span><span class="n">sum_S_mh</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="n">sum_S_ph</span> <span class="o">+</span> <span class="n">theta</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">sum_M_mh</span> <span class="o">+</span> <span class="n">sum_M_ph</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">S_h</span><span class="p">)</span></div>
+
+
+<span class="c1">################################################################################</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Stefan Paul
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

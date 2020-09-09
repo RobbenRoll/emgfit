@@ -1,0 +1,1256 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorial &mdash; emgfit 0.post56.dev0+g63c5afc documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> emgfit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.post56.dev0+g63c5afc
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Getting started with emgfit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="emgfit_tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Central concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">emgfit API docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="min_versions.html">Minimum Version of Python and NumPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">emgfit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Tutorial</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tutorial.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<p>The following tutorial file will give you an introduction to fitting a mass
+spectrum with <cite>emgfit</cite>:</p>
+<p>At first emgfit has to be imported</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">emgfit</span> <span class="k">as</span> <span class="nn">emg</span>
+<span class="c1">### Import mass data, plot full spectrum and choose fit range</span>
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;2019-09-13_004-_006 SUMMED High stats 62Ga&quot;</span> <span class="c1"># input file (as exported with MAc&#39;s hist-mode)</span>
+<span class="n">skiprows</span> <span class="o">=</span> <span class="mi">38</span> <span class="c1"># number of header rows to skip upon data import</span>
+<span class="n">m_start</span> <span class="o">=</span> <span class="mf">61.9243</span> <span class="c1"># low-mass cut off</span>
+<span class="n">m_stop</span> <span class="o">=</span> <span class="mf">61.962</span> <span class="c1"># high-mass cut off</span>
+<span class="n">spec</span> <span class="o">=</span> <span class="n">emg</span><span class="o">.</span><span class="n">spectrum</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s1">&#39;.txt&#39;</span><span class="p">,</span><span class="n">m_start</span><span class="p">,</span><span class="n">m_stop</span><span class="p">,</span><span class="n">skiprows</span><span class="o">=</span><span class="n">skiprows</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/tutorial_0_0.png" src="_images/tutorial_0_0.png" />
+</div>
+</div>
+<p>heading</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">### Detect peaks and add them to spectrum object &#39;spec&#39;</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">detect_peaks</span><span class="p">()</span> <span class="c1"># automatic peak detection</span>
+<span class="c1">#spec.add_peak(61.925,species=&#39;?&#39;) # manually add a peak at x_pos = 61.925u</span>
+<span class="c1">#spec.remove_peak(peak_index=0) # manually remove the peak with index 0</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/tutorial_1_0.png" src="_images/tutorial_1_0.png" />
+<img alt="_images/tutorial_1_1.png" src="_images/tutorial_1_1.png" />
+<img alt="_images/tutorial_1_2.png" src="_images/tutorial_1_2.png" />
+<img alt="_images/tutorial_1_3.png" src="_images/tutorial_1_3.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Peak properties table after peak detection:
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x_pos</th>
+      <th>species</th>
+      <th>comment</th>
+      <th>m_AME</th>
+      <th>m_AME_error</th>
+      <th>extrapolated</th>
+      <th>fit_model</th>
+      <th>cost_func</th>
+      <th>red_chi</th>
+      <th>area</th>
+      <th>area_error</th>
+      <th>m_fit</th>
+      <th>rel_stat_error</th>
+      <th>rel_recal_error</th>
+      <th>rel_peakshape_error</th>
+      <th>rel_mass_error</th>
+      <th>A</th>
+      <th>atomic_ME_keV</th>
+      <th>mass_error_keV</th>
+      <th>m_dev_keV</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>61.927800</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>61.932021</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>61.934369</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>61.943618</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>61.946994</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>61.949527</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>61.956611</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>61.958997</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>heading</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span><span class="o">.</span><span class="n">assign_species</span><span class="p">([</span><span class="s1">&#39;Ni62:-1e&#39;</span><span class="p">,</span><span class="s1">&#39;Cu62:-1e&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="s1">&#39;Ga62:-1e&#39;</span><span class="p">,</span><span class="s1">&#39;Ti46:O16:-1e&#39;</span><span class="p">,</span><span class="s1">&#39;Sc46:O16:-1e&#39;</span><span class="p">,</span><span class="s1">&#39;Ca43:F19:-1e&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">])</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">add_peak_comment</span><span class="p">(</span><span class="s1">&#39;Non-isobaric&#39;</span><span class="p">,</span><span class="n">peak_index</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">show_peak_properties</span><span class="p">()</span> <span class="c1"># check the changes by printing the peak properties table</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Species of peak 0 assigned as Ni62:-1e
+Species of peak 1 assigned as Cu62:-1e
+Species of peak 3 assigned as Ga62:-1e
+Species of peak 4 assigned as Ti46:O16:-1e
+Species of peak 5 assigned as Sc46:O16:-1e
+Species of peak 6 assigned as Ca43:F19:-1e
+Comment of peak 2 was changed to:  Non-isobaric
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x_pos</th>
+      <th>species</th>
+      <th>comment</th>
+      <th>m_AME</th>
+      <th>m_AME_error</th>
+      <th>extrapolated</th>
+      <th>fit_model</th>
+      <th>cost_func</th>
+      <th>red_chi</th>
+      <th>area</th>
+      <th>area_error</th>
+      <th>m_fit</th>
+      <th>rel_stat_error</th>
+      <th>rel_recal_error</th>
+      <th>rel_peakshape_error</th>
+      <th>rel_mass_error</th>
+      <th>A</th>
+      <th>atomic_ME_keV</th>
+      <th>mass_error_keV</th>
+      <th>m_dev_keV</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>61.927800</td>
+      <td>Ni62:-1e</td>
+      <td>-</td>
+      <td>61.927796</td>
+      <td>4.700000e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>61.932021</td>
+      <td>Cu62:-1e</td>
+      <td>-</td>
+      <td>61.932046</td>
+      <td>6.940000e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>61.934369</td>
+      <td>?</td>
+      <td>Non-isobaric</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>NaN</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>61.943618</td>
+      <td>Ga62:-1e</td>
+      <td>-</td>
+      <td>61.943641</td>
+      <td>6.940000e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>61.946994</td>
+      <td>Ti46:O16:-1e</td>
+      <td>-</td>
+      <td>61.946993</td>
+      <td>1.760001e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>61.949527</td>
+      <td>Sc46:O16:-1e</td>
+      <td>-</td>
+      <td>61.949534</td>
+      <td>7.320000e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>61.956611</td>
+      <td>Ca43:F19:-1e</td>
+      <td>-</td>
+      <td>61.956621</td>
+      <td>2.440018e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>61.958997</td>
+      <td>?</td>
+      <td>-</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>NaN</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<blockquote>
+<div><p>heading</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#spec.determine_peak_shape(species_shape_calib=&#39;Ca43:F19:-1e&#39;) # default settings and automatic model selection</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">determine_peak_shape</span><span class="p">(</span><span class="n">species_shape_calib</span><span class="o">=</span><span class="s1">&#39;Ca43:F19:-1e&#39;</span><span class="p">,</span><span class="n">x_fit_range</span><span class="o">=</span><span class="mf">0.0045</span><span class="p">)</span> <span class="c1"># user-defined fit range</span>
+<span class="c1">#spec.determine_peak_shape(species_shape_calib=&#39;Ca43:F19:-1e&#39;,fit_model=&#39;emg12&#39;,vary_tail_order=False) # user-defined model</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
+##### Determine optimal tail order #####
+
+
+### Fitting data with Gaussian ###---------------------------------------------------------------------------------------------
+
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_1.png" src="_images/tutorial_3_1.png" />
+<img alt="_images/tutorial_3_2.png" src="_images/tutorial_3_2.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
+Gaussian-fit yields reduced chi-square of: 45.57 +- 0.13
+
+
+### Fitting data with emg01 ###---------------------------------------------------------------------------------------------
+
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_4.png" src="_images/tutorial_3_4.png" />
+<img alt="_images/tutorial_3_5.png" src="_images/tutorial_3_5.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
+emg01-fit yields reduced chi-square of: 13.79 +- 0.13
+
+
+### Fitting data with emg10 ###---------------------------------------------------------------------------------------------
+
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_7.png" src="_images/tutorial_3_7.png" />
+<img alt="_images/tutorial_3_8.png" src="_images/tutorial_3_8.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
+emg10-fit yields reduced chi-square of: 45.96 +- 0.13
+
+
+### Fitting data with emg11 ###---------------------------------------------------------------------------------------------
+
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_10.png" src="_images/tutorial_3_10.png" />
+<img alt="_images/tutorial_3_11.png" src="_images/tutorial_3_11.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
+emg11-fit yields reduced chi-square of: 2.6 +- 0.13
+
+
+### Fitting data with emg12 ###---------------------------------------------------------------------------------------------
+
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_13.png" src="_images/tutorial_3_13.png" />
+<img alt="_images/tutorial_3_14.png" src="_images/tutorial_3_14.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
+emg12-fit yields reduced chi-square of: 1.22 +- 0.13
+
+
+### Fitting data with emg21 ###---------------------------------------------------------------------------------------------
+
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_16.png" src="_images/tutorial_3_16.png" />
+<img alt="_images/tutorial_3_17.png" src="_images/tutorial_3_17.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
+emg21-fit yields reduced chi-square of: 1.47 +- 0.13
+
+
+### Fitting data with emg22 ###---------------------------------------------------------------------------------------------
+
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_19.png" src="_images/tutorial_3_19.png" />
+<img alt="_images/tutorial_3_20.png" src="_images/tutorial_3_20.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
+emg22-fit yields reduced chi-square of: 0.96 +- 0.13
+
+
+### Fitting data with emg23 ###---------------------------------------------------------------------------------------------
+
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_22.png" src="_images/tutorial_3_22.png" />
+<img alt="_images/tutorial_3_23.png" src="_images/tutorial_3_23.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>WARNING: p6_eta_m1 = 0.891 +- 2.086  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_m2 = 0.109 +- 2.086  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p1 = 0.443 +- 6.292  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p2 = 0.458 +- 4.68  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p3 = 0.099 +- 6.292  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+
+emg23-fit yields reduced chi-square of: 0.98 +- 0.13
+
+
+### Fitting data with emg32 ###---------------------------------------------------------------------------------------------
+
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_25.png" src="_images/tutorial_3_25.png" />
+<img alt="_images/tutorial_3_26.png" src="_images/tutorial_3_26.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>WARNING: p6_eta_m3 = 0.007 +- 0.1  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+
+emg32-fit yields reduced chi-square of: 0.98 +- 0.13
+
+
+### Fitting data with emg33 ###---------------------------------------------------------------------------------------------
+
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_28.png" src="_images/tutorial_3_28.png" />
+<img alt="_images/tutorial_3_29.png" src="_images/tutorial_3_29.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>WARNING: p6_eta_m1 = 0.872 +- 4.49  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_m2 = 0.119 +- 4.168  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_m3 = 0.009 +- 4.49  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p1 = 0.442 +- 12.792  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p2 = 0.461 +- 9.645  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p3 = 0.097 +- 12.792  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+
+emg33-fit yields reduced chi-square of: 0.99 +- 0.14
+
+
+##### RESULT OF AUTOMATIC MODEL SELECTION: #####
+
+    Best fit model determined to be: emg22
+    Corresponding chi²-reduced: 0.96 
+
+
+##### Peak-shape determination #####-------------------------------------------------------------------------------------------
+</pre></div>
+</div>
+<img alt="_images/tutorial_3_31.png" src="_images/tutorial_3_31.png" />
+<img alt="_images/tutorial_3_32.png" src="_images/tutorial_3_32.png" />
+<div class="output text_html"><h2> Model</h2> (Model(constant, prefix='bkg_') + Model(emg22, prefix='p6_')) <h2>Fit Statistics</h2><table><tr><td>fitting method</td><td>least_squares</td><td></td></tr><tr><td># function evals</td><td>18</td><td></td></tr><tr><td># data points</td><td>123</td><td></td></tr><tr><td># variables</td><td>11</td><td></td></tr><tr><td>chi-square</td><td> 107.821079</td><td></td></tr><tr><td>reduced chi-square</td><td> 0.96268820</td><td></td></tr><tr><td>Akaike info crit.</td><td> 5.79952458</td><td></td></tr><tr><td>Bayesian info crit.</td><td> 36.7335525</td><td></td></tr></table><h2>Variables</h2><table><tr><th> name </th><th> value </th><th> standard error </th><th> relative error </th><th> initial value </th><th> min </th><th> max </th><th> vary </th><th> expression </th></tr><tr><td> bkg_c </td><td>  0.93751705 </td><td>  0.21448563 </td><td> (22.88%) </td><td> 0.1 </td><td>  0.00000000 </td><td>  4.00000000 </td><td> True </td><td>  </td></tr><tr><td> p6_amp </td><td>  0.95184911 </td><td>  0.00599045 </td><td> (0.63%) </td><td> 0.8422080000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p6_mu </td><td>  61.9566396 </td><td>  4.0323e-06 </td><td> (0.00%) </td><td> 61.95661076349748 </td><td>  61.9466108 </td><td>  61.9666108 </td><td> True </td><td>  </td></tr><tr><td> p6_sigma </td><td>  8.3414e-05 </td><td>  2.9557e-06 </td><td> (3.54%) </td><td> 8.68e-05 </td><td>  0.00000000 </td><td>  0.00508680 </td><td> True </td><td>  </td></tr><tr><td> p6_theta </td><td>  0.72471396 </td><td>  0.02349105 </td><td> (3.24%) </td><td> 0.5 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> True </td><td>  </td></tr><tr><td> p6_eta_m1 </td><td>  0.92019054 </td><td>  0.02313117 </td><td> (2.51%) </td><td> 0.85 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> True </td><td>  </td></tr><tr><td> p6_eta_m2 </td><td>  0.07980946 </td><td>  0.02313117 </td><td> (28.98%) </td><td> 0.15000000000000002 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_m1 </td></tr><tr><td> p6_tau_m1 </td><td>  4.4900e-05 </td><td>  5.8778e-06 </td><td> (13.09%) </td><td> 3.1e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> True </td><td>  </td></tr><tr><td> p6_tau_m2 </td><td>  1.7683e-04 </td><td>  2.4817e-05 </td><td> (14.03%) </td><td> 0.00031 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> True </td><td>  </td></tr><tr><td> p6_eta_p1 </td><td>  0.79009179 </td><td>  0.04493382 </td><td> (5.69%) </td><td> 0.85 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> True </td><td>  </td></tr><tr><td> p6_eta_p2 </td><td>  0.20990821 </td><td>  0.04493382 </td><td> (21.41%) </td><td> 0.15000000000000002 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_p1 </td></tr><tr><td> p6_tau_p1 </td><td>  1.2412e-04 </td><td>  1.3320e-05 </td><td> (10.73%) </td><td> 3.1e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> True </td><td>  </td></tr><tr><td> p6_tau_p2 </td><td>  4.0762e-04 </td><td>  5.4796e-05 </td><td> (13.44%) </td><td> 0.000372 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> True </td><td>  </td></tr></table><h2>Correlations (unreported correlations are < 0.100)</h2><table><tr><td>p6_eta_m1</td><td>p6_tau_m2</td><td>0.9505</td></tr><tr><td>p6_eta_p1</td><td>p6_tau_p2</td><td>0.9227</td></tr><tr><td>p6_theta</td><td>p6_tau_p1</td><td>0.8417</td></tr><tr><td>p6_sigma</td><td>p6_tau_m1</td><td>-0.8158</td></tr><tr><td>p6_eta_m1</td><td>p6_tau_m1</td><td>0.7745</td></tr><tr><td>p6_tau_p1</td><td>p6_tau_p2</td><td>0.7729</td></tr><tr><td>p6_eta_p1</td><td>p6_tau_p1</td><td>0.7297</td></tr><tr><td>p6_tau_m1</td><td>p6_tau_m2</td><td>0.7147</td></tr><tr><td>p6_mu</td><td>p6_tau_m1</td><td>0.7090</td></tr><tr><td>p6_mu</td><td>p6_eta_m1</td><td>0.6226</td></tr><tr><td>p6_sigma</td><td>p6_theta</td><td>0.6097</td></tr><tr><td>p6_mu</td><td>p6_tau_m2</td><td>0.5369</td></tr><tr><td>p6_sigma</td><td>p6_tau_p1</td><td>0.5313</td></tr><tr><td>p6_mu</td><td>p6_theta</td><td>0.5166</td></tr><tr><td>p6_theta</td><td>p6_tau_p2</td><td>0.4898</td></tr><tr><td>bkg_c</td><td>p6_tau_m2</td><td>-0.4616</td></tr><tr><td>p6_sigma</td><td>p6_eta_m1</td><td>-0.4114</td></tr><tr><td>bkg_c</td><td>p6_tau_p2</td><td>-0.4083</td></tr><tr><td>p6_sigma</td><td>p6_tau_m2</td><td>-0.4033</td></tr><tr><td>bkg_c</td><td>p6_eta_m1</td><td>-0.3728</td></tr><tr><td>p6_mu</td><td>p6_tau_p1</td><td>0.3425</td></tr><tr><td>p6_theta</td><td>p6_eta_p1</td><td>0.3425</td></tr><tr><td>p6_mu</td><td>p6_sigma</td><td>-0.2865</td></tr><tr><td>bkg_c</td><td>p6_eta_p1</td><td>-0.2755</td></tr><tr><td>p6_mu</td><td>p6_tau_p2</td><td>0.2750</td></tr><tr><td>p6_tau_m1</td><td>p6_tau_p1</td><td>-0.2464</td></tr><tr><td>p6_sigma</td><td>p6_tau_p2</td><td>0.2342</td></tr><tr><td>bkg_c</td><td>p6_mu</td><td>-0.2259</td></tr><tr><td>bkg_c</td><td>p6_tau_m1</td><td>-0.2253</td></tr><tr><td>p6_theta</td><td>p6_tau_m1</td><td>-0.1926</td></tr><tr><td>p6_mu</td><td>p6_eta_p1</td><td>0.1784</td></tr><tr><td>bkg_c</td><td>p6_tau_p1</td><td>-0.1740</td></tr><tr><td>bkg_c</td><td>p6_amp</td><td>-0.1418</td></tr><tr><td>p6_tau_m2</td><td>p6_tau_p2</td><td>0.1390</td></tr><tr><td>p6_sigma</td><td>p6_eta_p1</td><td>0.1320</td></tr><tr><td>p6_eta_m1</td><td>p6_tau_p2</td><td>0.1272</td></tr></table></div></div>
+</div>
+<p>heading</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Maximum likelihood fit of all peaks in the spectrum</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">fit_peaks</span><span class="p">(</span><span class="n">species_mass_calib</span><span class="o">=</span><span class="s1">&#39;Ti46:O16:-1e&#39;</span><span class="p">)</span>
+<span class="c1"># Alternative: Fit restricted to a user-defined mass range</span>
+<span class="c1">#spec.fit_peaks(species_mass_calib=&#39;Ti46:O16:-1e&#39;,x_fit_cen=61.9455,x_fit_range=0.01)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/tutorial_4_0.png" src="_images/tutorial_4_0.png" />
+<img alt="_images/tutorial_4_1.png" src="_images/tutorial_4_1.png" />
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
+##### Mass recalibration #####
+
+
+Relative literature error of mass calibrant:    3e-09
+Relative statistical error of mass calibrant:   1.1e-08
+
+Recalibration factor:      0.999999711 = 1 -2.89e-07
+Relative recalibration error:  1.1e-08 
+
+
+##### Peak-shape uncertainty evaluation #####
+
+Determining absolute centroid shifts of mass calibrant.
+
+</pre></div>
+</div>
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Re-fitting with  sigma  =  8.3e-05 +/- 3e-06  shifts Δm of peak 0 and mass calibrant by 0.497351 / -0.268 μu. 
+Re-fitting with  sigma  =  8.3e-05 +/- 3e-06  shifts Δm of peak 1 and mass calibrant by 1.419093 / -0.367 μu. 
+Re-fitting with  sigma  =  8.3e-05 +/- 3e-06  shifts Δm of peak 2 and mass calibrant by -0.124145 / 0.337 μu. 
+Re-fitting with  sigma  =  8.3e-05 +/- 3e-06  shifts Δm of peak 3 and mass calibrant by 0.009668 / 0.025 μu. 
+Re-fitting with  sigma  =  8.3e-05 +/- 3e-06  shifts Δm of peak 5 and mass calibrant by -0.014 / 0.002 μu. 
+Re-fitting with  sigma  =  8.3e-05 +/- 3e-06  shifts Δm of peak 6 and mass calibrant by 0.011673 / -0.032 μu. 
+Re-fitting with  sigma  =  8.3e-05 +/- 3e-06  shifts Δm of peak 7 and mass calibrant by -1.469091 / 0.908 μu. 
+
+</pre></div>
+</div>
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Re-fitting with  theta  =  0.724714 +/- 0.023491  shifts Δm of peak 0 and mass calibrant by -1.447894 / 1.312 μu. 
+Re-fitting with  theta  =  0.724714 +/- 0.023491  shifts Δm of peak 1 and mass calibrant by -1.406527 / 1.334 μu. 
+Re-fitting with  theta  =  0.724714 +/- 0.023491  shifts Δm of peak 2 and mass calibrant by -0.434006 / 0.331 μu. 
+Re-fitting with  theta  =  0.724714 +/- 0.023491  shifts Δm of peak 3 and mass calibrant by -0.254027 / 0.14 μu. 
+Re-fitting with  theta  =  0.724714 +/- 0.023491  shifts Δm of peak 5 and mass calibrant by -0.269747 / 0.237 μu. 
+Re-fitting with  theta  =  0.724714 +/- 0.023491  shifts Δm of peak 6 and mass calibrant by -0.090195 / 0.031 μu. 
+Re-fitting with  theta  =  0.724714 +/- 0.023491  shifts Δm of peak 7 and mass calibrant by -1.874815 / 1.815 μu. 
+
+</pre></div>
+</div>
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Re-fitting with  eta_m1  =  0.920191 +/- 0.023131  shifts Δm of peak 0 and mass calibrant by 0.789394 / -0.741 μu. 
+Re-fitting with  eta_m1  =  0.920191 +/- 0.023131  shifts Δm of peak 1 and mass calibrant by 0.461701 / -0.356 μu. 
+Re-fitting with  eta_m1  =  0.920191 +/- 0.023131  shifts Δm of peak 2 and mass calibrant by 0.451256 / -0.44 μu. 
+Re-fitting with  eta_m1  =  0.920191 +/- 0.023131  shifts Δm of peak 3 and mass calibrant by 0.404974 / -0.411 μu. 
+Re-fitting with  eta_m1  =  0.920191 +/- 0.023131  shifts Δm of peak 5 and mass calibrant by 0.307791 / -0.254 μu. 
+Re-fitting with  eta_m1  =  0.920191 +/- 0.023131  shifts Δm of peak 6 and mass calibrant by 0.014113 / -0.104 μu. 
+Re-fitting with  eta_m1  =  0.920191 +/- 0.023131  shifts Δm of peak 7 and mass calibrant by 0.687914 / -0.701 μu. 
+
+</pre></div>
+</div>
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Re-fitting with  tau_m1  =  4.5e-05 +/- 6e-06  shifts Δm of peak 0 and mass calibrant by -0.57012 / 0.613 μu. 
+Re-fitting with  tau_m1  =  4.5e-05 +/- 6e-06  shifts Δm of peak 1 and mass calibrant by 0.842104 / 0.017 μu. 
+Re-fitting with  tau_m1  =  4.5e-05 +/- 6e-06  shifts Δm of peak 2 and mass calibrant by -0.310449 / 0.48 μu. 
+Re-fitting with  tau_m1  =  4.5e-05 +/- 6e-06  shifts Δm of peak 3 and mass calibrant by -0.122483 / 0.103 μu. 
+Re-fitting with  tau_m1  =  4.5e-05 +/- 6e-06  shifts Δm of peak 5 and mass calibrant by -0.211685 / 0.112 μu. 
+Re-fitting with  tau_m1  =  4.5e-05 +/- 6e-06  shifts Δm of peak 6 and mass calibrant by -0.031523 / -0.011 μu. 
+Re-fitting with  tau_m1  =  4.5e-05 +/- 6e-06  shifts Δm of peak 7 and mass calibrant by -2.051389 / 1.601 μu. 
+
+</pre></div>
+</div>
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Re-fitting with  tau_m2  =  0.000177 +/- 2.5e-05  shifts Δm of peak 0 and mass calibrant by -0.292169 / 0.398 μu. 
+Re-fitting with  tau_m2  =  0.000177 +/- 2.5e-05  shifts Δm of peak 1 and mass calibrant by -0.191013 / 0.302 μu. 
+Re-fitting with  tau_m2  =  0.000177 +/- 2.5e-05  shifts Δm of peak 2 and mass calibrant by -0.207079 / 0.247 μu. 
+Re-fitting with  tau_m2  =  0.000177 +/- 2.5e-05  shifts Δm of peak 3 and mass calibrant by -0.198827 / 0.265 μu. 
+Re-fitting with  tau_m2  =  0.000177 +/- 2.5e-05  shifts Δm of peak 5 and mass calibrant by -0.079733 / 0.189 μu. 
+Re-fitting with  tau_m2  =  0.000177 +/- 2.5e-05  shifts Δm of peak 6 and mass calibrant by -0.040283 / 0.025 μu. 
+Re-fitting with  tau_m2  =  0.000177 +/- 2.5e-05  shifts Δm of peak 7 and mass calibrant by 0.104562 / 0.023 μu. 
+
+</pre></div>
+</div>
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Re-fitting with  eta_p1  =  0.790092 +/- 0.044934  shifts Δm of peak 0 and mass calibrant by -0.25787 / 0.127 μu. 
+Re-fitting with  eta_p1  =  0.790092 +/- 0.044934  shifts Δm of peak 1 and mass calibrant by -0.30804 / 0.236 μu. 
+Re-fitting with  eta_p1  =  0.790092 +/- 0.044934  shifts Δm of peak 2 and mass calibrant by -0.266946 / 0.17 μu. 
+Re-fitting with  eta_p1  =  0.790092 +/- 0.044934  shifts Δm of peak 3 and mass calibrant by -0.253966 / 0.15 μu. 
+Re-fitting with  eta_p1  =  0.790092 +/- 0.044934  shifts Δm of peak 5 and mass calibrant by -0.234102 / 0.188 μu. 
+Re-fitting with  eta_p1  =  0.790092 +/- 0.044934  shifts Δm of peak 6 and mass calibrant by 0.005052 / -0.022 μu. 
+Re-fitting with  eta_p1  =  0.790092 +/- 0.044934  shifts Δm of peak 7 and mass calibrant by -3.950558 / 3.447 μu. 
+
+</pre></div>
+</div>
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Re-fitting with  tau_p1  =  0.000124 +/- 1.3e-05  shifts Δm of peak 0 and mass calibrant by 0.599944 / -0.879 μu. 
+Re-fitting with  tau_p1  =  0.000124 +/- 1.3e-05  shifts Δm of peak 1 and mass calibrant by 0.623284 / -0.843 μu. 
+Re-fitting with  tau_p1  =  0.000124 +/- 1.3e-05  shifts Δm of peak 2 and mass calibrant by 0.381975 / -0.49 μu. 
+Re-fitting with  tau_p1  =  0.000124 +/- 1.3e-05  shifts Δm of peak 3 and mass calibrant by 0.214752 / -0.268 μu. 
+Re-fitting with  tau_p1  =  0.000124 +/- 1.3e-05  shifts Δm of peak 5 and mass calibrant by 0.04681 / -0.092 μu. 
+Re-fitting with  tau_p1  =  0.000124 +/- 1.3e-05  shifts Δm of peak 6 and mass calibrant by -0.039735 / -0.043 μu. 
+Re-fitting with  tau_p1  =  0.000124 +/- 1.3e-05  shifts Δm of peak 7 and mass calibrant by 0.724091 / -0.84 μu. 
+
+</pre></div>
+</div>
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Re-fitting with  tau_p2  =  0.000408 +/- 5.5e-05  shifts Δm of peak 0 and mass calibrant by -0.047889 / -0.028 μu. 
+Re-fitting with  tau_p2  =  0.000408 +/- 5.5e-05  shifts Δm of peak 1 and mass calibrant by 0.075925 / -0.105 μu. 
+Re-fitting with  tau_p2  =  0.000408 +/- 5.5e-05  shifts Δm of peak 2 and mass calibrant by 0.019801 / -0.089 μu. 
+Re-fitting with  tau_p2  =  0.000408 +/- 5.5e-05  shifts Δm of peak 3 and mass calibrant by 0.053686 / -0.141 μu. 
+Re-fitting with  tau_p2  =  0.000408 +/- 5.5e-05  shifts Δm of peak 5 and mass calibrant by 0.39755 / -0.396 μu. 
+Re-fitting with  tau_p2  =  0.000408 +/- 5.5e-05  shifts Δm of peak 6 and mass calibrant by -0.049006 / 0.027 μu. 
+Re-fitting with  tau_p2  =  0.000408 +/- 5.5e-05  shifts Δm of peak 7 and mass calibrant by 5.770581 / -7.819 μu. 
+
+Relative peak-shape error of peak 0: 3.4e-08
+Relative peak-shape error of peak 1: 3.9e-08
+Relative peak-shape error of peak 2: 1.7e-08
+Relative peak-shape error of peak 3: 1.1e-08
+Relative peak-shape error of peak 5: 1.1e-08
+Relative peak-shape error of peak 6: 3e-09
+Relative peak-shape error of peak 7: 1.51e-07
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x_pos</th>
+      <th>species</th>
+      <th>comment</th>
+      <th>m_AME</th>
+      <th>m_AME_error</th>
+      <th>extrapolated</th>
+      <th>fit_model</th>
+      <th>cost_func</th>
+      <th>red_chi</th>
+      <th>area</th>
+      <th>area_error</th>
+      <th>m_fit</th>
+      <th>rel_stat_error</th>
+      <th>rel_recal_error</th>
+      <th>rel_peakshape_error</th>
+      <th>rel_mass_error</th>
+      <th>A</th>
+      <th>atomic_ME_keV</th>
+      <th>mass_error_keV</th>
+      <th>m_dev_keV</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>61.927800</td>
+      <td>Ni62:-1e</td>
+      <td>-</td>
+      <td>61.927796</td>
+      <td>4.700000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>0.57</td>
+      <td>34.28</td>
+      <td>5.57</td>
+      <td>61.927803</td>
+      <td>3.442326e-07</td>
+      <td>1.129785e-08</td>
+      <td>3.363411e-08</td>
+      <td>3.460563e-07</td>
+      <td>62.0</td>
+      <td>-66740.227</td>
+      <td>19.962389</td>
+      <td>6.103</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>61.932021</td>
+      <td>Cu62:-1e</td>
+      <td>-</td>
+      <td>61.932046</td>
+      <td>6.940000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>0.57</td>
+      <td>25.16</td>
+      <td>5.57</td>
+      <td>61.932083</td>
+      <td>4.017788e-07</td>
+      <td>1.129785e-08</td>
+      <td>3.896350e-08</td>
+      <td>4.038217e-07</td>
+      <td>62.0</td>
+      <td>-62753.555</td>
+      <td>23.296222</td>
+      <td>33.878</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>61.934369</td>
+      <td>?</td>
+      <td>Non-isobaric</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>0.57</td>
+      <td>3879.62</td>
+      <td>47.60</td>
+      <td>61.934370</td>
+      <td>3.235428e-08</td>
+      <td>1.129785e-08</td>
+      <td>1.705508e-08</td>
+      <td>3.827945e-08</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.208399</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>61.943618</td>
+      <td>Ga62:-1e</td>
+      <td>-</td>
+      <td>61.943641</td>
+      <td>6.940000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>0.57</td>
+      <td>939.07</td>
+      <td>23.68</td>
+      <td>61.943636</td>
+      <td>6.575251e-08</td>
+      <td>1.129785e-08</td>
+      <td>1.113420e-08</td>
+      <td>6.763878e-08</td>
+      <td>62.0</td>
+      <td>-51992.089</td>
+      <td>3.902766</td>
+      <td>-5.177</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>61.946994</td>
+      <td>Ti46:O16:-1e</td>
+      <td>mass calibrant</td>
+      <td>61.946993</td>
+      <td>1.760001e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>0.57</td>
+      <td>33951.28</td>
+      <td>140.21</td>
+      <td>61.946993</td>
+      <td>1.093477e-08</td>
+      <td>1.129785e-08</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>62.0</td>
+      <td>-48864.806</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>61.949527</td>
+      <td>Sc46:O16:-1e</td>
+      <td>-</td>
+      <td>61.949534</td>
+      <td>7.320000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>0.57</td>
+      <td>1542.61</td>
+      <td>30.25</td>
+      <td>61.949540</td>
+      <td>5.129699e-08</td>
+      <td>1.129785e-08</td>
+      <td>1.106221e-08</td>
+      <td>5.367862e-08</td>
+      <td>62.0</td>
+      <td>-46492.523</td>
+      <td>3.097559</td>
+      <td>5.702</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>61.956611</td>
+      <td>Ca43:F19:-1e</td>
+      <td>shape calibrant</td>
+      <td>61.956621</td>
+      <td>2.440018e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>0.57</td>
+      <td>25913.21</td>
+      <td>121.87</td>
+      <td>61.956622</td>
+      <td>1.251439e-08</td>
+      <td>1.129785e-08</td>
+      <td>2.667552e-09</td>
+      <td>1.706948e-08</td>
+      <td>62.0</td>
+      <td>-39895.649</td>
+      <td>0.985118</td>
+      <td>0.623</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>61.958997</td>
+      <td>?</td>
+      <td>-</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>0.57</td>
+      <td>22.08</td>
+      <td>5.39</td>
+      <td>61.958978</td>
+      <td>4.287007e-07</td>
+      <td>1.129785e-08</td>
+      <td>1.512691e-07</td>
+      <td>4.547464e-07</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>26.245427</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div><div class="output text_html"><h2> Model</h2> ((((((((Model(constant, prefix='bkg_') + Model(emg22, prefix='p0_')) + Model(emg22, prefix='p1_')) + Model(emg22, prefix='p2_')) + Model(emg22, prefix='p3_')) + Model(emg22, prefix='p4_')) + Model(emg22, prefix='p5_')) + Model(emg22, prefix='p6_')) + Model(emg22, prefix='p7_')) <h2>Fit Statistics</h2><table><tr><td>fitting method</td><td>least_squares</td><td></td></tr><tr><td># function evals</td><td>9</td><td></td></tr><tr><td># data points</td><td>1027</td><td></td></tr><tr><td># variables</td><td>17</td><td></td></tr><tr><td>chi-square</td><td> 576.182030</td><td></td></tr><tr><td>reduced chi-square</td><td> 0.57047726</td><td></td></tr><tr><td>Akaike info crit.</td><td>-559.578861</td><td></td></tr><tr><td>Bayesian info crit.</td><td>-475.694109</td><td></td></tr></table><h2>Variables</h2><table><tr><th> name </th><th> value </th><th> standard error </th><th> relative error </th><th> initial value </th><th> min </th><th> max </th><th> vary </th><th> expression </th></tr><tr><td> bkg_c </td><td>  0.93849905 </td><td>  0.04823274 </td><td> (5.14%) </td><td> 0.1 </td><td>  0.00000000 </td><td>  4.00000000 </td><td> True </td><td>  </td></tr><tr><td> p0_amp </td><td>  0.00125783 </td><td>  2.0445e-04 </td><td> (16.25%) </td><td> 0.001488 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p0_mu </td><td>  61.9278207 </td><td>  2.2787e-05 </td><td> (0.00%) </td><td> 61.927800309876424 </td><td>  61.9178003 </td><td>  61.9378003 </td><td> True </td><td>  </td></tr><tr><td> p0_sigma </td><td>  8.3414e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.341444351311295e-05 </td><td>  0.00000000 </td><td>  0.00508341 </td><td> False </td><td>  </td></tr><tr><td> p0_theta </td><td>  0.72471396 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.724713961354256 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_m1 </td><td>  0.92019054 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9201905356472759 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_m2 </td><td>  0.07980946 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.07980946435272407 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p0_eta_m1 </td></tr><tr><td> p0_tau_m1 </td><td>  4.4900e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.490011233364427e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_tau_m2 </td><td>  1.7683e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001768253599220442 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_p1 </td><td>  0.79009179 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7900917915552933 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_p2 </td><td>  0.20990821 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.2099082084447067 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p0_eta_p1 </td></tr><tr><td> p0_tau_p1 </td><td>  1.2412e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00012412456123840068 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_tau_p2 </td><td>  4.0762e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00040761699179939085 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_amp </td><td>  9.2335e-04 </td><td>  2.0443e-04 </td><td> (22.14%) </td><td> 0.000496 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p1_mu </td><td>  61.9321006 </td><td>  2.9321e-05 </td><td> (0.00%) </td><td> 61.93202053070152 </td><td>  61.9220205 </td><td>  61.9420205 </td><td> True </td><td>  </td></tr><tr><td> p1_sigma </td><td>  8.3414e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.341444351311295e-05 </td><td>  0.00000000 </td><td>  0.00508341 </td><td> False </td><td>  </td></tr><tr><td> p1_theta </td><td>  0.72471396 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.724713961354256 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_m1 </td><td>  0.92019054 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9201905356472759 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_m2 </td><td>  0.07980946 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.07980946435272407 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p1_eta_m1 </td></tr><tr><td> p1_tau_m1 </td><td>  4.4900e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.490011233364427e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_tau_m2 </td><td>  1.7683e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001768253599220442 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_p1 </td><td>  0.79009179 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7900917915552933 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_p2 </td><td>  0.20990821 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.2099082084447067 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p1_eta_p1 </td></tr><tr><td> p1_tau_p1 </td><td>  1.2412e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00012412456123840068 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_tau_p2 </td><td>  4.0762e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00040761699179939085 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_amp </td><td>  0.14236628 </td><td>  0.00174660 </td><td> (1.23%) </td><td> 0.15648800000000002 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p2_mu </td><td>  61.9343876 </td><td>  1.5546e-06 </td><td> (0.00%) </td><td> 61.93436923761443 </td><td>  61.9243692 </td><td>  61.9443692 </td><td> True </td><td>  </td></tr><tr><td> p2_sigma </td><td>  8.3414e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.341444351311295e-05 </td><td>  0.00000000 </td><td>  0.00508341 </td><td> False </td><td>  </td></tr><tr><td> p2_theta </td><td>  0.72471396 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.724713961354256 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_m1 </td><td>  0.92019054 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9201905356472759 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_m2 </td><td>  0.07980946 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.07980946435272407 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p2_eta_m1 </td></tr><tr><td> p2_tau_m1 </td><td>  4.4900e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.490011233364427e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_tau_m2 </td><td>  1.7683e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001768253599220442 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_p1 </td><td>  0.79009179 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7900917915552933 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_p2 </td><td>  0.20990821 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.2099082084447067 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p2_eta_p1 </td></tr><tr><td> p2_tau_p1 </td><td>  1.2412e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00012412456123840068 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_tau_p2 </td><td>  4.0762e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00040761699179939085 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_amp </td><td>  0.03445992 </td><td>  8.6903e-04 </td><td> (2.52%) </td><td> 0.031992 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p3_mu </td><td>  61.9436535 </td><td>  3.1399e-06 </td><td> (0.00%) </td><td> 61.943617703998214 </td><td>  61.9336177 </td><td>  61.9536177 </td><td> True </td><td>  </td></tr><tr><td> p3_sigma </td><td>  8.3414e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.341444351311295e-05 </td><td>  0.00000000 </td><td>  0.00508341 </td><td> False </td><td>  </td></tr><tr><td> p3_theta </td><td>  0.72471396 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.724713961354256 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_m1 </td><td>  0.92019054 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9201905356472759 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_m2 </td><td>  0.07980946 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.07980946435272407 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p3_eta_m1 </td></tr><tr><td> p3_tau_m1 </td><td>  4.4900e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.490011233364427e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_tau_m2 </td><td>  1.7683e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001768253599220442 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_p1 </td><td>  0.79009179 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7900917915552933 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_p2 </td><td>  0.20990821 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.2099082084447067 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p3_eta_p1 </td></tr><tr><td> p3_tau_p1 </td><td>  1.2412e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00012412456123840068 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_tau_p2 </td><td>  4.0762e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00040761699179939085 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_amp </td><td>  1.24587330 </td><td>  0.00514515 </td><td> (0.41%) </td><td> 1.0294480000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p4_mu </td><td>  61.9470108 </td><td>  5.3152e-07 </td><td> (0.00%) </td><td> 61.946994300285866 </td><td>  61.9369943 </td><td>  61.9569943 </td><td> True </td><td>  </td></tr><tr><td> p4_sigma </td><td>  8.3414e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.341444351311295e-05 </td><td>  0.00000000 </td><td>  0.00508341 </td><td> False </td><td>  </td></tr><tr><td> p4_theta </td><td>  0.72471396 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.724713961354256 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_m1 </td><td>  0.92019054 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9201905356472759 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_m2 </td><td>  0.07980946 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.07980946435272407 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p4_eta_m1 </td></tr><tr><td> p4_tau_m1 </td><td>  4.4900e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.490011233364427e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_tau_m2 </td><td>  1.7683e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001768253599220442 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_p1 </td><td>  0.79009179 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7900917915552933 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_p2 </td><td>  0.20990821 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.2099082084447067 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p4_eta_p1 </td></tr><tr><td> p4_tau_p1 </td><td>  1.2412e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00012412456123840068 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_tau_p2 </td><td>  4.0762e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00040761699179939085 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_amp </td><td>  0.05660752 </td><td>  0.00111021 </td><td> (1.96%) </td><td> 0.050095999999999995 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p5_mu </td><td>  61.9495575 </td><td>  2.4749e-06 </td><td> (0.00%) </td><td> 61.94952680789496 </td><td>  61.9395268 </td><td>  61.9595268 </td><td> True </td><td>  </td></tr><tr><td> p5_sigma </td><td>  8.3414e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.341444351311295e-05 </td><td>  0.00000000 </td><td>  0.00508341 </td><td> False </td><td>  </td></tr><tr><td> p5_theta </td><td>  0.72471396 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.724713961354256 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_m1 </td><td>  0.92019054 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9201905356472759 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_m2 </td><td>  0.07980946 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.07980946435272407 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p5_eta_m1 </td></tr><tr><td> p5_tau_m1 </td><td>  4.4900e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.490011233364427e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_tau_m2 </td><td>  1.7683e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001768253599220442 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_p1 </td><td>  0.79009179 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7900917915552933 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_p2 </td><td>  0.20990821 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.2099082084447067 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p5_eta_p1 </td></tr><tr><td> p5_tau_p1 </td><td>  1.2412e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00012412456123840068 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_tau_p2 </td><td>  4.0762e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00040761699179939085 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_amp </td><td>  0.95090900 </td><td>  0.00447198 </td><td> (0.47%) </td><td> 0.8422080000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p6_mu </td><td>  61.9566396 </td><td>  5.8891e-07 </td><td> (0.00%) </td><td> 61.95661076349748 </td><td>  61.9466108 </td><td>  61.9666108 </td><td> True </td><td>  </td></tr><tr><td> p6_sigma </td><td>  8.3414e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.341444351311295e-05 </td><td>  0.00000000 </td><td>  0.00508341 </td><td> False </td><td>  </td></tr><tr><td> p6_theta </td><td>  0.72471396 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.724713961354256 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_m1 </td><td>  0.92019054 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9201905356472759 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_m2 </td><td>  0.07980946 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.07980946435272407 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_m1 </td></tr><tr><td> p6_tau_m1 </td><td>  4.4900e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.490011233364427e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_tau_m2 </td><td>  1.7683e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001768253599220442 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_p1 </td><td>  0.79009179 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7900917915552933 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_p2 </td><td>  0.20990821 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.2099082084447067 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_p1 </td></tr><tr><td> p6_tau_p1 </td><td>  1.2412e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00012412456123840068 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_tau_p2 </td><td>  4.0762e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00040761699179939085 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_amp </td><td>  8.1013e-04 </td><td>  1.9778e-04 </td><td> (24.41%) </td><td> 0.001488 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p7_mu </td><td>  61.9589959 </td><td>  3.5423e-05 </td><td> (0.00%) </td><td> 61.95899664282278 </td><td>  61.9489966 </td><td>  61.9689966 </td><td> True </td><td>  </td></tr><tr><td> p7_sigma </td><td>  8.3414e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.341444351311295e-05 </td><td>  0.00000000 </td><td>  0.00508341 </td><td> False </td><td>  </td></tr><tr><td> p7_theta </td><td>  0.72471396 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.724713961354256 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_m1 </td><td>  0.92019054 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9201905356472759 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_m2 </td><td>  0.07980946 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.07980946435272407 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p7_eta_m1 </td></tr><tr><td> p7_tau_m1 </td><td>  4.4900e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.490011233364427e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_tau_m2 </td><td>  1.7683e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001768253599220442 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_p1 </td><td>  0.79009179 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7900917915552933 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_p2 </td><td>  0.20990821 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.2099082084447067 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p7_eta_p1 </td></tr><tr><td> p7_tau_p1 </td><td>  1.2412e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00012412456123840068 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_tau_p2 </td><td>  4.0762e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.00040761699179939085 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr></table><h2>Correlations (unreported correlations are < 0.100)</h2><table><tr><td>p1_amp</td><td>p1_mu</td><td>0.2215</td></tr><tr><td>p7_amp</td><td>p7_mu</td><td>-0.1828</td></tr><tr><td>bkg_c</td><td>p7_amp</td><td>-0.1291</td></tr><tr><td>bkg_c</td><td>p1_amp</td><td>-0.1260</td></tr><tr><td>bkg_c</td><td>p0_amp</td><td>-0.1135</td></tr><tr><td>p4_amp</td><td>p4_mu</td><td>-0.1059</td></tr></table></div></div>
+</div>
+</div></blockquote>
+<p>Get method docs by:</p>
+<p>Get attribute docs by:</p>
+<p>Central concepts:
+peaks
+spectrum class
+peaks list
+peak identification</p>
+<p>Include example spectrum in package (also for doctests).</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Stefan Paul
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
