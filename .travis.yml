@@ -10,6 +10,8 @@ cache:
 # For automatic publishing of docs with doctr
 env:
   global:
+    - GH_USER: RobbenRoll
+    - GH_REPO: emgfit
     # Doctr deploy key for RobbenRoll/emgfit
     - secure: "dcAwtAKK84p3sAGOVHCY+amQpNUzbglreiIginVJJMAyiKQFkiucFQhdRlcXbV++adt5niuxHdzZtGGtyo6rcS5ACEzibOYcvasCeJro1mshoqBXcLD4EY65+j25ooPbvDdupuACANf6sjqttjb5QgbR6pE/OBzDkVyrR/SBov3Jp8q5I5AYbD9hCqWPfzxamvZvG0k3jcSZoYN+Q/bsS46fFN7UXYZxRcn5LgNaOU9Eg6H6SJ+5y9scYKCJ1JWWnwgjdK1vdCsDLSfoqg7CS2eEzH81bCtGXD19eiKdLQfrgjb7tzGIxjhRsFQvnJ7GDpcj/2NsxQShiA21TEcqtvnhuLKKonLIHYSxIxJ5Ac+7hFUcXpjb0xyZ8S8Ue3XEdc9zWiV4UJsLzxNICau/zmcPk+pySrB0osYeIf8dBUfn8t+KgB7gIdVatg2I43ZHvZHTUnEIweKZhtrEJBgnrdEfKf5xOLDg89yE5LxgY6nKglKKyGMV5/PZrzOn2gU1Mdj/sANR5m0xBU3WZHVsyoTp0TGicMQIuWdLOWC0PPvll9HhndfwlEvkChPaQcWGtCHNUYWItd8Px/jB79G7PyyHz7FW5xRE2LkCbWdbFFF6XFlJptExHZTGBt6jPbD5az3SI9x5GHFEQk4O13M1T6co4O98GeVlsR/hpZSie4g="
 
@@ -36,3 +38,12 @@ script:
   - DEPLOY_DIR="$TRAVIS_TAG";
   - doctr deploy --build-tags --built-docs docs/build/html $DEPLOY_DIR --branch-whitelist # Publish the documentation, only for new version tags.     
 
+# Update index of docs for different releases on gh-pages (only when commiting to master branch)
+deploy:
+  provider: script
+  script: bash deploy.sh
+  skip_cleanup: true
+  overwrite: true
+  on:
+    branch: master
+    #tags: true

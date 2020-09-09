@@ -84,8 +84,9 @@ plot_html_show_formats = False
 autosummary_generate = True
 numpydoc_show_class_members = False
 
-# Ignore errors when building docs from Jupyter notebooks
-nbsphinx_allow_errors = True
+# Options for building docs from Jupyter notebooks
+nbsphinx_execute = 'always' # re-run notebooks upon every doc build
+nbsphinx_allow_errors = False # ignore errors in notebook execution
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
