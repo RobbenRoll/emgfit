@@ -3,7 +3,7 @@
 
 set -e # exit with nonzero exit code if anything fails
 
-echo "Starting to update gh-pages index\n"
+echo "Starting to update gh-pages index"
 
 #go to home and setup git
 cd $HOME
@@ -22,4 +22,4 @@ git add -f .
 git commit -m "Update gh-pages index with travis build $TRAVIS_BUILD_NUMBER"
 git push -fq origin gh-pages > /dev/null
 
-echo "Done updating gh-pages index\n"
+echo "Done updating gh-pages index"
