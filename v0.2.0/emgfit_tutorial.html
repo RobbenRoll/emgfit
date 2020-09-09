@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
   <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
 
   
   
@@ -34,11 +35,13 @@
         <script src="_static/language_data.js"></script>
         <script src="_static/clipboard.min.js"></script>
         <script src="_static/copybutton.js"></script>
+        <script src="_static/thebelab-helper.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -507,62 +510,8 @@ directories and create a new notebook (<code class="docutils literal notranslate
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">FileNotFoundError</span>                         Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-2-ef0a1ad8b6b2&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      5</span> m_stop <span class="ansi-blue-fg">=</span> <span class="ansi-cyan-fg">61.962</span> <span class="ansi-red-fg"># high-mass cut off</span>
-<span class="ansi-green-intense-fg ansi-bold">      6</span>
-<span class="ansi-green-fg">----&gt; 7</span><span class="ansi-red-fg"> </span>spec <span class="ansi-blue-fg">=</span> emg<span class="ansi-blue-fg">.</span>spectrum<span class="ansi-blue-fg">(</span>filename<span class="ansi-blue-fg">+</span><span class="ansi-blue-fg">&#39;.txt&#39;</span><span class="ansi-blue-fg">,</span>m_start<span class="ansi-blue-fg">,</span>m_stop<span class="ansi-blue-fg">,</span>skiprows<span class="ansi-blue-fg">=</span>skiprows<span class="ansi-blue-fg">)</span>
-
-<span class="ansi-green-fg">~/virtualenv/python3.8.0/lib/python3.8/site-packages/emgfit/spectrum.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, filename, m_start, m_stop, skiprows, show_plot, df)</span>
-<span class="ansi-green-intense-fg ansi-bold">    323</span>        &#34;&#34;&#34;
-<span class="ansi-green-intense-fg ansi-bold">    324</span>         <span class="ansi-green-fg">if</span> filename <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">not</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">--&gt; 325</span><span class="ansi-red-fg">             data_uncut = pd.read_csv(filename,header=None,names=[&#39;Mass [u]&#39;, &#39;Counts&#39;],
-</span><span class="ansi-green-intense-fg ansi-bold">    326</span>                                      skiprows=skiprows,delim_whitespace=True,index_col=False,dtype=float)
-<span class="ansi-green-intense-fg ansi-bold">    327</span>             data_uncut<span class="ansi-blue-fg">.</span>set_index<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;Mass [u]&#39;</span><span class="ansi-blue-fg">,</span>inplace <span class="ansi-blue-fg">=</span><span class="ansi-green-fg">True</span><span class="ansi-blue-fg">)</span>
-
-<span class="ansi-green-fg">~/virtualenv/python3.8.0/lib/python3.8/site-packages/pandas/io/parsers.py</span> in <span class="ansi-cyan-fg">read_csv</span><span class="ansi-blue-fg">(filepath_or_buffer, sep, delimiter, header, names, index_col, usecols, squeeze, prefix, mangle_dupe_cols, dtype, engine, converters, true_values, false_values, skipinitialspace, skiprows, skipfooter, nrows, na_values, keep_default_na, na_filter, verbose, skip_blank_lines, parse_dates, infer_datetime_format, keep_date_col, date_parser, dayfirst, cache_dates, iterator, chunksize, compression, thousands, decimal, lineterminator, quotechar, quoting, doublequote, escapechar, comment, encoding, dialect, error_bad_lines, warn_bad_lines, delim_whitespace, low_memory, memory_map, float_precision)</span>
-<span class="ansi-green-intense-fg ansi-bold">    684</span>     )
-<span class="ansi-green-intense-fg ansi-bold">    685</span>
-<span class="ansi-green-fg">--&gt; 686</span><span class="ansi-red-fg">     </span><span class="ansi-green-fg">return</span> _read<span class="ansi-blue-fg">(</span>filepath_or_buffer<span class="ansi-blue-fg">,</span> kwds<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    687</span>
-<span class="ansi-green-intense-fg ansi-bold">    688</span>
-
-<span class="ansi-green-fg">~/virtualenv/python3.8.0/lib/python3.8/site-packages/pandas/io/parsers.py</span> in <span class="ansi-cyan-fg">_read</span><span class="ansi-blue-fg">(filepath_or_buffer, kwds)</span>
-<span class="ansi-green-intense-fg ansi-bold">    450</span>
-<span class="ansi-green-intense-fg ansi-bold">    451</span>     <span class="ansi-red-fg"># Create the parser.</span>
-<span class="ansi-green-fg">--&gt; 452</span><span class="ansi-red-fg">     </span>parser <span class="ansi-blue-fg">=</span> TextFileReader<span class="ansi-blue-fg">(</span>fp_or_buf<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwds<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    453</span>
-<span class="ansi-green-intense-fg ansi-bold">    454</span>     <span class="ansi-green-fg">if</span> chunksize <span class="ansi-green-fg">or</span> iterator<span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">~/virtualenv/python3.8.0/lib/python3.8/site-packages/pandas/io/parsers.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, f, engine, **kwds)</span>
-<span class="ansi-green-intense-fg ansi-bold">    934</span>             self<span class="ansi-blue-fg">.</span>options<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">&#34;has_index_names&#34;</span><span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">=</span> kwds<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">&#34;has_index_names&#34;</span><span class="ansi-blue-fg">]</span>
-<span class="ansi-green-intense-fg ansi-bold">    935</span>
-<span class="ansi-green-fg">--&gt; 936</span><span class="ansi-red-fg">         </span>self<span class="ansi-blue-fg">.</span>_make_engine<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>engine<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    937</span>
-<span class="ansi-green-intense-fg ansi-bold">    938</span>     <span class="ansi-green-fg">def</span> close<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">~/virtualenv/python3.8.0/lib/python3.8/site-packages/pandas/io/parsers.py</span> in <span class="ansi-cyan-fg">_make_engine</span><span class="ansi-blue-fg">(self, engine)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1166</span>     <span class="ansi-green-fg">def</span> _make_engine<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> engine<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#34;c&#34;</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">   1167</span>         <span class="ansi-green-fg">if</span> engine <span class="ansi-blue-fg">==</span> <span class="ansi-blue-fg">&#34;c&#34;</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">-&gt; 1168</span><span class="ansi-red-fg">             </span>self<span class="ansi-blue-fg">.</span>_engine <span class="ansi-blue-fg">=</span> CParserWrapper<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>f<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>self<span class="ansi-blue-fg">.</span>options<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1169</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">   1170</span>             <span class="ansi-green-fg">if</span> engine <span class="ansi-blue-fg">==</span> <span class="ansi-blue-fg">&#34;python&#34;</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">~/virtualenv/python3.8.0/lib/python3.8/site-packages/pandas/io/parsers.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, src, **kwds)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1996</span>         kwds<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">&#34;usecols&#34;</span><span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>usecols
-<span class="ansi-green-intense-fg ansi-bold">   1997</span>
-<span class="ansi-green-fg">-&gt; 1998</span><span class="ansi-red-fg">         </span>self<span class="ansi-blue-fg">.</span>_reader <span class="ansi-blue-fg">=</span> parsers<span class="ansi-blue-fg">.</span>TextReader<span class="ansi-blue-fg">(</span>src<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwds<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1999</span>         self<span class="ansi-blue-fg">.</span>unnamed_cols <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>_reader<span class="ansi-blue-fg">.</span>unnamed_cols
-<span class="ansi-green-intense-fg ansi-bold">   2000</span>
-
-<span class="ansi-green-fg">pandas/_libs/parsers.pyx</span> in <span class="ansi-cyan-fg">pandas._libs.parsers.TextReader.__cinit__</span><span class="ansi-blue-fg">()</span>
-
-<span class="ansi-green-fg">pandas/_libs/parsers.pyx</span> in <span class="ansi-cyan-fg">pandas._libs.parsers.TextReader._setup_parser_source</span><span class="ansi-blue-fg">()</span>
-
-<span class="ansi-red-fg">FileNotFoundError</span>: [Errno 2] No such file or directory: &#39;2019-09-13_004-_006 SUMMED High stats 62Ga.txt&#39;
-</pre></div></div>
+<img alt="_images/emgfit_tutorial_5_0.png" src="_images/emgfit_tutorial_5_0.png" />
+</div>
 </div>
 </div>
 <div class="section" id="Add-peaks-to-the-spectrum">
@@ -581,21 +530,274 @@ directories and create a new notebook (<code class="docutils literal notranslate
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_7_0.png" src="_images/emgfit_tutorial_7_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_7_1.png" src="_images/emgfit_tutorial_7_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_7_2.png" src="_images/emgfit_tutorial_7_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_7_3.png" src="_images/emgfit_tutorial_7_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-3-241f32881b9b&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      1</span> <span class="ansi-red-fg">### Detect peaks and add them to spectrum object &#39;spec&#39;</span>
-<span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>spec<span class="ansi-blue-fg">.</span>detect_peaks<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span> <span class="ansi-red-fg"># automatic peak detection</span>
-<span class="ansi-green-intense-fg ansi-bold">      3</span> <span class="ansi-red-fg">#spec.add_peak(61.925,species=&#39;?&#39;) # manually add a peak at x_pos = 61.925u</span>
-<span class="ansi-green-intense-fg ansi-bold">      4</span> <span class="ansi-red-fg">#spec.remove_peak(peak_index=0) # manually remove the peak with index 0</span>
-
-<span class="ansi-red-fg">NameError</span>: name &#39;spec&#39; is not defined
+Peak properties table after peak detection:
 </pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x_pos</th>
+      <th>species</th>
+      <th>comment</th>
+      <th>m_AME</th>
+      <th>m_AME_error</th>
+      <th>extrapolated</th>
+      <th>fit_model</th>
+      <th>cost_func</th>
+      <th>red_chi</th>
+      <th>area</th>
+      <th>area_error</th>
+      <th>m_ion</th>
+      <th>rel_stat_error</th>
+      <th>rel_recal_error</th>
+      <th>rel_peakshape_error</th>
+      <th>rel_mass_error</th>
+      <th>A</th>
+      <th>atomic_ME_keV</th>
+      <th>mass_error_keV</th>
+      <th>m_dev_keV</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>61.927800</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>61.932021</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>61.934369</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>61.943618</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>61.946994</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>61.949527</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>61.956611</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>61.958997</td>
+      <td>?</td>
+      <td>-</td>
+      <td>None</td>
+      <td>None</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
 </div>
 </div>
 <div class="section" id="Assign-identified-species-to-the-peaks-(optional)">
@@ -618,21 +820,252 @@ peaks), simply insert <code class="docutils literal notranslate"><span class="pr
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-4-e9e2c0dd31ce&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      1</span> <span class="ansi-red-fg">### Assign species and add peak comments</span>
-<span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>spec<span class="ansi-blue-fg">.</span>assign_species<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">&#39;Ni62:-1e&#39;</span><span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">&#39;Cu62:-1e?&#39;</span><span class="ansi-blue-fg">,</span><span class="ansi-green-fg">None</span><span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">&#39;Ga62:-1e&#39;</span><span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">&#39;Ti46:O16:-1e&#39;</span><span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">&#39;Sc46:O16:-1e&#39;</span><span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">&#39;Ca43:F19:-1e&#39;</span><span class="ansi-blue-fg">,</span><span class="ansi-green-fg">None</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">      3</span> spec<span class="ansi-blue-fg">.</span>add_peak_comment<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;Non-isobaric&#39;</span><span class="ansi-blue-fg">,</span>peak_index<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">2</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">      4</span> spec<span class="ansi-blue-fg">.</span>show_peak_properties<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span> <span class="ansi-red-fg"># check the changes by printing the peak properties table</span>
-
-<span class="ansi-red-fg">NameError</span>: name &#39;spec&#39; is not defined
+Species of peak 0 assigned as Ni62:-1e
+Species of peak 1 assigned as Cu62:-1e?
+Species of peak 3 assigned as Ga62:-1e
+Species of peak 4 assigned as Ti46:O16:-1e
+Species of peak 5 assigned as Sc46:O16:-1e
+Species of peak 6 assigned as Ca43:F19:-1e
+Comment of peak 2 was changed to:  Non-isobaric
 </pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x_pos</th>
+      <th>species</th>
+      <th>comment</th>
+      <th>m_AME</th>
+      <th>m_AME_error</th>
+      <th>extrapolated</th>
+      <th>fit_model</th>
+      <th>cost_func</th>
+      <th>red_chi</th>
+      <th>area</th>
+      <th>area_error</th>
+      <th>m_ion</th>
+      <th>rel_stat_error</th>
+      <th>rel_recal_error</th>
+      <th>rel_peakshape_error</th>
+      <th>rel_mass_error</th>
+      <th>A</th>
+      <th>atomic_ME_keV</th>
+      <th>mass_error_keV</th>
+      <th>m_dev_keV</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>61.927800</td>
+      <td>Ni62:-1e</td>
+      <td>-</td>
+      <td>61.927796</td>
+      <td>4.700000e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>61.932021</td>
+      <td>Cu62:-1e?</td>
+      <td>-</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>NaN</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>61.934369</td>
+      <td>?</td>
+      <td>Non-isobaric</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>NaN</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>61.943618</td>
+      <td>Ga62:-1e</td>
+      <td>-</td>
+      <td>61.943641</td>
+      <td>6.940000e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>61.946994</td>
+      <td>Ti46:O16:-1e</td>
+      <td>-</td>
+      <td>61.946993</td>
+      <td>1.760001e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>61.949527</td>
+      <td>Sc46:O16:-1e</td>
+      <td>-</td>
+      <td>61.949534</td>
+      <td>7.320000e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>61.956611</td>
+      <td>Ca43:F19:-1e</td>
+      <td>-</td>
+      <td>61.956621</td>
+      <td>2.440018e-07</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>62.0</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>61.958997</td>
+      <td>?</td>
+      <td>-</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>NaN</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
 </div>
 </div>
 <div class="section" id="Select-the-optimal-fit-model-and-perform-the-peak-shape-calibration">
@@ -662,22 +1095,343 @@ uncertainty. Alternatively, the auto-model selection can be turned off with the 
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-5-5042c47d1c5b&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      3</span>
-<span class="ansi-green-intense-fg ansi-bold">      4</span> <span class="ansi-red-fg">## Peak-shape calibration with user-defined fit range:</span>
-<span class="ansi-green-fg">----&gt; 5</span><span class="ansi-red-fg"> </span>spec<span class="ansi-blue-fg">.</span>determine_peak_shape<span class="ansi-blue-fg">(</span>species_shape_calib<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;Ca43:F19:-1e&#39;</span><span class="ansi-blue-fg">,</span>x_fit_range<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">0.0045</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">      6</span>
-<span class="ansi-green-intense-fg ansi-bold">      7</span> <span class="ansi-red-fg">## Peak-shape calibration with user-defined fit model:</span>
 
-<span class="ansi-red-fg">NameError</span>: name &#39;spec&#39; is not defined
+##### Determine optimal tail order #####
+
+
+### Fitting data with Gaussian ###---------------------------------------------------------------------------------------------
+
 </pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_1.png" src="_images/emgfit_tutorial_11_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_2.png" src="_images/emgfit_tutorial_11_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Gaussian-fit yields reduced chi-square of: 45.57 +- 0.13
+
+
+### Fitting data with emg01 ###---------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_4.png" src="_images/emgfit_tutorial_11_4.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_5.png" src="_images/emgfit_tutorial_11_5.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+emg01-fit yields reduced chi-square of: 13.79 +- 0.13
+
+
+### Fitting data with emg10 ###---------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_7.png" src="_images/emgfit_tutorial_11_7.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_8.png" src="_images/emgfit_tutorial_11_8.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+emg10-fit yields reduced chi-square of: 45.96 +- 0.13
+
+
+### Fitting data with emg11 ###---------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_10.png" src="_images/emgfit_tutorial_11_10.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_11.png" src="_images/emgfit_tutorial_11_11.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+emg11-fit yields reduced chi-square of: 2.6 +- 0.13
+
+
+### Fitting data with emg12 ###---------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_13.png" src="_images/emgfit_tutorial_11_13.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_14.png" src="_images/emgfit_tutorial_11_14.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+emg12-fit yields reduced chi-square of: 1.22 +- 0.13
+
+
+### Fitting data with emg21 ###---------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_16.png" src="_images/emgfit_tutorial_11_16.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_17.png" src="_images/emgfit_tutorial_11_17.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: p6_eta_m1 = 0.901 +- 0.987  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_m2 = 0.099 +- 0.987  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+
+emg21-fit yields reduced chi-square of: 1.47 +- 0.13
+
+
+### Fitting data with emg22 ###---------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_19.png" src="_images/emgfit_tutorial_11_19.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_20.png" src="_images/emgfit_tutorial_11_20.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+emg22-fit yields reduced chi-square of: 0.93 +- 0.13
+
+
+### Fitting data with emg23 ###---------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_22.png" src="_images/emgfit_tutorial_11_22.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_23.png" src="_images/emgfit_tutorial_11_23.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: p6_eta_m1 = 0.902 +- 0.916  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_m2 = 0.098 +- 0.916  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p1 = 0.482 +- 2.46  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p2 = 0.438 +- 1.894  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p3 = 0.08 +- 2.46  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+
+emg23-fit yields reduced chi-square of: 0.94 +- 0.13
+
+
+### Fitting data with emg32 ###---------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_25.png" src="_images/emgfit_tutorial_11_25.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_26.png" src="_images/emgfit_tutorial_11_26.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: p6_eta_m2 = 0.015 +- 0.076  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_m3 = 0.095 +- 0.133  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+
+emg32-fit yields reduced chi-square of: 0.94 +- 0.13
+
+
+### Fitting data with emg33 ###---------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_28.png" src="_images/emgfit_tutorial_11_28.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_29.png" src="_images/emgfit_tutorial_11_29.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: p6_eta_m1 = 0.863 +- 4.743  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_m2 = 0.116 +- 3.916  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_m3 = 0.02 +- 4.743  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p1 = 0.475 +- 11.47  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p2 = 0.447 +- 8.983  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+WARNING: p6_eta_p3 = 0.078 +- 11.47  is compatible with zero within uncertainty.
+             This tail order is likely overfitting the data and will be excluded from selection.
+
+emg33-fit yields reduced chi-square of: 0.96 +- 0.14
+
+
+##### RESULT OF AUTOMATIC MODEL SELECTION: #####
+
+    Best fit model determined to be: emg22
+    Corresponding chi²-reduced: 0.93
+
+
+##### Peak-shape determination #####-------------------------------------------------------------------------------------------
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_31.png" src="_images/emgfit_tutorial_11_31.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_11_32.png" src="_images/emgfit_tutorial_11_32.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<h2> Model</h2> (Model(constant, prefix='bkg_') + Model(emg22, prefix='p6_')) <h2>Fit Statistics</h2><table><tr><td>fitting method</td><td>least_squares</td><td></td></tr><tr><td># function evals</td><td>16</td><td></td></tr><tr><td># data points</td><td>123</td><td></td></tr><tr><td># variables</td><td>11</td><td></td></tr><tr><td>chi-square</td><td> 104.451674</td><td></td></tr><tr><td>reduced chi-square</td><td> 0.93260424</td><td></td></tr><tr><td>Akaike info crit.</td><td> 1.89444012</td><td></td></tr><tr><td>Bayesian info crit.</td><td> 32.8284680</td><td></td></tr></table><h2>Variables</h2><table><tr><th> name </th><th> value </th><th> standard error </th><th> relative error </th><th> initial value </th><th> min </th><th> max </th><th> vary </th><th> expression </th></tr><tr><td> bkg_c </td><td>  0.59386072 </td><td>  0.19767135 </td><td> (33.29%) </td><td> 0.1 </td><td>  0.00000000 </td><td>  4.00000000 </td><td> True </td><td>  </td></tr><tr><td> p6_amp </td><td>  0.95323437 </td><td>  0.00599104 </td><td> (0.63%) </td><td> 0.8422080000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p6_mu </td><td>  61.9566409 </td><td>  3.6332e-06 </td><td> (0.00%) </td><td> 61.95661076349748 </td><td>  61.9466108 </td><td>  61.9666108 </td><td> True </td><td>  </td></tr><tr><td> p6_sigma </td><td>  8.3298e-05 </td><td>  2.7262e-06 </td><td> (3.27%) </td><td> 8.68e-05 </td><td>  0.00000000 </td><td>  0.00508680 </td><td> True </td><td>  </td></tr><tr><td> p6_theta </td><td>  0.72958107 </td><td>  0.02084641 </td><td> (2.86%) </td><td> 0.5 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> True </td><td>  </td></tr><tr><td> p6_eta_m1 </td><td>  0.93085594 </td><td>  0.01775570 </td><td> (1.91%) </td><td> 0.85 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> True </td><td>  </td></tr><tr><td> p6_eta_m2 </td><td>  0.06914406 </td><td>  0.01775570 </td><td> (25.68%) </td><td> 0.15000000000000002 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_m1 </td></tr><tr><td> p6_tau_m1 </td><td>  4.6426e-05 </td><td>  5.0748e-06 </td><td> (10.93%) </td><td> 3.1e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> True </td><td>  </td></tr><tr><td> p6_tau_m2 </td><td>  1.9392e-04 </td><td>  2.5525e-05 </td><td> (13.16%) </td><td> 0.00031 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> True </td><td>  </td></tr><tr><td> p6_eta_p1 </td><td>  0.81292600 </td><td>  0.03620254 </td><td> (4.45%) </td><td> 0.85 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> True </td><td>  </td></tr><tr><td> p6_eta_p2 </td><td>  0.18707400 </td><td>  0.03620254 </td><td> (19.35%) </td><td> 0.15000000000000002 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_p1 </td></tr><tr><td> p6_tau_p1 </td><td>  1.2908e-04 </td><td>  1.1799e-05 </td><td> (9.14%) </td><td> 3.1e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> True </td><td>  </td></tr><tr><td> p6_tau_p2 </td><td>  4.5400e-04 </td><td>  5.9304e-05 </td><td> (13.06%) </td><td> 0.000372 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> True </td><td>  </td></tr></table><h2>Correlations (unreported correlations are < 0.100)</h2><table><tr><td>p6_eta_m1</td><td>p6_tau_m2</td><td>0.9372</td></tr><tr><td>p6_eta_p1</td><td>p6_tau_p2</td><td>0.9072</td></tr><tr><td>p6_theta</td><td>p6_tau_p1</td><td>0.8344</td></tr><tr><td>p6_sigma</td><td>p6_tau_m1</td><td>-0.8097</td></tr><tr><td>p6_eta_m1</td><td>p6_tau_m1</td><td>0.7516</td></tr><tr><td>p6_tau_p1</td><td>p6_tau_p2</td><td>0.7466</td></tr><tr><td>p6_eta_p1</td><td>p6_tau_p1</td><td>0.7019</td></tr><tr><td>p6_mu</td><td>p6_tau_m1</td><td>0.6956</td></tr><tr><td>p6_tau_m1</td><td>p6_tau_m2</td><td>0.6790</td></tr><tr><td>p6_sigma</td><td>p6_theta</td><td>0.6079</td></tr><tr><td>p6_mu</td><td>p6_eta_m1</td><td>0.5919</td></tr><tr><td>p6_mu</td><td>p6_theta</td><td>0.5288</td></tr><tr><td>p6_sigma</td><td>p6_tau_p1</td><td>0.5241</td></tr><tr><td>bkg_c</td><td>p6_tau_m2</td><td>-0.5166</td></tr><tr><td>p6_mu</td><td>p6_tau_m2</td><td>0.4970</td></tr><tr><td>p6_theta</td><td>p6_tau_p2</td><td>0.4598</td></tr><tr><td>bkg_c</td><td>p6_eta_m1</td><td>-0.4054</td></tr><tr><td>p6_sigma</td><td>p6_eta_m1</td><td>-0.3891</td></tr><tr><td>bkg_c</td><td>p6_tau_p2</td><td>-0.3828</td></tr><tr><td>p6_sigma</td><td>p6_tau_m2</td><td>-0.3734</td></tr><tr><td>p6_mu</td><td>p6_tau_p1</td><td>0.3515</td></tr><tr><td>p6_theta</td><td>p6_eta_p1</td><td>0.3051</td></tr><tr><td>p6_mu</td><td>p6_tau_p2</td><td>0.2685</td></tr><tr><td>p6_mu</td><td>p6_sigma</td><td>-0.2643</td></tr><tr><td>bkg_c</td><td>p6_tau_m1</td><td>-0.2445</td></tr><tr><td>p6_tau_m1</td><td>p6_tau_p1</td><td>-0.2418</td></tr><tr><td>bkg_c</td><td>p6_eta_p1</td><td>-0.2295</td></tr><tr><td>bkg_c</td><td>p6_mu</td><td>-0.2220</td></tr><tr><td>p6_sigma</td><td>p6_tau_p2</td><td>0.2164</td></tr><tr><td>p6_theta</td><td>p6_tau_m1</td><td>-0.1912</td></tr><tr><td>p6_mu</td><td>p6_eta_p1</td><td>0.1583</td></tr><tr><td>p6_tau_m2</td><td>p6_tau_p2</td><td>0.1564</td></tr><tr><td>bkg_c</td><td>p6_amp</td><td>-0.1405</td></tr><tr><td>bkg_c</td><td>p6_tau_p1</td><td>-0.1399</td></tr><tr><td>p6_eta_m1</td><td>p6_tau_p2</td><td>0.1367</td></tr><tr><td>p6_sigma</td><td>p6_eta_p1</td><td>0.1142</td></tr></table></div>
 </div>
 </div>
 <div class="section" id="Determine-A_stat_emg-for-subsequent-stat.-error-estimations-(optional)">
@@ -701,18 +1455,60 @@ below (then with the update value for <a class="reference internal" href="module
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Creating synthetic spectra via bootstrap re-sampling and fitting  them for A_stat determination.
+Depending on the choice of `N_spectra` this can take a few minutes. Interrupt kernel if this takes too long.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "bbdd23da4b1c4dba878c82dd72e4c905"}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Done!
+
+[[Model]]
+    Model(powerlaw)
+[[Fit Statistics]]
+    # fitting method   = leastsq
+    # function evals   = 5
+    # data points      = 8
+    # variables        = 1
+    chi-square         = 9.6122e-09
+    reduced chi-square = 1.3732e-09
+    Akaike info crit   = -162.317379
+    Bayesian info crit = -162.237937
+[[Variables]]
+    amplitude:  1.3260e-04 +/- 1.3094e-05 (9.87%) (init = 1)
+    exponent:  -0.5 (fixed)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_13_3.png" src="_images/emgfit_tutorial_13_3.png" />
+</div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-6-eee5f75af496&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      1</span> <span class="ansi-red-fg"># Determine A_stat_emg and save the resulting plot</span>
-<span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>spec<span class="ansi-blue-fg">.</span>determine_A_stat_emg<span class="ansi-blue-fg">(</span>species<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;Ca43:F19:-1e&#39;</span><span class="ansi-blue-fg">,</span>x_range<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">0.004</span><span class="ansi-blue-fg">,</span>plot_filename<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;outputs/&#39;</span><span class="ansi-blue-fg">+</span>filename<span class="ansi-blue-fg">+</span><span class="ansi-blue-fg">&#39;_MLE&#39;</span><span class="ansi-blue-fg">,</span>N_spectra<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">10</span><span class="ansi-blue-fg">)</span>
-
-<span class="ansi-red-fg">NameError</span>: name &#39;spec&#39; is not defined
+A_stat of a Gaussian model: 0.425
+Default A_stat_emg for Hyper-EMG models: 0.52
+A_stat_emg for this spectrum&#39;s emg22 fit model: 0.552 +- 0.055
 </pre></div></div>
 </div>
 </div>
@@ -734,22 +1530,361 @@ chi-square fitting with <a class="reference internal" href="modules.html#emgfit.
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_15_0.png" src="_images/emgfit_tutorial_15_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_15_1.png" src="_images/emgfit_tutorial_15_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-7-21ff46940cba&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      1</span> <span class="ansi-red-fg"># Maximum likelihood fit of all peaks in the spectrum</span>
-<span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>spec<span class="ansi-blue-fg">.</span>fit_peaks<span class="ansi-blue-fg">(</span>species_mass_calib<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;Ti46:O16:-1e&#39;</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">      3</span>
-<span class="ansi-green-intense-fg ansi-bold">      4</span> <span class="ansi-red-fg"># Maximum likelihood fit of peaks in a user-defined mass range</span>
-<span class="ansi-green-intense-fg ansi-bold">      5</span> <span class="ansi-red-fg">#spec.fit_peaks(species_mass_calib=&#39;Ti46:O16:-1e&#39;,x_fit_cen=61.9455,x_fit_range=0.01)</span>
 
-<span class="ansi-red-fg">NameError</span>: name &#39;spec&#39; is not defined
+##### Mass recalibration #####
+
+
+Relative literature error of mass calibrant:    3e-09
+Relative statistical error of mass calibrant:   1.2e-08
+
+Recalibration factor:      0.999999689 = 1 -3.11e-07
+Relative recalibration error:  1.2e-08
+
+
+##### Peak-shape uncertainty evaluation #####
+
+All mass shifts below are corrected for the corresponding shifts of the calibrant peak.
+
+Determining absolute centroid shifts of mass calibrant.
+
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 0 by -0.215 /  0.168 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 1 by  0.454 / -0.406 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 2 by -0.387 /  0.217 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 3 by -0.037 /  0.010 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 5 by  0.016 / -0.084 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 6 by  0.036 / -0.018 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 7 by  0.212 / -0.204 μu.
+
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 0 by -0.459 /  0.392 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 1 by -0.912 /  0.933 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 2 by -0.443 /  0.224 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 3 by -0.164 /  0.142 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 5 by -0.167 /  0.250 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 6 by -0.096 /  0.068 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 7 by -1.599 /  1.712 μu.
+
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 0 by  0.519 / -0.521 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 1 by  0.306 / -0.241 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 2 by  0.212 / -0.433 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 3 by  0.271 / -0.209 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 5 by  0.229 / -0.170 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 6 by  0.070 / -0.064 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 7 by  0.445 / -0.345 μu.
+
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 0 by -0.697 /  0.700 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 1 by  0.211 / -0.210 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 2 by -0.516 /  0.354 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 3 by -0.085 /  0.136 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 5 by -0.140 /  0.082 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 6 by -0.046 / -0.036 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 7 by -0.739 /  0.706 μu.
+
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 0 by -0.257 /  0.245 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 1 by -0.149 /  0.124 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 2 by -0.269 /  0.027 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 3 by -0.132 /  0.191 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 5 by -0.063 /  0.156 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 6 by -0.044 /  0.052 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 7 by  0.200 / -0.031 μu.
+
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 0 by -0.044 / -0.033 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 1 by -0.210 /  0.088 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 2 by -0.166 / -0.038 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 3 by -0.102 /  0.073 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 5 by -0.223 /  0.179 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 6 by  0.027 / -0.012 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 7 by -3.045 /  2.414 μu.
+
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 0 by  0.005 / -0.140 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 1 by  0.230 / -0.364 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 2 by  0.175 / -0.513 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 3 by  0.129 / -0.193 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 5 by  0.026 / -0.008 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 6 by -0.023 / -0.001 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 7 by  0.428 / -0.476 μu.
+
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 0 by -0.082 /  0.058 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 1 by  0.315 / -0.341 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 2 by  0.009 / -0.035 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 3 by  0.024 / -0.042 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 5 by  0.367 / -0.460 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 6 by -0.041 /  0.030 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 7 by  1.360 / -6.339 μu.
+
+Relative peak-shape error of peak 0: 1.7e-08
+Relative peak-shape error of peak 1: 2e-08
+Relative peak-shape error of peak 2: 1.7e-08
+Relative peak-shape error of peak 3: 7e-09
+Relative peak-shape error of peak 5: 1.1e-08
+Relative peak-shape error of peak 6: 2e-09
+Relative peak-shape error of peak 7: 1.18e-07
 </pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x_pos</th>
+      <th>species</th>
+      <th>comment</th>
+      <th>m_AME</th>
+      <th>m_AME_error</th>
+      <th>extrapolated</th>
+      <th>fit_model</th>
+      <th>cost_func</th>
+      <th>red_chi</th>
+      <th>area</th>
+      <th>area_error</th>
+      <th>m_ion</th>
+      <th>rel_stat_error</th>
+      <th>rel_recal_error</th>
+      <th>rel_peakshape_error</th>
+      <th>rel_mass_error</th>
+      <th>A</th>
+      <th>atomic_ME_keV</th>
+      <th>mass_error_keV</th>
+      <th>m_dev_keV</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>61.927800</td>
+      <td>Ni62:-1e</td>
+      <td>-</td>
+      <td>61.927796</td>
+      <td>4.700000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>38.67</td>
+      <td>6.77</td>
+      <td>61.927795</td>
+      <td>3.443261e-07</td>
+      <td>1.195055e-08</td>
+      <td>1.702163e-08</td>
+      <td>3.449536e-07</td>
+      <td>62.0</td>
+      <td>-66747.110</td>
+      <td>19.898780</td>
+      <td>-0.780</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>61.932021</td>
+      <td>Cu62:-1e?</td>
+      <td>-</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>28.07</td>
+      <td>5.98</td>
+      <td>61.932051</td>
+      <td>4.041159e-07</td>
+      <td>1.195055e-08</td>
+      <td>1.996979e-08</td>
+      <td>4.047855e-07</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>23.351808</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>61.934369</td>
+      <td>?</td>
+      <td>Non-isobaric</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>3872.82</td>
+      <td>62.56</td>
+      <td>61.934369</td>
+      <td>3.440307e-08</td>
+      <td>1.195055e-08</td>
+      <td>1.742077e-08</td>
+      <td>4.037165e-08</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.329101</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>61.943618</td>
+      <td>Ga62:-1e</td>
+      <td>-</td>
+      <td>61.943641</td>
+      <td>6.940000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>954.58</td>
+      <td>31.20</td>
+      <td>61.943636</td>
+      <td>6.928509e-08</td>
+      <td>1.195055e-08</td>
+      <td>7.320919e-09</td>
+      <td>7.068829e-08</td>
+      <td>62.0</td>
+      <td>-51992.051</td>
+      <td>4.078724</td>
+      <td>-5.139</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>61.946994</td>
+      <td>Ti46:O16:-1e</td>
+      <td>mass calibrant</td>
+      <td>61.946993</td>
+      <td>1.760001e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>34004.53</td>
+      <td>186.60</td>
+      <td>61.946993</td>
+      <td>1.160791e-08</td>
+      <td>1.195055e-08</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>62.0</td>
+      <td>-48864.806</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>61.949527</td>
+      <td>Sc46:O16:-1e</td>
+      <td>-</td>
+      <td>61.949534</td>
+      <td>7.320000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>1567.77</td>
+      <td>40.11</td>
+      <td>61.949540</td>
+      <td>5.405842e-08</td>
+      <td>1.195055e-08</td>
+      <td>1.055865e-08</td>
+      <td>5.636146e-08</td>
+      <td>62.0</td>
+      <td>-46492.209</td>
+      <td>3.252373</td>
+      <td>6.017</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>61.956611</td>
+      <td>Ca43:F19:-1e</td>
+      <td>shape calibrant</td>
+      <td>61.956621</td>
+      <td>2.440018e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>25966.02</td>
+      <td>161.32</td>
+      <td>61.956622</td>
+      <td>1.328166e-08</td>
+      <td>1.195055e-08</td>
+      <td>2.466350e-09</td>
+      <td>1.803610e-08</td>
+      <td>62.0</td>
+      <td>-39895.679</td>
+      <td>1.040904</td>
+      <td>0.593</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>61.958997</td>
+      <td>?</td>
+      <td>-</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>25.28</td>
+      <td>6.40</td>
+      <td>61.959019</td>
+      <td>4.256470e-07</td>
+      <td>1.195055e-08</td>
+      <td>1.179957e-07</td>
+      <td>4.418610e-07</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>25.501771</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The values for chi-squared as well as the parameter uncertainties and correlations reported by lmfit below should be taken with caution when your MLE fit includes bins with low statistics. For details see Notes section in the spectrum.peakfit() method documentation.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<h2> Model</h2> ((((((((Model(constant, prefix='bkg_') + Model(emg22, prefix='p0_')) + Model(emg22, prefix='p1_')) + Model(emg22, prefix='p2_')) + Model(emg22, prefix='p3_')) + Model(emg22, prefix='p4_')) + Model(emg22, prefix='p5_')) + Model(emg22, prefix='p6_')) + Model(emg22, prefix='p7_')) <h2>Fit Statistics</h2><table><tr><td>fitting method</td><td>least_squares</td><td></td></tr><tr><td># function evals</td><td>9</td><td></td></tr><tr><td># data points</td><td>1027</td><td></td></tr><tr><td># variables</td><td>17</td><td></td></tr><tr><td>chi-square</td><td> 1237.06416</td><td></td></tr><tr><td>reduced chi-square</td><td> 1.22481600</td><td></td></tr><tr><td>Akaike info crit.</td><td> 225.123700</td><td></td></tr><tr><td>Bayesian info crit.</td><td> 309.008452</td><td></td></tr></table><h2>Variables</h2><table><tr><th> name </th><th> value </th><th> standard error </th><th> relative error </th><th> initial value </th><th> min </th><th> max </th><th> vary </th><th> expression </th></tr><tr><td> bkg_c </td><td>  0.26119680 </td><td>  0.02315482 </td><td> (8.86%) </td><td> 0.1 </td><td>  0.00000000 </td><td>  4.00000000 </td><td> True </td><td>  </td></tr><tr><td> p0_amp </td><td>  0.00141907 </td><td>  2.4842e-04 </td><td> (17.51%) </td><td> 0.001488 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p0_mu </td><td>  61.9278147 </td><td>  2.2955e-05 </td><td> (0.00%) </td><td> 61.927800309876424 </td><td>  61.9178003 </td><td>  61.9378003 </td><td> True </td><td>  </td></tr><tr><td> p0_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p0_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p0_eta_m1 </td></tr><tr><td> p0_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p0_eta_p1 </td></tr><tr><td> p0_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_amp </td><td>  0.00103012 </td><td>  2.1954e-04 </td><td> (21.31%) </td><td> 0.000496 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p1_mu </td><td>  61.9320700 </td><td>  2.7212e-05 </td><td> (0.00%) </td><td> 61.93202053070152 </td><td>  61.9220205 </td><td>  61.9420205 </td><td> True </td><td>  </td></tr><tr><td> p1_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p1_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p1_eta_m1 </td></tr><tr><td> p1_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p1_eta_p1 </td></tr><tr><td> p1_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_amp </td><td>  0.14211660 </td><td>  0.00229567 </td><td> (1.62%) </td><td> 0.15648800000000002 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p2_mu </td><td>  61.9343887 </td><td>  2.0515e-06 </td><td> (0.00%) </td><td> 61.93436923761443 </td><td>  61.9243692 </td><td>  61.9443692 </td><td> True </td><td>  </td></tr><tr><td> p2_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p2_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p2_eta_m1 </td></tr><tr><td> p2_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p2_eta_p1 </td></tr><tr><td> p2_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_amp </td><td>  0.03502903 </td><td>  0.00114480 </td><td> (3.27%) </td><td> 0.031992 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p3_mu </td><td>  61.9436549 </td><td>  4.0836e-06 </td><td> (0.00%) </td><td> 61.943617703998214 </td><td>  61.9336177 </td><td>  61.9536177 </td><td> True </td><td>  </td></tr><tr><td> p3_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p3_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p3_eta_m1 </td></tr><tr><td> p3_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p3_eta_p1 </td></tr><tr><td> p3_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_amp </td><td>  1.24782758 </td><td>  0.00684747 </td><td> (0.55%) </td><td> 1.0294480000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p4_mu </td><td>  61.9470121 </td><td>  6.8949e-07 </td><td> (0.00%) </td><td> 61.946994300285866 </td><td>  61.9369943 </td><td>  61.9569943 </td><td> True </td><td>  </td></tr><tr><td> p4_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p4_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p4_eta_m1 </td></tr><tr><td> p4_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p4_eta_p1 </td></tr><tr><td> p4_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_amp </td><td>  0.05753078 </td><td>  0.00147176 </td><td> (2.56%) </td><td> 0.050095999999999995 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p5_mu </td><td>  61.9495592 </td><td>  3.1967e-06 </td><td> (0.00%) </td><td> 61.94952680789496 </td><td>  61.9395268 </td><td>  61.9595268 </td><td> True </td><td>  </td></tr><tr><td> p5_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p5_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p5_eta_m1 </td></tr><tr><td> p5_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p5_eta_p1 </td></tr><tr><td> p5_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_amp </td><td>  0.95284700 </td><td>  0.00591978 </td><td> (0.62%) </td><td> 0.8422080000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p6_mu </td><td>  61.9566409 </td><td>  7.7273e-07 </td><td> (0.00%) </td><td> 61.95661076349748 </td><td>  61.9466108 </td><td>  61.9666108 </td><td> True </td><td>  </td></tr><tr><td> p6_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p6_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_m1 </td></tr><tr><td> p6_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_p1 </td></tr><tr><td> p6_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_amp </td><td>  9.2777e-04 </td><td>  2.3485e-04 </td><td> (25.31%) </td><td> 0.001488 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p7_mu </td><td>  61.9590381 </td><td>  3.6728e-05 </td><td> (0.00%) </td><td> 61.95899664282278 </td><td>  61.9489966 </td><td>  61.9689966 </td><td> True </td><td>  </td></tr><tr><td> p7_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p7_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p7_eta_m1 </td></tr><tr><td> p7_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p7_eta_p1 </td></tr><tr><td> p7_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr></table><h2>Correlations (unreported correlations are < 0.100)</h2><table><tr><td>p4_amp</td><td>p4_mu</td><td>-0.1469</td></tr><tr><td>p7_amp</td><td>p7_mu</td><td>-0.1139</td></tr></table></div>
 </div>
 </div>
 <div class="section" id="Plot-the-fit-curve-zoomed-to-a-region-of-interest-(optional)">
@@ -764,18 +1899,19 @@ chi-square fitting with <a class="reference internal" href="modules.html#emgfit.
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_17_0.png" src="_images/emgfit_tutorial_17_0.png" />
+</div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-8-52fa46e05c69&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>spec<span class="ansi-blue-fg">.</span>plot_fit_zoom<span class="ansi-blue-fg">(</span>peak_indeces<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">3</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">4</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span> <span class="ansi-red-fg"># zoom to region around peaks 3 and 4</span>
-
-<span class="ansi-red-fg">NameError</span>: name &#39;spec&#39; is not defined
-</pre></div></div>
+<img alt="_images/emgfit_tutorial_17_1.png" src="_images/emgfit_tutorial_17_1.png" />
+</div>
 </div>
 </div>
 <div class="section" id="Export-fit-results">
@@ -798,12 +1934,7 @@ chi-square fitting with <a class="reference internal" href="modules.html#emgfit.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-9-5f4a0154c9de&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>spec<span class="ansi-blue-fg">.</span>save_results<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;outputs/&#39;</span><span class="ansi-blue-fg">+</span>filename<span class="ansi-blue-fg">+</span><span class="ansi-blue-fg">&#39; fitting MLE&#39;</span><span class="ansi-blue-fg">)</span>
-
-<span class="ansi-red-fg">NameError</span>: name &#39;spec&#39; is not defined
+ERROR: File outputs/2019-09-13_004-_006 SUMMED High stats 62Ga fitting MLE.xlsx already exists. No files saved! Choose a different filename or delete the original file and re-try.
 </pre></div></div>
 </div>
 <p><strong>That’s it! In principle we’re be done with the fitting at this point.</strong> Next we would probably take a look at the output file and proceed with some post-processing in Excel (e.g. combining mass values from different spectra etc.).</p>
@@ -815,7 +1946,7 @@ chi-square fitting with <a class="reference internal" href="modules.html#emgfit.
 <div class="section" id="Alternative-1:-Performing-the-mass-recalibration-separately-before-the-ion-of-interest-fits">
 <h3>Alternative 1: Performing the mass recalibration separately before the ion-of-interest fits<a class="headerlink" href="#Alternative-1:-Performing-the-mass-recalibration-separately-before-the-ion-of-interest-fits" title="Permalink to this headline">¶</a></h3>
 <p>All steps up to the final peak fit are identical. For breviety here we simply create an exact clone of the above spectrum object:</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
@@ -824,20 +1955,6 @@ chi-square fitting with <a class="reference internal" href="modules.html#emgfit.
 <span class="n">spec2</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span> <span class="c1"># create a clone of the spectrum object</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-10-440dac9272ab&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      1</span> <span class="ansi-green-fg">import</span> copy
-<span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>spec2 <span class="ansi-blue-fg">=</span> copy<span class="ansi-blue-fg">.</span>deepcopy<span class="ansi-blue-fg">(</span>spec<span class="ansi-blue-fg">)</span> <span class="ansi-red-fg"># create a clone of the spectrum object</span>
-
-<span class="ansi-red-fg">NameError</span>: name &#39;spec&#39; is not defined
-</pre></div></div>
 </div>
 <div class="section" id="First-obtain-the-recalibration-factor-from-a-fit-of-the-mass-calibrant">
 <h4>First obtain the recalibration factor from a fit of the mass calibrant<a class="headerlink" href="#First-obtain-the-recalibration-factor-from-a-fit-of-the-mass-calibrant" title="Permalink to this headline">¶</a></h4>
@@ -850,17 +1967,51 @@ chi-square fitting with <a class="reference internal" href="modules.html#emgfit.
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+##### Calibrant fit #####
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_25_1.png" src="_images/emgfit_tutorial_25_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_25_2.png" src="_images/emgfit_tutorial_25_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<h2> Model</h2> ((Model(constant, prefix='bkg_') + Model(emg22, prefix='p4_')) + Model(emg22, prefix='p5_')) <h2>Fit Statistics</h2><table><tr><td>fitting method</td><td>least_squares</td><td></td></tr><tr><td># function evals</td><td>9</td><td></td></tr><tr><td># data points</td><td>169</td><td></td></tr><tr><td># variables</td><td>5</td><td></td></tr><tr><td>chi-square</td><td> 307.772018</td><td></td></tr><tr><td>reduced chi-square</td><td> 1.87665864</td><td></td></tr><tr><td>Akaike info crit.</td><td> 111.308840</td><td></td></tr><tr><td>Bayesian info crit.</td><td> 126.958333</td><td></td></tr></table><h2>Variables</h2><table><tr><th> name </th><th> value </th><th> standard error </th><th> relative error </th><th> initial value </th><th> min </th><th> max </th><th> vary </th><th> expression </th></tr><tr><td> bkg_c </td><td>  1.05752689 </td><td>  0.13337284 </td><td> (12.61%) </td><td> 0.1 </td><td>  0.00000000 </td><td>  4.00000000 </td><td> True </td><td>  </td></tr><tr><td> p4_amp </td><td>  1.24572232 </td><td>  0.00678229 </td><td> (0.54%) </td><td> 1.0294480000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p4_mu </td><td>  61.9470122 </td><td>  6.7237e-07 </td><td> (0.00%) </td><td> 61.946994300285866 </td><td>  61.9369943 </td><td>  61.9569943 </td><td> True </td><td>  </td></tr><tr><td> p4_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p4_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p4_eta_m1 </td></tr><tr><td> p4_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p4_eta_p1 </td></tr><tr><td> p4_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_amp </td><td>  0.05637666 </td><td>  0.00148134 </td><td> (2.63%) </td><td> 0.050095999999999995 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p5_mu </td><td>  61.9495591 </td><td>  3.2791e-06 </td><td> (0.00%) </td><td> 61.94952680789496 </td><td>  61.9395268 </td><td>  61.9595268 </td><td> True </td><td>  </td></tr><tr><td> p5_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p5_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p5_eta_m1 </td></tr><tr><td> p5_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p5_eta_p1 </td></tr><tr><td> p5_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr></table></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-11-30b71865faa5&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>spec2<span class="ansi-blue-fg">.</span>fit_calibrant<span class="ansi-blue-fg">(</span>species_mass_calib<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;Ti46:O16:-1e&#39;</span><span class="ansi-blue-fg">)</span>
 
-<span class="ansi-red-fg">NameError</span>: name &#39;spec2&#39; is not defined
+##### Mass recalibration #####
+
+
+Relative literature error of mass calibrant:    3e-09
+Relative statistical error of mass calibrant:   1.2e-08
+
+Recalibration factor:      0.999999689 = 1 -3.11e-07
+Relative recalibration error:  1.2e-08
+
+Determining absolute centroid shifts of mass calibrant.
+
 </pre></div></div>
 </div>
 </div>
@@ -875,18 +2026,351 @@ chi-square fitting with <a class="reference internal" href="modules.html#emgfit.
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_27_0.png" src="_images/emgfit_tutorial_27_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_27_1.png" src="_images/emgfit_tutorial_27_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-12-dc5625286cbc&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>spec2<span class="ansi-blue-fg">.</span>fit_peaks<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
 
-<span class="ansi-red-fg">NameError</span>: name &#39;spec2&#39; is not defined
+##### Peak-shape uncertainty evaluation #####
+
+All mass shifts below are corrected for the corresponding shifts of the calibrant peak.
+
+Determining absolute centroid shifts of mass calibrant.
+
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 0 by -0.200 /  0.184 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 1 by  0.469 / -0.391 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 2 by -0.371 /  0.232 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 3 by -0.021 /  0.026 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 5 by  0.032 / -0.069 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 6 by  0.052 / -0.003 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 7 by  0.228 / -0.189 μu.
+
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 0 by -0.443 /  0.407 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 1 by -0.897 /  0.948 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 2 by -0.427 /  0.239 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 3 by -0.148 /  0.158 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 5 by -0.152 /  0.266 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 6 by -0.081 /  0.084 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 7 by -1.583 /  1.728 μu.
+
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 0 by  0.534 / -0.505 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 1 by  0.322 / -0.226 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 2 by  0.228 / -0.418 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 3 by  0.286 / -0.194 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 5 by  0.244 / -0.155 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 6 by  0.086 / -0.049 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 7 by  0.460 / -0.330 μu.
+
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 0 by -0.682 /  0.715 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 1 by  0.226 / -0.195 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 2 by -0.501 /  0.369 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 3 by -0.070 /  0.151 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 5 by -0.125 /  0.098 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 6 by -0.030 / -0.021 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 7 by -0.724 /  0.721 μu.
+
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 0 by -0.241 /  0.260 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 1 by -0.134 /  0.139 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 2 by -0.254 /  0.043 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 3 by -0.116 /  0.206 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 5 by -0.048 /  0.171 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 6 by -0.029 /  0.068 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 7 by  0.215 / -0.015 μu.
+
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 0 by -0.029 / -0.017 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 1 by -0.194 /  0.103 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 2 by -0.150 / -0.023 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 3 by -0.086 /  0.088 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 5 by -0.207 /  0.195 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 6 by  0.043 /  0.003 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 7 by -3.030 /  2.429 μu.
+
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 0 by  0.020 / -0.125 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 1 by  0.245 / -0.349 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 2 by  0.191 / -0.497 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 3 by  0.145 / -0.177 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 5 by  0.042 /  0.007 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 6 by -0.008 /  0.014 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 7 by  0.444 / -0.461 μu.
+
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 0 by -0.066 /  0.074 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 1 by  0.330 / -0.326 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 2 by  0.024 / -0.020 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 3 by  0.039 / -0.026 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 5 by  0.382 / -0.444 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 6 by -0.026 /  0.046 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 7 by  1.375 / -6.324 μu.
+
+Relative peak-shape error of peak 0: 1.7e-08
+Relative peak-shape error of peak 1: 2e-08
+Relative peak-shape error of peak 2: 1.7e-08
+Relative peak-shape error of peak 3: 7e-09
+Relative peak-shape error of peak 5: 1e-08
+Relative peak-shape error of peak 6: 3e-09
+Relative peak-shape error of peak 7: 1.18e-07
 </pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x_pos</th>
+      <th>species</th>
+      <th>comment</th>
+      <th>m_AME</th>
+      <th>m_AME_error</th>
+      <th>extrapolated</th>
+      <th>fit_model</th>
+      <th>cost_func</th>
+      <th>red_chi</th>
+      <th>area</th>
+      <th>area_error</th>
+      <th>m_ion</th>
+      <th>rel_stat_error</th>
+      <th>rel_recal_error</th>
+      <th>rel_peakshape_error</th>
+      <th>rel_mass_error</th>
+      <th>A</th>
+      <th>atomic_ME_keV</th>
+      <th>mass_error_keV</th>
+      <th>m_dev_keV</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>61.927800</td>
+      <td>Ni62:-1e</td>
+      <td>-</td>
+      <td>61.927796</td>
+      <td>4.700000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>38.67</td>
+      <td>6.77</td>
+      <td>61.927795</td>
+      <td>3.443261e-07</td>
+      <td>1.196007e-08</td>
+      <td>1.710577e-08</td>
+      <td>3.449581e-07</td>
+      <td>62.0</td>
+      <td>-66747.125</td>
+      <td>19.899039</td>
+      <td>-0.795</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>61.932021</td>
+      <td>Cu62:-1e?</td>
+      <td>-</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>28.07</td>
+      <td>5.98</td>
+      <td>61.932051</td>
+      <td>4.041159e-07</td>
+      <td>1.196007e-08</td>
+      <td>2.017798e-08</td>
+      <td>4.047961e-07</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>23.352419</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>61.934369</td>
+      <td>?</td>
+      <td>Non-isobaric</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>3872.82</td>
+      <td>62.56</td>
+      <td>61.934369</td>
+      <td>3.440307e-08</td>
+      <td>1.196007e-08</td>
+      <td>1.678873e-08</td>
+      <td>4.010582e-08</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.313765</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>61.943618</td>
+      <td>Ga62:-1e</td>
+      <td>-</td>
+      <td>61.943641</td>
+      <td>6.940000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>954.58</td>
+      <td>31.20</td>
+      <td>61.943636</td>
+      <td>6.928509e-08</td>
+      <td>1.196007e-08</td>
+      <td>7.462671e-09</td>
+      <td>7.070473e-08</td>
+      <td>62.0</td>
+      <td>-51992.065</td>
+      <td>4.079672</td>
+      <td>-5.153</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>61.946994</td>
+      <td>Ti46:O16:-1e</td>
+      <td>mass calibrant</td>
+      <td>61.946993</td>
+      <td>1.760001e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.88</td>
+      <td>33947.16</td>
+      <td>184.82</td>
+      <td>61.946993</td>
+      <td>1.161771e-08</td>
+      <td>1.196007e-08</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>62.0</td>
+      <td>-48864.806</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>61.949527</td>
+      <td>Sc46:O16:-1e</td>
+      <td>-</td>
+      <td>61.949534</td>
+      <td>7.320000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>1567.77</td>
+      <td>40.11</td>
+      <td>61.949540</td>
+      <td>5.405842e-08</td>
+      <td>1.196007e-08</td>
+      <td>1.048831e-08</td>
+      <td>5.635034e-08</td>
+      <td>62.0</td>
+      <td>-46492.223</td>
+      <td>3.251732</td>
+      <td>6.002</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>61.956611</td>
+      <td>Ca43:F19:-1e</td>
+      <td>shape calibrant</td>
+      <td>61.956621</td>
+      <td>2.440018e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>25966.02</td>
+      <td>161.32</td>
+      <td>61.956622</td>
+      <td>1.328166e-08</td>
+      <td>1.196007e-08</td>
+      <td>2.639794e-09</td>
+      <td>1.806694e-08</td>
+      <td>62.0</td>
+      <td>-39895.693</td>
+      <td>1.042683</td>
+      <td>0.578</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>61.958997</td>
+      <td>?</td>
+      <td>-</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>MLE</td>
+      <td>1.22</td>
+      <td>25.28</td>
+      <td>6.40</td>
+      <td>61.959019</td>
+      <td>4.256470e-07</td>
+      <td>1.196007e-08</td>
+      <td>1.177245e-07</td>
+      <td>4.417889e-07</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>25.497610</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The values for chi-squared as well as the parameter uncertainties and correlations reported by lmfit below should be taken with caution when your MLE fit includes bins with low statistics. For details see Notes section in the spectrum.peakfit() method documentation.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<h2> Model</h2> ((((((((Model(constant, prefix='bkg_') + Model(emg22, prefix='p0_')) + Model(emg22, prefix='p1_')) + Model(emg22, prefix='p2_')) + Model(emg22, prefix='p3_')) + Model(emg22, prefix='p4_')) + Model(emg22, prefix='p5_')) + Model(emg22, prefix='p6_')) + Model(emg22, prefix='p7_')) <h2>Fit Statistics</h2><table><tr><td>fitting method</td><td>least_squares</td><td></td></tr><tr><td># function evals</td><td>9</td><td></td></tr><tr><td># data points</td><td>1027</td><td></td></tr><tr><td># variables</td><td>17</td><td></td></tr><tr><td>chi-square</td><td> 1237.06416</td><td></td></tr><tr><td>reduced chi-square</td><td> 1.22481600</td><td></td></tr><tr><td>Akaike info crit.</td><td> 225.123700</td><td></td></tr><tr><td>Bayesian info crit.</td><td> 309.008452</td><td></td></tr></table><h2>Variables</h2><table><tr><th> name </th><th> value </th><th> standard error </th><th> relative error </th><th> initial value </th><th> min </th><th> max </th><th> vary </th><th> expression </th></tr><tr><td> bkg_c </td><td>  0.26119680 </td><td>  0.02315482 </td><td> (8.86%) </td><td> 0.1 </td><td>  0.00000000 </td><td>  4.00000000 </td><td> True </td><td>  </td></tr><tr><td> p0_amp </td><td>  0.00141907 </td><td>  2.4842e-04 </td><td> (17.51%) </td><td> 0.001488 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p0_mu </td><td>  61.9278147 </td><td>  2.2955e-05 </td><td> (0.00%) </td><td> 61.927800309876424 </td><td>  61.9178003 </td><td>  61.9378003 </td><td> True </td><td>  </td></tr><tr><td> p0_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p0_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p0_eta_m1 </td></tr><tr><td> p0_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p0_eta_p1 </td></tr><tr><td> p0_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_amp </td><td>  0.00103012 </td><td>  2.1954e-04 </td><td> (21.31%) </td><td> 0.000496 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p1_mu </td><td>  61.9320700 </td><td>  2.7212e-05 </td><td> (0.00%) </td><td> 61.93202053070152 </td><td>  61.9220205 </td><td>  61.9420205 </td><td> True </td><td>  </td></tr><tr><td> p1_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p1_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p1_eta_m1 </td></tr><tr><td> p1_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p1_eta_p1 </td></tr><tr><td> p1_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_amp </td><td>  0.14211660 </td><td>  0.00229567 </td><td> (1.62%) </td><td> 0.15648800000000002 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p2_mu </td><td>  61.9343887 </td><td>  2.0515e-06 </td><td> (0.00%) </td><td> 61.93436923761443 </td><td>  61.9243692 </td><td>  61.9443692 </td><td> True </td><td>  </td></tr><tr><td> p2_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p2_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p2_eta_m1 </td></tr><tr><td> p2_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p2_eta_p1 </td></tr><tr><td> p2_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_amp </td><td>  0.03502903 </td><td>  0.00114480 </td><td> (3.27%) </td><td> 0.031992 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p3_mu </td><td>  61.9436549 </td><td>  4.0836e-06 </td><td> (0.00%) </td><td> 61.943617703998214 </td><td>  61.9336177 </td><td>  61.9536177 </td><td> True </td><td>  </td></tr><tr><td> p3_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p3_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p3_eta_m1 </td></tr><tr><td> p3_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p3_eta_p1 </td></tr><tr><td> p3_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_amp </td><td>  1.24782758 </td><td>  0.00684747 </td><td> (0.55%) </td><td> 1.0294480000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p4_mu </td><td>  61.9470121 </td><td>  6.8949e-07 </td><td> (0.00%) </td><td> 61.946994300285866 </td><td>  61.9369943 </td><td>  61.9569943 </td><td> True </td><td>  </td></tr><tr><td> p4_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p4_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p4_eta_m1 </td></tr><tr><td> p4_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p4_eta_p1 </td></tr><tr><td> p4_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_amp </td><td>  0.05753078 </td><td>  0.00147176 </td><td> (2.56%) </td><td> 0.050095999999999995 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p5_mu </td><td>  61.9495592 </td><td>  3.1967e-06 </td><td> (0.00%) </td><td> 61.94952680789496 </td><td>  61.9395268 </td><td>  61.9595268 </td><td> True </td><td>  </td></tr><tr><td> p5_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p5_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p5_eta_m1 </td></tr><tr><td> p5_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p5_eta_p1 </td></tr><tr><td> p5_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_amp </td><td>  0.95284700 </td><td>  0.00591978 </td><td> (0.62%) </td><td> 0.8422080000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p6_mu </td><td>  61.9566409 </td><td>  7.7273e-07 </td><td> (0.00%) </td><td> 61.95661076349748 </td><td>  61.9466108 </td><td>  61.9666108 </td><td> True </td><td>  </td></tr><tr><td> p6_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p6_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_m1 </td></tr><tr><td> p6_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_p1 </td></tr><tr><td> p6_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_amp </td><td>  9.2777e-04 </td><td>  2.3485e-04 </td><td> (25.31%) </td><td> 0.001488 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p7_mu </td><td>  61.9590381 </td><td>  3.6728e-05 </td><td> (0.00%) </td><td> 61.95899664282278 </td><td>  61.9489966 </td><td>  61.9689966 </td><td> True </td><td>  </td></tr><tr><td> p7_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p7_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p7_eta_m1 </td></tr><tr><td> p7_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p7_eta_p1 </td></tr><tr><td> p7_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr></table><h2>Correlations (unreported correlations are < 0.100)</h2><table><tr><td>p4_amp</td><td>p4_mu</td><td>-0.1469</td></tr><tr><td>p7_amp</td><td>p7_mu</td><td>-0.1139</td></tr></table></div>
 </div>
 </div>
 </div>
@@ -906,21 +2390,60 @@ chi-square fitting with <a class="reference internal" href="modules.html#emgfit.
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Creating synthetic spectra via bootstrap re-sampling and fitting  them for A_stat determination.
+Depending on the choice of `N_spectra` this can take a few minutes. Interrupt kernel if this takes too long.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "3fddc4658b994534b3e4f99332905d86"}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Done!
+
+[[Model]]
+    Model(powerlaw)
+[[Fit Statistics]]
+    # fitting method   = leastsq
+    # function evals   = 5
+    # data points      = 8
+    # variables        = 1
+    chi-square         = 8.9947e-09
+    reduced chi-square = 1.2850e-09
+    Akaike info crit   = -162.848615
+    Bayesian info crit = -162.769174
+[[Variables]]
+    amplitude:  1.4857e-04 +/- 1.2998e-05 (8.75%) (init = 1)
+    exponent:  -0.5 (fixed)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_29_3.png" src="_images/emgfit_tutorial_29_3.png" />
+</div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-13-5b50247ca518&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      1</span> <span class="ansi-green-fg">import</span> copy
-<span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>spec_chi_sq <span class="ansi-blue-fg">=</span> copy<span class="ansi-blue-fg">.</span>deepcopy<span class="ansi-blue-fg">(</span>spec<span class="ansi-blue-fg">)</span> <span class="ansi-red-fg"># create a clone of the spectrum object</span>
-<span class="ansi-green-intense-fg ansi-bold">      3</span>
-<span class="ansi-green-intense-fg ansi-bold">      4</span> <span class="ansi-red-fg"># Use Pearson&#39;s chi-squared statistic for A_stat_emg determination</span>
-<span class="ansi-green-intense-fg ansi-bold">      5</span> spec_chi_sq<span class="ansi-blue-fg">.</span>determine_A_stat_emg<span class="ansi-blue-fg">(</span>species<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;Ca43:F19:-1e&#39;</span><span class="ansi-blue-fg">,</span>x_range<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">0.004</span><span class="ansi-blue-fg">,</span>cost_func<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;chi-square&#39;</span><span class="ansi-blue-fg">,</span>plot_filename<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;outputs/&#39;</span><span class="ansi-blue-fg">+</span>filename<span class="ansi-blue-fg">+</span><span class="ansi-blue-fg">&#39;_chi-square&#39;</span><span class="ansi-blue-fg">,</span>N_spectra<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">10</span><span class="ansi-blue-fg">)</span>
-
-<span class="ansi-red-fg">NameError</span>: name &#39;spec&#39; is not defined
+A_stat of a Gaussian model: 0.425
+Default A_stat_emg for Hyper-EMG models: 0.52
+A_stat_emg for this spectrum&#39;s emg22 fit model: 0.619 +- 0.054
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -932,20 +2455,357 @@ chi-square fitting with <a class="reference internal" href="modules.html#emgfit.
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_30_0.png" src="_images/emgfit_tutorial_30_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/emgfit_tutorial_30_1.png" src="_images/emgfit_tutorial_30_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-14-4098b944f53e&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>spec_chi_sq<span class="ansi-blue-fg">.</span>fit_peaks<span class="ansi-blue-fg">(</span>species_mass_calib<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;Ti46:O16:-1e&#39;</span><span class="ansi-blue-fg">,</span>cost_func<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;chi-square&#39;</span><span class="ansi-blue-fg">)</span> <span class="ansi-red-fg"># use Pearson&#39;s chi-squared statistic</span>
 
-<span class="ansi-red-fg">NameError</span>: name &#39;spec_chi_sq&#39; is not defined
+##### Mass recalibration #####
+
+
+Relative literature error of mass calibrant:    3e-09
+Relative statistical error of mass calibrant:   1.3e-08
+
+Recalibration factor:      0.999999689 = 1 -3.11e-07
+Relative recalibration error:  1.3e-08
+
+
+##### Peak-shape uncertainty evaluation #####
+
+All mass shifts below are corrected for the corresponding shifts of the calibrant peak.
+
+Determining absolute centroid shifts of mass calibrant.
+
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 0 by -2.553 / -0.335 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 1 by -0.135 /  0.066 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 2 by -0.384 /  0.272 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 3 by -0.092 /  0.077 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 5 by -0.028 /  0.030 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 6 by  0.010 / -0.011 μu.
+Re-fitting with sigma = 8.33e-05 +/- 2.73e-06 shifts peak 7 by -0.678 /  1.590 μu.
+
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 0 by -0.907 /  0.870 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 1 by -0.928 /  0.734 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 2 by -0.665 /  0.527 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 3 by -0.203 /  0.180 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 5 by -0.143 /  0.145 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 6 by -0.015 /  0.018 μu.
+Re-fitting with theta = 7.30e-01 +/- 2.08e-02 shifts peak 7 by -1.595 /  2.653 μu.
+
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 0 by  0.620 / -0.475 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 1 by  0.548 / -0.406 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 2 by  0.342 / -0.302 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 3 by  0.323 / -0.225 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 5 by  0.176 / -0.107 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 6 by  0.018 / -0.015 μu.
+Re-fitting with eta_m1 = 9.31e-01 +/- 1.78e-02 shifts peak 7 by  0.628 / -0.509 μu.
+
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 0 by -3.304 /  0.435 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 1 by -0.120 /  0.196 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 2 by -0.486 /  0.505 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 3 by -0.226 /  0.224 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 5 by -0.216 /  0.217 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 6 by -0.033 /  0.031 μu.
+Re-fitting with tau_m1 = 4.64e-05 +/- 5.07e-06 shifts peak 7 by -1.950 /  2.106 μu.
+
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 0 by -0.121 /  0.244 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 1 by -0.268 /  0.340 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 2 by -0.061 /  0.105 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 3 by -0.093 /  0.171 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 5 by  0.006 /  0.048 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 6 by  0.016 / -0.008 μu.
+Re-fitting with tau_m2 = 1.94e-04 +/- 2.55e-05 shifts peak 7 by -0.120 /  0.174 μu.
+
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 0 by -0.143 /  0.069 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 1 by -0.309 /  0.132 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 2 by -0.327 /  0.191 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 3 by -0.136 /  0.112 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 5 by -0.229 /  0.207 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 6 by  0.018 / -0.015 μu.
+Re-fitting with eta_p1 = 8.13e-01 +/- 3.62e-02 shifts peak 7 by -8.185 /  6.416 μu.
+
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 0 by  0.153 / -0.285 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 1 by  0.517 / -0.704 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 2 by  0.487 / -0.596 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 3 by  0.168 / -0.207 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 5 by -0.072 /  0.074 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 6 by -0.002 /  0.000 μu.
+Re-fitting with tau_p1 = 1.29e-04 +/- 1.18e-05 shifts peak 7 by  0.045 / -0.070 μu.
+
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 0 by  0.011 / -2.820 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 1 by -0.050 / -0.131 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 2 by -0.011 / -0.139 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 3 by  0.021 / -0.066 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 5 by  0.476 / -0.625 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 6 by -0.018 /  0.024 μu.
+Re-fitting with tau_p2 = 4.54e-04 +/- 5.93e-05 shifts peak 7 by  8.496 / -29.021 μu.
+
+Relative peak-shape error of peak 0: 8.3e-08
+Relative peak-shape error of peak 1: 2.3e-08
+Relative peak-shape error of peak 2: 1.9e-08
+Relative peak-shape error of peak 3: 9e-09
+Relative peak-shape error of peak 5: 1.2e-08
+Relative peak-shape error of peak 6: 1e-09
+Relative peak-shape error of peak 7: 4.91e-07
 </pre></div></div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
 </div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x_pos</th>
+      <th>species</th>
+      <th>comment</th>
+      <th>m_AME</th>
+      <th>m_AME_error</th>
+      <th>extrapolated</th>
+      <th>fit_model</th>
+      <th>cost_func</th>
+      <th>red_chi</th>
+      <th>area</th>
+      <th>area_error</th>
+      <th>m_ion</th>
+      <th>rel_stat_error</th>
+      <th>rel_recal_error</th>
+      <th>rel_peakshape_error</th>
+      <th>rel_mass_error</th>
+      <th>A</th>
+      <th>atomic_ME_keV</th>
+      <th>mass_error_keV</th>
+      <th>m_dev_keV</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>61.927800</td>
+      <td>Ni62:-1e</td>
+      <td>-</td>
+      <td>61.927796</td>
+      <td>4.700000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>chi-square</td>
+      <td>0.78</td>
+      <td>42.98</td>
+      <td>7.29</td>
+      <td>61.927802</td>
+      <td>3.659375e-07</td>
+      <td>1.330349e-08</td>
+      <td>8.347710e-08</td>
+      <td>3.755738e-07</td>
+      <td>62.0</td>
+      <td>-66741.279</td>
+      <td>21.665120</td>
+      <td>5.051</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>61.932021</td>
+      <td>Cu62:-1e?</td>
+      <td>-</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>chi-square</td>
+      <td>0.78</td>
+      <td>31.37</td>
+      <td>6.53</td>
+      <td>61.932058</td>
+      <td>4.283049e-07</td>
+      <td>1.330349e-08</td>
+      <td>2.250901e-08</td>
+      <td>4.291023e-07</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>24.754629</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>61.934369</td>
+      <td>?</td>
+      <td>Non-isobaric</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>chi-square</td>
+      <td>0.78</td>
+      <td>4002.37</td>
+      <td>63.93</td>
+      <td>61.934370</td>
+      <td>3.791713e-08</td>
+      <td>1.330349e-08</td>
+      <td>1.946408e-08</td>
+      <td>4.464910e-08</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.575874</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>61.943618</td>
+      <td>Ga62:-1e</td>
+      <td>-</td>
+      <td>61.943641</td>
+      <td>6.940000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>chi-square</td>
+      <td>0.78</td>
+      <td>967.82</td>
+      <td>31.50</td>
+      <td>61.943636</td>
+      <td>7.709600e-08</td>
+      <td>1.330349e-08</td>
+      <td>8.850163e-09</td>
+      <td>7.873437e-08</td>
+      <td>62.0</td>
+      <td>-51992.161</td>
+      <td>4.542984</td>
+      <td>-5.248</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>61.946994</td>
+      <td>Ti46:O16:-1e</td>
+      <td>mass calibrant</td>
+      <td>61.946993</td>
+      <td>1.760001e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>chi-square</td>
+      <td>0.78</td>
+      <td>34052.89</td>
+      <td>184.77</td>
+      <td>61.946993</td>
+      <td>1.299656e-08</td>
+      <td>1.330349e-08</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>62.0</td>
+      <td>-48864.806</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>61.949527</td>
+      <td>Sc46:O16:-1e</td>
+      <td>-</td>
+      <td>61.949534</td>
+      <td>7.320000e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>chi-square</td>
+      <td>0.78</td>
+      <td>1582.90</td>
+      <td>40.49</td>
+      <td>61.949540</td>
+      <td>6.027830e-08</td>
+      <td>1.330349e-08</td>
+      <td>1.198239e-08</td>
+      <td>6.288111e-08</td>
+      <td>62.0</td>
+      <td>-46492.156</td>
+      <td>3.628594</td>
+      <td>6.070</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>61.956611</td>
+      <td>Ca43:F19:-1e</td>
+      <td>shape calibrant</td>
+      <td>61.956621</td>
+      <td>2.440018e-07</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>chi-square</td>
+      <td>0.78</td>
+      <td>26004.76</td>
+      <td>161.51</td>
+      <td>61.956622</td>
+      <td>1.487002e-08</td>
+      <td>1.330349e-08</td>
+      <td>8.905363e-10</td>
+      <td>1.997232e-08</td>
+      <td>62.0</td>
+      <td>-39895.706</td>
+      <td>1.152647</td>
+      <td>0.565</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>61.958997</td>
+      <td>?</td>
+      <td>-</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>emg22</td>
+      <td>chi-square</td>
+      <td>0.78</td>
+      <td>29.96</td>
+      <td>7.06</td>
+      <td>61.959002</td>
+      <td>4.380771e-07</td>
+      <td>1.330349e-08</td>
+      <td>4.905291e-07</td>
+      <td>6.578049e-07</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>37.964847</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<h2> Model</h2> ((((((((Model(constant, prefix='bkg_') + Model(emg22, prefix='p0_')) + Model(emg22, prefix='p1_')) + Model(emg22, prefix='p2_')) + Model(emg22, prefix='p3_')) + Model(emg22, prefix='p4_')) + Model(emg22, prefix='p5_')) + Model(emg22, prefix='p6_')) + Model(emg22, prefix='p7_')) <h2>Fit Statistics</h2><table><tr><td>fitting method</td><td>least_squares</td><td></td></tr><tr><td># function evals</td><td>7</td><td></td></tr><tr><td># data points</td><td>1027</td><td></td></tr><tr><td># variables</td><td>17</td><td></td></tr><tr><td>chi-square</td><td> 789.027165</td><td></td></tr><tr><td>reduced chi-square</td><td> 0.78121502</td><td></td></tr><tr><td>Akaike info crit.</td><td>-236.713564</td><td></td></tr><tr><td>Bayesian info crit.</td><td>-152.828811</td><td></td></tr></table><h2>Variables</h2><table><tr><th> name </th><th> value </th><th> standard error </th><th> relative error </th><th> initial value </th><th> min </th><th> max </th><th> vary </th><th> expression </th></tr><tr><td> bkg_c </td><td>  0.26881088 </td><td>  0.03720715 </td><td> (13.84%) </td><td> 0.1 </td><td>  0.00000000 </td><td>  4.00000000 </td><td> True </td><td>  </td></tr><tr><td> p0_amp </td><td>  0.00157708 </td><td>  2.6752e-04 </td><td> (16.96%) </td><td> 0.001488 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p0_mu </td><td>  61.9278210 </td><td>  2.3311e-05 </td><td> (0.00%) </td><td> 61.927800309876424 </td><td>  61.9178003 </td><td>  61.9378003 </td><td> True </td><td>  </td></tr><tr><td> p0_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p0_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p0_eta_m1 </td></tr><tr><td> p0_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p0_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p0_eta_p1 </td></tr><tr><td> p0_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p0_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_amp </td><td>  0.00115121 </td><td>  2.3959e-04 </td><td> (20.81%) </td><td> 0.000496 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p1_mu </td><td>  61.9320777 </td><td>  2.5981e-05 </td><td> (0.00%) </td><td> 61.93202053070152 </td><td>  61.9220205 </td><td>  61.9420205 </td><td> True </td><td>  </td></tr><tr><td> p1_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p1_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p1_eta_m1 </td></tr><tr><td> p1_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p1_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p1_eta_p1 </td></tr><tr><td> p1_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p1_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_amp </td><td>  0.14687054 </td><td>  0.00234596 </td><td> (1.60%) </td><td> 0.15648800000000002 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p2_mu </td><td>  61.9343894 </td><td>  2.1344e-06 </td><td> (0.00%) </td><td> 61.93436923761443 </td><td>  61.9243692 </td><td>  61.9443692 </td><td> True </td><td>  </td></tr><tr><td> p2_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p2_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p2_eta_m1 </td></tr><tr><td> p2_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p2_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p2_eta_p1 </td></tr><tr><td> p2_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p2_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_amp </td><td>  0.03551501 </td><td>  0.00115594 </td><td> (3.25%) </td><td> 0.031992 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p3_mu </td><td>  61.9436548 </td><td>  4.0941e-06 </td><td> (0.00%) </td><td> 61.943617703998214 </td><td>  61.9336177 </td><td>  61.9536177 </td><td> True </td><td>  </td></tr><tr><td> p3_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p3_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p3_eta_m1 </td></tr><tr><td> p3_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p3_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p3_eta_p1 </td></tr><tr><td> p3_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p3_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_amp </td><td>  1.24960216 </td><td>  0.00678032 </td><td> (0.54%) </td><td> 1.0294480000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p4_mu </td><td>  61.9470122 </td><td>  6.6779e-07 </td><td> (0.00%) </td><td> 61.946994300285866 </td><td>  61.9369943 </td><td>  61.9569943 </td><td> True </td><td>  </td></tr><tr><td> p4_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p4_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p4_eta_m1 </td></tr><tr><td> p4_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p4_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p4_eta_p1 </td></tr><tr><td> p4_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p4_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_amp </td><td>  0.05808599 </td><td>  0.00148580 </td><td> (2.56%) </td><td> 0.050095999999999995 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p5_mu </td><td>  61.9495593 </td><td>  3.2295e-06 </td><td> (0.00%) </td><td> 61.94952680789496 </td><td>  61.9395268 </td><td>  61.9595268 </td><td> True </td><td>  </td></tr><tr><td> p5_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p5_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p5_eta_m1 </td></tr><tr><td> p5_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p5_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p5_eta_p1 </td></tr><tr><td> p5_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p5_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_amp </td><td>  0.95426876 </td><td>  0.00592669 </td><td> (0.62%) </td><td> 0.8422080000000001 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p6_mu </td><td>  61.9566409 </td><td>  7.6985e-07 </td><td> (0.00%) </td><td> 61.95661076349748 </td><td>  61.9466108 </td><td>  61.9666108 </td><td> True </td><td>  </td></tr><tr><td> p6_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p6_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_m1 </td></tr><tr><td> p6_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p6_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p6_eta_p1 </td></tr><tr><td> p6_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p6_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_amp </td><td>  0.00109948 </td><td>  2.5924e-04 </td><td> (23.58%) </td><td> 0.001488 </td><td>  1.0000e-20 </td><td>         inf </td><td> True </td><td>  </td></tr><tr><td> p7_mu </td><td>  61.9590212 </td><td>  3.2736e-05 </td><td> (0.00%) </td><td> 61.95899664282278 </td><td>  61.9489966 </td><td>  61.9689966 </td><td> True </td><td>  </td></tr><tr><td> p7_sigma </td><td>  8.3298e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 8.329830944305415e-05 </td><td>  0.00000000 </td><td>  0.00508330 </td><td> False </td><td>  </td></tr><tr><td> p7_theta </td><td>  0.72958107 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.7295810682165222 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_m1 </td><td>  0.93085594 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.9308559436145877 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_m2 </td><td>  0.06914406 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.06914405638541232 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p7_eta_m1 </td></tr><tr><td> p7_tau_m1 </td><td>  4.6426e-05 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 4.6426492114914925e-05 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_tau_m2 </td><td>  1.9392e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001939165239395595 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_p1 </td><td>  0.81292600 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.8129260035354914 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td>  </td></tr><tr><td> p7_eta_p2 </td><td>  0.18707400 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.18707399646450862 </td><td>  0.00000000 </td><td>  1.00000000 </td><td> False </td><td> 1-p7_eta_p1 </td></tr><tr><td> p7_tau_p1 </td><td>  1.2908e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0001290811175724487 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr><tr><td> p7_tau_p2 </td><td>  4.5400e-04 </td><td>  0.00000000 </td><td> (0.00%) </td><td> 0.0004539974092137846 </td><td>  1.0000e-12 </td><td>  0.05000000 </td><td> False </td><td>  </td></tr></table><h2>Correlations (unreported correlations are < 0.100)</h2><table><tr><td>bkg_c</td><td>p1_amp</td><td>-0.1003</td></tr></table></div>
+</div>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"b1db523e717f4438b950135645f91345": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "10feeb231fb04f8bb3afc3f02d551823": {"model_name": "ProgressStyleModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "StyleView", "bar_color": null, "description_width": "initial"}}, "3d76829a12c7429f8a2aa5052b9aa6c1": {"model_name": "FloatProgressModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "ProgressView", "bar_style": "success", "description": "100%", "description_tooltip": null, "layout": "IPY_MODEL_b1db523e717f4438b950135645f91345", "max": 80.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_10feeb231fb04f8bb3afc3f02d551823", "value": 80.0}}, "30c7bf07c056469bbfbd2b8dae1abaac": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "f1a81c09f12b414781f8d6daedc4c141": {"model_name": "DescriptionStyleModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "DescriptionStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "StyleView", "description_width": ""}}, "45ad6a6465274231a9d95bbd1ae3cfdc": {"model_name": "HTMLModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "HTMLView", "description": "", "description_tooltip": null, "layout": "IPY_MODEL_30c7bf07c056469bbfbd2b8dae1abaac", "placeholder": "\u200b", "style": "IPY_MODEL_f1a81c09f12b414781f8d6daedc4c141", "value": " 80/80 [00:16&lt;00:00,  4.77it/s]"}}, "a24224f0aa704443867987f9f7a75e2c": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "bbdd23da4b1c4dba878c82dd72e4c905": {"model_name": "HBoxModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_3d76829a12c7429f8a2aa5052b9aa6c1", "IPY_MODEL_45ad6a6465274231a9d95bbd1ae3cfdc"], "layout": "IPY_MODEL_a24224f0aa704443867987f9f7a75e2c"}}, "1c97d9e8d800474c9ce6829e5114c206": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "d0e2abf55a46435e957a17cb4da6295e": {"model_name": "ProgressStyleModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "StyleView", "bar_color": null, "description_width": "initial"}}, "5571ebdf643a433aa341a78afe106a57": {"model_name": "FloatProgressModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "ProgressView", "bar_style": "success", "description": "100%", "description_tooltip": null, "layout": "IPY_MODEL_1c97d9e8d800474c9ce6829e5114c206", "max": 80.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_d0e2abf55a46435e957a17cb4da6295e", "value": 80.0}}, "e5b28243507b4266b85e0586189b553a": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "50bfd9dac850422aaafc219e9e7d9bb6": {"model_name": "DescriptionStyleModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "DescriptionStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "StyleView", "description_width": ""}}, "d105c1c7dd9f4e04a705bf15d3031bd6": {"model_name": "HTMLModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "HTMLView", "description": "", "description_tooltip": null, "layout": "IPY_MODEL_e5b28243507b4266b85e0586189b553a", "placeholder": "\u200b", "style": "IPY_MODEL_50bfd9dac850422aaafc219e9e7d9bb6", "value": " 80/80 [00:12&lt;00:00,  6.55it/s]"}}, "a6eb2e8f5c324cc09b276f74d912f4db": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "3fddc4658b994534b3e4f99332905d86": {"model_name": "HBoxModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_5571ebdf643a433aa341a78afe106a57", "IPY_MODEL_d105c1c7dd9f4e04a705bf15d3031bd6"], "layout": "IPY_MODEL_a6eb2e8f5c324cc09b276f74d912f4db"}}}, "version_major": 2, "version_minor": 0}
+</script></div>
 </div>
 </div>
 
