@@ -19,7 +19,7 @@ bash ./make-index.sh
 
 #add, commit and push files
 git add -f .
-git commit -m "Update gh-pages index with travis build $TRAVIS_BUILD_NUMBER"
+git commit --allow-empty -m "Update gh-pages index with travis build $TRAVIS_BUILD_NUMBER"
 git push -fq origin gh-pages > /dev/null
 
 echo "Done updating gh-pages index"
