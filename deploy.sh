@@ -15,7 +15,7 @@ git clone --quiet --branch=gh-pages https://github.com/${GH_USER}/${GH_REPO}.git
 
 # Update gh-pages index
 cd gh-pages
-./make-index.sh
+bash ./make-index.sh
 
 #add, commit and push files
 git add -f .
