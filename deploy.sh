@@ -20,6 +20,10 @@ bash ./make-index.sh
 #add, commit and push files
 git add -f .
 git commit --allow-empty -m "Update gh-pages index with travis build $TRAVIS_BUILD_NUMBER"
-git push -fq origin gh-pages > /dev/null
+# Remove existing "origin"
+git remote rm origin
+# Add new "origin" with access token in the git URL for authentication
+git remote add origin https://${GH_USER}:${DOCTR_DEPLOY_ENCRYPTION_KEY_ROBBENROLL_EMGFIT}@github.com/${GH_USER}/${GH_REPO}.git gh-pages > /dev/null
+git push -fq origin gh-pages 
 
 echo "Done updating gh-pages index"
