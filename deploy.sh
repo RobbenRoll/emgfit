@@ -1,8 +1,7 @@
+# Script based off of https://github.com/voorhoede/front-end-tooling-recipes/blob/master/travis-deploy-to-gh-pages/scripts/deploy.sh
 #!/bin/bash
 
 set -e # exit with nonzero exit code if anything fails
-
-if [[$TRAVIS_PULL_REQUEST == "false" ]]; then
 
 echo "Starting to update gh-pages index\n"
 
@@ -24,7 +23,3 @@ git commit -m "Update gh-pages index with travis build $TRAVIS_BUILD_NUMBER"
 git push -fq origin gh-pages > /dev/null
 
 echo "Done updating gh-pages index\n"
-
-else
- echo "Skipped updating gh-pages, because build is only a pull request."
-fi;
