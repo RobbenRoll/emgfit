@@ -11,7 +11,7 @@ git config --global user.email "travis@travis-ci.org"
 git config --global user.name "Travis"
 
 #using token clone gh-pages branch
-git clone --quiet --branch=gh-pages https://github.com/${GH_USER}/${GH_REPO}.git gh-pages > /dev/null
+git clone --quiet --branch=gh-pages https://${GH_USER}:${DOCTR_DEPLOY_ENCRYPTION_KEY_ROBBENROLL_EMGFIT}@github.com/${GH_USER}/${GH_REPO}.git gh-pages > /dev/null
 
 # Update gh-pages index
 cd gh-pages
