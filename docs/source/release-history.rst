@@ -2,7 +2,7 @@
 Release History
 ===============
 
-v0.2.0 (2020-08-21):
+v0.2.0 (2020-09-08):
 --------------------
 * Improved numerical robustness and speed of Hyper-EMG functions in emg_funcs
   module. The improved routines avoid arithmetic overflow of exp() or underflow
