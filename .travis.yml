@@ -35,12 +35,17 @@ script:
   - flake8 . --exit-zero # Exit with status code "0" even if there are errors.
   - set -e # exit if building docs fails
   - make -C docs html  # Build the documentation.
-  - pip install doctr
-  - DEPLOY_DIR="$TRAVIS_TAG";
-  - doctr deploy --build-tags --built-docs docs/build/html $DEPLOY_DIR --branch-whitelist # Publish the documentation, only for new version tags.
+  if tag IS present:
+    - DEPLOY_DIR="$TRAVIS_TAG";
+    - pip install doctr
+  # Publish the documentation, only for new version tags
+  - if [ $TRAVIS_TAG != null ]; then
+        doctr deploy --build-tags --built-docs docs/build/html $DEPLOY_DIR --branch-whitelist;
+    fi
+   
 
 # Update index of docs for different releases on gh-pages (only when commiting to master branch)
-deploy:
+before_deploy:
   provider: script
   script: bash deploy.sh
   skip_cleanup: true
