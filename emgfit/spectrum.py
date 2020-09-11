@@ -767,7 +767,7 @@ class spectrum:
             print("Added peak at ",x_pos," u")
 
 
-    def remove_peaks(self,peak_indeces=None,x_pos=None,species="?"):
+    def remove_peaks(self,peak_indeces=None,x_pos=None,species="?",verbose=True):
         """Remove specified peak(s) from the spectrum's :attr:`peaks` list.
 
         Select the peak to be removed by specifying either the respective
@@ -797,7 +797,7 @@ class spectrum:
         # Get indeces of peaks to remove
         if peak_indeces is not None:
             indeces = np.atleast_1d(peak_indeces)
-        elif species is not "?":
+        elif species != "?":
             peaks = self.peaks
             indeces = [i for i in range(len(peaks)) if species == peaks[i].species]
         elif x_pos:
@@ -806,7 +806,8 @@ class spectrum:
             try:
                 rem_peak = self.peaks.pop(i)
                 self.fit_results.pop(i)
-                print("Removed peak at ",rem_peak.x_pos," u")
+                if verbose:
+                    print("Removed peak at ",rem_peak.x_pos," u")
             except:
                 print("Removal of peak {0} failed!".format(i))
                 raise
@@ -3025,7 +3026,7 @@ class spectrum:
         self._update_peak_props(peaks_to_fit,fit_result)
         self.show_peak_properties()
         if show_fit_report:
-            if cost_func is 'MLE':
+            if cost_func == 'MLE':
                 print("The values for chi-squared as well as the parameter "
                       "uncertainties and correlations reported by lmfit below "
                       "should be taken with caution when your MLE fit includes "

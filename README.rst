@@ -20,11 +20,11 @@ wrapper around the `lmfit` curve fitting package and uses many of lmfit's
 user-friendly high-level features. Experience with `lmfit` can be helpful but is
 not an essential prerequisite for using `emgfit` since the `lmfit` features stay
 largely 'hidden under the hood'. `emgfit` is designed to be user-friendly and
-offers automization features whenever reasonable while also supporting a
+offers automization whenever reasonable while also supporting a
 large amount of flexibility and control for the user. Depending on the user's
 preferences an entire spectrum can be rapidly analyzed with only a few lines of
 code. Alternatively, various optional features are available to aid the user in
-a more rigorous analysis process.
+a more rigorous analysis.
 
 Amongst other features, the `emgfit` toolbox includes:
 

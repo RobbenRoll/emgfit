@@ -39,3 +39,7 @@ nbconvert
 nbstripout
 sphinx-gallery
 jupyter_sphinx
+
+# For publishing to PyPI:
+twine
+wheel
