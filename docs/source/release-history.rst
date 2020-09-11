@@ -2,6 +2,10 @@
 Release History
 ===============
 
+An index with links to the documentation of every emgfit version can be found `here`_.
+
+.. _here: https://RobbenRoll.github.io/emgfit
+
 v0.2.0 (2020-09-09):
 --------------------
 * Improved numerical robustness and speed of Hyper-EMG functions in emg_funcs

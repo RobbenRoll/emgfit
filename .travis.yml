@@ -1,53 +1,45 @@
 language: python
 python:
-  - 3.7
-  - 3.8
+- 3.7
+- 3.8
 cache:
   directories:
-    - $HOME/.cache/pip
-    - $HOME/.ccache  # https://github.com/travis-ci/travis-ci/issues/5853
-
-# For automatic publishing of docs with doctr
+  - "$HOME/.cache/pip"
+  - "$HOME/.ccache"
 env:
   global:
-    # Access env variables for deploy.sh
-    - GH_USER: RobbenRoll
-    - GH_REPO: emgfit
-    # Doctr deploy key for RobbenRoll/emgfit
-    - secure: "u0WmX4X/j19MOLQLnRmTjGNnOHgpD6Mlqmn0BJ75KrJqkwRWKofK0K0OkncXr8CFe233zVCH74T+Ai5yrmZ9EuDVgKuEsnaYq0P/0RzvcM2KArj6YnqtxRTWxHL3eaK8ISvkDYdDPIuvNN8fJBR0YF8VnIzsGLGNgeO5MfIBMMDjmKonCvegIxRs3fcewwH/xuAwhz2mckKnvw5ns+9cVvL0zQ+Sx2l4AxqNyhUhUDkng6vzqgH3CqUoiAWa+N9kZd3lhu8rGDLOSWzMOUAEZ19BpNI8LPWgA1mg65+sKQwkb5ubkL8LxBrZxcG75YaQy5+YWqz3qWDoezRb8Jxl/FZhvMc+uzK4VEWvO1itQ8JIib2K6B2C837fv0jvr6bH1rBDStilg5Q0jJvXTKnQCZnr4EezvVvBtdvz4d4DzAL/z3Zk30IX9TwE/AShGalGmIfjCHNRxd8IR5cr4gqoOO7Nvtffz0UjyoPwu8200VntW68P/Lx1XlSxVY7nuws+DWj5lAl4Df+yDxugINewzyl/ttUe/t4mGeAB39ysfbKm+a6sgCsklm/NXhQjpjE/e8LgX6yu2ijPIw0XOcTup4Fu2h/qrRhgzHiYIS2CTnWx9CmfiLuSjcKwJvC4JcncehJGfUCi94BGzvxd2eqjoOsCPoBYfv/2mWZTlC0rcpk="
-    
+  - GH_USER: RobbenRoll
+  - GH_REPO: emgfit
+  - secure: u0WmX4X/j19MOLQLnRmTjGNnOHgpD6Mlqmn0BJ75KrJqkwRWKofK0K0OkncXr8CFe233zVCH74T+Ai5yrmZ9EuDVgKuEsnaYq0P/0RzvcM2KArj6YnqtxRTWxHL3eaK8ISvkDYdDPIuvNN8fJBR0YF8VnIzsGLGNgeO5MfIBMMDjmKonCvegIxRs3fcewwH/xuAwhz2mckKnvw5ns+9cVvL0zQ+Sx2l4AxqNyhUhUDkng6vzqgH3CqUoiAWa+N9kZd3lhu8rGDLOSWzMOUAEZ19BpNI8LPWgA1mg65+sKQwkb5ubkL8LxBrZxcG75YaQy5+YWqz3qWDoezRb8Jxl/FZhvMc+uzK4VEWvO1itQ8JIib2K6B2C837fv0jvr6bH1rBDStilg5Q0jJvXTKnQCZnr4EezvVvBtdvz4d4DzAL/z3Zk30IX9TwE/AShGalGmIfjCHNRxd8IR5cr4gqoOO7Nvtffz0UjyoPwu8200VntW68P/Lx1XlSxVY7nuws+DWj5lAl4Df+yDxugINewzyl/ttUe/t4mGeAB39ysfbKm+a6sgCsklm/NXhQjpjE/e8LgX6yu2ijPIw0XOcTup4Fu2h/qrRhgzHiYIS2CTnWx9CmfiLuSjcKwJvC4JcncehJGfUCi94BGzvxd2eqjoOsCPoBYfv/2mWZTlC0rcpk=
 install:
-  # Install this package and the packages listed in requirements.txt.
-  - pip install .
-  # Install extra requirements for running tests and building docs.
-  - pip install -r requirements-dev.txt
-
+- pip install .
+- pip install -r requirements-dev.txt
 sudo: true
 before_script:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y pandoc  # Install pandoc for markdown notebook cells
-
+- sudo apt-get -qq update
+- sudo apt-get install -y pandoc
 script:
-  - coverage run -m pytest  # Run the tests and check for test coverage.
-  - coverage report -m  # Generate test coverage report.
-  - codecov  # Upload the report to codecov.
-  # Enforce code style ('relaxed' line length limit is set in .flake8 config file).
-  - flake8 . --exit-zero # Exit with status code "0" even if there are errors.
-  - set -e # exit if building docs fails
-  - make -C docs html  # Build the documentation.
-  - DEPLOY_DIR="$TRAVIS_TAG";
-  - pip install doctr
-  # Publish the documentation, only for new version tags
-  - if [ $TRAVIS_TAG != null ]; then
-        doctr deploy --build-tags --built-docs docs/build/html $DEPLOY_DIR --branch-whitelist;
-    fi
-   
-
-# Update index of docs for different releases on gh-pages (only when commiting to master branch)
+- coverage run -m pytest
+- coverage report -m
+- codecov
+- flake8 . --exit-zero
+- set -e
+- make -C docs html
+- DEPLOY_DIR="$TRAVIS_TAG";
+- pip install doctr
+- if [ $TRAVIS_TAG != null ]; then doctr deploy --build-tags --built-docs docs/build/html
+  $DEPLOY_DIR --branch-whitelist; fi
 before_deploy:
   provider: script
   script: bash update_gh-pages_index.sh
   skip_cleanup: true
   overwrite: true
+  on:
+    tags: true
+deploy:
+  provider: pypi
+  username: "__token__"
+  password:
+    secure: JnqhV+9IJVCroSYJ9X5sqXh++/bIAcOiJP+ou0SQ+sCSQVdn03SRPCRiJOZcIA8llxHAW5ju9nb35LLM32ixys+STC1fYPxYL05zJIaQCe64RRRwsS6txwCnPe7NRAfby99QhcBwSapub9G7t9jJZzQaX9Zwy1+kAJbhCko67D0Bjrva/4cDuvt3V1G3yTuKwyBBXzWSABew7dlsDinrJhirn31Sf5CfLlZId2La8hmp/O0V7V0ko5kmwpUsrQWc1vYT6cQ1oJOgpFMipAmGqcD5x9Kg3wgKOeD2JyDBn17O51MQAYgJ0Z0zQ9OcA4a+PQBE2EPBJi5pdEUqYKY8A5HpwE9/Zotv3n3JLieFzQRWu3x4zjt+8m3C3vWRgFStwlqCNQFt83Xw33u4/d6I1fCgYq9agMp7G32OfriLkWHTEuXV2F2nShOJsGGaDQyC5fQ0RR+M09TKgzdetJKiWQURXSk+2Wym1zBjQU20cOkBn7vRX8veLzvVVaYiwSrny0n0zTYoRIn6x335Gp6UWNjDKDNegQLKVllh31anhJyoX/sEy+BT9Oa5+NXLK+lWwZic5Vc52+b3Z8Xgi25JxO1hJaGkB27k1k9yMJ1QbyODCIRq+AQUW+rEe8K4HkA8RFSZhUelNHgdeFSRD+OOB/V6OpEWKLuY+zWABULh5lg=
   on:
     tags: true
