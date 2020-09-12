@@ -2,8 +2,8 @@
 emgfit
 ======
 
-.. image:: https://travis-ci.org/RobbenRoll/emgfit/master.svg
-        :target: https://travis-ci.org/RobbenRoll/emgfit/master.svg
+.. image:: https://travis-ci.org/RobbenRoll/emgfit.svg?branch=master
+        :target: https://travis-ci.org/RobbenRoll/emgfit.svg?branch=master
 
 .. image:: https://img.shields.io/pypi/v/emgfit.svg
         :target: https://pypi.python.org/pypi/emgfit
