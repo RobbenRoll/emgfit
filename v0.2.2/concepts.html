@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Central concepts &mdash; emgfit 0.2.2 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
+        <script src="_static/thebelab-helper.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="emgfit API docs" href="modules.html" />
+    <link rel="prev" title="Tutorial" href="emgfit_tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> emgfit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Getting started with emgfit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="emgfit_tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Central concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-peak-and-spectrum-classes">The peak and spectrum classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#importing-data-and-creating-spectrum-objects">Importing data and creating spectrum objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-peak-objects-to-a-spectrum">Adding peak objects to a spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#assigning-species-to-peaks-and-fetching-ame-values">Assigning species to peaks and fetching AME values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#available-fit-models">Available fit models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#peak-fitting">Peak fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#peak-shape-calibration">Peak-shape calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mass-re-calibration">Mass re-calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fitting-peaks-of-interest">Fitting peaks of interest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#peak-shape-uncertainty-evaluation">Peak-shape uncertainty evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notation-of-chemical-substances">:-Notation of chemical substances</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">emgfit API docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">emgfit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Central concepts</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/concepts.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="central-concepts">
+<h1>Central concepts<a class="headerlink" href="#central-concepts" title="Permalink to this headline">¶</a></h1>
+<p>Only singly-charged isobaric ions are currently supported by <cite>emgfit</cite>!</p>
+<div class="section" id="the-peak-and-spectrum-classes">
+<h2>The peak and spectrum classes<a class="headerlink" href="#the-peak-and-spectrum-classes" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="importing-data-and-creating-spectrum-objects">
+<h2>Importing data and creating spectrum objects<a class="headerlink" href="#importing-data-and-creating-spectrum-objects" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="adding-peak-objects-to-a-spectrum">
+<h2>Adding peak objects to a spectrum<a class="headerlink" href="#adding-peak-objects-to-a-spectrum" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="assigning-species-to-peaks-and-fetching-ame-values">
+<h2>Assigning species to peaks and fetching AME values<a class="headerlink" href="#assigning-species-to-peaks-and-fetching-ame-values" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="available-fit-models">
+<h2>Available fit models<a class="headerlink" href="#available-fit-models" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="peak-fitting">
+<h2>Peak fitting<a class="headerlink" href="#peak-fitting" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="peak-shape-calibration">
+<h2>Peak-shape calibration<a class="headerlink" href="#peak-shape-calibration" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="mass-re-calibration">
+<h2>Mass re-calibration<a class="headerlink" href="#mass-re-calibration" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="fitting-peaks-of-interest">
+<h2>Fitting peaks of interest<a class="headerlink" href="#fitting-peaks-of-interest" title="Permalink to this headline">¶</a></h2>
+<p>Multi-peak fits</p>
+<p>Fits of regions of interest</p>
+</div>
+<div class="section" id="peak-shape-uncertainty-evaluation">
+<h2>Peak-shape uncertainty evaluation<a class="headerlink" href="#peak-shape-uncertainty-evaluation" title="Permalink to this headline">¶</a></h2>
+<p>#One peculiarity of this method is that only the centroid shifts of the     #TODO: move this section to the peak-shape error evaluation article
+peaks-of-interest relative to the (shifted) centroid of the mass
+calibrant are taken into account for the peak-shape error evaluation.
+This is because the mass re-calibration ensures that only relative
+centroid shifts with respect to the calibrant enter the final mass
+values. If varying the shape parameters shifts the peaks-of-interest and
+the calibrant peak by the same amount, the final mass value is not
+altered. Despite the uncertainty of the peak-shape parameters the peak
+shape of isobaric peaks can be assumed to be identical. The mass
+dependence of shape parameters is negligible for isobaric species. The
+above argument relies on the condition that a decent time-resolved
+calibration (TRC) with sufficient calibrant statistics per block has
+been performed (otherwise, the IOI peaks can be broadened w.r.t. the
+calibrant). Hence, the peaks-of-interest and the calibrant peak should
+both be re-fitted.</p>
+</div>
+<div class="section" id="notation-of-chemical-substances">
+<h2>:-Notation of chemical substances<a class="headerlink" href="#notation-of-chemical-substances" title="Permalink to this headline">¶</a></h2>
+<p>Just like the MR-TOF-MS data acquisition software MAc, <cite>emgfit</cite> follows the
+:-notation of chemical compounds. The chemical composition of an ion is denoted
+as a single string in which the constituting isotopes are separated by a colon
+(<code class="docutils literal notranslate"><span class="pre">:</span></code>). Each isotope is denoted as <code class="docutils literal notranslate"><span class="pre">'n(El)A'</span></code> where <cite>El</cite> is the corresponding
+element symbol, <cite>n</cite> denotes the number of atoms of the isotope <cite>El</cite> and A is the
+respective atomic mass number. The charge state of the ion is indicated by
+substracting the desired number of electrons from the atomic species (i.e.
+singly-charged = <code class="docutils literal notranslate"><span class="pre">'':-1e'</span></code>, doubly-charged = <code class="docutils literal notranslate"><span class="pre">'':-2e'</span></code> etc.). The
+substraction of the electron is important since otherwise the atomic instead
+of the ionic mass is used for subsequent calculations. Mind that <cite>emgfit</cite>
+currently only supports singly-charged ions.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="modules.html" class="btn btn-neutral float-right" title="emgfit API docs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="emgfit_tutorial.html" class="btn btn-neutral float-left" title="Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Stefan Paul
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
