@@ -2584,8 +2584,10 @@ class spectrum:
         # mass shifts in quadrature
         for peak_idx in peak_indeces:
             # Add eff. mass shifts in quadrature to get total peakshape error:
-            shape_error = np.sqrt(np.sum(np.square( list(self.eff_mass_shifts[peak_idx].values()) )))
+            mass_shift_vals = list(self.eff_mass_shifts[peak_idx].values())
+            shape_error = np.sqrt(np.sum(np.square(mass_shift_vals)))
             p = self.peaks[peak_idx]
+            pref = 'p{0}_'.format(peak_idx)
             m_ion = fit_result.best_values[pref+'mu']*self.recal_fac
             p.rel_peakshape_error = shape_error/m_ion
             if verbose:

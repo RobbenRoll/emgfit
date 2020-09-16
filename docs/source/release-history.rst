@@ -6,6 +6,12 @@ An index with links to the documentation of every emgfit version can be found `h
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+v0.2.1 (2020-09-15)
+-------------------
+* Fixed bug in mass re-scaling in peak-shape error evaluation.
+* Relevant for developers only: Further automatized the deployment of new
+  releases.
+
 v0.2.0 (2020-09-09):
 --------------------
 * Improved numerical robustness and speed of Hyper-EMG functions in emg_funcs
