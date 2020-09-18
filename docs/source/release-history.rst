@@ -2,9 +2,14 @@
 Release History
 ===============
 
-An index with links to the documentation of every emgfit version can be found `here`_.
+An index with links to the documentation of the latest and former emgfit
+versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
+
+v0.2.3 (2020-09-18)
+-------------------
+* Updated docs and README.
 
 v0.2.2 (2020-09-16)
 -------------------
@@ -14,7 +19,7 @@ v0.2.2 (2020-09-16)
 
 v0.2.1
 ------
-* Version number skipped due to administrative reasons. 
+* Version number skipped due to administrative reasons.
 
 v0.2.0 (2020-09-09):
 --------------------
