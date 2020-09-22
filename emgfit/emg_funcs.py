@@ -107,27 +107,40 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
 
     Notes
     -----
+    The Hyper-EMG probability distribution function was first introduced in
+    `this publication`_ by Purushothaman et al. [#]_. The basic definitions and
+    notations used here are adapted from this work.
+
     Each negative tail of a Hyper-EMG function can be expressed in two
     equivalent ways:
 
     .. math::
 
-        h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(\\left(\\frac{x-\mu}{2\\sigma}\\right)^2)} \mathrm{erfcx}(v)
+        h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{-(\\left(\\frac{x-\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
         = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(u)} \mathrm{erfc}(v),
 
     where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\tau_{-i}}`
     and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
-    The `exp(u)`_ routine overflows if u > 709.78. The complementary error
-    function `erfc(v)`_ underflows to 0.0 if v > 26.54. The scaled complementary
-    error function `erfcx(v)`_ overflows if v < -26.62. To circumvent those
-    scenarios and always ensure an exact result, the underlying helper function
-    for the calculation of a negative EMG tail :func:`h_m_i` uses the
-    formulation in terms of `erfcx` whenever v >= 0 and switches to the
+    In double float precision, the `exp(u)`_ routine overflows if u > 709.78. The
+    complementary error function `erfc(v)`_ underflows to 0.0 if v > 26.54. The
+    scaled complementary error function `erfcx(v)`_ overflows if v < -26.62. To
+    circumvent those scenarios and always ensure an exact result, the underlying
+    helper function for the calculation of a negative EMG tail :func:`h_m_i`
+    uses the formulation in terms of `erfcx` whenever v >= 0 and switches to the
     `erfc`-formulation when v < 0.
 
     .. _`exp(u)`: https://numpy.org/doc/stable/reference/generated/numpy.exp.html#numpy.exp
     .. _`erfc(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfc.html
     .. _`erfcx(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfcx.html
+    .. _`this publication`: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913
+
+    References
+    ----------
+    .. [#] Purushothaman, S., et al. "Hyper-EMG: A new probability distribution
+       function composed of Exponentially Modified Gaussian distributions to
+       analyze asymmetric peak shapes in high-resolution time-of-flight mass
+       spectrometry." International Journal of Mass Spectrometry 421 (2017):
+       245-254.
 
     """
     li_eta_m = np.array(li_eta_m).astype(np.float_)
@@ -205,27 +218,40 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
 
     Notes
     -----
+    The Hyper-EMG probability distribution function was first introduced in
+    `this publication`_ by Purushothaman et al. [#]_. The basic definitions and
+    notations used here are adapted from this work.
+
     Each positive tail of a Hyper-EMG function can be expressed in two
     equivalent ways:
 
     .. math::
 
-        h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(\\left(\\frac{x-\mu}{2\\sigma}\\right)^2)} \mathrm{erfcx}(v)
+        h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{-(\\left(\\frac{x-\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
         = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(u)} \mathrm{erfc}(v),
 
     where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\tau_{+i}}`
     and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
-    The `exp(u)`_ routine overflows if u > 709.78. The complementary error
-    function `erfc(v)`_ underflows to 0.0 if v > 26.54. The scaled complementary
-    error function `erfcx(v)`_ overflows if v < -26.62. To circumvent those
-    scenarios and always ensure an exact result, the underlying helper function
-    for the calculation of a negative EMG tail :func:`h_m_i` uses the
-    formulation in terms of `erfcx` whenever v >= 0 and switches to the
+    In double precision, the `exp(u)`_ routine overflows if u > 709.78. The
+    complementary error function `erfc(v)`_ underflows to 0.0 if v > 26.54. The
+    scaled complementary error function `erfcx(v)`_ overflows if v < -26.62. To
+    circumvent those scenarios and always ensure an exact result, the underlying
+    helper function for the calculation of a negative EMG tail :func:`h_m_i`
+    uses the formulation in terms of `erfcx` whenever v >= 0 and switches to the
     `erfc`-formulation when v < 0.
 
     .. _`exp(u)`: https://numpy.org/doc/stable/reference/generated/numpy.exp.html#numpy.exp
     .. _`erfc(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfc.html
     .. _`erfcx(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfcx.html
+    .. _`this publication`: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913
+
+    References
+    ----------
+    .. [#] Purushothaman, S., et al. "Hyper-EMG: A new probability distribution
+       function composed of Exponentially Modified Gaussian distributions to
+       analyze asymmetric peak shapes in high-resolution time-of-flight mass
+       spectrometry." International Journal of Mass Spectrometry 421 (2017):
+       245-254.
 
     """
     li_eta_p = np.array(li_eta_p).astype(np.float_)
@@ -279,17 +305,6 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
         Tuple containing the pos. tail decay constants with the signature:
         ``(tau_p1, tau_p2, ...)``.
 
-    Notes
-    -----
-    The total hyper-EMG distribution `h_m_emg` is comprised of the negative- and
-    positive-skewed EMG distributions `h_m_emg` and `h_p_emg` respectively and
-    is calculated as:
-    ``h_emg(x, mu, sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p) =``
-    ``theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) +
-    (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)``.
-
-    For algorithmic details, see `Notes` of :func:`h_m_emg` and :func:`h_p_emg`.
-
     Returns
     -------
     float
@@ -299,6 +314,31 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     --------
     :func:`h_m_emg`
     :func:`h_p_emg`
+
+    Notes
+    -----
+    The Hyper-EMG probability distribution function was first introduced in
+    `this publication`_ by Purushothaman et al. [#]_. The basic definitions and
+    notations used here are adapted from this work.
+
+    The total hyper-EMG distribution `h_m_emg` is comprised of the negative- and
+    positive-skewed EMG distributions `h_m_emg` and `h_p_emg` respectively and
+    is calculated as:
+    ``h_emg(x, mu, sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p) =``
+    ``theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) +
+    (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)``.
+
+    For algorithmic details, see `Notes` of :func:`h_m_emg` and :func:`h_p_emg`.
+
+    .. _`this publication`: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913
+
+    References
+    ----------
+    .. [#] Purushothaman, S., et al. "Hyper-EMG: A new probability distribution
+       function composed of Exponentially Modified Gaussian distributions to
+       analyze asymmetric peak shapes in high-resolution time-of-flight mass
+       spectrometry." International Journal of Mass Spectrometry 421 (2017):
+       245-254.
 
     """
     if theta == 1:
@@ -343,6 +383,22 @@ def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     -------
     float
         Mean of hyper-EMG distribution.
+
+    Notes
+    -----
+    The Hyper-EMG probability distribution function was first introduced in
+    `this publication`_ by Purushothaman et al. [#]_. The basic definitions and
+    notations used here are adapted from this work.
+
+    .. _`this publication`: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913
+
+    References
+    ----------
+    .. [#] Purushothaman, S., et al. "Hyper-EMG: A new probability distribution
+       function composed of Exponentially Modified Gaussian distributions to
+       analyze asymmetric peak shapes in high-resolution time-of-flight mass
+       spectrometry." International Journal of Mass Spectrometry 421 (2017):
+       245-254.
 
     """
     if abs(sum(li_eta_m) - 1) > norm_precision:  # check normalization of eta_m's
@@ -393,6 +449,22 @@ def sigma_emg(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     -------
     float
         Standard deviation of hyper-EMG distribution.
+
+    Notes
+    -----
+    The Hyper-EMG probability distribution function was first introduced in
+    `this publication`_ by Purushothaman et al. [#]_. The basic definitions and
+    notations used here are adapted from this work.
+
+    .. _`this publication`: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913
+
+    References
+    ----------
+    .. [#] Purushothaman, S., et al. "Hyper-EMG: A new probability distribution
+       function composed of Exponentially Modified Gaussian distributions to
+       analyze asymmetric peak shapes in high-resolution time-of-flight mass
+       spectrometry." International Journal of Mass Spectrometry 421 (2017):
+       245-254.
 
     """
     if abs(sum(li_eta_m) - 1) > norm_precision:  # check normalization of eta_m's

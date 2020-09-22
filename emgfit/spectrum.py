@@ -385,6 +385,10 @@ class spectrum:
             overwritten with `comment`, else `comment` is appended to the end of
             :attr:`spectrum_comment`.
 
+        See also
+        --------
+        :meth:`add_peak_comment`
+
         Notes
         -----
         The :attr:`spectrum_comment` will be included in the output file storing all fit
@@ -393,10 +397,6 @@ class spectrum:
 
         If :attr:`spectrum_comment` is '-' (default value) it is always
         overwritten with `comment`.
-
-        See also
-        --------
-        :meth:`add_peak_comment`
 
         """
         try:
@@ -645,16 +645,16 @@ class spectrum:
             If ``True`` a plot of the spectrum with markers for the detected
             peaks is shown.
 
+        See also
+        --------
+        :meth:`add_peak`
+        :meth:`remove_peak`
+
         Notes
         -----
         For details on the smoothing, see docs of :meth:`_smooth` by calling:
 
         >>> help(emgfit.spectrum._smooth)
-
-        See also
-        --------
-        :meth:`add_peak`
-        :meth:`remove_peak`
 
         """
         # Smooth spectrum (moving average with window function)
@@ -743,15 +743,15 @@ class spectrum:
             If ``True``, a message is printed after successful peak addition.
             Intended for internal use only.
 
-        Note
-        ----
-        Adding a peak will shift the peak_indeces of all peaks at higher masses
-        by ``+1``.
-
         See also
         --------
         :meth:`detect_peaks`
         :meth:`remove_peak`
+
+        Note
+        ----
+        Adding a peak will shift the peak_indeces of all peaks at higher masses
+        by ``+1``.
 
         """
         p = peak(x_pos,species,m_AME=m_AME,m_AME_error=m_AME_error) # instantiate new peak
@@ -1373,6 +1373,11 @@ class spectrum:
         :class:`lmfit.model.ModelResult`
             Fit model result.
 
+        See also
+        --------
+        :meth:`fit_peaks`
+        :meth:`fit_calibrant`
+
         Notes
         -----
 
@@ -1423,11 +1428,6 @@ class spectrum:
         a Levenberg-Marquardt algorithm for bound-constrained problems. For more
         details on these optimizers see the docs of
         :func:`lmfit.minimizer.minimize` and :class:`scipy.optimize`.
-
-        See also
-        --------
-        :meth:`fit_peaks`
-        :meth:`fit_calibrant`
 
         """
         if x_fit_range is None:
@@ -1882,8 +1882,8 @@ class spectrum:
 
         Notes
         -----
-        Statistical errors of Hyper-EMG peak centroids obey the following
-        scaling with the number of counts in the peak `N_counts`:
+        As noted in [#]_, statistical errors of Hyper-EMG peak centroids obey
+        the following scaling with the number of counts in the peak `N_counts`:
 
         .. math::  \\sigma_{stat} = A_{stat,emg} \\frac{FWHM}{\\sqrt{N_{counts}}}
 
@@ -1905,6 +1905,13 @@ class spectrum:
 
         The resulting value for `A_stat_emg` will be stored as spectrum
         attribute and will be used for all subsequent stat. error determinations.
+
+        References
+        ----------
+        .. [#] San Andrés, Samuel Ayet, et al. "High-resolution, accurate
+           multiple-reflection time-of-flight mass spectrometry for short-lived,
+           exotic nuclei of a few events in their ground and low-lying isomeric
+           states." Physical Review C 99.6 (2019): 064313.
 
         """
         if peak_index is not None:
@@ -2388,7 +2395,8 @@ class spectrum:
         shifts **relative to the calibrant** are taken into account (hence
         '**effective** mass shifts').
 
-        The peak-shape uncertainties are obtained via the following procedure:
+        Inspired by the approach outlined in [#]_, the peak-shape uncertainties
+        are obtained via the following procedure:
 
         - Since only effective mass shifts corrected for the corresponding
           shifts of the calibrant peak enter the peak-shape uncertainty,
@@ -2426,6 +2434,13 @@ class spectrum:
         - The estimates for the total peak-shape uncertainty of each peak are
           finally obtained by adding the eff. mass shifts stored in the
           :attr:`eff_mass_shifts` dictionary in quadrature.
+
+        References
+        ----------
+        .. [#] San Andrés, Samuel Ayet, et al. "High-resolution, accurate
+           multiple-reflection time-of-flight mass spectrometry for short-lived,
+           exotic nuclei of a few events in their ground and low-lying isomeric
+           states." Physical Review C 99.6 (2019): 064313.
 
         """
         if self.shape_cal_pars is None:
@@ -2584,7 +2599,8 @@ class spectrum:
         # mass shifts in quadrature
         for peak_idx in peak_indeces:
             # Add eff. mass shifts in quadrature to get total peakshape error:
-            shape_error = np.sqrt(np.sum(np.square( list(self.eff_mass_shifts[peak_idx].values()) )))
+            mass_shift_vals = list(self.eff_mass_shifts[peak_idx].values())
+            shape_error = np.sqrt(np.sum(np.square(mass_shift_vals)))
             p = self.peaks[peak_idx]
             pref = 'p{0}_'.format(peak_idx)
             m_ion = fit_result.best_values[pref+'mu']*self.recal_fac
@@ -2835,6 +2851,10 @@ class spectrum:
             '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
             **Caution: Existing files with identical name are overwritten.**
 
+        See also
+        --------
+        :meth:`spectrum.fit_peaks`
+
         Notes
         -----
         The :meth:`spectrum.fit_peaks` method enables the simultaneous fitting
@@ -2846,16 +2866,16 @@ class spectrum:
         shifts as preparation for subsequent peak-shape error determinations.
 
         Since the spectrum has already been coarsely calibrated via the time-
-        resolved calibration in the MR-TOF's data acquisition software MAc, the
-        recalibration (or precision calibration) factor is usually very close to
-        unity. An error will be raised by the :meth:`spectrum._update_calibrant_props`
-        method if :attr:`spectrum.recal_fac` deviates from unity by more than a
-        permille since this causes some implicit approximations for the
-        calculation of the final mass values and their uncertainties to break
-        down.
+        resolved calibration in the MR-TOF-MS's data acquisition software MAc,
+        the recalibration (or precision calibration) factor is usually very
+        close to unity. An error will be raised by the
+        :meth:`spectrum._update_calibrant_props` method if
+        :attr:`spectrum.recal_fac` deviates from unity by more than a permille
+        since this causes some implicit approximations for the calculation of
+        the final mass values and their uncertainties to break down.
 
         The statistical uncertainty of the peak is calculated via the following
-        relation:
+        relation [#]_:
 
         .. math:
 
@@ -2869,9 +2889,12 @@ class spectrum:
         The latter is usually preferable since this accounts for the specifics
         of the given peak shape.
 
-        See also
-        --------
-        :meth:`spectrum.fit_peaks`
+        References
+        ----------
+        .. [#] San Andrés, Samuel Ayet, et al. "High-resolution, accurate
+           multiple-reflection time-of-flight mass spectrometry for short-lived,
+           exotic nuclei of a few events in their ground and low-lying isomeric
+           states." Physical Review C 99.6 (2019): 064313.
 
         """
         if index_mass_calib is not None and (species_mass_calib is None):

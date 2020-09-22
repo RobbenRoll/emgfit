@@ -98,7 +98,7 @@ For conda users:
 3. Now you are inside your virtual environment and can install `emgfit`.
    Download and install emgfit by running::
 
-     (emgfit-env) $ python setup.py install
+     (emgfit-env) $ pip install --upgrade emgfit
 
    The latest version of the package and all its dependencies should now be
    installed inside your virtual environment `emgfit-env` under
