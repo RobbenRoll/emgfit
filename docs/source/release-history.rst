@@ -7,6 +7,12 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+vX.Y.Z
+------
+* Fixed bug in remove_peaks() method.
+* Updated docs of assign_species() method. Fix bug in installation instructions.
+* Update concept article on :-Notation. 
+
 v0.2.3 (2020-09-18)
 -------------------
 * Updated docs and README.

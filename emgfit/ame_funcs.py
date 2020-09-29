@@ -99,7 +99,7 @@ def splitparticle(s):
     El = tail.rstrip('0123456789') # get central letters
     if El == 'e' and len(El) == len(tail): # handle electron strings, e.g. ':-1e'
         A = 0
-    else:
+    else: # handle hadrons
         A = int(tail[len(El):]) # trailing number
     return n, El, A
 

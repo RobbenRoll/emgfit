@@ -36,7 +36,7 @@ class peak:
     species : str
         String with chemical formula of ion species asociated with peak.
         Species strings follow the :-notation (likewise used in MAc).
-        Examples: ``'1K39:-1e'``, ``'K39:-e'``, ``'2H1:1O16:-1e'``.
+        Examples: ``'1K39:-1e'``, ``'K39:-e'``, ``'3H1:1O16:-1e'``.
         **Do not forget to substract the electron**, otherwise the atomic not
         the ionic mass would be used as literature value!
         Alternatively, tentative assigments can be made by adding a ``'?'`` at
@@ -103,7 +103,7 @@ class peak:
         species : str
             String with chemical formula of ion species asociated with peak.
             Species strings follow the :-notation (likewise used in MAc).
-            Examples: ``'1K39:-1e'``, ``'K39:-e'``, ``'2H1:1O16:-1e'``.
+            Examples: ``'1K39:-1e'``, ``'K39:-e'``, ``'3H1:1O16:-1e'``.
             **Do not forget to substract the electron from singly-charged
             species**, otherwise the atomic not the ionic mass will be used as
             literature value!
@@ -770,9 +770,10 @@ class spectrum:
     def remove_peaks(self,peak_indeces=None,x_pos=None,species="?",verbose=True):
         """Remove specified peak(s) from the spectrum's :attr:`peaks` list.
 
-        Select the peak to be removed by specifying either the respective
-        `peak_index`, `species` label or peak marker position `x_pos`. To remove
-        multiple peaks at once, pass a list to one of the above arguments.
+        Select the peak(s) to be removed by specifying either the respective
+        `peak_indeces`, `species` label(s) or peak marker position(s) `x_pos`.
+        To remove multiple peaks at once, pass a list to one of the above
+        arguments.
 
         Parameters
         ----------
@@ -795,23 +796,42 @@ class spectrum:
 
         """
         # Get indeces of peaks to remove
+        err_msg1 = "Use EITHER the `peak_indeces`, `x_pos` or `species` argument."
         if peak_indeces is not None:
+            assert x_pos is None and species == "?", err_msg1
             indeces = np.atleast_1d(peak_indeces)
         elif species != "?":
+            assert x_pos is None, err_msg1
+            species = np.atleast_1d(species)
             peaks = self.peaks
-            indeces = [i for i in range(len(peaks)) if species == peaks[i].species]
+            indeces = [i for i in range(len(peaks)) if peaks[i].species in species]
+            err_msg2 = "Selection of one or multiple peaks from specified `species` failed."
+            assert len(indeces) == len(species), err_msg2
         elif x_pos:
-            indeces = [i for i in range(len(self.peaks)) if np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)]
-        for i in indeces:
+            x_pos = np.atleast_1d(x_pos)
+            peaks = self.peaks
+            indeces = [i for i in range(len(peaks)) if np.round(peaks[i].x_pos,6) in np.round(x_pos,6)]
+            err_msg3 = "Selection of one or multiple peaks from specified `x_pos` failed."
+            assert len(indeces) == len(x_pos), err_msg3
+        # Make safety copies for case of error in peak removals
+        orig_peaks = copy.deepcopy(self.peaks)
+        orig_results = copy.deepcopy(self.fit_results)
+        rem_pos = []
+        for i in sorted(indeces,reverse=True):
             try:
                 rem_peak = self.peaks.pop(i)
+                rem_pos.append(rem_peak.x_pos)
                 self.fit_results.pop(i)
-                if verbose:
-                    print("Removed peak at ",rem_peak.x_pos," u")
             except:
-                print("Removal of peak {0} failed!".format(i))
-                raise
-                # TODO: Revert previous peak removals if an error is occurs
+                # Restore original peaks and fit_results lists
+                self.peaks = orig_peaks
+                self.fit_results = orig_results
+                msg = "Removal of peak {0} failed! Restored original peaks list.".format(i)
+                raise Exception(msg)
+        if verbose:
+            rem_pos.reverse() # switch to ascending order
+            for x_pos in rem_pos:
+                print("Removed peak at x_pos = {0:.6f} u".format(x_pos))
 
 
     def remove_peak(self,peak_index=None,x_pos=None,species="?"):
@@ -856,13 +876,13 @@ class spectrum:
 
 
     def assign_species(self,species,peak_index=None,x_pos=None):
-        """Assign species label(s) to a single or all peaks.
+        """Assign species label(s) to a single peak (or all peaks at once).
 
         If no single peak is selected with `peak_index` or `x_pos`, a list with
-        species names for all peaks in the peak list must be passed to
-        `species`. For already specified or unkown species ``None`` must be
-        inserted as a placeholder. See `Notes` and `Examples` sections below for
-        details on usage.
+        species names for **all** peaks in the peak list must be passed to
+        `species`. For already specified or unkown species insert ``None`` as a
+        placeholder to skip the species assignment for this peak. See `Notes`
+        and `Examples` sections below for details on usage.
 
         Parameters
         ----------
@@ -871,7 +891,7 @@ class spectrum:
             selected peak (or to all peaks). For unkown or already assigned
             species, ``None`` should be inserted as placeholder at the
             corresponding position in the `species` list. :attr:`species` names
-            must follow the :-notation.                                         #TODO: Link to :-notation page
+            must follow the :ref:`:-notation`.
         peak_index : int, optional
             Index of single peak to assign `species` name to.
         x_pos : float [u], optional
@@ -911,7 +931,7 @@ class spectrum:
         >>> spec.assign_species(['1Ru102:-1e', '1Pd102:-1e', 'Rh102:-1e?', None,'1Sr83:1F19:-1e', '?'])
 
         This assigns the species of the first, second, third and fourth peak
-        with the repsective labels in the specified list and fetches their AME
+        with the respective labels in the specified list and fetches their AME
         values. The `'?'` in the ``'Rh102:-1e?'`` argument indicates a tentative
         species assignment, literature values will not be calculated for this
         peak. The ``None`` argument leaves the species assignment of the 4th
@@ -921,28 +941,31 @@ class spectrum:
         """
         try:
             if peak_index is not None:
+                msg = "Use either the `peak_index` OR the `species` argument."
+                assert x_pos is None, msg
                 p = self.peaks[peak_index]
                 p.species = species
-                p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated attributes with AME values for specified species
+                p.update_lit_values()
                 print("Species of peak",peak_index,"assigned as",p.species)
-            elif x_pos:
-                i = [i for i in range(len(self.peaks)) if  np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)][0] # select peak at position 'x_pos'
+            elif x_pos is not None:
+                # Select peak at position 'x_pos'
+                i = [i for i in range(len(self.peaks)) if abs(x_pos - self.peaks[i].x_pos) < 1e-06][0]
                 p = self.peaks[i]
                 p.species = species
-                p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated attributes with AME values for specified species
+                p.update_lit_values()
                 print("Species of peak",i,"assigned as",p.species)
-            elif len(species) == len(self.peaks) and peak_index is None and x_pos is None: # assignment of multiple species
-                for i in range(len(species)):
+            elif len(species) == len(self.peaks):
+                for i in range(len(species)): # loop over multiple species
                     species_i = species[i]
                     if species_i: # skip peak if 'None' given as argument
                         p = self.peaks[i]
                         p.species = species_i
-                        p.update_lit_values() # overwrite m_AME, m_AME_error and extrapolated attributes with AME values for specified species
+                        p.update_lit_values()
                         print("Species of peak",i,"assigned as",p.species)
             else:
-                raise Exception('ERROR: Species assignment failed. Check method documentation for details on peak selection.\n')
+                raise Exception('Species assignment failed. Check method documentation for details on peak selection.\n')
         except:
-            print('Errors occured in peak assignment!')
+            print('Species assignment failed with')
             raise
 
 

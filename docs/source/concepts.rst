@@ -42,33 +42,44 @@ Fits of regions of interest
 Peak-shape uncertainty evaluation
 ---------------------------------
 
-#One peculiarity of this method is that only the centroid shifts of the     #TODO: move this section to the peak-shape error evaluation article
-peaks-of-interest relative to the (shifted) centroid of the mass
-calibrant are taken into account for the peak-shape error evaluation.
-This is because the mass re-calibration ensures that only relative
-centroid shifts with respect to the calibrant enter the final mass
-values. If varying the shape parameters shifts the peaks-of-interest and
-the calibrant peak by the same amount, the final mass value is not
-altered. Despite the uncertainty of the peak-shape parameters the peak
-shape of isobaric peaks can be assumed to be identical. The mass
-dependence of shape parameters is negligible for isobaric species. The
-above argument relies on the condition that a decent time-resolved
-calibration (TRC) with sufficient calibrant statistics per block has
-been performed (otherwise, the IOI peaks can be broadened w.r.t. the
-calibrant). Hence, the peaks-of-interest and the calibrant peak should
-both be re-fitted.
+.. One peculiarity of this method is that only the centroid shifts of the     #TODO: EDIT
+.. peaks-of-interest relative to the (shifted) centroid of the mass
+.. calibrant are taken into account for the peak-shape error evaluation.
+.. This is because the mass re-calibration ensures that only relative
+.. centroid shifts with respect to the calibrant enter the final mass
+.. values. If varying the shape parameters shifts the peaks-of-interest and
+.. the calibrant peak by the same amount, the final mass value is not
+.. altered. Despite the uncertainty of the peak-shape parameters the peak
+.. shape of isobaric peaks can be assumed to be identical. The mass
+.. dependence of shape parameters is negligible for isobaric species. The
+.. above argument relies on the condition that a decent time-resolved
+.. calibration (TRC) with sufficient calibrant statistics per block has
+.. been performed (otherwise, the IOI peaks can be broadened w.r.t. the
+.. calibrant). Hence, the peaks-of-interest and the calibrant peak should
+.. both be re-fitted.
 
-:-Notation of chemical substances
+.. _:-notation:
+
+:-notation of chemical substances
 ---------------------------------
 
 Just like the MR-TOF-MS data acquisition software MAc, `emgfit` follows the
 :-notation of chemical compounds. The chemical composition of an ion is denoted
 as a single string in which the constituting isotopes are separated by a colon
 (``:``). Each isotope is denoted as ``'n(El)A'`` where `El` is the corresponding
-element symbol, `n` denotes the number of atoms of the isotope `El` and A is the
-respective atomic mass number. The charge state of the ion is indicated by
-substracting the desired number of electrons from the atomic species (i.e.
-singly-charged = ``'':-1e'``, doubly-charged = ``'':-2e'`` etc.). The
-substraction of the electron is important since otherwise the atomic instead
-of the ionic mass is used for subsequent calculations. Mind that `emgfit`
-currently only supports singly-charged ions.
+element symbol, `n` denotes the number of atoms of the given isotope and `A` is
+the respective atomic mass number. In the case  `n = 1`, the number indication
+`n` can be omitted. The charge state of the ion is indicated by subtracting
+the desired number of electrons from the atomic species (i.e. singly-charged =
+``':-1e'``, doubly-charged = ``':-2e'`` etc.). The subtraction of the electron
+is important since otherwise the atomic instead of the ionic mass is used for
+subsequent calculations. Mind that `emgfit` currently only supports
+singly-charged ions.
+
+Examples:
+
+- The most abundant isotope of the hydronium cation :math:`H_{3}O^{+}` can be
+  denoted as ``'3H1:1O16:-1e'`` or ``'3H1:O16:-e'`` or ``'1O16:3H1:-1e'`` or ...
+- The most abundant isotope of the ammonium cation :math:`N H_{4}^{+}` can be
+  denoted as ``'4H1:1N14:-1e'`` or ``'4H1:N14:-e'`` or ``'N14:4H1:-1e'`` or ...
+- The proton is denoted as ``'1H1:-1e'`` or ``'H1:-1e'`` or ``'H1:-e'``.
