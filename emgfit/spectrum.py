@@ -544,7 +544,6 @@ class spectrum:
         plt.show()
 
 
-    ##### Define static routine for plotting spectrum data stored in dataframe df (only for internal use within this class)
     @staticmethod
     def _plot_df(df,title="",ax=None,yscale='log',peaks=None,vmarkers=None,thres=None,ymin=None,xmin=None,xmax=None):
         """Plots spectrum data stored in :class:`pandas.DataFrame` `df`.
@@ -2612,95 +2611,102 @@ class spectrum:
 
     def _stat_errors_from_resampling(self,peak_indeces=[],fit_result=None,
                                      x_cen=None, x_range=0.01, N_spectra=1000):
-    """ Estimate statistical uncertainties via re-sampling from best-fit PDF.
+        """ Estimate statistical uncertainties via re-sampling from best-fit PDF.
 
-    This method provides refined estimates of the statistical errors by
-    evaluating the scatter of peak centres in spectra creating by sampling
-    events from the spectrum object's best-fit PDF. Statistical errors are taken
-    as the standard deviation of the best-fit peak centroids obtained by
-    performing fits on `N_spectra` simulated spectra.
+        This method provides refined estimates of the statistical errors by
+        evaluating the scatter of peak centres in spectra creating by sampling
+        events from the spectrum object's best-fit PDF. Statistical errors are taken
+        as the standard deviation of the best-fit peak centroids obtained by
+        performing fits on `N_spectra` simulated spectra.
 
-    *All peaks for which stat. errors are to be evaluated must belong to the
-    same lmfit ModelResult `fit_result`.*
+        *All peaks for which stat. errors are to be evaluated must belong to the
+        same lmfit ModelResult `fit_result`.*
 
-    Parameters
-    ----------
-    peak_indeces : list
-        List containing indeces of peaks to evaluate peak-shape uncertainty
-        for, e.g. to evaluate peak-shape error of peaks 0 and 3 use
-        ``peak_indeces=[0,3]``.
-    fit_result : :class:`lmfit.model.ModelResult`, optional
-        Fit result object to evaluate statistical errors for.
-    x_cen : float, optional
+        Parameters
+        ----------
+        peak_indeces : list
+            List containing indeces of peaks to evaluate peak-shape uncertainty
+            for, e.g. to evaluate peak-shape error of peaks 0 and 3 use
+            ``peak_indeces=[0,3]``.
+        fit_result : :class:`lmfit.model.ModelResult`, optional
+            Fit result object to evaluate statistical errors for.
+        x_cen : float, optional
 
-    x_range : float, optional
+        x_range : float, optional
 
-    N_spectra : int, optional
+        N_spectra : int, optional
 
-    """
-    if x_cen is None:
-        x_range = self.data.index[-1] - self.data.index[0]
-        x_cen = self.data.index[0] + x_range/2
-    if fit_result is None:
-        fit_result = self.fit_results[peak_indeces[0]]
-    N_peaks = len(peak_indeces)
+        """
+        if x_cen is None:
+            x_range = self.data.index[-1] - self.data.index[0]
+            x_cen = self.data.index[0] + x_range/2
+        if fit_result is None:
+            fit_result = self.fit_results[peak_indeces[0]]
+        N_peaks = len(peak_indeces)
 
-    # Collect peak centroids and amplitudes
-    mus = []
-    amps = []
-    for idx in peak_indeces:
-        pref = 'p{0}_'.format(idx)
-        mus.append(fit_result.best_values[pref+'mu'])
-        amps.append(fit_result.best_values[pref+'amp'])
-
-    bkg_c = fit_result.best_values['bkg_c']
-    fit_model = fit_result.fit_model
-    cost_func = fit_result.cost_func
-    method = fit_result.method
-    vary_baseline = fit_result.vary_baseline
-    shape_pars = self.shape_cal_pars
-
-    def get_new_mus(): # spec,mus,amps,bkg_c,x_cen,x_range,fit_result
-        # create simulated spectrum data by sampling from fit-result PDF
-        df = sample_spectrum(self, mus, amps, bkg_c,
-                                   x_cen=x_cen,
-                                   x_range=x_range)
-
-        # create simulated spectrum object
-        sim_spec = deepcopy(self)
-        sim_spec.data = df
-        # re-perform fit on simulated spectrum
-        #try:
-        new_result = sim_spec.peakfit(fit_model=fit_model,
-                                       x_fit_cen=x_cen,
-                                       x_fit_range=x_range,
-                                       cost_func=cost_func,
-                                       method=method,
-                                       vary_baseline=vary_baseline,
-                                       init_pars=shape_pars,
-                                       show_plots=False)
-        # Record centroid of peak
-        new_mus = []
-        for idx in range(N_peaks):
+        # Collect peak centroids and amplitudes
+        mus = []
+        amps = []
+        for idx in peak_indeces:
             pref = 'p{0}_'.format(idx)
-            mu = new_result.best_values[pref+'mu']
-            new_mus.append(mu)
+            mus.append(fit_result.best_values[pref+'mu'])
+            amps.append(fit_result.best_values[pref+'amp'])
 
-        return new_mus
-        #except ValueError:
-        #    print("A fit failed with ValueError "
-        #          "(likely due to NaNs in y-model array).")
-        #    return np.NaN
+        bkg_c = fit_result.best_values['bkg_c']
+        fit_model = fit_result.fit_model
+        cost_func = fit_result.cost_func
+        method = fit_result.method
+        vary_baseline = fit_result.vary_baseline
+        shape_pars = self.shape_cal_pars
 
-    arr_mus = np.array([get_new_mus() for i in prange(N_spectra)])
-    stat_errs = arr_mus.transpose()
+        from emgfit.sample import sample_spectrum
+        from copy import deepcopy
+        def get_new_mus(): # spec,mus,amps,bkg_c,x_cen,x_range,fit_result
 
-    # Update peak properties with refined statistical uncertainties
-    for i, peak_idx in enumerate(peak_indeces):
-        p = self.peaks[peak_idx]
-        pref = 'p{0}_'.format(peak_idx)
-        m_ion = self.recal_fac*fit_result.best_values[pref+'mu']
-        p.stat_error = stat_errs[i]/m_ion
+            # Create simulated spectrum data by sampling from fit-result PDF
+            df = sample_spectrum(self, mus, amps, bkg_c, x_cen=x_cen,
+                                 x_range=x_range)
+            # Create simulated spectrum object
+            sim_spec = deepcopy(self)
+            sim_spec.data = df
+            # Re-perform fit on simulated spectrum
+            try:
+                new_result = sim_spec.peakfit(fit_model=fit_model,
+                                               x_fit_cen=x_cen,
+                                               x_fit_range=x_range,
+                                               cost_func=cost_func,
+                                               method=method,
+                                               vary_baseline=vary_baseline,
+                                               init_pars=shape_pars,
+                                               show_plots=False)
+                # Record new peak centroids
+                new_mus = []
+                for idx in range(N_peaks):
+                    pref = 'p{0}_'.format(idx)
+                    mu = new_result.best_values[pref+'mu']
+                    new_mus.append(mu)
+
+                return new_mus
+            except ValueError:
+                import warnings
+                warnings.simplefilter('always')
+                msg = str("Fit failed with ValueError (likely NaNs in y-model "
+                           "array) and will be excluded.")
+                warnings.warn(msg, UserWarning)
+                return np.NaN
+
+        from tqdm.auto import tqdm # add progress bar with tqdm
+        arr_mus = np.array([get_new_mus() for i in tqdm(range(N_spectra))])
+        transp = arr_mus.transpose()
+        stat_errs = np.nanstd(transp,axis=1)
+
+        # Update peak properties with refined statistical uncertainties
+        for i, peak_idx in enumerate(peak_indeces):
+            p = self.peaks[peak_idx]
+            pref = 'p{0}_'.format(peak_idx)
+            m_ion = self.recal_fac*fit_result.best_values[pref+'mu']
+            print(stat_errs[i]/m_ion)
+            p.stat_error = stat_errs[i]/m_ion
 
 
     def _update_calibrant_props(self,index_mass_calib,fit_result):
@@ -2925,7 +2931,6 @@ class spectrum:
         self._eval_peakshape_errors(peak_indeces=[index_mass_calib],fit_result=fit_result,verbose=False)
 
 
-    ##### Update peak list with fit values
     def _update_peak_props(self,peaks,fit_result):
         """Update the peak properties using the given 'fit_result'.
 

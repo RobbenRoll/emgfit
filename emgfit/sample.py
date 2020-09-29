@@ -3,6 +3,8 @@
 ##### transform sampling
 ##### Author: Stefan Paul
 
+import numpy as np
+import pandas as pd
 from scipy.stats import exponnorm, uniform, poisson
 # N_samples = 50000 # total no of counts in spectrum
 # # Random samples drawn from h_m EMG PDF
@@ -102,14 +104,14 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
 ################################################################################
 ##### Define functions for creating simulated spectra
 
-def sample_spectrum(spectrum,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
+def sample_spectrum(spec,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
                     N_samples=None,out='hist'):
     """ Create simulated ion events using the best-fit peak shape of a reference
     spectrum
 
     Parameters
     ----------
-    spectrum : :class:`~emgfit.spectrum.spectrum`
+    spec : :class:`~emgfit.spectrum.spectrum`
         Reference spectrum object whose best-fit peak-shape parameters will be
         used to sample from.
     mus : float or list of float [u]
@@ -119,13 +121,13 @@ def sample_spectrum(spectrum,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
     bkg_c : float, optional, default: 0.0
         Nominal amplitude of constant background in simulated spectrum.
     x_cen : float [u], optional
-        Mass center of simulated spectrum. Defaults to `x_cen` of `spectrum`.
+        Mass center of simulated spectrum. Defaults to `x_cen` of `spec`.
     x_range : float [u], optional
         Covered mass range of simulated spectrum. Defaults to `x_range` of
         `spectrum`.
     N_samples : int, optional
         Number of ion events to simulate (excluding background events). Defaults
-        to total number of events in `spectrum`.
+        to total number of events in `spec`.
     out : str
         Output format of sampled data. Options:
 
@@ -142,18 +144,16 @@ def sample_spectrum(spectrum,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
     Notes
     -----
 
-    Routine requires tail arguments in shape_cal_pars dict to be ordered (eta_m1,eta_m2,...).
+    Routine requires tail arguments in shape_cal_pars dict to be ordered
+    (eta_m1,eta_m2,...).
 
     Spectra sampled in ``'hist'`` mode follow the binning of the reference
     spectrum.
 
     """
-    if isinstance(mus,float):
-        mus = [mus]
-    if isinstance(amps,float):
-        amps = [amps]
-    else:
-        assert len(mus) == len(amps), "Lengths of `mus` and `amps` arrays must match."
+    mus = np.atleast_1d(mus)
+    amps = np.atleast_1d(amps)
+    assert len(mus) == len(amps), "Lengths of `mus` and `amps` arrays must match."
 
     #  Get xmin and xmax
     if x_cen is None and x_range is None:
@@ -164,13 +164,14 @@ def sample_spectrum(spectrum,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
         x_max = x_cen + x_range
     x_range = x_max -x_min
     bin_width = spec.data.index[1] - spec.data.index[0]
+    N_bins = len(spec.data.index)
 
     # Prepare number of samples to draw
     if N_samples is None:
         N_samples = int(np.sum(spec.data['Counts'])) # total number of counts in spectrum
 
     # Prepare shape parameters
-    pars = spectrum.shape_cal_pars
+    pars = spec.shape_cal_pars
     sigma = pars['sigma']
     theta = pars['theta']
     li_eta_m = []
@@ -194,8 +195,8 @@ def sample_spectrum(spectrum,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
     # Distribute counts over different peaks and background
     # randomly distribute ions using amps and c_bkg as prob. weights
     N_peaks = len(amps)
-    weights = np.append(amps,bkg_c) # weights of each peak and background
-    weights = weights/np.sum(weights) # normalize weights
+    counts = np.append(amps/bin_width,bkg_c*N_bins) # cts in each peak & background
+    weights = counts/np.sum(counts) # normalized probability weights
 
     peak_dist = np.random.choice(range(N_peaks+1),size=N_samples,p = weights)
     N_bkg = np.count_nonzero(peak_dist == N_peaks) # calc. number of background counts
@@ -214,7 +215,7 @@ def sample_spectrum(spectrum,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
 
     if out is 'list':  # return unbinned list of events
         return events
-    elif out is 'hist':  # return histogram with identical binning as `spectrum`
+    elif out is 'hist':  # return histogram with identical binning as `spec`
         x = spec.data.loc[x_min:x_max].index.values
         bin_edges = np.append(x,x[-1] + bin_width) - bin_width/2
         y = np.histogram(events,bins=bin_edges)[0]
