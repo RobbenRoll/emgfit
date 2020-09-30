@@ -70,11 +70,11 @@ as a single string in which the constituting isotopes are separated by a colon
 element symbol, `n` denotes the number of atoms of the given isotope and `A` is
 the respective atomic mass number. In the case  `n = 1`, the number indication
 `n` can be omitted. The charge state of the ion is indicated by subtracting
-the desired number of electrons from the atomic species (i.e. singly-charged =
-``':-1e'``, doubly-charged = ``':-2e'`` etc.). The subtraction of the electron
-is important since otherwise the atomic instead of the ionic mass is used for
-subsequent calculations. Mind that `emgfit` currently only supports
-singly-charged ions.
+the desired number of electrons from the atomic species (i.e. ``':-1e'`` for
+singly charged cations, ``':-2e'`` for doubly charged cations etc.). The
+subtraction of the electron is important since otherwise the atomic instead of
+the ionic mass is used for subsequent calculations. Mind that `emgfit` currently
+only supports singly charged ions.
 
 Examples:
 
