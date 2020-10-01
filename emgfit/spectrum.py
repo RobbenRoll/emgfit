@@ -335,7 +335,7 @@ class spectrum:
         self.red_chi_shape_calib = None
         self.fit_range_shape_calib = None
         self.shape_cal_pars = None
-        self.shape_cal_errors = []
+        self.shape_cal_errors = None
         self.index_mass_calib = None
         self.determined_A_stat_emg = False
         self.A_stat_emg = A_stat_emg_default # initialize at default
@@ -1088,13 +1088,14 @@ class spectrum:
            plot_title = fit_result.fit_model+' '+fit_result.cost_func+' fit'
         i_min = np.argmin(np.abs(fit_result.x - x_min))
         i_max = np.argmin(np.abs(fit_result.x - x_max))
-        y_max_log = max( max(self.data.values[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
-        y_max_lin = max( max(self.data.values[i_min:i_max]), max(fit_result.init_fit[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
+        y_max_log = max(max(self.data.values[i_min:i_max]),max(fit_result.best_fit[i_min:i_max]))
+        y_max_lin = max( y_max_log, max(fit_result.init_fit[i_min:i_max]))
         weights = 1/fit_result.y_err[i_min:i_max]
 
         # Plot fit result with logarithmic y-scale
         f1 = plt.figure(figsize=(20,12))
-        plt.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',color='royalblue',linewidth=0.5)
+        plt.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',
+                     color='royalblue',linewidth=0.5)
         plt.plot(fit_result.x, fit_result.best_fit,'-',color='red',linewidth=2)
         comps = fit_result.eval_components(x=fit_result.x)
         for peak in peaks_to_plot: # loop over peaks to plot
@@ -1103,9 +1104,13 @@ class spectrum:
             plt.plot(fit_result.x, comps[pref], '--',linewidth=2)
         if show_peak_markers:
             self._add_peak_markers(yscale='log',ymax=y_max_log,peaks=peaks_to_plot)
-        if sigmas_of_conf_band!=0 and fit_result.errorbars == True: # add confidence band with specified number of sigmas
+        # add confidence band with specified number of sigmas
+        if sigmas_of_conf_band!=0 and fit_result.errorbars == True:
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
-            plt.fill_between(fit_result.x, fit_result.best_fit-dely, fit_result.best_fit+dely, color="#ABABAB", label=str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band')
+            label = str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band'
+            plt.fill_between(fit_result.x, fit_result.best_fit-dely,
+                             fit_result.best_fit+dely, color="#ABABAB",
+                             label=label)
         plt.title(plot_title)
         plt.xlabel('m/z [u]')
         plt.ylabel('Counts per bin')
@@ -1120,23 +1125,28 @@ class spectrum:
         plt.show()
 
         # Plot residuals and fit result with linear y-scale
-        standardized_residual = (fit_result.best_fit - fit_result.y)/fit_result.y_err
-        y_max_res = np.max(np.abs(standardized_residual))
+        norm_residual = (fit_result.best_fit - fit_result.y)/fit_result.y_err
+        y_max_res = np.max(np.abs(norm_residual))
         x_fine = np.arange(x_min,x_max,0.2*(fit_result.x[1]-fit_result.x[0]))
         y_fine = fit_result.eval(x=x_fine)
         f2, axs = plt.subplots(2,1,figsize=(20,12),gridspec_kw={'height_ratios': [1, 2.5]})
         ax0 = axs[0]
         ax0.set_title(plot_title)
-        ax0.plot(fit_result.x, standardized_residual,'.',color='royalblue',markersize=8.5,label='residuals')
+        ax0.plot(fit_result.x, norm_residual,'.', color='royalblue',
+                 markersize=8.5,label='residuals')
         #ax0.hlines(1,x_min,x_max,linestyle='dashed')
         ax0.hlines(0,x_min,x_max)
         #ax0.hlines(-1,x_min,x_max,linestyle='dashed')
         ax0.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
         ax0.set_ylabel('Residual / $\sigma$')
         ax1 = axs[1]
-        ax1.plot(x_fine, fit_result.eval(params=fit_result.init_params,x=x_fine),linestyle='dashdot',color='green',label='init-fit')
-        ax1.plot(x_fine, fit_result.eval(x=x_fine),'-',color='red',linewidth=2,label='best-fit')
-        ax1.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',color='royalblue',linewidth=1,markersize=8.5,label='data')
+        ax1.plot(x_fine, fit_result.eval(params=fit_result.init_params,x=x_fine),
+                 linestyle='dashdot', color='green', label='init-fit')
+        ax1.plot(x_fine, fit_result.eval(x=x_fine), '-', color='red',
+                 linewidth=2, label='best-fit')
+        ax1.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
+                     color='royalblue', linewidth=1, markersize=8.5,
+                     label='data')
         ax1.set_title('')
         ax1.set_ylim(-0.05*y_max_lin, 1.2*y_max_lin)
         ax1.set_ylabel('Counts per bin')
@@ -1208,8 +1218,12 @@ class spectrum:
             x_min = x_center - x_range/2
             x_max = x_center + x_range/2
         else:
-            raise Exception("\nMass range to plot could not be determined. Check documentation on method parameters.\n")
-        self.plot_fit(x_min=x_min,x_max=x_max,plot_title=plot_title,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,plot_filename=plot_filename)
+            msg = "\nMass range to plot could not be determined. Check documentation on method parameters.\n"
+            raise Exception(msg)
+        self.plot_fit(x_min=x_min, x_max=x_max, plot_title=plot_title,
+                      show_peak_markers=show_peak_markers,
+                      sigmas_of_conf_band=sigmas_of_conf_band,
+                      plot_filename=plot_filename)
 
 
     def comp_model(self,peaks_to_fit,model='emg22',init_pars=None,
@@ -1680,12 +1694,13 @@ class spectrum:
         if fit_result is None and self.fit_results[peak_index] is not None:
             fit_result = self.fit_results[peak_index]
         elif fit_result is None:
-            raise Exception("Error: No matching fit result found in `fit_results` list. Ensure the peak has been fitted.")
+            raise Exception("No matching fit result found in `fit_results` list. Ensure the peak has been fitted.")
 
         pars = fit_result.params
         pref = 'p{0}_'.format(peak_index)
         mu = pars[pref+'mu'] # centroid of underlying Gaussian
-        x_range = 0.05
+        sigma = pars[pref+'sigma'] # sigma of underlying Gaussian
+        x_range = sigma*30
         x = np.linspace(mu-x_range/2,mu+x_range/2,10000)
         comps = fit_result.eval_components(x=x)
         y = comps[pref] #fit_result.eval(pars,x=x)
@@ -1695,8 +1710,8 @@ class spectrum:
         i_HM1 = np.argmin(np.abs(y[0:i_M]-y_HM))
         i_HM2 = i_M + np.argmin(np.abs(y[i_M:]-y_HM))
         if i_HM1 == 0 or i_HM2 == len(x):
-            print("ERROR: FWHM points at boundary, likely a larger x_range needs to be implemented for this function.")
-            return
+            msg = "FWHM points at boundary, likely a larger x_range needs to be hardcoded into function."
+            raise Exception(msg)
         FWHM = x[i_HM2] - x[i_HM1]
 
         return FWHM

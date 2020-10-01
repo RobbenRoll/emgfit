@@ -104,35 +104,53 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
 ################################################################################
 ##### Define functions for creating simulated spectra
 
-def sample_spectrum(spec,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
-                    N_samples=None,out='hist'):
-    """ Create simulated ion events using the best-fit peak shape of a reference
-    spectrum
+def simulate_events(shape_pars,mus,amps,bkg_c,N_events,x_min,
+                    x_max,out='hist',N_bins=None,bin_cens=None):
+    """ Create simulated ion events drawn from a user-defined probability
+    distribution function (PDF)
+
+    Events can either be output as a list of single events (mass stamps) or as a
+    histogram. In histogram output mode, uniform binning is easily realized by
+    specifying the `N_bins` argument. More control over the binning can be
+    achieved by parsing the desired bin centers to the `bin_cens` argument (e.g.
+    for non-uniform binning).
 
     Parameters
     ----------
-    spec : :class:`~emgfit.spectrum.spectrum`
-        Reference spectrum object whose best-fit peak-shape parameters will be
-        used to sample from.
+    shape_pars : dict
+        Peak-shape parameters to use for sampling. The dictionary must follow
+        the structure of the :attr:`~spectrum.shape_cal_pars` attribute of the
+        :class:`~spectrum.spectrum` class.
     mus : float or list of float [u]
         Nominal peak centres of peaks in simulated spectrum.
     amps : float or list of float
         Nominal amplitudes of peaks in simulated spectrum.
     bkg_c : float, optional, default: 0.0
-        Nominal amplitude of constant background in simulated spectrum.
-    x_cen : float [u], optional
-        Mass center of simulated spectrum. Defaults to `x_cen` of `spec`.
-    x_range : float [u], optional
-        Covered mass range of simulated spectrum. Defaults to `x_range` of
-        `spectrum`.
-    N_samples : int, optional
-        Number of ion events to simulate (excluding background events). Defaults
-        to total number of events in `spec`.
-    out : str
+        Nominal amplitude of uniform background in simulated spectrum.
+    x_min : float [u], optional
+        Beginning of sampling mass range.
+    x_max : float [u], optional
+        End of sampling mass range.
+    N_events : int, optional, default: 1000
+        Total number of events to simulate (signal and background events).
+    out : str, optional
         Output format of sampled data. Options:
 
-        - ``'hist'`` for binned mass spectrum (default).
+        - ``'hist'`` for binned mass spectrum (default). The centres of the mass
+          bins must be specified with the `bin_cens` argument.
         - ``'list'`` for unbinned list of single ion and background events.
+
+    N_bins : int, optional
+        Number of uniform bins to use in ``'hist'`` output mode. The **outer**
+        edges of the first and last bin are fixed to the start and end of the
+        sampling range respectively (i.e. `x_min` and
+        `x_max`). In between, bins are distributed with a fixed
+        spacing of (`x_max`-`x_min`)/`N_bins`.
+    bin_cens : :class:`numpy.ndarray` [u]
+        Centres of mass bins to use in ``'hist'`` output mode. This argument
+        allows the realization of non-uniform binning. Bin edges are centred
+        between neighboring bins. Note: Bins outside the sampling range defined
+        with `x_min` and `x_max` will be empty.
 
    Returns
    -------
@@ -144,41 +162,54 @@ def sample_spectrum(spec,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
     Notes
     -----
 
-    Routine requires tail arguments in shape_cal_pars dict to be ordered
-    (eta_m1,eta_m2,...).
+    Currently, all peaks have the identical width and shape (no re-scaling of
+    mass-dependent shape parameters to a peak's mass centroid).
 
-    Spectra sampled in ``'hist'`` mode follow the binning of the reference
-    spectrum.
+    Routine requires tail arguments in shape_cal_pars dict to be ordered
+    (eta_m1,eta_m2,...) etc..
 
     """
+    # TODO: Implement rescaling of peak-shape parameters with mass
     mus = np.atleast_1d(mus)
     amps = np.atleast_1d(amps)
     assert len(mus) == len(amps), "Lengths of `mus` and `amps` arrays must match."
+    if (mus < x_min).any() or (mus > x_max).any():
+        import warnings
+        msg = str("At least one peak centroid in `mus` is outside the sampling range.")
+        warnings.warn(msg, UserWarning)
 
-    #  Get xmin and xmax
-    if x_cen is None and x_range is None:
-        x_min = spec.data.index[0]
-        x_max = spec.data.index[-1]
+    sample_range = x_max - x_min
+
+    if N_bins is not None and bin_cens is not None:
+        msg =  "Either specify the `N_bins` OR the `bin_cens` argument."
+        raise Exception(msg)
+    elif bin_cens is not None: # user-defined bins
+        N_bins = len(bin_cens)
+        bin_edges = np.empty((N_bins+1,))
+        spacings = bin_cens[1:] - bin_cens[:-1]
+        inner_edges = bin_cens[:-1] + spacings/2
+        bin_edges[1:-1] = inner_edges # set inner bin edges
+        # Get outer edges
+        width_start = bin_cens[1] - bin_cens[0]
+        bin_edges[0] = bin_cens[0] - width_start/2 # set first bin edge
+        width_end = bin_cens[-1] - bin_cens[-2]
+        bin_edges[-1] = bin_cens[-1] + width_end/2 # set last bin edge
+        bin_width = (bin_edges[-1] - bin_edges[0])/N_bins # AVERAGE bin width
+    elif N_bins is not None: # automatic uniform binning
+        bin_edges = np.linspace(x_min, x_max, num=N_bins+1, endpoint=True)
+        bin_width = sample_range/N_bins
+        bin_cens = bin_edges[:-1] + bin_width/2
     else:
-        x_min = x_cen - x_range
-        x_max = x_cen + x_range
-    x_range = x_max -x_min
-    bin_width = spec.data.index[1] - spec.data.index[0]
-    N_bins = len(spec.data.index)
-
-    # Prepare number of samples to draw
-    if N_samples is None:
-        N_samples = int(np.sum(spec.data['Counts'])) # total number of counts in spectrum
+        raise Exception("`N_bins` or `bin_cens` argument must be specified!")
 
     # Prepare shape parameters
-    pars = spec.shape_cal_pars
-    sigma = pars['sigma']
-    theta = pars['theta']
+    sigma = shape_pars['sigma']
+    theta = shape_pars['theta']
     li_eta_m = []
     li_tau_m = []
     li_eta_p = []
     li_tau_p = []
-    for key, val in pars.items():
+    for key, val in shape_pars.items():
         if key.startswith('eta_m'):
             li_eta_m.append(val)
         if key.startswith('tau_m'):
@@ -198,7 +229,7 @@ def sample_spectrum(spec,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
     counts = np.append(amps/bin_width,bkg_c*N_bins) # cts in each peak & background
     weights = counts/np.sum(counts) # normalized probability weights
 
-    peak_dist = np.random.choice(range(N_peaks+1),size=N_samples,p = weights)
+    peak_dist = np.random.choice(range(N_peaks+1),size=N_events,p = weights)
     N_bkg = np.count_nonzero(peak_dist == N_peaks) # calc. number of background counts
 
     events = np.array([])
@@ -210,15 +241,124 @@ def sample_spectrum(spec,mus,amps,bkg_c=0.0,x_cen=None,x_range=None,
         events = np.append(events,events_i)
 
     # Create background events
-    bkg = uniform.rvs(size=N_bkg,loc=x_min,scale=x_range)
+    bkg = uniform.rvs(size=N_bkg,loc=x_min,scale=sample_range)
     events = np.append(events,bkg)
 
     if out is 'list':  # return unbinned list of events
         return events
-    elif out is 'hist':  # return histogram with identical binning as `spec`
-        x = spec.data.loc[x_min:x_max].index.values
-        bin_edges = np.append(x,x[-1] + bin_width) - bin_width/2
+    elif out is 'hist':  # return histogram
         y = np.histogram(events,bins=bin_edges)[0]
-        df = pd.DataFrame(data=y,index=x,columns = ['Counts'])
+        df = pd.DataFrame(data=y,index=bin_cens,columns = ['Counts'])
         df.index.rename('Mass [u]',inplace=True)
         return df
+
+
+def simulate_spectrum(spec,x_cen=None,x_range=None,mus=None,amps=None,bkg_c=None,
+                      N_events=None,copy_spec=False):
+    """ Create a simulated spectrum using the attributes of a reference spectrum
+
+    The peak shape of the sampling probability distribution function (PDF)
+    follows the shape calibration of the reference spectrum (`spec`). By
+    default, all other parameters of the sampling PDF are identical to the
+    best-fit parameters of the reference spectrum. If desired, the positions,
+    amplitudes and number of peaks in the sampling PDF as well as the background
+    level can be changed with the `mus`, `amps` and `bkg_c` arguments.
+
+    Parameters
+    ----------
+    spec : :class:`~emgfit.spectrum.spectrum`
+        Reference spectrum object whose best-fit parameters will be used to
+        sample from.
+    mus : float or list of float [u], optional
+        Nominal peak centres of peaks in simulated spectrum. Defaults to the
+        mus of the reference spectrum fit.
+    amps : float or list of float
+        Nominal amplitudes of peaks in simulated spectrum. Defaults to the
+        amplitudes of the reference spectrum fit.
+    bkg_c : float, optional
+        Nominal amplitude of uniform background in simulated spectrum. Defaults
+        to the c_bkg obtained in the fit of the first peak in the reference
+        spectrum.
+    x_cen : float [u], optional
+        Mass center of simulated spectrum. Defaults to `x_cen` of `spec`.
+    x_range : float [u], optional
+        Covered mass range of simulated spectrum. Defaults to `x_range` of
+        `spectrum`.
+    N_events : int, optional
+        Number of ion events to simulate (excluding background events). Defaults
+        to total number of events in `spec`.
+    copy_spec : bool, optional, default: False
+        If ``False`` (default), this function returns a fresh
+        :class:`~spectrum.spectrum` object created from the simulated mass data.
+        If ``True``, this function returns an exact copy of `spec` with only the
+        :attr`data` attribute replaced by the new simulated mass data.
+
+   Returns
+   -------
+   class:`spectrum.spectrum`
+       If `copy_spec = False` (default) a fresh spectrum object holding the
+       simulated mass data is returned. If `copy_spec = True`, a copy of the
+       reference spectrum `spec` is returned with only the :attr:`data`
+       attribute replaced by the new simulated mass data.
+
+    Notes
+    -----
+
+    All peaks have the identical width and shape (no re-scaling of
+    mass-dependent shape parameters to a peak's mass centroid).
+
+    The returned spectrum follows the binning of the reference spectrum.
+
+    """
+    if spec.fit_results is [] or None:
+        raise Exception("No fit results found in reference spectrum `spec`.")
+    if x_cen is None and x_range is None:
+        x_min = spec.data.index.values[0]
+        x_max = spec.data.index.values[-1]
+        indeces = range(len(spec.peaks)) # get peak indeces in sampling range
+    else:
+        x_min = x_cen - x_range
+        x_max = x_cen + x_range
+        # Get peak indeces in sampling range:
+        peaks = spec.peaks
+        indeces = [i for i in range(len(peaks)) if x_min <= peaks[i].x_pos <= x_max]
+    if mus is None:
+        if len(indeces) == 0:
+            import warnings
+            msg = str("No peaks in sampling range.")
+            warnings.warn(msg, UserWarning)
+        mus = []
+        for i in indeces:
+            result = spec.fit_results[i]
+            pref = 'p{0}_'.format(i)
+            mus.append(result.best_values[pref+'mu'])
+    if amps is None:
+        amps = []
+        for i in indeces:
+            result = spec.fit_results[i]
+            pref = 'p{0}_'.format(i)
+            amps.append(result.best_values[pref+'amp'])
+    if bkg_c is None:
+        assert len(indeces) != 0, "Zero background and no peaks in sampling range."
+        result = spec.fit_results[indeces[0]]
+        bkg_c = result.best_values['bkg_c']
+    if N_events is None:
+        N_events = int(np.sum(spec.data['Counts'])) # total number of counts in spectrum
+
+    # Create histogram with Monte Carlo events
+    x = spec.data[x_min:x_max].index.values
+    df = simulate_events(spec.shape_cal_pars,mus,amps,bkg_c,N_events,x_min,
+                         x_max,out='hist',N_bins=None,bin_cens=x)
+
+    # Copy original spectrum and overwrite data
+    # This copies all results such as peak assignments, PS calibration,
+    # fit_results etc.
+    if copy_spec:
+        from copy import deepcopy
+        new_spec = deepcopy(spec)
+        new_spec.data = df
+    else: # Define a fresh spectrum with sampled data
+        from emgfit import spectrum
+        new_spec = spectrum.spectrum(df=df)
+
+    return new_spec
