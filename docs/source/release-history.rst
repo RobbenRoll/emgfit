@@ -7,6 +7,11 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+vX.Y.Z
+------
+* Added `fit_kws` argument to peakfit method to enable more control over the 
+  underlying scipy optimization algorithms.
+
 v0.2.3 (2020-09-18)
 -------------------
 * Updated docs and README.

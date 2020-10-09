@@ -1285,8 +1285,8 @@ class spectrum:
 
     def peakfit(self,fit_model='emg22', cost_func='chi-square', x_fit_cen=None,
                 x_fit_range=None, init_pars=None, vary_shape=False,
-                vary_baseline=True, method='least_squares', show_plots=True,
-                show_peak_markers=True, sigmas_of_conf_band=0,
+                vary_baseline=True, method='least_squares', fit_kws=None,
+                show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0,
                 plot_filename=None, eval_par_covar=False):
         """Internal routine for fitting peaks.
 
@@ -1362,6 +1362,9 @@ class spectrum:
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
+        fit_kws : dict, optional, default: None
+            Options to pass to lmfit minimizer used in
+            :meth:`lmfit.model.Model.fit` method.
         show_plots : bool, optional
             If ``True`` (default) linear and logarithmic plots of the spectrum
             with the best fit curve are displayed. For details see
@@ -1500,16 +1503,17 @@ class spectrum:
                 # Calculate weights for current iteration, non-zero upper
                 # bound of 1 implemented for numerical stability:
                 weights = 1./np.maximum(1.,np.sqrt(y_m))
-
                 return (y_m - y_data)*weights
+
             # Overwrite lmfit's standard least square residuals with iterative
             # residuals for Pearson chi-square fit
             mod_Pearson._residual = resid_Pearson_chi_square
             out = mod_Pearson.fit(y, params=pars, x=x, weights=weights,
-                                  method=method, scale_covar=False,
-                                  nan_policy='propagate')
-            y_m = out.best_fit
+                                  method=method, fit_kws=fit_kws,
+                                  calc_covar=False, nan_policy='propagate')
+
             # Calculate final weights for plotting
+            y_m = out.best_fit
             Pearson_weights = 1./np.maximum(1.,np.sqrt(y_m))
             out.y_err = 1./Pearson_weights
         elif cost_func == 'MLE':
@@ -1527,14 +1531,16 @@ class spectrum:
                 NLLR = 2*(y_m-y_data) + 2*y_data*(np.log(y_data+tiny)-np.log(y_m+tiny))
                 ret = np.sqrt(NLLR)
                 return ret
+
             # Overwrite lmfit's standard least square residuals with the
             # square-roots of the NLLR summands, this enables usage of scipy's
             # `least_squares` minimizer and yields much faster optimization
             # than with scalar minimizers
             mod_MLE._residual = sqrt_NLLR
             out = mod_MLE.fit(y, params=pars, x=x, weights=weights,
-                              method=method, scale_covar=False,
-                              calc_covar=False, nan_policy='propagate')
+                              method=method, fit_kws=fit_kws,
+                              scale_covar=False, calc_covar=False,
+                              nan_policy='propagate')
             out.y_err = 1./out.weights
         else:
             raise Exception("Error: Definition of `cost_func` failed!")
