@@ -9,8 +9,12 @@ versions can be found `here`_.
 
 vX.Y.Z
 ------
-* Added `fit_kws` argument to peakfit method to enable more control over the 
+* Added `fit_kws` argument to peakfit method to enable more control over the
   underlying scipy optimization algorithms.
+* Changed bounding of Pearson weights to addition of small number eps = 1e-10.
+  This ensures that the cost function asymptotically converges to a chi square
+  distribution. At the same time this still avoids numerical stabilities due to
+  overweighting of bins whose predicted number of counts approach zero. 
 
 v0.2.3 (2020-09-18)
 -------------------

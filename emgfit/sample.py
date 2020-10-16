@@ -123,9 +123,9 @@ def simulate_events(shape_pars,mus,amps,bkg_c,N_events,x_min,
         :class:`~spectrum.spectrum` class.
     mus : float or list of float [u]
         Nominal peak centres of peaks in simulated spectrum.
-    amps : float or list of float
+    amps : float or list of float [counts per u]
         Nominal amplitudes of peaks in simulated spectrum.
-    bkg_c : float, optional, default: 0.0
+    bkg_c : float [counts per bin], optional, default: 0.0
         Nominal amplitude of uniform background in simulated spectrum.
     x_min : float [u], optional
         Beginning of sampling mass range.
@@ -162,11 +162,19 @@ def simulate_events(shape_pars,mus,amps,bkg_c,N_events,x_min,
     Notes
     -----
 
-    Currently, all peaks have the identical width and shape (no re-scaling of
-    mass-dependent shape parameters to a peak's mass centroid).
+    Currently, all simulated peaks have identical width and shape (no re-scaling
+    of mass-dependent shape parameters to a peak's mass centroid).
 
     Routine requires tail arguments in shape_cal_pars dict to be ordered
     (eta_m1,eta_m2,...) etc..
+
+    Mind the different units for peak amplitudes `amps` (counts per u) and the
+    background level `bkg_c` (counts per bin). When spectrum data is
+    simulated counts are distributed between the different peaks and the
+    background with probability weights `amps`*<bin width in> and
+    `bkg_c`*<number of bins>, respectively. As a consequence, simply changing
+    `N_events` (while keeping all other arguments constant), will render `amps`
+    and `bkg_c` away from their nominal units.
 
     """
     # TODO: Implement rescaling of peak-shape parameters with mass
@@ -272,10 +280,10 @@ def simulate_spectrum(spec,x_cen=None,x_range=None,mus=None,amps=None,bkg_c=None
     mus : float or list of float [u], optional
         Nominal peak centres of peaks in simulated spectrum. Defaults to the
         mus of the reference spectrum fit.
-    amps : float or list of float
+    amps : float or list of float [counts per u]
         Nominal amplitudes of peaks in simulated spectrum. Defaults to the
         amplitudes of the reference spectrum fit.
-    bkg_c : float, optional
+    bkg_c : float [counts per bin], optional
         Nominal amplitude of uniform background in simulated spectrum. Defaults
         to the c_bkg obtained in the fit of the first peak in the reference
         spectrum.
@@ -285,7 +293,7 @@ def simulate_spectrum(spec,x_cen=None,x_range=None,mus=None,amps=None,bkg_c=None
         Covered mass range of simulated spectrum. Defaults to `x_range` of
         `spectrum`.
     N_events : int, optional
-        Number of ion events to simulate (excluding background events). Defaults
+        Number of ion events to simulate (including background events). Defaults
         to total number of events in `spec`.
     copy_spec : bool, optional, default: False
         If ``False`` (default), this function returns a fresh
@@ -304,10 +312,18 @@ def simulate_spectrum(spec,x_cen=None,x_range=None,mus=None,amps=None,bkg_c=None
     Notes
     -----
 
-    All peaks have the identical width and shape (no re-scaling of
-    mass-dependent shape parameters to a peak's mass centroid).
+    Currently, all simulated peaks have identical width and shape (no re-scaling
+    of mass-dependent shape parameters to a peak's mass centroid).
 
     The returned spectrum follows the binning of the reference spectrum.
+
+    Mind the different units for peak amplitudes `amps` (counts per u) and the
+    background level `bkg_c` (counts per bin). When spectrum data is
+    simulated counts are distributed between the different peaks and the
+    background with probability weights `amps`*<bin width in> and
+    `bkg_c`*<number of bins>, respectively. As a consequence, simply changing
+    `N_events` (while keeping all other arguments constant), will render `amps`
+    and `bkg_c` away from their nominal units.
 
     """
     if spec.fit_results is [] or None:

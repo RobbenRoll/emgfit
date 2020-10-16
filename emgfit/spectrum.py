@@ -1398,9 +1398,12 @@ class spectrum:
         -----
 
         In fits with the ``chi-square`` cost function the variance weights
-        :math:`w_i` for the residuals are estimated as the square of the model
-        predictions: :math:`w_i = 1/\sigma_i = 1/f(x_i)^2`. On each iteration
-        the weights are updated with the new values of the model function.
+        :math:`w_i` for the residuals are estimated using the latest model
+        predictions: :math:`w_i = 1/(\sigma_i + \epsilon) = 1/(f(x_i)+ \epsilon)`,
+        where :math:`\epsilon = 1e-10` is a small number added to increase
+        numerical robustness when :math:`f(x_i)` approaches zero. On each
+        iteration the weights are updated with the new values of the model
+        function. 
 
         When performing ``MLE`` fits including bins with low statistics the
         value for chi-squared as well as the parameter standard errors and
@@ -1466,7 +1469,7 @@ class spectrum:
         y = df_fit['Counts'].values
         y_err = np.maximum(1,np.sqrt(y)) # assume Poisson (counting) statistics
         # Weights for residuals: residual = (fit_model - y) * weights
-        weights = 1./y_err # np.nan_to_num(1./y_err, nan=0.0, posinf=0.0, neginf=None)
+        weights = 1./y_err
 
         if init_pars == 'default':
             # Take default params defined in create_default_init_pars() in
@@ -1496,13 +1499,13 @@ class spectrum:
         # Perform fit, print fit report
         if cost_func == 'chi-square':
             ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x_i))
-            ## Weights have a lower bound of 1
             mod_Pearson = mod
+            eps = 1e-10 # small number to bound Pearson weights
             def resid_Pearson_chi_square(pars,y_data,weights,x=x):
                 y_m = mod_Pearson.eval(pars,x=x)
-                # Calculate weights for current iteration, non-zero upper
-                # bound of 1 implemented for numerical stability:
-                weights = 1./np.maximum(1.,np.sqrt(y_m))
+                # Calculate weights for current iteration, add tiny number `eps`
+                # in denominator for numerical stability
+                weights = 1/np.sqrt(y_m + eps)
                 return (y_m - y_data)*weights
 
             # Overwrite lmfit's standard least square residuals with iterative
@@ -1512,10 +1515,8 @@ class spectrum:
                                   method=method, fit_kws=fit_kws,
                                   calc_covar=False, nan_policy='propagate')
 
-            # Calculate final weights for plotting
-            y_m = out.best_fit
-            Pearson_weights = 1./np.maximum(1.,np.sqrt(y_m))
-            out.y_err = 1./Pearson_weights
+            # Reset y_errs to np.maximum(1,np.sqrt(y)) for plotting
+            out.y_err = 1/weights
         elif cost_func == 'MLE':
             ## Binned max. likelihood fit using negative log-likelihood ratio
             mod_MLE = mod
@@ -1668,11 +1669,15 @@ class spectrum:
                 area_err = fit_result.params[pref+'amp'].stderr/bin_width
                 area_err = np.round(area_err,decimals)
             except TypeError as err:
-                    print('\nWARNING: Area error determination failed with Type error:',err,' \n')
-                    pass
+                    import warnings
+                    msg = 'Area error determination failed with Type error: '
+                    msg += str(getattr(err, 'message', repr(err)))
+                    warnings.warn(msg)
         except TypeError or AttributeError:
-            print('WARNING: Area error determination failed. Could not get amplitude parameter (`amp`) of peak. Likely the peak has not been fitted successfully yet.')
-            raise
+            msg = str('Area error determination failed. Could not get amplitude '
+                      'parameter (`amp`) of peak. Likely the peak has not been '
+                      'fitted successfully yet.')
+            raise Exception(msg)
         return area, area_err
 
 
@@ -1716,7 +1721,7 @@ class spectrum:
         i_HM1 = np.argmin(np.abs(y[0:i_M]-y_HM))
         i_HM2 = i_M + np.argmin(np.abs(y[i_M:]-y_HM))
         if i_HM1 == 0 or i_HM2 == len(x):
-            msg = "FWHM points at boundary, likely a larger x_range needs to be hardcoded into function."
+            msg = "FWHM points at boundary, likely a larger `x_range` needs to be hardcoded into this method."
             raise Exception(msg)
         FWHM = x[i_HM2] - x[i_HM1]
 
@@ -2673,23 +2678,26 @@ class spectrum:
             mus.append(fit_result.best_values[pref+'mu'])
             amps.append(fit_result.best_values[pref+'amp'])
 
-        bkg_c = fit_result.best_values['bkg_c']
+        ##bkg_c = fit_result.best_values['bkg_c']
         fit_model = fit_result.fit_model
         cost_func = fit_result.cost_func
         method = fit_result.method
         vary_baseline = fit_result.vary_baseline
         shape_pars = self.shape_cal_pars
 
-        from emgfit.sample import sample_spectrum
+        from emgfit.sample import simulate_spectrum
         from copy import deepcopy
         def get_new_mus(): # spec,mus,amps,bkg_c,x_cen,x_range,fit_result
 
             # Create simulated spectrum data by sampling from fit-result PDF
-            df = sample_spectrum(self, mus, amps, bkg_c, x_cen=x_cen,
-                                 x_range=x_range)
+            sim_spec = simulate_spectrum(self, x_cen=x_cen, x_range=x_range,
+                                         copy_spec=True)
+
+            ##df = simulate_events(self, mus, amps, bkg_c, x_cen=x_cen,
+            ##                     x_range=x_range)
             # Create simulated spectrum object
-            sim_spec = deepcopy(self)
-            sim_spec.data = df
+            ##sim_spec = deepcopy(self)
+            ##sim_spec.data = df
             # Re-perform fit on simulated spectrum
             try:
                 new_result = sim_spec.peakfit(fit_model=fit_model,
