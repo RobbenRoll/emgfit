@@ -14,7 +14,12 @@ vX.Y.Z
 * Changed bounding of Pearson weights to addition of small number eps = 1e-10.
   This ensures that the cost function asymptotically converges to a chi square
   distribution. At the same time this still avoids numerical stabilities due to
-  overweighting of bins whose predicted number of counts approach zero. 
+  overweighting of bins whose predicted number of counts approach zero.
+* Added :mod:`sample` module for easy generation of simulated spectra.
+* Implemented get_errors_from_resampling() method which can yield refined
+  estimates of the statistical and peak area errors for each peak individually
+  by performing a parametric bootstrap.
+* Updated formatting of peak properties table for more clarity.
 
 v0.2.3 (2020-09-18)
 -------------------

@@ -6,16 +6,6 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import exponnorm, uniform, poisson
-# N_samples = 50000 # total no of counts in spectrum
-# # Random samples drawn from h_m EMG PDF
-# x_min = 99.99
-# x_max = 100.01
-# bin_width = 30e-06
-# c_bkg = 0 # mean no of background counts per bin
-# x_range = x_max - x_min
-# N_bins = int(x_range/bin_width)
-# N_bkg = int(c_bkg * N_bins)
-# print(N_bkg)
 
 ################################################################################
 ##### Define Functions for drawing random variates from Hyper-EMG PDFs
@@ -104,9 +94,9 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
 ################################################################################
 ##### Define functions for creating simulated spectra
 
-def simulate_events(shape_pars,mus,amps,bkg_c,N_events,x_min,
-                    x_max,out='hist',N_bins=None,bin_cens=None):
-    """ Create simulated ion events drawn from a user-defined probability
+def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
+                    x_max, out='hist', N_bins=None, bin_cens=None):
+    """Create simulated ion events drawn from a user-defined probability
     distribution function (PDF)
 
     Events can either be output as a list of single events (mass stamps) or as a
@@ -127,9 +117,9 @@ def simulate_events(shape_pars,mus,amps,bkg_c,N_events,x_min,
         Nominal amplitudes of peaks in simulated spectrum.
     bkg_c : float [counts per bin], optional, default: 0.0
         Nominal amplitude of uniform background in simulated spectrum.
-    x_min : float [u], optional
+    x_min : float [u]
         Beginning of sampling mass range.
-    x_max : float [u], optional
+    x_max : float [u]
         End of sampling mass range.
     N_events : int, optional, default: 1000
         Total number of events to simulate (signal and background events).
@@ -143,24 +133,25 @@ def simulate_events(shape_pars,mus,amps,bkg_c,N_events,x_min,
     N_bins : int, optional
         Number of uniform bins to use in ``'hist'`` output mode. The **outer**
         edges of the first and last bin are fixed to the start and end of the
-        sampling range respectively (i.e. `x_min` and
-        `x_max`). In between, bins are distributed with a fixed
-        spacing of (`x_max`-`x_min`)/`N_bins`.
+        sampling range respectively (i.e. `x_min` and `x_max`). In between, bins
+        are distributed with a fixed spacing of (`x_max`-`x_min`)/`N_bins`.
     bin_cens : :class:`numpy.ndarray` [u]
         Centres of mass bins to use in ``'hist'`` output mode. This argument
         allows the realization of non-uniform binning. Bin edges are centred
         between neighboring bins. Note: Bins outside the sampling range defined
         with `x_min` and `x_max` will be empty.
 
-   Returns
-   -------
-   class:`numpy.array` or :class:`pandas.Dataframe`
+    Returns
+    -------
+    :class:`numpy.array` or :class:`pandas.Dataframe`
        If out='hist' a dataframe with a histogram of the format
        [bin centre [u], counts in bin] is returned. If out='list' an unbinned
        array with mass values [u] of single ion or background events is returned.
 
     Notes
     -----
+    Random events are created via inverse-transform sampling using Hyper-EMG
+    extensions of Scipy's :meth:`scipy.exponnorm.rvs` method.
 
     Currently, all simulated peaks have identical width and shape (no re-scaling
     of mass-dependent shape parameters to a peak's mass centroid).
@@ -261,9 +252,9 @@ def simulate_events(shape_pars,mus,amps,bkg_c,N_events,x_min,
         return df
 
 
-def simulate_spectrum(spec,x_cen=None,x_range=None,mus=None,amps=None,bkg_c=None,
-                      N_events=None,copy_spec=False):
-    """ Create a simulated spectrum using the attributes of a reference spectrum
+def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
+                      bkg_c=None, N_events=None, copy_spec=False):
+    """Create a simulated spectrum using the attributes of a reference spectrum
 
     The peak shape of the sampling probability distribution function (PDF)
     follows the shape calibration of the reference spectrum (`spec`). By
@@ -280,7 +271,7 @@ def simulate_spectrum(spec,x_cen=None,x_range=None,mus=None,amps=None,bkg_c=None
     mus : float or list of float [u], optional
         Nominal peak centres of peaks in simulated spectrum. Defaults to the
         mus of the reference spectrum fit.
-    amps : float or list of float [counts per u]
+    amps : float or list of float [counts per u], optional
         Nominal amplitudes of peaks in simulated spectrum. Defaults to the
         amplitudes of the reference spectrum fit.
     bkg_c : float [counts per bin], optional
@@ -301,9 +292,9 @@ def simulate_spectrum(spec,x_cen=None,x_range=None,mus=None,amps=None,bkg_c=None
         If ``True``, this function returns an exact copy of `spec` with only the
         :attr`data` attribute replaced by the new simulated mass data.
 
-   Returns
-   -------
-   class:`spectrum.spectrum`
+    Returns
+    -------
+    :class:`spectrum.spectrum`
        If `copy_spec = False` (default) a fresh spectrum object holding the
        simulated mass data is returned. If `copy_spec = True`, a copy of the
        reference spectrum `spec` is returned with only the :attr:`data`
@@ -311,6 +302,8 @@ def simulate_spectrum(spec,x_cen=None,x_range=None,mus=None,amps=None,bkg_c=None
 
     Notes
     -----
+    Random events are created via inverse-transform sampling using Hyper-EMG
+    extensions of Scipy's :meth:`scipy.exponnorm.rvs` method.
 
     Currently, all simulated peaks have identical width and shape (no re-scaling
     of mass-dependent shape parameters to a peak's mass centroid).

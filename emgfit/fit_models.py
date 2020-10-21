@@ -67,23 +67,23 @@ def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Parameters
     ----------
-        peak_index :  int
-            Index of peak to fit.
-        x_pos : float)
-           Initial guess of peak centroid.
-        amp : floatI
-            Initial guess of peak amplitude.
-        init_pars : dict
-            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
-            dictionary are overwritten by the given `amp` and `x_pos` arguments)
-        vary_shape_pars : bool
-            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
-            eta's and tau's).
-        index_first_peak : int
-            Index of the first peak to be fit in a multi-peak-fit. Only use this
-            during peak shape determination to enforce common shape parameters
-            for all peaks to be fitted. (For a regular fit with
-            ``vary_shape_pars = False`` this is irrelevant.)
+    peak_index :  int
+        Index of peak to fit.
+    x_pos : float)
+       Initial guess of peak centroid.
+    amp : floatI
+        Initial guess of peak amplitude.
+    init_pars : dict
+        Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+        dictionary are overwritten by the given `amp` and `x_pos` arguments)
+    vary_shape_pars : bool
+        Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+        eta's and tau's).
+    index_first_peak : int
+        Index of the first peak to be fit in a multi-peak-fit. Only use this
+        during peak shape determination to enforce common shape parameters
+        for all peaks to be fitted. (For a regular fit with
+        ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -119,23 +119,23 @@ def emg01(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Parameters
     ----------
-        peak_index :  int
-            Index of peak to fit.
-        x_pos : float)
-           Initial guess of peak centroid.
-        amp : floatI
-            Initial guess of peak amplitude.
-        init_pars : dict
-            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
-            dictionary are overwritten by the given `amp` and `x_pos` arguments)
-        vary_shape_pars : bool
-            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
-            eta's and tau's).
-        index_first_peak : int
-            Index of the first peak to be fit in a multi-peak-fit. Only use this
-            during peak shape determination to enforce common shape parameters
-            for all peaks to be fitted. (For a regular fit with
-            ``vary_shape_pars = False`` this is irrelevant.)
+    peak_index :  int
+        Index of peak to fit.
+    x_pos : float)
+       Initial guess of peak centroid.
+    amp : floatI
+        Initial guess of peak amplitude.
+    init_pars : dict
+        Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+        dictionary are overwritten by the given `amp` and `x_pos` arguments)
+    vary_shape_pars : bool
+        Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+        eta's and tau's).
+    index_first_peak : int
+        Index of the first peak to be fit in a multi-peak-fit. Only use this
+        during peak shape determination to enforce common shape parameters
+        for all peaks to be fitted. (For a regular fit with
+        ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -173,23 +173,23 @@ def emg10(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Parameters
     ----------
-        peak_index :  int
-            Index of peak to fit.
-        x_pos : float)
-           Initial guess of peak centroid.
-        amp : floatI
-            Initial guess of peak amplitude.
-        init_pars : dict
-            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
-            dictionary are overwritten by the given `amp` and `x_pos` arguments)
-        vary_shape_pars : bool
-            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
-            eta's and tau's).
-        index_first_peak : int
-            Index of the first peak to be fit in a multi-peak-fit. Only use this
-            during peak shape determination to enforce common shape parameters
-            for all peaks to be fitted. (For a regular fit with
-            ``vary_shape_pars = False`` this is irrelevant.)
+    peak_index :  int
+        Index of peak to fit.
+    x_pos : float)
+       Initial guess of peak centroid.
+    amp : floatI
+        Initial guess of peak amplitude.
+    init_pars : dict
+        Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+        dictionary are overwritten by the given `amp` and `x_pos` arguments)
+    vary_shape_pars : bool
+        Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+        eta's and tau's).
+    index_first_peak : int
+        Index of the first peak to be fit in a multi-peak-fit. Only use this
+        during peak shape determination to enforce common shape parameters
+        for all peaks to be fitted. (For a regular fit with
+        ``vary_shape_pars = False`` this is irrelevant.)
 
 
     Returns
@@ -228,23 +228,23 @@ def emg11(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Parameters
     ----------
-        peak_index :  int
-            Index of peak to fit.
-        x_pos : float)
-           Initial guess of peak centroid.
-        amp : floatI
-            Initial guess of peak amplitude.
-        init_pars : dict
-            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
-            dictionary are overwritten by the given `amp` and `x_pos` arguments)
-        vary_shape_pars : bool
-            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
-            eta's and tau's).
-        index_first_peak : int
-            Index of the first peak to be fit in a multi-peak-fit. Only use this
-            during peak shape determination to enforce common shape parameters
-            for all peaks to be fitted. (For a regular fit with
-            ``vary_shape_pars = False`` this is irrelevant.)
+    peak_index :  int
+        Index of peak to fit.
+    x_pos : float)
+       Initial guess of peak centroid.
+    amp : floatI
+        Initial guess of peak amplitude.
+    init_pars : dict
+        Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+        dictionary are overwritten by the given `amp` and `x_pos` arguments)
+    vary_shape_pars : bool
+        Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+        eta's and tau's).
+    index_first_peak : int
+        Index of the first peak to be fit in a multi-peak-fit. Only use this
+        during peak shape determination to enforce common shape parameters
+        for all peaks to be fitted. (For a regular fit with
+        ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -286,24 +286,23 @@ def emg12(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Parameters
     ----------
-        peak_index :  int
-            Index of peak to fit.
-        x_pos : float)
-           Initial guess of peak centroid.
-        amp : floatI
-            Initial guess of peak amplitude.
-        init_pars : dict
-            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
-            dictionary are overwritten by the given `amp` and `x_pos` arguments)
-        vary_shape_pars : bool
-            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
-            eta's and tau's).
-        index_first_peak : int
-            Index of the first peak to be fit in a multi-peak-fit. Only use this
-            during peak shape determination to enforce common shape parameters
-            for all peaks to be fitted. (For a regular fit with
-            ``vary_shape_pars = False`` this is irrelevant.)
-
+    peak_index :  int
+        Index of peak to fit.
+    x_pos : float)
+       Initial guess of peak centroid.
+    amp : floatI
+        Initial guess of peak amplitude.
+    init_pars : dict
+        Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+        dictionary are overwritten by the given `amp` and `x_pos` arguments)
+    vary_shape_pars : bool
+        Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+        eta's and tau's).
+    index_first_peak : int
+        Index of the first peak to be fit in a multi-peak-fit. Only use this
+        during peak shape determination to enforce common shape parameters
+        for all peaks to be fitted. (For a regular fit with
+        ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -351,24 +350,23 @@ def emg21(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Parameters
     ----------
-        peak_index :  int
-            Index of peak to fit.
-        x_pos : float)
-           Initial guess of peak centroid.
-        amp : floatI
-            Initial guess of peak amplitude.
-        init_pars : dict
-            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
-            dictionary are overwritten by the given `amp` and `x_pos` arguments)
-        vary_shape_pars : bool
-            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
-            eta's and tau's).
-        index_first_peak : int
-            Index of the first peak to be fit in a multi-peak-fit. Only use this
-            during peak shape determination to enforce common shape parameters
-            for all peaks to be fitted. (For a regular fit with
-            ``vary_shape_pars = False`` this is irrelevant.)
-
+    peak_index :  int
+        Index of peak to fit.
+    x_pos : float)
+       Initial guess of peak centroid.
+    amp : floatI
+        Initial guess of peak amplitude.
+    init_pars : dict
+        Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+        dictionary are overwritten by the given `amp` and `x_pos` arguments)
+    vary_shape_pars : bool
+        Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+        eta's and tau's).
+    index_first_peak : int
+        Index of the first peak to be fit in a multi-peak-fit. Only use this
+        during peak shape determination to enforce common shape parameters
+        for all peaks to be fitted. (For a regular fit with
+        ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -416,24 +414,23 @@ def emg22(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Parameters
     ----------
-        peak_index :  int
-            Index of peak to fit.
-        x_pos : float)
-           Initial guess of peak centroid.
-        amp : floatI
-            Initial guess of peak amplitude.
-        init_pars : dict
-            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
-            dictionary are overwritten by the given `amp` and `x_pos` arguments)
-        vary_shape_pars : bool
-            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
-            eta's and tau's).
-        index_first_peak : int
-            Index of the first peak to be fit in a multi-peak-fit. Only use this
-            during peak shape determination to enforce common shape parameters
-            for all peaks to be fitted. (For a regular fit with
-            ``vary_shape_pars = False`` this is irrelevant.)
-
+    peak_index :  int
+        Index of peak to fit.
+    x_pos : float)
+       Initial guess of peak centroid.
+    amp : floatI
+        Initial guess of peak amplitude.
+    init_pars : dict
+        Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+        dictionary are overwritten by the given `amp` and `x_pos` arguments)
+    vary_shape_pars : bool
+        Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+        eta's and tau's).
+    index_first_peak : int
+        Index of the first peak to be fit in a multi-peak-fit. Only use this
+        during peak shape determination to enforce common shape parameters
+        for all peaks to be fitted. (For a regular fit with
+        ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -487,24 +484,23 @@ def emg23(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Parameters
     ----------
-        peak_index :  int
-            Index of peak to fit.
-        x_pos : float)
-           Initial guess of peak centroid.
-        amp : floatI
-            Initial guess of peak amplitude.
-        init_pars : dict
-            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
-            dictionary are overwritten by the given `amp` and `x_pos` arguments)
-        vary_shape_pars : bool
-            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
-            eta's and tau's).
-        index_first_peak : int
-            Index of the first peak to be fit in a multi-peak-fit. Only use this
-            during peak shape determination to enforce common shape parameters
-            for all peaks to be fitted. (For a regular fit with
-            ``vary_shape_pars = False`` this is irrelevant.)
-
+    peak_index :  int
+        Index of peak to fit.
+    x_pos : float)
+       Initial guess of peak centroid.
+    amp : floatI
+        Initial guess of peak amplitude.
+    init_pars : dict
+        Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+        dictionary are overwritten by the given `amp` and `x_pos` arguments)
+    vary_shape_pars : bool
+        Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+        eta's and tau's).
+    index_first_peak : int
+        Index of the first peak to be fit in a multi-peak-fit. Only use this
+        during peak shape determination to enforce common shape parameters
+        for all peaks to be fitted. (For a regular fit with
+        ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -569,24 +565,23 @@ def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True,
 
     Parameters
     ----------
-        peak_index :  int
-            Index of peak to fit.
-        x_pos : float)
-           Initial guess of peak centroid.
-        amp : floatI
-            Initial guess of peak amplitude.
-        init_pars : dict
-            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
-            dictionary are overwritten by the given `amp` and `x_pos` arguments)
-        vary_shape_pars : bool
-            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
-            eta's and tau's).
-        index_first_peak : int
-            Index of the first peak to be fit in a multi-peak-fit. Only use this
-            during peak shape determination to enforce common shape parameters
-            for all peaks to be fitted. (For a regular fit with
-            ``vary_shape_pars = False`` this is irrelevant.)
-
+    peak_index :  int
+        Index of peak to fit.
+    x_pos : float)
+       Initial guess of peak centroid.
+    amp : floatI
+        Initial guess of peak amplitude.
+    init_pars : dict
+        Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+        dictionary are overwritten by the given `amp` and `x_pos` arguments)
+    vary_shape_pars : bool
+        Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+        eta's and tau's).
+    index_first_peak : int
+        Index of the first peak to be fit in a multi-peak-fit. Only use this
+        during peak shape determination to enforce common shape parameters
+        for all peaks to be fitted. (For a regular fit with
+        ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -651,24 +646,23 @@ def emg33(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Parameters
     ----------
-        peak_index :  int
-            Index of peak to fit.
-        x_pos : float)
-           Initial guess of peak centroid.
-        amp : floatI
-            Initial guess of peak amplitude.
-        init_pars : dict
-            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
-            dictionary are overwritten by the given `amp` and `x_pos` arguments)
-        vary_shape_pars : bool
-            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
-            eta's and tau's).
-        index_first_peak : int
-            Index of the first peak to be fit in a multi-peak-fit. Only use this
-            during peak shape determination to enforce common shape parameters
-            for all peaks to be fitted. (For a regular fit with
-            ``vary_shape_pars = False`` this is irrelevant.)
-
+    peak_index :  int
+        Index of peak to fit.
+    x_pos : float)
+       Initial guess of peak centroid.
+    amp : floatI
+        Initial guess of peak amplitude.
+    init_pars : dict
+        Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+        dictionary are overwritten by the given `amp` and `x_pos` arguments)
+    vary_shape_pars : bool
+        Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+        eta's and tau's).
+    index_first_peak : int
+        Index of the first peak to be fit in a multi-peak-fit. Only use this
+        during peak shape determination to enforce common shape parameters
+        for all peaks to be fitted. (For a regular fit with
+        ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
