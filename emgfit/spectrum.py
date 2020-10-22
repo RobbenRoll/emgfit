@@ -1485,14 +1485,14 @@ class spectrum:
             from multiprocessing import Pool, cpu_count
             import dill
             #dill.detect.trace(True)
-            n_cores = int(cpu_count()-1)
+            n_cores = int(cpu_count())
             #pool = Pool(n_cores)
             import multiprocess as mp
             pool = mp.Pool(n_cores)
             print("Number of cores used for sampling:",n_cores)
             ## Set emcee options
             ## It is advisable to thin by about half the autocorrelation time
-            emcee_kws = dict(steps=500, burn=200, thin=20, nwalkers=nwalkers,
+            emcee_kws = dict(steps=500, burn=200, thin=70, nwalkers=nwalkers,
                              float_behavior='chi2',is_weighted=True, pos=p0,
                              progress=True, workers=pool) # steps=700, burn=250,
 
@@ -1554,21 +1554,21 @@ class spectrum:
             ## Plot parameter covariances returned by emcee
             import corner
             percentile_range = [0.99]*ndim  # percentile of samples to plot
-            fig_corner = plt.figure()
+            fig_cor, ax = plt.subplots(ndim,ndim,figsize=(25,25))
             corner.corner(result_emcee.flatchain,
-                            fig=fig_corner,
-                        labels=result_emcee.var_names,
-                                       bins=30, truths=list(out.params.valuesdict().values()),
-                                       hist_bin_factor=2,
-                                       range=percentile_range,
-                                       levels=(1-np.exp(-0.5),),
-                                       quantiles=[0.1587, 0.5, 0.8413])  # 1-sigma level contour assumes Gaussian PDFs # truths=list(result_emcee.params.valuesdict().values())
-            fig_corner.subplots_adjust(right=2,top=2)
-            for ax in fig_corner.get_axes():
+                          fig=fig_cor,
+                          labels=result_emcee.var_names,
+                          bins=30, truths=list(out.params.valuesdict().values()),
+                          hist_bin_factor=2,
+                          range=percentile_range,
+                          levels=(1-np.exp(-0.5),),
+                          quantiles=[0.1587, 0.5, 0.8413])  # 1-sigma level contour assumes Gaussian PDFs # truths=list(result_emcee.params.valuesdict().values())
+            fig_cor.subplots_adjust(right=2,top=2)
+            for ax in fig_cor.get_axes():
                 ax.tick_params(axis='both', labelsize=17)
                 ax.xaxis.label.set_size(27)
                 ax.yaxis.label.set_size(27)
-            plt.savefig("covariance map.png",dpi=350)
+            #plt.savefig("covariance map.png",dpi=350)
             plt.show()
 
             #print("\nmedian of posterior probability distribution")
@@ -2405,7 +2405,7 @@ class spectrum:
           spectrum's :attr:`centroid_shifts` dictionary.
         - The estimates for the total peak-shape uncertainty of each peak are
           obtained by adding the relative centroid shifts stored in
-          :attr:`centroid_shifts in quadrature`.
+          :attr:`centroid_shifts` in quadrature.
 
         """
         if self.index_shape_calib is None:
@@ -2532,7 +2532,8 @@ class spectrum:
 
     ##### Evaluate centroid shifts and calculate MC peak-shape errors
     def _eval_MC_peakshape_errors(self,peak_indeces=[],fit_result=None,
-                               verbose=False,show_shape_err_fits=False):
+                                  verbose=False,show_shape_err_fits=False,
+                                  N_samples = 1000):
         """Calculate the relative peak-shape uncertainty of the specified peaks. # TODO: Update function docs
 
         **This internal method is automatically called by the :meth:`fit_peaks`
@@ -2615,7 +2616,7 @@ class spectrum:
           spectrum's :attr:`centroid_shifts` dictionary.
         - The estimates for the total peak-shape uncertainty of each peak are
           obtained by adding the relative centroid shifts stored in
-          :attr:`centroid_shifts in quadrature`.
+          :attr:`centroid_shifts` in quadrature.
 
         """
         if self.index_shape_calib is None:
@@ -2653,7 +2654,6 @@ class spectrum:
         # Pick random shape parameter sets from the parameter PDFs determined
         # via MCMC sampling in the peak-shape calibration
         seed = 104
-        N_samples = 1000
         par_samples = self.MCMC_par_samples.sample(n=N_samples, replace=True, random_state=seed)
         par_samples.columns = par_samples.columns.str.replace('p'+str(self.index_shape_calib)+'_','')
 
@@ -2669,10 +2669,10 @@ class spectrum:
         delta_mus = np.full((len(self.peaks),N_samples), np.nan)
         idx_mass_cal = self.index_mass_calib
         cal_key = 'p{0}_mu'.format(idx_mass_cal)
-        i = 0
         # Iterate over selected parameter sets and re-fit with each set
         # recording the respective centroid shifts
-        for shape_pars in par_samples.to_dict(orient="row"):
+        from tqdm.auto import tqdm
+        for i, shape_pars in tqdm(enumerate(par_samples.to_dict(orient="row"))):
             # Calculate initial values for highest order eta pars using the
             # normalization condition
             if n_ltails == 2:
@@ -2834,11 +2834,11 @@ class spectrum:
                     #if verbose:
                     #    print(u'Re-fitting shifts Δm of peak',peak_idx,'and mass calibrant by',np.round(delta_mu*1e06,6),'\u03BCu. ')
 
-                print(i)
-            except:
-                print("Skipped parameter set {0} due to error.".format(i))
+            except Exception as err:
+                print("Skipped parameter set {0} due to error:".format(i))
+                print(err)
                 pass
-            i += 1
+
 
                 ##self.centroid_shifts[peak_idx][par+' centroid shift'] = np.where(np.abs(delta_mu_p) > np.abs(delta_mu_m),delta_mu_p,delta_mu_m).item() # maximal shifts relative to calibrant centroid
 
