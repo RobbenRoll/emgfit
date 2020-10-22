@@ -859,7 +859,7 @@ class spectrum:
 
         """
         import warnings
-        warnings.simplefilter('default')
+        warnings.simplefilter('once')
         msg = str("remove_peak is deprecated in v0.1.1 and will likely be "
                   "removed in future versions, use remove_peaks instead!")
         warnings.warn(msg, PendingDeprecationWarning)
@@ -2250,6 +2250,7 @@ class spectrum:
                                 par_name = pref+"eta_m"+str(i)
                                 val = out.params[par_name].value
                                 err = out.params[par_name].stderr
+                                print(val,err)
                                 if val < err:
                                     print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
                                     print("             This tail order is likely overfitting the data and will be excluded from selection.")
@@ -2265,6 +2266,7 @@ class spectrum:
                                 par_name = pref+"eta_p"+str(i)
                                 val = out.params[par_name].value
                                 err = out.params[par_name].stderr
+                                print(val,err)
                                 if val < err:
                                     print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
                                     print("             This tail order is likely overfitting the data and will be excluded from selection.")
@@ -2561,8 +2563,8 @@ class spectrum:
             # of the mass calibrant
             # if calibrant is not in fit range, its centroid shifts must have
             # been determined in a foregoing mass re-calibration
+            cal_idx = self.index_mass_calib
             if mass_calib_in_range:
-                cal_idx = self.index_mass_calib
                 cal_peak = self.peaks[cal_idx]
                 pref = 'p{0}_'.format(cal_idx)
                 cen = fit_result.best_values[pref+'mu']
@@ -2584,8 +2586,8 @@ class spectrum:
                     isinstance(self.eff_mass_shifts_pm[cal_idx][par+' calibrant centroid shift pm'],list)
                 except:
                     raise Exception(
-                    '\nERROR: No calibrant centroid shifts available for '
-                    'peak-shape error evaluation. Ensure that: \n'
+                    'No calibrant centroid shifts available for peak-shape error evaluation.\n'
+                    'Ensure that: \n'
                     '(a) either the mass calibrant is in the fit range and specified\n'
                     '    with the `index_mass_calib` or `species_mass_calib` parameter, or\n'
                     '(b) if the mass calibrant is not in the fit range, a successful\n'

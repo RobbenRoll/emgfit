@@ -10,8 +10,9 @@ versions can be found `here`_.
 vX.Y.Z
 ------
 * Fixed bug in remove_peaks() method.
+* Fixed bug in _eval_peakshape_errors() method.
 * Updated docs of assign_species() method. Fix bug in installation instructions.
-* Update concept article on :-Notation. 
+* Update concept article on :-Notation.
 
 v0.2.3 (2020-09-18)
 -------------------
