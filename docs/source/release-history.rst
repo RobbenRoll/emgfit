@@ -11,8 +11,11 @@ vX.Y.Z
 ------
 * Fixed bug in remove_peaks() method.
 * Fixed bug in _eval_peakshape_errors() method.
+* Changed automatic tail order determination in determine_peak_shape(). Now tail
+  orders are excluded if either the corresponding eta *or tau* parameter agrees 
+  with zero within 1-sigma confidence.
 * Updated docs of assign_species() method. Fix bug in installation instructions.
-* Update concept article on :-Notation.
+* Updated concept article on :-Notation.
 
 v0.2.3 (2020-09-18)
 -------------------

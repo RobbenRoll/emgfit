@@ -2215,7 +2215,9 @@ class spectrum:
             li_fit_models = ['Gaussian','emg01','emg10','emg11','emg12','emg21','emg22','emg23','emg32','emg33']
             li_red_chis = np.array([np.nan]*len(li_fit_models))
             li_red_chi_errs = np.array([np.nan]*len(li_fit_models))
-            li_eta_flags =np.array([False]*len(li_fit_models)) # list of flags for models with eta's compatible with zero or eta's without error
+            # Prepare list of flags for excluding models with tail parameters
+            # compatible with zero within error or with failed error estimation:
+            li_flags =np.array([False]*len(li_fit_models))
             for model in li_fit_models:
                 try:
                     print("\n### Fitting data with",model,"###---------------------------------------------------------------------------------------------\n")
@@ -2231,9 +2233,13 @@ class spectrum:
                     li_red_chi_errs[idx] =  np.round(np.sqrt(2/out.nfree),2)
 
                     # Check emg models with tail orders >= 2 for overfitting
-                    # (i.e. a eta parameter agress with zero within its error)
+                    # (i.e. an eta or tau parameter agress with zero within 1-sigma)
                     # and check for existence of parameter uncertainties
-                    if model.startswith('emg') and model not in ['emg01','emg10','emg11']:
+                    if not out.errorbars:
+                        print("WARNING: Could not get parameter uncertainties from covariance matrix! This tail order will be excluded from selection.") # TO DO: Consider adding conf_interval() option here.
+                        # Mark model in order to exclude it below
+                        li_flags[idx] = True
+                    elif model.startswith('emg') and model not in ['emg01','emg10','emg11']:
                         no_left_tails = int(model[3])
                         no_right_tails = int(model[4])
                         # Must use first peak to be fit, since only its shape
@@ -2242,36 +2248,34 @@ class spectrum:
                         pref = first_parname.split('_')[0]+'_'
                         if no_left_tails > 1:
                             for i in np.arange(1,no_left_tails+1):
-                                if not out.errorbars:
-                                    print("WARNING: parameter uncertainty determination failed! This tail order will be excluded from selection.") # TO DO: Consider adding eval_uncertainty option here.
-                                    # Mark model in order to exclude it below
-                                    li_eta_flags[idx] = True
-                                    break
                                 par_name = pref+"eta_m"+str(i)
                                 val = out.params[par_name].value
                                 err = out.params[par_name].stderr
-                                print(val,err)
                                 if val < err:
-                                    print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
-                                    print("             This tail order is likely overfitting the data and will be excluded from selection.")
-                                    # Mark model in order to exclude it below
-                                    li_eta_flags[idx] = True
+                                    print("WARNING: {:10} = {:.3f} +- {:.3f} is compatible with zero within uncertainty.".format(par_name,val,err))
+                                    li_flags[idx] = True # mark for exclusion
+                                par_name = pref+"tau_m"+str(i)
+                                val = out.params[par_name].value
+                                err = out.params[par_name].stderr
+                                if val < err:
+                                    print("WARNING: {:10} = {:.1e} +- {:.1e} is compatible with zero within uncertainty.".format(par_name,val,err))
+                                    li_flags[idx] = True # mark for exclusion
                         if no_right_tails > 1:
                             for i in np.arange(1,no_right_tails+1):
-                                if not out.errorbars:
-                                    print("WARNING: parameter uncertainty determination failed! This tail order will be excluded from selection.") # TO DO: Consider adding eval_uncertainty option here.
-                                    # Mark model in order to exclude it below
-                                    li_eta_flags[idx] = True
-                                    break
                                 par_name = pref+"eta_p"+str(i)
                                 val = out.params[par_name].value
                                 err = out.params[par_name].stderr
-                                print(val,err)
                                 if val < err:
-                                    print("WARNING:",par_name,"=",np.round(val,3),"+-",np.round(err,3)," is compatible with zero within uncertainty.")
-                                    print("             This tail order is likely overfitting the data and will be excluded from selection.")
-                                    li_eta_flags[idx] = True  # mark model in order to exclude it below
-
+                                    print("WARNING: {:10} = {:.3f} +- {:.3f} is compatible with zero within uncertainty.".format(par_name,val,err))
+                                    li_flags[idx] = True  # mark for exclusion
+                                par_name = pref+"tau_p"+str(i)
+                                val = out.params[par_name].value
+                                err = out.params[par_name].stderr
+                                if val < err:
+                                    print("WARNING: {:10} = {:.1e} +- {:.1e} is compatible with zero within uncertainty.".format(par_name,val,err))
+                                    li_flags[idx] = True  # mark for exclusion
+                        if any(li_flags):
+                            print("             This tail order is likely overfitting the data and will be excluded from selection.")
                     print("\n"+str(model)+"-fit yields reduced chi-square of: "+str(li_red_chis[idx])+" +- "+str(li_red_chi_errs[idx]))
                     print()
                     if show_fit_reports:
@@ -2280,12 +2284,13 @@ class spectrum:
                     print('\nWARNING:',model+'-fit failed due to NaN-values and was skipped! ----------------------------------------------\n')
 
             # Select best model, models with eta_flag == True are excluded
-            idx_best_model = np.nanargmin(np.where(li_eta_flags, np.inf, li_red_chis))
+            idx_best_model = np.nanargmin(np.where(li_flags, np.inf, li_red_chis))
             best_model = li_fit_models[idx_best_model]
             self.fit_model = best_model
             print('\n##### RESULT OF AUTOMATIC MODEL SELECTION: #####\n')
-            print('    Best fit model determined to be:',best_model)
-            print('    Corresponding chi²-reduced:',li_red_chis[idx_best_model],'\n')
+            print('    Best fit model determined to be:  {}'.format(best_model))
+            print('    Corresponding chi²-reduced:  {:1.2f} +- {:1.2f}\n'.format(
+                   li_red_chis[idx_best_model], li_red_chi_errs[idx_best_model]))
         elif not vary_tail_order:
             self.fit_model = fit_model
 
