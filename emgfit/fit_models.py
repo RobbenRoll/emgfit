@@ -13,7 +13,8 @@ upper_bound_taus = 5e-02 # keeps minimizer from running towards virtually flat t
 
 
 def create_default_init_pars(mass_number=100): #TODO: COnsider moving to config for user control
-    """Scale default parameters to mass of interest and return parameter dictionary.
+    """
+    Scale default parameters to mass of interest and return parameter dictionary.
 
     Parameters
     ----------
@@ -27,9 +28,9 @@ def create_default_init_pars(mass_number=100): #TODO: COnsider moving to config 
 
     Notes
     -----
-    **The default parameters were defined for mass 100**, hence the scaling of
-    all mass-dependent parameters (i.e. shape parameters & ``amp``) with
-    ``mass_number``/100.
+    **The default parameters were defined for mass 100**, to obtain suitable
+    parameters at other masses all mass-dependent parameters (i.e. shape
+    parameters & `amp`) are multiplied by the scaling factor `mass_number`/100.
 
     """
     # Default initial parameters for peaks around mass 100 (with
@@ -57,41 +58,32 @@ def create_default_init_pars(mass_number=100): #TODO: COnsider moving to config 
 
 pars_dict = create_default_init_pars()
 
-##### Define default initial parameters and store them in dictionary
-# amp = 0.45
-# mu = None
-# sigma = 0.00018 #0.00017
-# theta = 0.5 # 0.35
-# eta_m1 = 0.85
-# eta_m2 = 0.10
-# eta_m3 = 0.05
-# tau_m1 = 50e-06 #[u]
-# tau_m2 = 500e-06
-# tau_m3 = 1000e-06
-# eta_p1 = 0.85
-# eta_p2 = 0.10
-# eta_p3 = 0.05
-# tau_p1 = 50e-06
-# tau_p2 = 600e-06
-# tau_p3 = 1000e-06
-#
-# pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta, 'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3, 'tau_m1': tau_m1, 'tau_m2': tau_m2, 'tau_m3': tau_m3, 'eta_p1': eta_p1, 'eta_p2': eta_p2, 'eta_p3': eta_p3, 'tau_p1': tau_p1, 'tau_p2': tau_p2, 'tau_p3': tau_p3}
-
 ################################################################################
 ##### Define emgfit fit models
-def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
+def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict,
+             vary_shape_pars=True, index_first_peak=None):
     """
     Gaussian lmfit model (single-peak Gaussian fit model)
 
     Parameters
     ----------
-        peak_index (int): index of peak to fit
-        x_pos (float): initial guess of peak centroid
-        amp (float): initial guess of peak amplitude
-        init_pars (dict): initial parameters for fit ('amp' and 'mu' parameters in 'init_pars' dictionary are overwritten by 'amp' and 'x_pos' arguments)
-        vary_shape_pars (bool): Boolean flag whether to vary or fix peak shape parameters (i.e. sigma, theta, eta's and tau's)
-        index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
-                                common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
+        peak_index :  int
+            Index of peak to fit.
+        x_pos : float)
+           Initial guess of peak centroid.
+        amp : floatI
+            Initial guess of peak amplitude.
+        init_pars : dict
+            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+            dictionary are overwritten by the given `amp` and `x_pos` arguments)
+        vary_shape_pars : bool
+            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+            eta's and tau's).
+        index_first_peak : int
+            Index of the first peak to be fit in a multi-peak-fit. Only use this
+            during peak shape determination to enforce common shape parameters
+            for all peaks to be fitted. (For a regular fit with
+            ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -117,19 +109,31 @@ def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, 
     return model
 
 
-def emg01(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
+def emg01(peak_index, x_pos, amp, init_pars=pars_dict,
+          vary_shape_pars=True, index_first_peak=None):
     """
-    Hyper-EMG(0,1) lmfit model (single-peak fit model with one exponential tail on the right)
+    Hyper-EMG(0,1) lmfit model (single-peak fit model with one exponential tail
+    on the right)
 
     Parameters
     ----------
-        peak_index (int): index of peak to fit
-        x_pos (float): initial guess of peak centroid
-        amp (float): initial guess of peak amplitude
-        init_pars (dict): initial parameters for fit ('amp' and 'mu' parameters in 'init_pars' dictionary are overwritten by 'amp' and 'x_pos' arguments)
-        vary_shape_pars (bool): Boolean flag whether to vary or fix peak shape parameters (i.e. sigma, theta, eta's and tau's)
-        index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
-                                common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
+        peak_index :  int
+            Index of peak to fit.
+        x_pos : float)
+           Initial guess of peak centroid.
+        amp : floatI
+            Initial guess of peak amplitude.
+        init_pars : dict
+            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+            dictionary are overwritten by the given `amp` and `x_pos` arguments)
+        vary_shape_pars : bool
+            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+            eta's and tau's).
+        index_first_peak : int
+            Index of the first peak to be fit in a multi-peak-fit. Only use this
+            during peak shape determination to enforce common shape parameters
+            for all peaks to be fitted. (For a regular fit with
+            ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -157,19 +161,32 @@ def emg01(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-def emg10(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
+def emg10(peak_index, x_pos, amp, init_pars=pars_dict,
+          vary_shape_pars=True, index_first_peak=None):
     """
-    Hyper-EMG(1,0) lmfit model (single-peak fit model with one exponential tail on the left)
+    Hyper-EMG(1,0) lmfit model (single-peak fit model with one exponential tail
+    on the left)
 
     Parameters
     ----------
-        peak_index (int): index of peak to fit
-        x_pos (float): initial guess of peak centroid
-        amp (float): initial guess of peak amplitude
-        init_pars (dict): initial parameters for fit ('amp' and 'mu' parameters in 'init_pars' dictionary are overwritten by 'amp' and 'x_pos' arguments)
-        vary_shape_pars (bool): Boolean flag whether to vary or fix peak shape parameters (i.e. sigma, theta, eta's and tau's)
-        index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
-                                common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
+        peak_index :  int
+            Index of peak to fit.
+        x_pos : float)
+           Initial guess of peak centroid.
+        amp : floatI
+            Initial guess of peak amplitude.
+        init_pars : dict
+            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+            dictionary are overwritten by the given `amp` and `x_pos` arguments)
+        vary_shape_pars : bool
+            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+            eta's and tau's).
+        index_first_peak : int
+            Index of the first peak to be fit in a multi-peak-fit. Only use this
+            during peak shape determination to enforce common shape parameters
+            for all peaks to be fitted. (For a regular fit with
+            ``vary_shape_pars = False`` this is irrelevant.)
+
 
     Returns
     -------
@@ -197,19 +214,31 @@ def emg10(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-def emg11(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
+def emg11(peak_index, x_pos, amp, init_pars=pars_dict,
+          vary_shape_pars=True, index_first_peak=None):
     """
-    Hyper-EMG(1,1) lmfit model (single-peak fit model with one exponential tail on the left and one exponential tail on the right)
+    Hyper-EMG(1,1) lmfit model (single-peak fit model with one exponential tail
+    on the left and one exponential tail on the right)
 
     Parameters
     ----------
-        peak_index (int): index of peak to fit
-        x_pos (float): initial guess of peak centroid
-        amp (float): initial guess of peak amplitude
-        init_pars (dict): initial parameters for fit ('amp' and 'mu' parameters in 'init_pars' dictionary are overwritten by 'amp' and 'x_pos' arguments)
-        vary_shape_pars (bool): Boolean flag whether to vary or fix peak shape parameters (i.e. sigma, theta, eta's and tau's)
-        index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
-                                common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
+        peak_index :  int
+            Index of peak to fit.
+        x_pos : float)
+           Initial guess of peak centroid.
+        amp : floatI
+            Initial guess of peak amplitude.
+        init_pars : dict
+            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+            dictionary are overwritten by the given `amp` and `x_pos` arguments)
+        vary_shape_pars : bool
+            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+            eta's and tau's).
+        index_first_peak : int
+            Index of the first peak to be fit in a multi-peak-fit. Only use this
+            during peak shape determination to enforce common shape parameters
+            for all peaks to be fitted. (For a regular fit with
+            ``vary_shape_pars = False`` this is irrelevant.)
 
     Returns
     -------
@@ -241,19 +270,32 @@ def emg11(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-def emg12(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
+def emg12(peak_index, x_pos, amp, init_pars=pars_dict,
+          vary_shape_pars=True, index_first_peak=None):
     """
-    Hyper-EMG(1,2) lmfit model (single-peak fit model with one exponential tail on the left and two exponential tails on the right)
+    Hyper-EMG(1,2) lmfit model (single-peak fit model with one exponential tail
+    on the left and two exponential tails on the right)
 
     Parameters
     ----------
-        peak_index (int): index of peak to fit
-        x_pos (float): initial guess of peak centroid
-        amp (float): initial guess of peak amplitude
-        init_pars (dict): initial parameters for fit ('amp' and 'mu' parameters in 'init_pars' dictionary are overwritten by 'amp' and 'x_pos' arguments)
-        vary_shape_pars (bool): Boolean flag whether to vary or fix peak shape parameters (i.e. sigma, theta, eta's and tau's)
-        index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
-                                common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
+        peak_index :  int
+            Index of peak to fit.
+        x_pos : float)
+           Initial guess of peak centroid.
+        amp : floatI
+            Initial guess of peak amplitude.
+        init_pars : dict
+            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+            dictionary are overwritten by the given `amp` and `x_pos` arguments)
+        vary_shape_pars : bool
+            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+            eta's and tau's).
+        index_first_peak : int
+            Index of the first peak to be fit in a multi-peak-fit. Only use this
+            during peak shape determination to enforce common shape parameters
+            for all peaks to be fitted. (For a regular fit with
+            ``vary_shape_pars = False`` this is irrelevant.)
+
 
     Returns
     -------
@@ -291,19 +333,32 @@ def emg12(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-def emg21(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
+def emg21(peak_index, x_pos, amp, init_pars=pars_dict,
+          vary_shape_pars=True, index_first_peak=None):
     """
-    Hyper-EMG(2,1) lmfit model (single-peak fit model with two exponential tails on the left and one exponential tail on the right)
+    Hyper-EMG(2,1) lmfit model (single-peak fit model with two exponential tails
+    on the left and one exponential tail on the right)
 
     Parameters
     ----------
-        peak_index (int): index of peak to fit
-        x_pos (float): initial guess of peak centroid
-        amp (float): initial guess of peak amplitude
-        init_pars (dict): initial parameters for fit ('amp' and 'mu' parameters in 'init_pars' dictionary are overwritten by 'amp' and 'x_pos' arguments)
-        vary_shape_pars (bool): Boolean flag whether to vary or fix peak shape parameters (i.e. sigma, theta, eta's and tau's)
-        index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
-                                common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
+        peak_index :  int
+            Index of peak to fit.
+        x_pos : float)
+           Initial guess of peak centroid.
+        amp : floatI
+            Initial guess of peak amplitude.
+        init_pars : dict
+            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+            dictionary are overwritten by the given `amp` and `x_pos` arguments)
+        vary_shape_pars : bool
+            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+            eta's and tau's).
+        index_first_peak : int
+            Index of the first peak to be fit in a multi-peak-fit. Only use this
+            during peak shape determination to enforce common shape parameters
+            for all peaks to be fitted. (For a regular fit with
+            ``vary_shape_pars = False`` this is irrelevant.)
+
 
     Returns
     -------
@@ -341,19 +396,32 @@ def emg21(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-def emg22(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
+def emg22(peak_index, x_pos, amp, init_pars=pars_dict,
+          vary_shape_pars=True, index_first_peak=None):
     """
-    Hyper-EMG(2,2) lmfit model (single-peak fit model with two exponential tails on the left and two exponential tails on the right)
+    Hyper-EMG(2,2) lmfit model (single-peak fit model with two exponential tails
+    on the left and two exponential tails on the right)
 
     Parameters
     ----------
-        peak_index (int): index of peak to fit
-        x_pos (float): initial guess of peak centroid
-        amp (float): initial guess of peak amplitude
-        init_pars (dict): initial parameters for fit ('amp' and 'mu' parameters in 'init_pars' dictionary are overwritten by 'amp' and 'x_pos' arguments)
-        vary_shape_pars (bool): Boolean flag whether to vary or fix peak shape parameters (i.e. sigma, theta, eta's and tau's)
-        index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
-                                common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
+        peak_index :  int
+            Index of peak to fit.
+        x_pos : float)
+           Initial guess of peak centroid.
+        amp : floatI
+            Initial guess of peak amplitude.
+        init_pars : dict
+            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+            dictionary are overwritten by the given `amp` and `x_pos` arguments)
+        vary_shape_pars : bool
+            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+            eta's and tau's).
+        index_first_peak : int
+            Index of the first peak to be fit in a multi-peak-fit. Only use this
+            during peak shape determination to enforce common shape parameters
+            for all peaks to be fitted. (For a regular fit with
+            ``vary_shape_pars = False`` this is irrelevant.)
+
 
     Returns
     -------
@@ -397,19 +465,32 @@ def emg22(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-def emg23(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
+def emg23(peak_index, x_pos, amp, init_pars=pars_dict,
+          vary_shape_pars=True, index_first_peak=None):
     """
-    Hyper-EMG(2,3) lmfit model (single-peak fit model with two exponential tails on the left and three exponential tails on the right)
+    Hyper-EMG(2,3) lmfit model (single-peak fit model with two exponential tails
+    on the left and three exponential tails on the right)
 
     Parameters
     ----------
-        peak_index (int): index of peak to fit
-        x_pos (float): initial guess of peak centroid
-        amp (float): initial guess of peak amplitude
-        init_pars (dict): initial parameters for fit ('amp' and 'mu' parameters in 'init_pars' dictionary are overwritten by 'amp' and 'x_pos' arguments)
-        vary_shape_pars (bool): Boolean flag whether to vary or fix peak shape parameters (i.e. sigma, theta, eta's and tau's)
-        index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
-                                common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
+        peak_index :  int
+            Index of peak to fit.
+        x_pos : float)
+           Initial guess of peak centroid.
+        amp : floatI
+            Initial guess of peak amplitude.
+        init_pars : dict
+            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+            dictionary are overwritten by the given `amp` and `x_pos` arguments)
+        vary_shape_pars : bool
+            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+            eta's and tau's).
+        index_first_peak : int
+            Index of the first peak to be fit in a multi-peak-fit. Only use this
+            during peak shape determination to enforce common shape parameters
+            for all peaks to be fitted. (For a regular fit with
+            ``vary_shape_pars = False`` this is irrelevant.)
+
 
     Returns
     -------
@@ -464,19 +545,32 @@ def emg23(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
+def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True,
+          index_first_peak=None):
     """
-    Hyper-EMG(3,2) lmfit model (single-peak fit model with three exponential tails on the left and two exponential tails on the right)
+    Hyper-EMG(3,2) lmfit model (single-peak fit model with three exponential
+    tails on the left and two exponential tails on the right)
 
     Parameters
     ----------
-        peak_index (int): index of peak to fit
-        x_pos (float): initial guess of peak centroid
-        amp (float): initial guess of peak amplitude
-        init_pars (dict): initial parameters for fit ('amp' and 'mu' parameters in 'init_pars' dictionary are overwritten by 'amp' and 'x_pos' arguments)
-        vary_shape_pars (bool): Boolean flag whether to vary or fix peak shape parameters (i.e. sigma, theta, eta's and tau's)
-        index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
-                                common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
+        peak_index :  int
+            Index of peak to fit.
+        x_pos : float)
+           Initial guess of peak centroid.
+        amp : floatI
+            Initial guess of peak amplitude.
+        init_pars : dict
+            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+            dictionary are overwritten by the given `amp` and `x_pos` arguments)
+        vary_shape_pars : bool
+            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+            eta's and tau's).
+        index_first_peak : int
+            Index of the first peak to be fit in a multi-peak-fit. Only use this
+            during peak shape determination to enforce common shape parameters
+            for all peaks to be fitted. (For a regular fit with
+            ``vary_shape_pars = False`` this is irrelevant.)
+
 
     Returns
     -------
@@ -531,19 +625,32 @@ def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
     return model
 
 
-def emg33(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, index_first_peak=None):
+def emg33(peak_index, x_pos, amp, init_pars=pars_dict,
+          vary_shape_pars=True, index_first_peak=None):
     """
-    Hyper-EMG(3,3) lmfit model (single-peak fit model with three exponential tails on the left and three exponential tails on the right)
+    Hyper-EMG(3,3) lmfit model (single-peak fit model with three exponential
+    tails on the left and three exponential tails on the right)
 
     Parameters
     ----------
-        peak_index (int): index of peak to fit
-        x_pos (float): initial guess of peak centroid
-        amp (float): initial guess of peak amplitude
-        init_pars (dict): initial parameters for fit ('amp' and 'mu' parameters in 'init_pars' dictionary are overwritten by 'amp' and 'x_pos' arguments)
-        vary_shape_pars (bool): Boolean flag whether to vary or fix peak shape parameters (i.e. sigma, theta, eta's and tau's)
-        index_first_peak (int): index of the first peak to be fit in a multi-peak-fit. Only use this during peak shape determination to enforce
-                                common shape parameters for all peaks to be fitted. (For a regular fit this is done by setting 'vary_shape_pars = False'.)
+        peak_index :  int
+            Index of peak to fit.
+        x_pos : float)
+           Initial guess of peak centroid.
+        amp : floatI
+            Initial guess of peak amplitude.
+        init_pars : dict
+            Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
+            dictionary are overwritten by the given `amp` and `x_pos` arguments)
+        vary_shape_pars : bool
+            Whether to vary or fix peak shape parameters (i.e. sigma, theta,
+            eta's and tau's).
+        index_first_peak : int
+            Index of the first peak to be fit in a multi-peak-fit. Only use this
+            during peak shape determination to enforce common shape parameters
+            for all peaks to be fitted. (For a regular fit with
+            ``vary_shape_pars = False`` this is irrelevant.)
+
 
     Returns
     -------
@@ -606,7 +713,3 @@ def emg33(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True, ind
         model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=1e-12, max=upper_bound_taus, expr=first_pref+'tau_p3')
 
     return model
-
-# expr= pref+'delta-'+pref+'eta_p1 if ('+pref+'eta_p1 <='+pref+'delta) else '+pref+'eta_p1-'+pref+'delta'
-#1 - init_pars['eta_p3']
-# init_pars['eta_p3']

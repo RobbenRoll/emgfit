@@ -52,14 +52,13 @@ extensions = [
 
 # Add mappings to other package docs
 intersphinx_mapping = {
-    'py': ('http://docs.python.org/3', None),
-    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
-    'pandas': ('http://pandas.pydata.org/pandas-docs/dev', None),
-    'scipy': ('http://docs.scipy.org/doc/scipy/reference', None),
+    'py': ('https://docs.python.org/3/', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable', None),
+    'matplotlib': ('http://matplotlib.sourceforge.net', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'lmfit': ('https://lmfit.github.io/lmfit-py', None)
 }
-
-#numpydoc_show_class_members = True
 
 # Napoleon settings
 napoleon_google_docstring = False
@@ -85,8 +84,9 @@ plot_html_show_formats = False
 autosummary_generate = True
 numpydoc_show_class_members = False
 
-# Ignore errors when building docs from Jupyter notebooks
-nbsphinx_allow_errors = True
+# Options for building docs from Jupyter notebooks
+nbsphinx_execute = 'always' # re-run notebooks upon every doc build
+nbsphinx_allow_errors = False # ignore errors in notebook execution
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -231,15 +231,3 @@ texinfo_documents = [
      author, 'emgfit', 'Fitting of MR-TOF mass spectra with Hyper-EMG models',
      'Miscellaneous'),
 ]
-
-
-
-
-# Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {
-    'python': ('https://docs.python.org/3/', None),
-    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
-    'pandas': ('https://pandas.pydata.org/pandas-docs/stable', None),
-    'matplotlib': ('https://matplotlib.org', None),
-}

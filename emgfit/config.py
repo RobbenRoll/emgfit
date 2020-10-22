@@ -4,10 +4,10 @@
 
 # Load packages
 import scipy.constants as con
-import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 ##### Set image resolution
-mpl.rcParams['figure.dpi'] = 500
+plt.rcParams['figure.dpi'] = 500
 
 ##### Define fundamental constants
 global m_e, u, u_to_keV
@@ -19,5 +19,9 @@ u_to_keV = con.physical_constants["atomic mass constant energy equivalent in MeV
 
 ##### Define constants for fit routines
 A_stat_emg_default = 0.52  # constant of proportionality for calculating statistical mass error of HyperEmg-fits:  stat_error = A_stat * FWHM / sqrt(peak_area)
+
+##### Plot appearance
+plt.rcParams.update({'errorbar.capsize': 2})
+
 
 ################################################################################

@@ -84,3 +84,5 @@ target/
 # Data files
 emgfit/examples/tutorial/outputs/**
 !emgfit/examples/tutorial/outputs/readme.txt
+emgfit/docs/source/outputs/**
+!emgfit/docs/source/outputs/readme.txt

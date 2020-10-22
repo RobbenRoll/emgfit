@@ -9,14 +9,19 @@ that want to keep their Python setup cleaner by using virtual environments.
 The quick and dirty way
 -----------------------
 
-0. Download the `emgfit` repository from GitHub. Ensure that Python 3 is
-   installed on your system and has been added to your `PATH`.
-1. Use your command line to navigate into the emgfit parent directory that
-   you've just downloaded and install emgfit by running::
+All emgfit versions >= 0.2.0 are available as pip install from PyPI.
 
-     $ python setup.py install
+0. Ensure that Python3 and its package installer pip are available on your
+   system and have been added to your `PATH` (pip comes pre-installed with most
+   Python distributions).
+1. Use your command line to download and install emgfit from PyPI by
+   running::
 
-  The package and all its dependencies should now be installed.
+     $ pip install --upgrade emgfit
+
+  The latest version of the package and all its dependencies should now be
+  installed under your Python directory in `/Lib/site-packages`. If you want to
+  install a specific emgfit version `x.y.z` run ``$ pip install emgfit==x.y.z``.
 
 2. To test whether the installation succeeded open Python from your command
    line and import the package::
@@ -35,8 +40,9 @@ Find instructions for both conda and pip users below.
 For pip users:
 ^^^^^^^^^^^^^^
 
-0. Download the `emgfit` repository from GitHub. Ensure that Python 3 is
-   installed on your system and has been added to your `PATH`.
+0. Ensure that Python3 and its package installer pip are available on your
+   system and have been added to your `PATH` (pip comes pre-installed with most
+   Python distributions).
 1. Set up a new virtual environment for `emgfit` to live in. To do so, use your
    command line to navigate to the folder in which you would like to set up the
    virtual environment and run the following::
@@ -56,13 +62,14 @@ For pip users:
     $ source emgfit-env/bin/activate
 
 3. Now you are inside your virtual environment and can install `emgfit`.
-   Therefore, navigate into the emgfit parent directory that you have downloaded
-   in step 0 and install emgfit by running::
+   Download and install emgfit by running::
 
-     (emgfit-env) $ python setup.py install
+     (emgfit-env) $ pip install --upgrade emgfit
 
-  The package and all its dependencies should now be installed inside your
-  virtual environment `emgfit-env`.
+  The latest version of the package and all its dependencies should now be
+  installed inside your virtual environment `emgfit-env` under
+  `/Lib/site-packages`. If you want to install a specific emgfit version `x.y.z`
+  run ``$ pip install emgfit==x.y.z``.
 
 4. To test whether the installation succeeded open Python from your command
    line (after activating `emgfit-env`!) and import the package::
@@ -76,8 +83,9 @@ For pip users:
 For conda users:
 ^^^^^^^^^^^^^^^^
 
-0. Download the `emgfit` repository from GitHub. Ensure that the Anaconda Python
-   distribution is installed on your system and has been added to your `PATH`.
+0. Ensure that Python3 and its package installer pip are available on your
+   system and have been added to your `PATH` (pip comes pre-installed with most
+   Python distributions including Anaconda).
 1. Set up a new virtual environment for `emgfit` to live in by running the
    following in your command line::
 
@@ -88,13 +96,14 @@ For conda users:
     (emgfit-env) $ conda activate emgfit-env
 
 3. Now you are inside your virtual environment and can install `emgfit`.
-   Therefore, navigate into the emgfit parent directory that you have downloaded
-   in step 0 and install emgfit by running::
+   Download and install emgfit by running::
 
-     (emgfit-env) $ python setup.py install
+     (emgfit-env) $ pip install --upgrade emgfit
 
-  The package and all its dependencies should now be installed inside your
-  virtual environment `emgfit-env`.
+   The latest version of the package and all its dependencies should now be
+   installed inside your virtual environment `emgfit-env` under
+   `/Lib/site-packages`. If you want to install a specific emgfit version `x.y.z`
+   run ``$ pip install emgfit==x.y.z``.
 
 4. To test whether the installation succeeded open Python from your command
    line and import the package::
