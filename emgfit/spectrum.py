@@ -251,7 +251,7 @@ class spectrum:
         details see docs of :meth:`_eval_peakshape_errors`.
     MCMC_par_samples : list of dict
         Shape parameter samples obtained via Markov chain Monte Carlo sampling
-        with `emcee`.
+        with :meth:`_get_MCMC_par_samples`.
     peaks : list of :class:`peak`
         List containing all peaks associated with the spectrum sorted by
         ascending mass. The index of a peak within the `peaks` list is referred
@@ -369,8 +369,7 @@ class spectrum:
         self.mass_number = int(np.round(self.data.index.values[int(len(self.data)/2)]))
         self.default_fit_range = 0.01*(self.mass_number/100)
         if show_plot:
-            plt.rcParams.update({"font.size": 16})
-            fig  = plt.figure(figsize=(20,8))
+            fig  = plt.figure(figsize=(18,5))
             plt.title(plot_title)
             data_uncut.plot(ax=fig.gca())
             plt.vlines(m_start,0,1.2*max(self.data['Counts']))
@@ -522,7 +521,7 @@ class spectrum:
             peaks = self.peaks
         data = self.data # get spectrum data stored in dataframe 'self.data'
         ymax = data.max()[0]
-        data.plot(figsize=(20,6),ax=ax)
+        data.plot(figsize=(18,5),ax=ax)
         plt.yscale(yscale)
         plt.ylabel('Counts')
         plt.title(title)
@@ -594,7 +593,7 @@ class spectrum:
         :meth:`plot_fit_zoom`
 
         """
-        df.plot(figsize=(20,6),ax=ax)
+        df.plot(figsize=(18,5),ax=ax)
         plt.yscale(yscale)
         plt.ylabel('Counts')
         plt.title(title)
@@ -673,8 +672,8 @@ class spectrum:
         data_smooth['Counts'] = spectrum._smooth(self.data['Counts'].values,window_len=window_len,window=window)
         if plot_smoothed_spec:
             # Plot smoothed and original spectrum
-            ax = self.data.plot(figsize=(20,6))
-            data_smooth.plot(figsize=(20,6),ax=ax)
+            ax = self.data.plot(figsize=(18,5))
+            data_smooth.plot(figsize=(18,5),ax=ax)
             plt.title("Smoothed spectrum")
             ax.legend(["Raw","Smoothed"])
             plt.ylim(0.1,)
@@ -1129,7 +1128,7 @@ class spectrum:
 
         # Plot fit result with logarithmic y-scale
         plt.rcParams["errorbar.capsize"] = 0.5
-        f1 = plt.figure(figsize=(20,12))
+        f1 = plt.figure(figsize=(18,9))
         plt.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',color='royalblue',linewidth=0.5)
         plt.plot(fit_result.x, fit_result.best_fit,'-',color='red',linewidth=2)
         comps = fit_result.eval_components(x=fit_result.x)
@@ -1160,7 +1159,7 @@ class spectrum:
         y_max_res = np.max(np.abs(standardized_residual))
         x_fine = np.arange(x_min,x_max,0.2*(fit_result.x[1]-fit_result.x[0]))
         y_fine = fit_result.eval(x=x_fine)
-        f2, axs = plt.subplots(2,1,figsize=(20,12),gridspec_kw={'height_ratios': [1, 2.5]})
+        f2, axs = plt.subplots(2,1,figsize=(18,9),gridspec_kw={'height_ratios': [1, 2.5]})
         ax0 = axs[0]
         ax0.set_title(plot_title)
         ax0.plot(fit_result.x, standardized_residual,'.',color='royalblue',markersize=8.5,label='residuals')
@@ -1308,56 +1307,146 @@ class spectrum:
         return mod
 
 
-    def _get_MCMC_par_covar(self, fit_result, steps=10000, burn=200, thin=70,
-                            covar_map_fname=None, n_cores=-1):
-        """Map out parameter PDFs and covariances using MCMC sampling
+    def _get_MCMC_par_samples(self, fit_result, steps=10000, burn=200, thin=100,
+                              show_MCMC_fit_result=False, covar_map_fname=None,
+                              n_cores=-1, seed=1364):
+        """Map out parameter posterior distributions and covariances using
+        Markov-chain Monte Carlo (MCMC) sampling
+
+        *This Method is intended for internal usage and for single peaks only.*
+
+        Parameters
+        ----------
+        fit_result : :class:`lmfit.model.ModelResult`
+            Fit result of region explore with MCMC sampling. since `emcee` only
+            efficiently samples unimodal distributions, `fit_result` should hold
+            the result of a single-peak fit (typically of the peak-shape
+            calibrant). The MCMC walkers are initialized with randomized
+            parameter values drawn from normal distributions whose mean and
+            standard deviation are given by the respective best-fit values and
+            uncertainties stored in `fit_result`.
+        steps : int, optional
+            Number of MCMC sampling steps.
+        burn : int, optional
+            Number of initial sampling steps to discard ("burn-in").
+        thin : int, optional
+            After sampling, only every `thin`-th sample is used for further
+            treatment. It is recommended to set `thin`  to at least half the
+            autocorrelation time.
+        show_MCMC_fit_result : bool, default: False
+            If `True`, a maximum likelihood estimate is derived from the MCMC
+            samples with best-fit values estimated by the median of the samples.
+            The MCMC MLE result can be compared to the conventional `fit_result`
+            as an additional crosscheck.
+        covar_map_fname : str or None (default)
+            If not `None`, the parameter covariance map will be saved as
+            "<covar_map_fname>_covar_map.png".
+        n_cores : int, default: -1
+            Number of CPU cores to use for parallelized sampling. If `-1`
+            (default) all available cores will be used.
+        seed : int
+            Random state for reproducible sampling. #### NOT WORKING
+
+        Notes
+        -----
+        MCMC algorithms are a powerful tool to efficiently sample the posterior
+        probability density functions (PDFs) of model parameters. In simpler
+        words, MCMC methods can be used to estimate the distributions of
+        parameter values which are supported by the data. They are particularly
+        important in situations where conventional sampling techniques become
+        intractable or inefficient. For MCMC sampling emgfit deploys lmfit's
+        implementation of the :class:`emcee.EnsembleSampler` from the `emcee`_
+        package [#]_. Since emcee's :class:`~emcee.EnsembleSampler` is only
+        optimized for uni-modal probability density functions this method should
+        only be used to explore the parameter space of a single-peak fit.
+
+        One complication with MCMC is that there is oftentimes no rigorous way
+        to prove that the sampling chain has converged to the true PDF. Instead
+        it is at the user's disgression to decide after how many sampling steps
+        a sufficient amount of convergence is achieved. A useful measure of the
+        degree of convergence is the autocorrelation time (`tau`). If the
+        autocorrelation time shows only small changes over time the MCMC chain
+        can be assumed to be converged. To ensure a sufficient degree of
+        convergence this method will issue a warning whenever the number of
+        performed sampling steps is smaller than 50 times the autocorrelation
+        time of at least one parameter. If this warning is encountered it is
+        strongly advisable to run a longer chain.
+
+        Another complication of MCMC algorithms is that the samples in the MCMC
+        chain are not indepedent. To reduce correlations between samples
+        the obtained MCMC chains are usually "thinned out" by discarding all but
+        every m-th sample. The degree of correlation between different samples
+        is quantified by the autocorrelation time (tau). A rule of thumb to
+        obtain independent samples from an MCMC chain is to chose thinning
+        intervals of ``m > 0.5*tau``. To be conservative, emgfit uses a thinning
+        interval of ``m = 100`` by default and issues a warning when ``m < tau``
+        for at least one of the parameters. Since more data is discareded, a
+        larger thinning interval comes with a loss of precision of the PDF
+        estimates. However, independent samples are required for the MC
+        peak-shape error determination.
+
+        For more details on MCMC see the excellent introdutory paper
+        `"Data Analysis Recipes: Using Markov Chain Monte Carlo"`_ [#]_.
+
+        .. _`emcee`: https://iopscience.iop.org/article/10.1086/670067
+        .. _`"Data Analysis Recipes: Using Markov Chain Monte Carlo"`: https://iopscience.iop.org/article/10.3847/1538-4365/aab76e
+
+        See also
+        --------
+
+
+        References
+        ----------
+        .. [#] Foreman-Mackey, Daniel, et al. "emcee: the MCMC hammer."
+           Publications of the Astronomical Society of the Pacific 125.925
+           (2013): 306.
+        .. [#] Hogg, David W., and Daniel Foreman-Mackey. "Data analysis
+           recipes: Using markov chain monte carlo." The Astrophysical Journal
+           Supplement Series 236.1 (2018): 11.
+
         """
         print("\n### Evaluating parameter covariances using MCMC sampling ###\n")
-        ## Perform emcee MCMC sampling
+        ### This feature is based on
+        ### `<https://lmfit.github.io/lmfit-py/examples/example_emcee_Model_interface.html>`_.
+
         ndim = fit_result.nvarys # dimension of parameter space to explore
         print("Number of varied parameters: ndim =",fit_result.nvarys)
         nwalkers = 20*fit_result.nvarys # total number of MCMC walkers
         emcee_params = fit_result.params.copy()
 
+        # Get names, best-fit values and errors of parameters to vary
         varied_pars = emcee_params.copy()
         for key, p in emcee_params.items():
             if p.vary is False or p.expr is not None:
                 del varied_pars[key]
         assert len(varied_pars.values()) == ndim,"Length of varied_pars != ndim"
         varied_par_names = [p.name for p in varied_pars.values()]
-        varied_par_vals = [p.value for p in varied_pars.values()]  #[p.value for p in emcee_params.values() if p.vary is True and p.expr is None]  # best fit values
+        varied_par_vals = [p.value for p in varied_pars.values()]
         varied_par_errs = [p.stderr for p in varied_pars.values()]
 
         # Initialize the walkers with normal dist. around best-fit values
         r0 = np.array(varied_par_errs) # sigma of initial Gaussian PDFs # 1e-06
         p0 = [varied_par_vals + r0*np.random.randn(ndim) for i in range(nwalkers)]
 
-        # Set up the backend for continuously saving the sampling chain
-        # Don't forget to clear it in case the file already exists
-
-        from multiprocessing import cpu_count
-        import dill
-        #dill.detect.trace(True)
+        from multiprocessing import cpu_count, Pool
         if n_cores == -1:
             n_cores = int(cpu_count())
-        import multiprocess as mp
-        pool = mp.Pool(n_cores)
+        pool = Pool(n_cores)
         print("Number of cores used for sampling:",n_cores)
         ## Set emcee options
         ## It is advisable to thin by about half the autocorrelation time
         emcee_kws = dict(steps=steps, burn=burn, thin=thin, nwalkers=nwalkers,
-                         float_behavior='chi2',is_weighted=True, pos=p0,
-                         progress=True, workers=pool) # steps=700, burn=250,
+                         float_behavior='chi2', is_weighted=True, pos=p0,
+                         progress='notebook', seed=seed, workers=pool) # steps=700, burn=250,
 
         mod = fit_result.model
         x = fit_result.x
         y = fit_result.y
         weights = fit_result.weights
-        #emcee_params.add('__lnsigma', value=np.log(7.0), min=np.log(1.0), max=np.log(100.0))
+        ## Perform emcee MCMC sampling
         result_emcee = mod.fit(y, x=x, params=emcee_params, weights=weights,
                                method='emcee', nan_policy='propagate',
                                fit_kws=emcee_kws)
-        fit.report_fit(result_emcee)
         fit_result.result_emcee = result_emcee # store sampling result
 
         ## Save chain to HDF5 file #TODO
@@ -1367,27 +1456,17 @@ class spectrum:
         #hf = h5py.File(filename, 'w')
         #hf.create_dataset('dataset_1', data=d1)
 
-        plt.figure(figsize=(12,8))
-        plt.plot(x, mod.eval(params=fit_result.params, x=x),
-                 label=fit_result.cost_func, zorder=100)
-        result_emcee.plot_fit(data_kws=dict(color='gray', markersize=2))
-        plt.title("MCMC result vs. {} result".format(fit_result.cost_func))
-        plt.yscale("log")
-        plt.show()
-
         ## Plot MCMC traces
-        fig, axes = plt.subplots(ndim, figsize=(10, 3*ndim), sharex=True)
+        fig, axes = plt.subplots(ndim, figsize=(16, 2.7*ndim), sharex=True)
         samples = result_emcee.sampler.get_chain()[..., :, :] #result_emcee.chain # thinned chain without burn-in
         for i in range(ndim):
             par_chains = samples[:, :, i] # chains for i-th varied parameter
             ax = axes[i]
             ax.plot(par_chains, 'k', alpha=0.3)
-            #ax.set_xlim(0, len(result_emcee.chain))
             ax.set_ylabel(varied_par_names[i])
             ax.axvline(emcee_kws['burn'])
-            #ax.yaxis.set_label_coords(-0.1, 0.5)
         axes[-1].set_xlabel('steps')
-        axes[0].set_title('MCMC chains before thinning with burn-in cut-off marker')
+        axes[0].set_title('MCMC traces before thinning with burn-in cut-off marker')
 
         ## Check acceptance fraction of emcee
         plt.figure()
@@ -1397,68 +1476,102 @@ class spectrum:
         plt.show()
 
         ## Plot autocorrelation times of Parameters
+        result_emcee.acor = result_emcee.sampler.get_autocorr_time(quiet=True)
         if hasattr(result_emcee, "acor"):
             print("Autocorrelation time for the parameters:")
             print("----------------------------------------")
             for i, p in enumerate(varied_pars):
                 try:
-                    print(p, result_emcee.acor[i])
+                    print("{:>10}: {:.2f} steps".format(p,result_emcee.acor[i]))
                 except IndexError:
                     print("\nEncountered index error in autocorrelation print.")
                     pass
 
+        if show_MCMC_fit_result:
+            plt.figure(figsize=(18,7))
+            plt.plot(x, mod.eval(params=fit_result.params, x=x),
+                     label=fit_result.cost_func, zorder=100)
+            result_emcee.plot_fit(data_kws=dict(color='gray', markersize=2))
+            plt.title("MCMC result vs. {} result".format(fit_result.cost_func))
+            plt.yscale("log")
+            plt.show()
+
+            fit.report_fit(result_emcee)
+
+            ## Find the maximum likelihood solution
+            highest_prob = np.argmax(result_emcee.lnprob)
+            hp_loc = np.unravel_index(highest_prob, result_emcee.lnprob.shape)
+            mle_soln = result_emcee.chain[hp_loc]
+            print("\nMaximum likelihood Estimation from MCMC")
+            print(  "---------------------------------------")
+            for ix, param in enumerate(varied_pars):
+                try:
+                    print(param + ': ' + str(mle_soln[ix]))
+                except IndexError:
+                    print("\nEncountered index error in MCMC MLE result print.")
+                    pass
+
+            # Use mu of first fitted peak
+            first_mu = [s for s in varied_par_names if s.endswith('mu')][0]
+            quantiles = np.percentile(result_emcee.flatchain[first_mu],
+                                      [2.28, 15.9, 50, 84.2, 97.7])
+            print("\n 1-sigma spread of mu:", 0.5 * (quantiles[3] - quantiles[1]))
+            print(" 2-sigma spread of mu:",  0.5 * (quantiles[4] - quantiles[0]))
+
         ## Plot parameter covariances returned by emcee
+        #from copy import deepcopy
+        #chain = deepcopy(result_emcee.flatchain)
+        ### Format axes labels and add units
+        # labels = []
+        # for i, s in enumerate(varied_par_names):
+        #     lab = s.lstrip("p0123456789_") # strip prefixes
+        #     if (lab == 'sigma') or ('tau' in lab):
+        #         chain[s] *= 1e06
+        #         lab += r" [$\mu u$]"
+        #     elif lab == 'mu':
+        #         offset = np.round(varied_par_vals[i],3)
+        #         chain[s] = (chain[s] - offset)*1e06
+        #         lab += r" [$\mu u$] - {:.3f}$u$".format(offset)
+        #     labels.append(lab)
+
+        labels = [s.lstrip("p0123456789_") for s in result_emcee.var_names]
+        peak_idx = varied_par_names[-1].split('p')[1].split('_')[0]
+        print("Covariance map for peak {} with 0.16, 0.50 & 0.84 "
+              "quantiles".format(peak_idx) )
         import corner
         percentile_range = [0.99]*ndim  # percentile of samples to plot
-        fig_cor, ax = plt.subplots(ndim,ndim,figsize=(25,25))
-        corner.corner(result_emcee.flatchain,
+        fig_cor, axes = plt.subplots(ndim,ndim,figsize=(16,16))
+        corner.corner(result_emcee.flatchain, #chain
                       fig=fig_cor,
-                      labels=result_emcee.var_names,
-                      bins=30,
-                      truths=list(fit_result.params.valuesdict().values()),
+                      labels=labels,
+                      bins=25,
+                      max_n_ticks=3,
+                      truths=list(varied_par_vals),
                       hist_bin_factor=2,
                       range=percentile_range,
                       levels=(1-np.exp(-0.5),),
-                      quantiles=[0.1587, 0.5, 0.8413]) # 1-sigma level contour assumes Gaussian PDFs # truths=list(result_emcee.params.valuesdict().values())
-        fig_cor.subplots_adjust(right=2,top=2)
+                      quantiles=[0.1587, 0.5, 0.8413]) # 1-sigma level contour assumes Gaussian PDFs
         for ax in fig_cor.get_axes():
-            ax.tick_params(axis='both', labelsize=17)
-            ax.xaxis.label.set_size(27)
-            ax.yaxis.label.set_size(27)
+            ax.tick_params(axis='both', labelsize=11)
+            ax.xaxis.offsetText.set_fontsize(11)
+            ax.yaxis.offsetText.set_fontsize(11)
+            #ax.yaxis.set_offset_position('left')
+            ax.xaxis.label.set_size(15)
+            ax.yaxis.label.set_size(15)
+            labelpad = 0.34
+            ax.xaxis.set_label_coords(0.5, -0.3 - labelpad)
+            ax.yaxis.set_label_coords(-0.3 - labelpad, 0.5)
         if covar_map_fname is not None:
-            plt.savefig("covariance map.png",dpi=400)
+            plt.savefig(covar_map_fname+"_covar_map.png", dpi=500,
+                        pad_inches=0.3, bbox_inches='tight')
         plt.show()
-
-        #print("\nmedian of posterior probability distribution")
-        #print('--------------------------------------------')
-        #fit.report_fit(result_emcee.params)
-
-        ## Find the maximum likelihood solution
-        highest_prob = np.argmax(result_emcee.lnprob)
-        hp_loc = np.unravel_index(highest_prob, result_emcee.lnprob.shape)
-        mle_soln = result_emcee.chain[hp_loc]
-        print("\nMaximum likelihood Estimation from MCMC")
-        print(  "---------------------------------------")
-        for ix, param in enumerate(varied_pars):
-            try:
-                print(param + ': ' + str(mle_soln[ix]))
-            except IndexError:
-                print("\nEncountered index error in MCMC MLE result print.")
-                pass
-
-        #pref = 'p'+str(self.peaks.index(peaks_to_fit[0]))+'_' # Use mu of first peak to fit #TODO: set to shape calib. if available
-        first_mu = [s for s in varied_par_names if s.endswith('mu')][0]
-        quantiles = np.percentile(result_emcee.flatchain[first_mu],
-                                  [2.28, 15.9, 50, 84.2, 97.7])
-        print("\n 1-sigma spread of mu:", 0.5 * (quantiles[3] - quantiles[1]))
-        print(" 2-sigma spread of mu:",  0.5 * (quantiles[4] - quantiles[0]))
 
 
     def peakfit(self,fit_model='emg22', cost_func='chi-square', x_fit_cen=None,
                 x_fit_range=None, init_pars=None, vary_shape=False,
                 vary_baseline=True, method='least_squares', show_plots=True,
                 show_peak_markers=True, sigmas_of_conf_band=0,
-                plot_filename=None, eval_par_covar=False):
+                plot_filename=None, map_par_covar=False, **MCMC_kwargs):
         """Internal routine for fitting peaks.
 
         Fits full spectrum or subrange (if `x_fit_cen` and `x_fit_range` are
@@ -1547,10 +1660,13 @@ class spectrum:
             If not ``None``, the plots will be saved to two separate files named
             '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
             **Caution: Existing files with identical name are overwritten.**
-        eval_par_covar : bool, optional
-            If ``True`` the parameter covariances will be estimated using
-            Markov-Chain Monte Carlo (MCMC) sampling. This feature is based on
-            `<https://lmfit.github.io/lmfit-py/examples/example_emcee_Model_interface.html>`_.
+        map_par_covar : bool, optional
+            If ``True`` the parameter covariances will be mapped using
+            Markov-Chain Monte Carlo (MCMC) sampling and shown in a corner plot.
+            This feature is only recommended for single-peak fits.
+        **MCMC_kwargs : optional
+            Options to send to :meth:`_get_MCMC_par_samples`. Only relevant when
+            `map_par_covar` is True.
 
         Returns
         -------
@@ -1720,9 +1836,8 @@ class spectrum:
         out.vary_baseline = vary_baseline
         out.vary_shape = vary_shape
 
-        if eval_par_covar:
-            self._get_MCMC_par_covar(out, steps=1000, burn=200, thin=70,
-                                     n_cores=-1)
+        if map_par_covar:
+            self._get_MCMC_par_samples(out, **MCMC_kwargs)
             #
             # print("\n### Evaluating parameter covariances using MCMC sampling\n")
             # ## Perform emcee MCMC sampling
@@ -1889,7 +2004,8 @@ class spectrum:
             Index of peak of interest.
         fit_result : :class:`lmfit.model.ModelResult`, optional
             Fit result object to use for area calculation. If ``None`` (default)
-            use corresponding fit result stored in :attr:`~emgfit.spectrum.spectrum.fit_results` list.
+            use corresponding fit result stored in
+            :attr:`~emgfit.spectrum.spectrum.fit_results` list.
         decimals : int
             Number of decimals of returned output values.
 
@@ -2066,10 +2182,10 @@ class spectrum:
         return df_new
 
 
-    def determine_A_stat_emg(self,peak_index=None,species="?",x_pos=None,
-                             x_range=None,N_spectra=1000,fit_model=None,
-                             cost_func='MLE',method='least_squares',
-                             vary_baseline=True,plot_filename=None):
+    def determine_A_stat_emg(self, peak_index=None, species="?", x_pos=None,
+                             x_range=None, N_spectra=1000, fit_model=None,
+                             cost_func='MLE', method='least_squares',
+                             vary_baseline=True, plot_filename=None):
         """Determine the constant of proprotionality `A_stat_emg` for
         calculation of the statistical uncertainties of Hyper-EMG fits.
 
@@ -2299,7 +2415,7 @@ class spectrum:
                              vary_tail_order=True, show_fit_reports=False,
                              show_plots=True, show_peak_markers=True,
                              sigmas_of_conf_band=0, plot_filename=None,
-                             eval_par_covar=False):
+                             map_par_covar=False, **MCMC_kwargs):
         """Determine optimal peak-shape parameters by fitting the specified
         peak-shape calibrant.
 
@@ -2404,10 +2520,13 @@ class spectrum:
             two separate files named '<`plot_filename`>_log_plot.png' and
             '<`plot_filename`>_lin_plot.png'. **Caution: Existing files with
             identical name are overwritten.**
-        eval_par_covar : bool, optional
-            If ``True`` the parameter covariances will be estimated using
-            Markov-Chain Monte Carlo (MCMC) sampling. This feature is based on
-            `<https://lmfit.github.io/lmfit-py/examples/example_emcee_Model_interface.html>`_.
+        map_par_covar : bool, optional
+            If ``True`` the parameter covariances will be mapped using
+            Markov-Chain Monte Carlo (MCMC) sampling and shown in a corner plot.
+            This feature is only recommended for single-peak fits.
+        **MCMC_kwargs : optional
+            Options to send to :meth:`_get_MCMC_par_samples`. Only relevant when
+            `map_par_covar` is True.
 
         Notes
         -----
@@ -2546,7 +2665,8 @@ class spectrum:
                                vary_baseline=vary_baseline, method=method,
                                show_plots=show_plots, show_peak_markers=show_peak_markers,
                                sigmas_of_conf_band=sigmas_of_conf_band,
-                               plot_filename=plot_filename, eval_par_covar=eval_par_covar)
+                               plot_filename=plot_filename,
+                               map_par_covar=map_par_covar, **MCMC_kwargs)
 
         self.index_mass_calib = None # reset mass calibrant flag
         for p in self.peaks: # reset 'shape calibrant' and 'mass calibrant' comment flags
@@ -2577,9 +2697,9 @@ class spectrum:
         self.shape_cal_errors['bkg_c'] = out.params['bkg_c'].stderr
         self.fit_range_shape_cal = x_fit_range
 
-        # Save posterior
-        if eval_par_covar is True:
-            self.MCMC_par_samples = out.result_emcee.flatchain  # TODO add to spectrum attribute list
+        # Save thinned and flattened MCMC chain
+        if map_par_covar is True:
+            self.MCMC_par_samples = out.result_emcee.flatchain
 
 
     def save_peak_shape_cal(self,filename):
@@ -2802,7 +2922,7 @@ class spectrum:
 
             if show_shape_err_fits:
                 plt.rcParams["errorbar.capsize"] = 0.5
-                fig, axs = plt.subplots(1,2,figsize=(20,6))
+                fig, axs = plt.subplots(1,2,figsize=(18,6))
                 ax0 = axs[0]
                 ax0.set_title("Re-fit with ("+str(par)+" + 1 sigma) = {:.4E}".format(self.shape_cal_pars[par]+self.shape_cal_errors[par]))
                 ax0.errorbar(fit_result_p.x,fit_result_p.y,yerr=fit_result_p.y_err,fmt='.',color='royalblue',linewidth=0.5)
