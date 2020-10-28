@@ -3382,11 +3382,11 @@ class spectrum:
         """
         if peak_indeces in ([], None):
             peak_indeces = np.arange(len(self.peaks)).tolist()
-        peak_indeces .sort()
+        peak_indeces.sort() # ensure ascending order
         # Collect fit_results for peaks in `peak_indeces`
         results = []
         POI = [] # 2D-list with indeces of interest for each fit_result
-        for idx in sorted(peak_indeces):
+        for idx in peak_indeces:
             res = self.fit_results[idx]
             if res not in results:
                 results.append(res)
