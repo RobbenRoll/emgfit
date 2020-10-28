@@ -1307,7 +1307,7 @@ class spectrum:
         return mod
 
 
-    def _get_MCMC_par_samples(self, fit_result, steps=10000, burn=200, thin=100,
+    def _get_MCMC_par_samples(self, fit_result, steps=12000, burn=200, thin=100,
                               show_MCMC_fit_result=False, covar_map_fname=None,
                               n_cores=-1, seed=1364):
         """Map out parameter posterior distributions and covariances using
@@ -1379,7 +1379,7 @@ class spectrum:
         is quantified by the autocorrelation time (tau). A rule of thumb to
         obtain independent samples from an MCMC chain is to chose thinning
         intervals of ``m > 0.5*tau``. To be conservative, emgfit uses a thinning
-        interval of ``m = 100`` by default and issues a warning when ``m < tau``
+        interval of ``m = 100`` by default and issues a warning when ``m < 0.5*tau``
         for at least one of the parameters. Since more data is discareded, a
         larger thinning interval comes with a loss of precision of the PDF
         estimates. However, independent samples are required for the MC
@@ -1405,10 +1405,9 @@ class spectrum:
            Supplement Series 236.1 (2018): 11.
 
         """
-        print("\n### Evaluating parameter covariances using MCMC sampling ###\n")
         ### This feature is based on
         ### `<https://lmfit.github.io/lmfit-py/examples/example_emcee_Model_interface.html>`_.
-
+        print("\n### Evaluating parameter covariances using MCMC sampling ###\n")
         ndim = fit_result.nvarys # dimension of parameter space to explore
         print("Number of varied parameters: ndim =",fit_result.nvarys)
         nwalkers = 20*fit_result.nvarys # total number of MCMC walkers
@@ -1425,7 +1424,7 @@ class spectrum:
         varied_par_errs = [p.stderr for p in varied_pars.values()]
 
         # Initialize the walkers with normal dist. around best-fit values
-        r0 = np.array(varied_par_errs) # sigma of initial Gaussian PDFs # 1e-06
+        r0 = np.array(varied_par_errs) # sigma of initial Gaussian PDFs
         p0 = [varied_par_vals + r0*np.random.randn(ndim) for i in range(nwalkers)]
 
         from multiprocessing import cpu_count, Pool
@@ -1437,7 +1436,7 @@ class spectrum:
         ## It is advisable to thin by about half the autocorrelation time
         emcee_kws = dict(steps=steps, burn=burn, thin=thin, nwalkers=nwalkers,
                          float_behavior='chi2', is_weighted=True, pos=p0,
-                         progress='notebook', seed=seed, workers=pool) # steps=700, burn=250,
+                         progress='notebook', seed=seed, workers=pool)
 
         mod = fit_result.model
         x = fit_result.x
@@ -1477,6 +1476,12 @@ class spectrum:
 
         ## Plot autocorrelation times of Parameters
         result_emcee.acor = result_emcee.sampler.get_autocorr_time(quiet=True)
+        if any(thin < 0.5*result_emcee.acor):
+            import warnings
+            warnings.warn("Thinning interval `thin` is less than half the "
+                          "autocorrelation for at least one parameter. "
+                          "Consider increasing `thin` to ensure independent "
+                          "parameter samples.", UserWarning)
         if hasattr(result_emcee, "acor"):
             print("Autocorrelation time for the parameters:")
             print("----------------------------------------")
@@ -1485,7 +1490,6 @@ class spectrum:
                     print("{:>10}: {:.2f} steps".format(p,result_emcee.acor[i]))
                 except IndexError:
                     print("\nEncountered index error in autocorrelation print.")
-                    pass
 
         if show_MCMC_fit_result:
             plt.figure(figsize=(18,7))
@@ -1494,6 +1498,8 @@ class spectrum:
             result_emcee.plot_fit(data_kws=dict(color='gray', markersize=2))
             plt.title("MCMC result vs. {} result".format(fit_result.cost_func))
             plt.yscale("log")
+            plt.xlabel("m/z [u]")
+            plt.ylabel("Counts per bin")
             plt.show()
 
             fit.report_fit(result_emcee)
@@ -1838,139 +1844,6 @@ class spectrum:
 
         if map_par_covar:
             self._get_MCMC_par_samples(out, **MCMC_kwargs)
-            #
-            # print("\n### Evaluating parameter covariances using MCMC sampling\n")
-            # ## Perform emcee MCMC sampling
-            # ndim = out.nvarys # dimension of parameter space to explore
-            # print("Number of varied parameters: ndim =",out.nvarys)
-            # nwalkers = 20*out.nvarys # total number of MCMC walkers
-            # emcee_params = out.params.copy()
-            #
-            # varied_pars = emcee_params.copy()
-            # for key, p in emcee_params.items():
-            #     if p.vary is False or p.expr is not None:
-            #         del varied_pars[key]
-            # assert len(varied_pars.values()) == ndim, "Length of varied_pars != ndim"
-            # varied_par_names = [p.name for p in varied_pars.values()]
-            # varied_par_vals = [p.value for p in varied_pars.values()]  #[p.value for p in emcee_params.values() if p.vary is True and p.expr is None]  # best fit values
-            # varied_par_errs = [p.stderr for p in varied_pars.values()]
-            #
-            # # Initialize the walkers with normal dist. around best-fit values
-            # r0 = np.array(varied_par_errs) # sigma of initial Gaussian PDFs # 1e-06
-            # p0 = [varied_par_vals + r0*np.random.randn(ndim) for i in range(nwalkers)]
-            #
-            # # Set up the backend for continuously saving the sampling chain
-            # # Don't forget to clear it in case the file already exists
-            #
-            # from multiprocessing import Pool, cpu_count
-            # import dill
-            # #dill.detect.trace(True)
-            # n_cores = int(cpu_count())
-            # #pool = Pool(n_cores)
-            # import multiprocess as mp
-            # pool = mp.Pool(n_cores)
-            # print("Number of cores used for sampling:",n_cores)
-            # ## Set emcee options
-            # ## It is advisable to thin by about half the autocorrelation time
-            # emcee_kws = dict(steps=10000, burn=200, thin=70, nwalkers=nwalkers,
-            #                  float_behavior='chi2',is_weighted=True, pos=p0,
-            #                  progress=True, workers=pool) # steps=700, burn=250,
-            #
-            # #emcee_params.add('__lnsigma', value=np.log(7.0), min=np.log(1.0), max=np.log(100.0))
-            # result_emcee = mod.fit(y, x=x, params=emcee_params, weights=weights,
-            #                        method='emcee', nan_policy='propagate',
-            #                        fit_kws=emcee_kws)
-            # fit.report_fit(result_emcee)
-            # out.result_emcee = result_emcee # store sampling result
-            # out.result_emcee.fit_model = fit_model
-            #
-            # ## Save chain to HDF5 file #TODO
-            # #import h5py
-            # #import emcee
-            # #filename = self.input_filename+"_MCMC_sampling.h5"
-            # #hf = h5py.File(filename, 'w')
-            # #hf.create_dataset('dataset_1', data=d1)
-            #
-            #
-            # plt.figure(figsize=(12,8))
-            # plt.plot(x, mod.eval(params=out.params, x=x), label='least_squares', zorder=100)
-            # result_emcee.plot_fit(data_kws=dict(color='gray', markersize=2))
-            # plt.yscale("log")
-            # plt.show()
-            #
-            # ## Plot MCMC chain
-            # fig, axes = plt.subplots(ndim, figsize=(10, 3*ndim), sharex=True)
-            # samples = result_emcee.sampler.get_chain()[..., :, :] #result_emcee.chain # thinned chain without burn-in
-            # for i in range(ndim):
-            #     par_chains = samples[:, :, i] # chains for i-th varied parameter
-            #     ax = axes[i]
-            #     ax.plot(par_chains, 'k', alpha=0.3)
-            #     #ax.set_xlim(0, len(result_emcee.chain))
-            #     ax.set_ylabel(varied_par_names[i])
-            #     ax.axvline(emcee_kws['burn'])
-            #     #ax.yaxis.set_label_coords(-0.1, 0.5)
-            # axes[-1].set_xlabel('steps')
-            # axes[0].set_title('MCMC chains before thinning with burn-in cut-off marker')
-            #
-            # ## Check acceptance fraction of emcee
-            # plt.figure()
-            # plt.plot(result_emcee.acceptance_fraction)
-            # plt.xlabel('walker')
-            # plt.ylabel('acceptance fraction')
-            # plt.show()
-            #
-            # ## Plot autocorrelation times of Parameters
-            # if hasattr(result_emcee, "acor"):
-            #     print("Autocorrelation time for the parameters:")
-            #     print("----------------------------------------")
-            #     for i, p in enumerate(varied_pars):
-            #         try:
-            #             print(p, result_emcee.acor[i])
-            #         except IndexError:
-            #             print("\nEncountered index error in autocorrelation print.")
-            #             pass
-            #
-            # ## Plot parameter covariances returned by emcee
-            # import corner
-            # percentile_range = [0.99]*ndim  # percentile of samples to plot
-            # fig_cor, ax = plt.subplots(ndim,ndim,figsize=(25,25))
-            # corner.corner(result_emcee.flatchain,
-            #               fig=fig_cor,
-            #               labels=result_emcee.var_names,
-            #               bins=30, truths=list(out.params.valuesdict().values()),
-            #               hist_bin_factor=2,
-            #               range=percentile_range,
-            #               levels=(1-np.exp(-0.5),),
-            #               quantiles=[0.1587, 0.5, 0.8413])  # 1-sigma level contour assumes Gaussian PDFs # truths=list(result_emcee.params.valuesdict().values())
-            # fig_cor.subplots_adjust(right=2,top=2)
-            # for ax in fig_cor.get_axes():
-            #     ax.tick_params(axis='both', labelsize=17)
-            #     ax.xaxis.label.set_size(27)
-            #     ax.yaxis.label.set_size(27)
-            # #plt.savefig("covariance map.png",dpi=350)
-            # plt.show()
-            #
-            # #print("\nmedian of posterior probability distribution")
-            # #print('--------------------------------------------')
-            # #fit.report_fit(result_emcee.params)
-            #
-            # ## Find the maximum likelihood solution
-            # highest_prob = np.argmax(result_emcee.lnprob)
-            # hp_loc = np.unravel_index(highest_prob, result_emcee.lnprob.shape)
-            # mle_soln = result_emcee.chain[hp_loc]
-            # print("\nMaximum likelihood Estimation from MCMC")
-            # print(  "---------------------------------------")
-            # for ix, param in enumerate(varied_pars):
-            #     try:
-            #         print(param + ': ' + str(mle_soln[ix]))
-            #     except IndexError:
-            #         print("\nEncountered index error in MLE result print.")
-            #         pass
-            #
-            # pref = 'p'+str(self.peaks.index(peaks_to_fit[0]))+'_' # Use mu of first peak to fit #TODO: set to shape calib. if available
-            # quantiles = np.percentile(result_emcee.flatchain[pref+'mu'], [2.28, 15.9, 50, 84.2, 97.7])
-            # print("\n 1-sigma spread of mu:", 0.5 * (quantiles[3] - quantiles[1]))
-            # print(" 2-sigma spread of mu:",  0.5 * (quantiles[4] - quantiles[0]))
 
         if show_plots:
             self.plot_fit(fit_result=out, show_peak_markers=show_peak_markers,
