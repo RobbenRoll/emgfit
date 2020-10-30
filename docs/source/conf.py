@@ -57,7 +57,8 @@ intersphinx_mapping = {
     'pandas': ('https://pandas.pydata.org/pandas-docs/stable', None),
     'matplotlib': ('http://matplotlib.sourceforge.net', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
-    'lmfit': ('https://lmfit.github.io/lmfit-py', None)
+    'lmfit': ('https://lmfit.github.io/lmfit-py', None),
+    'emcee': ('https://emcee.readthedocs.io/en/stable',None),
 }
 
 # Napoleon settings
