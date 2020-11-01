@@ -1519,8 +1519,8 @@ class spectrum:
                 except IndexError:
                     print("\nEncountered index error in autocorrelation print.")
 
-        print("Total number of MCMC parameter sets after discarding burn-in "
-              "and thinning:",len(result_emcee.flatchain))
+        print("\nTotal number of MCMC parameter sets after discarding burn-in "
+              "and thinning:",len(result_emcee.flatchain),"\n")
 
         if show_MCMC_fit_result:
             plt.figure(figsize=(18,7))
