@@ -1606,8 +1606,8 @@ class spectrum:
 
     def peakfit(self,fit_model='emg22', cost_func='chi-square', x_fit_cen=None,
                 x_fit_range=None, init_pars=None, vary_shape=False,
-                vary_baseline=True, method='least_squares', show_plots=True,
-                show_peak_markers=True, sigmas_of_conf_band=0,
+                vary_baseline=True, method='least_squares', fit_kws=None,
+                show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0,
                 plot_filename=None, map_par_covar=False, **MCMC_kwargs):
         """Internal routine for fitting peaks.
 
@@ -1683,6 +1683,9 @@ class spectrum:
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
+        fit_kws : dict, optional, default: None
+            Options to pass to lmfit minimizer used in
+            :meth:`lmfit.model.Model.fit` method.
         show_plots : bool, optional
             If ``True`` (default) linear and logarithmic plots of the spectrum
             with the best fit curve are displayed. For details see
@@ -1749,7 +1752,7 @@ class spectrum:
         summands in the log-likelihood ratio are positive semi-definite:
         :math:`L_i = f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right) \\geq 0`.
         Exploiting this property, the minimization of the log-likelihood ratio
-        can be re-formulated into a least-squares problem:
+        can be re-formulated into a least-squares problem (see also [#]_):
 
         .. math::
 
@@ -1766,6 +1769,13 @@ class spectrum:
         a Levenberg-Marquardt algorithm for bound-constrained problems. For more
         details on these optimizers see the docs of
         :func:`lmfit.minimizer.minimize` and :class:`scipy.optimize`.
+
+        References
+        ----------
+        .. [#] Ross, G. J. S. "Least squares optimisation of general
+           log-likelihood functions and estimation of separable linear
+           parameters." COMPSTAT 1982 5th Symposium held at Toulouse 1982. 
+           Physica, Heidelberg, 1982.
 
         """
         if x_fit_range is None:
@@ -1833,8 +1843,8 @@ class spectrum:
             # residuals for Pearson chi-square fit
             mod_Pearson._residual = resid_Pearson_chi_square
             out = mod_Pearson.fit(y, params=pars, x=x, weights=weights,
-                                  method=method, scale_covar=False,
-                                  nan_policy='propagate')
+                                  method=method, fit_kws=fit_kws,
+                                  scale_covar=False, nan_policy='propagate')
             y_m = out.best_fit
             # Calculate final weights for plotting
             Pearson_weights = 1./np.maximum(1.,np.sqrt(y_m))
@@ -1858,7 +1868,7 @@ class spectrum:
             # than with scalar minimizers
             mod_MLE._residual = sqrt_NLLR
             out = mod_MLE.fit(y, params=pars, x=x, weights=weights,
-                              method=method, scale_covar=False,
+                              method=method, fit_kws=fit_kws, scale_covar=False,
                               calc_covar=False, nan_policy='propagate')
             out.y_err = 1./out.weights
         else:
@@ -1868,6 +1878,7 @@ class spectrum:
         out.fit_model = fit_model
         out.cost_func = cost_func
         out.method = method
+        out.fit_kws = fit_kws
         out.x_fit_cen = x_fit_cen
         out.x_fit_range = x_fit_range
         out.vary_baseline = vary_baseline
@@ -2089,7 +2100,8 @@ class spectrum:
     def determine_A_stat_emg(self, peak_index=None, species="?", x_pos=None,
                              x_range=None, N_spectra=1000, fit_model=None,
                              cost_func='MLE', method='least_squares',
-                             vary_baseline=True, plot_filename=None):
+                             fit_kws=None, vary_baseline=True,
+                             plot_filename=None):
         """Determine the constant of proprotionality `A_stat_emg` for
         calculation of the statistical uncertainties of Hyper-EMG fits.
 
@@ -2155,6 +2167,9 @@ class spectrum:
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
+        fit_kws : dict, optional, default: None
+            Options to pass to lmfit minimizer used in
+            :meth:`lmfit.model.Model.fit` method.
         vary_baseline : bool, optional, default: ``True``
             If ``True``, the constant background will be fitted with a varying
             uniform baseline parameter `bkg_c` (initial value: 0.1).
@@ -2248,6 +2263,7 @@ class spectrum:
                                                    x_fit_range=x_range,
                                                    cost_func=cost_func,
                                                    method=method,
+                                                   fit_kws=fit_kws,
                                                    vary_baseline=vary_baseline,
                                                    init_pars=self.shape_cal_pars,
                                                    show_plots=False)
@@ -2316,7 +2332,8 @@ class spectrum:
                              cost_func='chi-square', init_pars = 'default',
                              x_fit_cen=None, x_fit_range=None,
                              vary_baseline=True, method='least_squares',
-                             vary_tail_order=True, show_fit_reports=False,
+                             fit_kws=None, vary_tail_order=True,
+                             show_fit_reports=False,
                              show_plots=True, show_peak_markers=True,
                              sigmas_of_conf_band=0, plot_filename=None,
                              map_par_covar=False, **MCMC_kwargs):
@@ -2402,6 +2419,9 @@ class spectrum:
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
+        fit_kws : dict, optional, default: None
+            Options to pass to lmfit minimizer used in
+            :meth:`lmfit.model.Model.fit` method.
         vary_tail_order : bool, optional
             If ``True`` (default), before the calibration of the peak-shape
             parameters an automatized fit model selection is performed. For
@@ -2491,6 +2511,7 @@ class spectrum:
                                            x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
                                            init_pars=init_pars, vary_shape=True,
                                            vary_baseline=vary_baseline, method=method,
+                                           fit_kws=fit_kws,
                                            show_plots=show_plots,
                                            show_peak_markers=show_peak_markers,
                                            sigmas_of_conf_band=sigmas_of_conf_band)
@@ -2568,7 +2589,8 @@ class spectrum:
                                x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
                                init_pars=init_pars, vary_shape=True,
                                vary_baseline=vary_baseline, method=method,
-                               show_plots=show_plots, show_peak_markers=show_peak_markers,
+                               fit_kws=fit_kws, show_plots=show_plots,
+                               show_peak_markers=show_peak_markers,
                                sigmas_of_conf_band=sigmas_of_conf_band,
                                plot_filename=plot_filename,
                                map_par_covar=map_par_covar, **MCMC_kwargs)
@@ -2808,6 +2830,7 @@ class spectrum:
                                         init_pars=pars, vary_shape=False,
                                         vary_baseline=fit_result.vary_baseline,
                                         method=fit_result.method,
+                                        fit_kws=fit_result.fit_kws,
                                         show_plots=False)
             #display(fit_result_p) # show fit result
 
@@ -2825,6 +2848,7 @@ class spectrum:
                                         init_pars=pars, vary_shape=False,
                                         vary_baseline=fit_result.vary_baseline,
                                         method=fit_result.method,
+                                        fit_kws=fit_result.fit_kws,
                                         show_plots=False)
             #display(fit_result_m) # show fit result
 
@@ -3066,6 +3090,7 @@ class spectrum:
         fit_model = fit_result.fit_model
         cost_func = fit_result.cost_func
         method = fit_result.method
+        fit_kws = fit_result.fit_kws
         x_cen = fit_result.x_fit_cen
         x_range = fit_result.x_fit_range
         x = fit_result.x
@@ -3149,7 +3174,7 @@ class spectrum:
                 min_res = minimize(model._residual, pars, method=method,
                                    args=(y,weights), kws={'x':x},
                                    scale_covar=False, nan_policy='propagate',
-                                   reduce_fcn=None, calc_covar=False)
+                                   reduce_fcn=None, calc_covar=False **fit_kws)
 
                 # Record peak centroids and amplitudes
                 new_mus = []
@@ -3472,7 +3497,7 @@ class spectrum:
     def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None,
                       fit_model=None, cost_func='MLE', x_fit_cen=None,
                       x_fit_range=None, vary_baseline=True,
-                      method='least_squares', show_plots=True,
+                      method='least_squares', fit_kws=None, show_plots=True,
                       show_peak_markers=True, sigmas_of_conf_band=0,
                       show_fit_report=True, plot_filename=None):
         """Determine mass re-calibration factor by fitting the selected
@@ -3525,6 +3550,9 @@ class spectrum:
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
+        fit_kws : dict, optional, default: None
+            Options to pass to lmfit minimizer used in
+            :meth:`lmfit.model.Model.fit` method.
         show_plots : bool, optional
             If ``True`` (default) linear and logarithmic plots of the spectrum
             with the best fit curve are displayed. For details see
@@ -3608,7 +3636,8 @@ class spectrum:
         fit_result = spectrum.peakfit(self, fit_model=fit_model, cost_func=cost_func,
                                       x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
                                       vary_shape=False, vary_baseline=vary_baseline,
-                                      method=method, show_plots=show_plots,
+                                      method=method, fit_kws=fit_kws,
+                                      show_plots=show_plots,
                                       show_peak_markers=show_peak_markers,
                                       sigmas_of_conf_band=sigmas_of_conf_band,
                                       plot_filename=plot_filename)
@@ -3689,9 +3718,9 @@ class spectrum:
 
     def fit_peaks(self, index_mass_calib=None, species_mass_calib=None,
                   x_fit_cen=None, x_fit_range=None, fit_model=None,
-                  cost_func='MLE', method ='least_squares', init_pars=None,
-                  vary_shape=False, vary_baseline=True, show_plots=True,
-                  show_peak_markers=True,sigmas_of_conf_band=0,
+                  cost_func='MLE', method ='least_squares', fit_kws=None,
+                  init_pars=None, vary_shape=False, vary_baseline=True,
+                  show_plots=True, show_peak_markers=True,sigmas_of_conf_band=0,
                   plot_filename=None,show_fit_report=True,
                   show_shape_err_fits=False):
         """Fit peaks, update peaks properties and show results.
@@ -3742,7 +3771,11 @@ class spectrum:
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
-        vary_shape (bool, optional): if False, peak-shape parameters (sigma, theta, eta's and tau's) are kept fixed at initial values; if True, they are varied (default: False)
+        fit_kws : dict, optional, default: None
+            Options to pass to lmfit minimizer used in
+            :meth:`lmfit.model.Model.fit` method.
+        vary_shape (bool, optional): if False, peak-shape parameters
+        (sigma, theta, eta's and tau's) are kept fixed at initial values; if True, they are varied (default: False)
         vary_baseline : bool, optional, default: True
             if True, the constant background will be fitted with a varying baseline paramter bkg_c (initial value: 0.1); otherwise the beseline paremter bkg_c will be fixed to 0.
         init_pars : dict, optional
@@ -3820,6 +3853,7 @@ class spectrum:
                                       x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
                                       init_pars=init_pars, vary_shape=vary_shape,
                                       vary_baseline=vary_baseline, method=method,
+                                      fit_kws=fit_kws,
                                       show_plots=show_plots,
                                       show_peak_markers=show_peak_markers,
                                       sigmas_of_conf_band=sigmas_of_conf_band,
