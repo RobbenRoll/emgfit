@@ -255,6 +255,10 @@ class spectrum:
     MC_recal_facs : list of float
         Recalibration factors obtained in fits with Markov Chain Monte Carlo
         (MCMC) shape parameter samples in :meth:`get_MC_peakshape_errors`.
+    peaks_with_MC_PS_errors : list of int
+        List with indeces of peaks for which peak-shape errors have been
+        determined by re-fitting with shape parameter sets from Markov Chain
+        Monte Carlo sampling (see :meth:`get_MC_peakshape_errors`).
     peaks : list of :class:`peak`
         List containing all peaks associated with the spectrum sorted by
         ascending mass. The index of a peak within the `peaks` list is referred
@@ -359,6 +363,7 @@ class spectrum:
         self.eff_mass_shifts = None
         self.MCMC_par_samples = None
         self.MC_recal_facs = None
+        self.peaks_with_MC_PS_errors = []
         self.peaks = [] # list containing peaks associated with spectrum
         self.fit_results = [] # list containing fit results of all peaks
         plt.rcParams.update({"font.size": 15})
@@ -886,7 +891,18 @@ class spectrum:
         """
         dict_peaks = [p.__dict__ for p in self.peaks]
         df_prop = pd.DataFrame(dict_peaks)
+        def mark_MC_PS_errs(rows):
+            return ['background-color: lightblue' for i in rows]
+
+        df_prop = df_prop.style.apply(lambda col: ['color: royalblue'
+                                      if i in self.peaks_with_MC_PS_errors
+                                      else '' for i in range(col.size)],
+                                      subset=['rel_peakshape_error'])
         display(df_prop)
+        if any(self.peaks_with_MC_PS_errors): # add color legend
+            from termcolor import colored
+            print('        ',colored('stat. errors from resampling','green'),
+                             colored('    Monte Carlo peakshape errors','blue'))
 
 
     def assign_species(self,species,peak_index=None,x_pos=None):
@@ -1774,7 +1790,7 @@ class spectrum:
         ----------
         .. [#] Ross, G. J. S. "Least squares optimisation of general
            log-likelihood functions and estimation of separable linear
-           parameters." COMPSTAT 1982 5th Symposium held at Toulouse 1982. 
+           parameters." COMPSTAT 1982 5th Symposium held at Toulouse 1982.
            Physica, Heidelberg, 1982.
 
         """
@@ -3397,6 +3413,7 @@ class spectrum:
                 p.area_error = np.sqrt(p.area_error**2 + PS_area_errs[i_p]**2)
                 if peak_idx != self.index_mass_calib:
                     p.rel_peakshape_error = PS_mass_errs[i_p]/p.m_ion
+                    peaks_with_MC_PS_errors.append(peak_idx)
                     try:
                         p.rel_mass_error = np.sqrt(p.rel_stat_error**2 +
                                                    p.rel_peakshape_error**2 +
@@ -3405,10 +3422,10 @@ class spectrum:
                     except TypeError:
                         import warnings
                         warnings.simplefilter("once")
-                        msg = str("Could not update total mass error of peak {0} "
-                                  "due to TypeError. Check if the `rel_stat_error` "
-                                  "and `rel_recal_error` are defined. ").format(
-                                  peak_idx)
+                        msg = str("Could not update total mass error of peak "
+                                  "{0} due to TypeError. Check if the "
+                                  "`rel_stat_error` and `rel_recal_error` are "
+                                  "defined. ").format(peak_idx)
                         warnings.warn(msg)
             s_indeces = ",".join(map(str,POI[i_res]))
             print("\nUpdated area error, peak-shape error and (total)"
@@ -3933,7 +3950,10 @@ class spectrum:
         spec_data = np.append(spec_data, [["scipy version",scipy_version]],axis=0)
         spec_data = np.append(spec_data, [["numpy version",np.__version__]],axis=0)
         spec_data = np.append(spec_data, [["pandas version",pd.__version__]],axis=0)
-        attributes = ['input_filename','mass_number','spectrum_comment','fit_model','red_chi_shape_cal','fit_range_shape_cal','determined_A_stat_emg','A_stat_emg','A_stat_emg_error','recal_fac','rel_recal_error']
+        attributes = ['input_filename','mass_number','spectrum_comment',
+                      'fit_model','red_chi_shape_cal','fit_range_shape_cal',
+                      'determined_A_stat_emg','A_stat_emg','A_stat_emg_error',
+                      'recal_fac','rel_recal_error','peaks_with_MC_PS_errors']
         for attr in attributes:
             attr_val = getattr(self,attr)
             spec_data = np.append(spec_data, [[attr,attr_val]],axis=0)
