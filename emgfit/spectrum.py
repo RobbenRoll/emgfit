@@ -239,7 +239,7 @@ class spectrum:
         For the mass calibrant the dictionary holds the absolute shifts of the
         calibrant peak centroid (`calibrant centroid shift pm`). For more
         details see docs of :meth:`_eval_peakshape_errors`.
-    eff_mass_shifts : :class:`numpy.ndarray` of dict 
+    eff_mass_shifts : :class:`numpy.ndarray` of dict
         Maximal effective mass shifts for each peak obtained in peak-shape
         uncertainty evaluation by varying each shape parameter by plus and minus
         1 standard deviation and only keeping the shift with the larger absolute
@@ -1923,21 +1923,21 @@ class spectrum:
 
 
     def calc_peak_area(self, peak_index, fit_result=None, decimals=2):
-        """Calculate peak area (counts in peak) and its error for specified peak.
+        """Calculate the peak area (counts in peak) and its stat. uncertainty.
 
-        The peak area is calculated using the peak's amplitude parameter `amp`
-        and the width of the uniform binning of the spectrum. Therefore, the
-        peak must have been fitted beforehand. In the case of overlapping peaks
-        only the counts within the fit component of the specified peak are
+        Area and area error are calculated using the peak's amplitude parameter
+        `amp` and the width of the uniform binning of the spectrum. Therefore,
+        the peak must have been fitted beforehand. In the case of overlapping
+        peaks only the counts within the fit component of the specified peak are
         returned.
 
         Note
         ----
         This routine assumes the bin width to be uniform across the spectrum.
-        The mass binning of a MAc mass spectrum is not perfectly uniform
-        (only time bins are uniform, mass bins have a marginal quadratic scaling
-        with mass). However, for isobaric species the quadratic term should
-        usually be so small that it can safely be neglected.
+        The mass binning of most mass spectra is not perfectly uniform
+        (usually time bins are uniform such that the width of mass bins has a
+        quadratic scaling with mass). However, for isobaric species the
+        quadratic term is usually so small that it can safely be neglected.
 
 
         Parameters
@@ -2937,18 +2937,25 @@ class spectrum:
 
             # Determine effective mass shifts
             # If calibrant is in fit range, the newly determined calibrant
-            # centroid shifts will be used calculate the shifted recalibration
+            # centroid shifts are used to calculate the shifted recalibration
             # factors. Otherwise, the shifted re-calibration factors from a
             # foregoing mass calibration are used
             for peak_idx in peak_indeces: # IOIs only, mass calibrant excluded
                 pref = 'p{0}_'.format(peak_idx)
                 cen = fit_result.best_values[pref+'mu']
+                bin_width = fit_result.x[1] - fit_result.x[0] # assume approx. uniform binning
+                area = fit_result.best_values[pref+'amp']/bin_width
+                print(area)
 
+                new_area_p = fit_result_p.best_values[pref+'amp']/bin_width
+                print(new_area_p)
                 new_cen_p =  fit_result_p.best_values[pref+'mu']
                 recal_fac_p = self.recal_facs_pm[par+' recal facs pm'][0]
                 # effective mass shift for +1 sigma parameter variation:
                 dm_p = recal_fac_p*new_cen_p - self.recal_fac*cen
 
+                new_area_m = fit_result_m.best_values[pref+'amp']/bin_width
+                print(new_area_m)
                 new_cen_m = fit_result_m.best_values[pref+'mu']
                 recal_fac_m = self.recal_facs_pm[par+' recal facs pm'][1]
                 # effective mass shift for -1 sigma parameter variation:
@@ -3002,7 +3009,6 @@ class spectrum:
         have been processed with this method upfront (using the same `N_samples`
         and `seed` arguments to ensure identical sets of peak-shapes).
 
-
         Parameters
         ----------
         peak_indeces : int or list of int
@@ -3033,7 +3039,6 @@ class spectrum:
         --------
         :meth:`get_MC_peakshape_errors`
         :meth:`_get_MCMC_par_samples`
-
 
         Notes
         -----
@@ -3908,7 +3913,7 @@ class spectrum:
         if x_fit_range is None:
             x_fit_range = self.default_fit_range
 
-        if peak_indeces != []:
+        if peak_indeces != []: # get fit range from specified peak indeces
             peak_indeces.sort()
             if x_fit_cen is not None:
                 raise Exception(
@@ -3924,16 +3929,16 @@ class spectrum:
             pos_last_peak = self.peaks[peak_indeces[-1]].x_pos
             x_fit_cen = (pos_last_peak + pos_first_peak)/2
             x_fit_range = x_fit_range + (pos_last_peak - pos_first_peak)
-        elif x_fit_cen is not None:
             x_min = x_fit_cen - x_fit_range/2
             x_max = x_fit_cen + x_fit_range/2
-            # get peaks in fit range
-            peaks_to_fit = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)]
-            peak_indeces = [self.peaks.index(p) for p in peaks_to_fit]
-        else:
-            peaks_to_fit = self.peaks
-            peak_indeces = [self.peaks.index(p) for p in self.peaks]
-
+        elif x_fit_cen is not None: # fit user-defined mass range
+            x_min = x_fit_cen - x_fit_range/2
+            x_max = x_fit_cen + x_fit_range/2
+        else: # fit full range
+            x_min = self.data.index[0]
+            x_max = self.data.index[-1]
+        peaks_to_fit = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)]
+        peak_indeces = [self.peaks.index(p) for p in peaks_to_fit]
 
         if index_mass_calib is None and species_mass_calib is not None:
             index_mass_calib = [i for i in range(len(self.peaks)) if
