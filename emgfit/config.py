@@ -7,10 +7,10 @@ import scipy.constants as con
 import matplotlib.pyplot as plt
 
 ##### Set image resolution
-from IPython.display import set_matplotlib_formats
-set_matplotlib_formats('retina')
+#from IPython.display import set_matplotlib_formats
+#set_matplotlib_formats('retina')
 # For even higher res, use the following instead:
-# plt.rcParams['figure.dpi'] = 600
+plt.rcParams['figure.dpi'] = 500
 
 ##### Define fundamental constants
 global m_e, u, u_to_keV

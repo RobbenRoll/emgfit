@@ -39,5 +39,5 @@ emgfit.spectrum module
 .. automodule:: emgfit.spectrum
    :members:
    :undoc-members:
-   :private-members: spectrum._eval_peakshape_errors
+   :private-members: spectrum._eval_peakshape_errors, spectrum.get_MC_peakshape_errors, spectrum._eval_MC_peakshape_errors, spectrum._get_MCMC_par_samples
    :show-inheritance:

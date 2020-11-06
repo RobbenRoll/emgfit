@@ -1348,7 +1348,7 @@ class spectrum:
         steps : int, optional
             Number of MCMC sampling steps.
         burn : int, optional
-            Number of initial sampling steps to discard ("burn-in").
+            Number of initial sampling steps to discard ("burn-in" phase).
         thin : int, optional
             After sampling, only every `thin`-th sample is used for further
             treatment. It is recommended to set `thin`  to at least half the
@@ -1388,7 +1388,7 @@ class spectrum:
         probability density functions this method should only be used to explore
         the parameter space of a single-peak fit.
 
-        One complication with MCMC methods is that there is usually no rigorous
+        A complication with MCMC methods is that there is usually no rigorous
         way to prove that the sampling chain has converged to the true PDF.
         Instead it is at the user's disgression to decide after how many
         sampling steps a sufficient amount of convergence is achieved. Gladly,
@@ -1400,7 +1400,14 @@ class spectrum:
         convergence this method will issue a warning whenever the number of
         performed sampling steps is smaller than 50 times the integrated
         autocorrelation time of at least one parameter. If this rule of thumb is
-        violated it is strongly advisable to run a longer chain.
+        violated it is strongly advisable to run a longer chain. An additonal
+        aid in judging the performance of the MCMC chain are the provided plots
+        of the MCMC traces. These plots show the paths of all MCMC walkers
+        through parameter space. Dramatic changes of the initial trace envelopes
+        indicate that the chain has not reached a stationary state yet and is
+        still in the so-called "burn-in" phase. Samples in this region are
+        discarded by setting the `burn` argument to an appropriate number of
+        steps (default burn-in: 500 steps).
 
         Another complication of MCMC algorithms is the fact that nearby samples
         in a MCMC chain are not indepedent. To reduce correlations between
@@ -1408,12 +1415,13 @@ class spectrum:
         of every m-th MCMC iteration. The number of steps after which two
         samples can be assumed to be uncorrelated/independent (so to say the
         memory of the chain) is given by the integrated autocorrelation time
-        (tau). To be conservative, emgfit uses a thinning interval of ``m = 250`` by default
-        and issues a warning when ``m < tau`` for at least one of the
-        parameters. Since more data is discareded, a larger thinning interval
+        (tau). To be conservative, emgfit uses a thinning interval of ``m = 250``
+        by default and issues a warning when ``m < tau`` for at least one of the
+        parameters. Since more data is discarded, a larger thinning interval
         comes with a loss of precision of the posterior PDF estimates. However,
-        the MC peak-shape error determination (:meth:`get_MC_peakshape_errors)
-        relies on independent parameter samples.
+        a sufficient amount of thinning is still advisable since emgfit's MC
+        peak-shape error determination (:meth:`get_MC_peakshape_errors) relies
+        on independent parameter samples.
 
         As a helpful measure for tuning MCMC chains, emgfit provides a plot of
         the "acceptance fraction" for each walker, i.e. the fraction of
@@ -1429,7 +1437,8 @@ class spectrum:
 
         .. _`emcee`: https://iopscience.iop.org/article/10.1086/670067
         .. _`"emcee: The MCMC hammer"`: https://iopscience.iop.org/article/10.1086/670067`
-        .. _`"Data Analysis Recipes: Using Markov Chain Monte Carlo"`: https://iopscience.iop.org/article/10.3847/1538-4365/aab76e
+        .. _`"Data Analysis Recipes: Using Markov Chain Monte Carlo"`:
+           https://iopscience.iop.org/article/10.3847/1538-4365/aab76e
 
         See also
         --------
@@ -1448,7 +1457,7 @@ class spectrum:
         """
         ## This feature is based on
         ## `<https://lmfit.github.io/lmfit-py/examples/example_emcee_Model_interface.html>`_.
-        print("\n### Evaluating parameter posterior PDFs using MCMC sampling ###\n")
+        print("\n### Evaluating posterior PDFs using MCMC sampling ###\n")
         ndim = fit_result.nvarys # dimension of parameter space to explore
         print("Number of varied parameters: ndim =",fit_result.nvarys)
         nwalkers = 20*fit_result.nvarys # total number of MCMC walkers
@@ -1590,7 +1599,8 @@ class spectrum:
         labels = [s.lstrip("p0123456789_") for s in result_emcee.var_names]
         peak_idx = varied_par_names[-1].split('p')[1].split('_')[0]
         print("\nCovariance map for peak {} with 0.16, 0.50 & 0.84 quantiles "
-              "(dashed lines) and best-fit values (blue lines)".format(peak_idx))
+              "(dashed lines) and best-fit values (blue lines):".format(
+              peak_idx))
         import corner
         percentile_range = [0.99]*ndim  # percentile of samples to plot
         fig_cor, axes = plt.subplots(ndim,ndim,figsize=(16,16))
@@ -2803,7 +2813,7 @@ class spectrum:
         if verbose:
             print('\n##### Peak-shape uncertainty evaluation #####\n')
             print('All mass shifts below are corrected for the corresponding '
-                  'shifts of the calibrant peak.\n')
+                  'shifts of the mass calibrant peak.\n')
         if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
         pref = 'p{0}_'.format(peak_indeces[0])
@@ -2974,31 +2984,35 @@ class spectrum:
         """Get peak-shape uncertainties for a fit result by re-fitting with many
         different MC-shape-parameter sets
 
-        A representative samples of the shape parameter sets which are supported
+        A representative subset of the shape parameter sets which are supported
         by the data is obtained by performing MCMC sampling on the peak-shape
         calibrant. If this has not already been done using the `map_par_covar`
         option in :meth:`determine_peak_shape`, the :meth:`_get_MCMC_par_samples`
         method will be automatically called here.
 
         The peaks specified by `peak_indeces` will be fitted with `N_samples`
-        different shape parameter sets. The peak-shape uncertainty is then
-        estimated as the RMS deviation of the mass values obtained in these fits
-        compared to the best-fit value.
+        different shape parameter sets. The peak-shape uncertainties are then
+        estimated as the RMS deviation of the obtained values from the best-fit
+        values.
 
-        The mass calibrant must either have been treated with this method upfront
-        or           #TODO
+        The mass calibrant must either be included in `peak_indeces` or must
+        have been processed with this method upfront (using the same `N_samples`
+        and `seed` arguments to ensure identical sets of peak-shapes).
 
 
         Parameters
         ----------
         peak_indeces : int or list of int
-            Indeces of peaks to evaluate MC peak-shape uncertainties for.
-        fit_result : optional
-            F
+            Indeces of peaks to evaluate MC peak-shape uncertainties for. The
+            peaks of interest must belong to the same `fit_result`.
+        fit_result : :class:`~lmfit.model.ModelResult`, optional
+            Fit result for which MC peak-shape uncertainties are to be evaluated
+            for. Defaults to the fit result stored for the peaks of interest in
+            the :attr:`spectrum.fit_results` spectrum attribute.
         verbose : bool, optional
             Whether to print status updates.
         N_samples : int, optional
-            Number of different shape parameter sets to use.
+            Number of different shape parameter sets to use for re-fitting.
         show_hist : bool, optional
             If `True` histograms of the effective mass shifts and peak areas
             obtained with the MC shape parameter sets are shown.
@@ -3020,12 +3034,12 @@ class spectrum:
 
         Notes
         -----
-        For details on MCMC see #TODO
+        For details on MCMC sampling see docs of :meth:`_get_MCMC_par_samples`.
 
-        Assuming that the samples obtained with the MCMC algorithm form a
-        representative set of parameter samples and are sufficiently independent
-        from each other, this method provides refined peak-shape uncertainties
-        that account for the correlations between peak-shape parameters.
+        This method only supports peaks that belong to the same fit result. If
+        peaks in multiple `fit_results` are to be treated or the peak properties
+        are to be updated with the refined peak-shape errors use
+        :meth:`get_MC_peakshape_errors` which wraps around this method.
 
         """
 
@@ -3039,19 +3053,18 @@ class spectrum:
         elif self.MC_recal_facs is not None:
             mass_calib_in_range = False
         else:
-            raise Exeption(
-                  'No calibrant centroid shifts available for MC peak-shape '
-                  'error evaluation.\n'     ##########TODO
+            raise Exception(
+                  'No MC recalibration factors available for peak-shape '
+                  'error evaluation.\n'
                   'Ensure that: \n'
-                  '(a) either the mass calibrant is in the fit range and \n'
-                  '    specified with the `species_mass_calib` parameter, or\n'
-                  '(b) if the calibrant is not in the fit range, this method\n'
-                  '    has been performed on the mass calibrant peak upfront.')
+                  '(a) either the mass calibrant is in `peak_indeces`, or. \n'
+                  '(b) this method has been performed on the mass calibrant\n'
+                  '    peak upfront.')
 
         for idx in peak_indeces:
             pname = "p{0}_mu".format(idx)
             if pname not in fit_result.model.param_names:
-                raise Exeption("Peak {0} was not found in `fit_result`.".format(
+                raise Exception("Peak {0} not found in `fit_result`.".format(
                                idx))
 
         if fit_result is None:
@@ -3072,7 +3085,8 @@ class spectrum:
                 flatchain = self.shape_cal_result.result_emcee.flatchain
                 self.MCMC_par_samples = flatchain
             except Exception as err:
-                print("Failed to obtain MCMC shape parameter samples with exception:")
+                print("Failed to obtain MCMC shape parameter samples with "
+                      "exception:")
                 raise Exception(err)
 
         if verbose:
@@ -3107,6 +3121,8 @@ class spectrum:
         cost_func = fit_result.cost_func
         method = fit_result.method
         fit_kws = fit_result.fit_kws
+        if fit_kws is None:
+            fit_kws = {}
         x_cen = fit_result.x_fit_cen
         x_range = fit_result.x_fit_range
         x = fit_result.x
@@ -3190,7 +3206,7 @@ class spectrum:
                 min_res = minimize(model._residual, pars, method=method,
                                    args=(y,weights), kws={'x':x},
                                    scale_covar=False, nan_policy='propagate',
-                                   reduce_fcn=None, calc_covar=False **fit_kws)
+                                   reduce_fcn=None, calc_covar=False, **fit_kws)
 
                 # Record peak centroids and amplitudes
                 new_mus = []
@@ -3243,7 +3259,6 @@ class spectrum:
             p = self.peaks[peak_idx]
 
             dm = self.MC_recal_facs*mus[i] - p.m_ion
-            PS_mass_err = np.sqrt(np.mean(dm**2))
             PS_mass_err = np.sqrt(np.mean(dm**2))
             MC_PS_mass_errs.append(PS_mass_err)
 
@@ -3298,17 +3313,24 @@ class spectrum:
         MC-shape-parameter sets
 
         This method provides refined peak-shape uncertainties that account for
-        correlations between peak-shape parameters. To that end the peaks
-        specified with `peak_indeces` are be fitted with `N_samples` different
+        non-normal distributions and correlations of shape parameters. To that
+        end, the peaks of interest are re-fitted with `N_samples` different
         peak-shape parameter sets. For these parameter sets to be representative
-        of all peak shapes supported by the data they are obtained by
-        Markov-Chain Monte Carlo (MCMC) sampling from the parameter posterior
-        PDFs. The peak-shape uncertainty of the mass values and peak areas are
-        then estimated as the RMS deviation of the mass values obtained in these
-        fits compared to the best-fit value.
+        of all peak shapes supported by the data they are randomly drawn from a
+        larger ensemble of parameter sets obtained from Markov-Chain Monte Carlo
+        (MCMC) sampling on the peak-shape calibrant. The peak-shape uncertainty
+        of the mass values and peak areas are estimated by the obtained RMS
+        deviations from the best-fit values. Finally, the peak properties table
+        is updated with the refined uncertainties.
 
-        This method requires the mass calibrant to be included in
-        `peak_indeces`.
+        This method only takes effective mass shifts relative to the calibrant
+        peak into account. For each peak shape the calibrant peak is re-fitted
+        and the respective recalibration factors are used to calculate shifted
+        ion-of-interest masses. Therefore, the mass calibrant must be included
+        in `peak_indeces`.
+
+        *When the `peak_indeces` argument is used, it must include the mass
+        calibrant.*
 
         Parameters
         ----------
@@ -3338,9 +3360,9 @@ class spectrum:
         Markov-Chain Monte Carlo (MCMC) sampling on the peak-shape calibrant.
         In MCMC sampling so-called walkers are sent on random walks to explore
         the parameter space. The latter is done with the
-        :meth:`_get_MCMC_par_samples` method. If
-        MCMC sampling has not already been performed with the `map_par_covar`
-        option in :meth:`determine_peak_shape`, the :meth:`_get_MCMC_par_samples`
+        :meth:`_get_MCMC_par_samples` method. If MCMC sampling has not already
+        been performed with the `map_par_covar` option in
+        :meth:`determine_peak_shape`, the :meth:`_get_MCMC_par_samples`
         method will be automatically evoked before the peak-shape error
         evaluation.
 
@@ -3367,7 +3389,10 @@ class spectrum:
         sets and the final mass values are calculated with the obtained IOI
         centroids and the respective mass recalibration factors.
 
-                  #TODO
+        This method only takes effective mass shifts relative to the calibrant
+        peak into account. For each peak shape the calibrant peak is re-fitted
+        and the respective recalibration factors are used to calculate shifted
+        ion-of-interest masses.
 
         """
         if peak_indeces in ([], None):
@@ -3375,7 +3400,6 @@ class spectrum:
 
         if self.index_mass_calib not in peak_indeces:
             raise Exception("Mass calibrant must be in `peak_indeces`.")
-
 
         # Collect fit_results for peaks in `peak_indeces`
         results = []
@@ -3388,6 +3412,13 @@ class spectrum:
                 POI.append([idx])
             else:
                 POI[-1].append(idx)
+            if idx == self.index_mass_calib:
+                i_cal_res = len(results) - 1
+        # Move calibrant result and corresponding peaks to the front of the
+        # results and POI lists to ensure that the calibrant centroid shifts are
+        # determined before other results are treated below
+        results.insert(0, results.pop(i_cal_res))
+        POI.insert(0, POI.pop(i_cal_res))
 
         # For each fit_result, perform many fits with the same MCMC parameter
         # sets (the latter is ensured by the identical `seed` arguments)
@@ -3404,7 +3435,15 @@ class spectrum:
 
             # Update peak properties with refined stat. and area uncertainties
             # and set `MC_PS_errs` flag
+            s_indeces = "" # string for updated peak indeces
             for i_p, peak_idx in enumerate(POI[i_res]):
+                if PS_area_errs[i_p]==np.nan  or PS_mass_errs[i_p]==np.nan:
+                    import warnings
+                    msg = str("Properties of peak {} not updated since "
+                              "MC estimates of mass or area peak-shape error "
+                              "is NaN.").format(peak_idx)
+                    warings.warn(msg)
+                    continue # skip updating properties of this peak
                 p = self.peaks[peak_idx]
                 pref = 'p{0}_'.format(peak_idx)
                 m_ion = p.m_ion
@@ -3413,7 +3452,7 @@ class spectrum:
                 p.area_error = np.sqrt(p.area_error**2 + PS_area_errs[i_p]**2)
                 if peak_idx != self.index_mass_calib:
                     p.rel_peakshape_error = PS_mass_errs[i_p]/p.m_ion
-                    peaks_with_MC_PS_errors.append(peak_idx)
+                    self.peaks_with_MC_PS_errors.append(peak_idx)
                     try:
                         p.rel_mass_error = np.sqrt(p.rel_stat_error**2 +
                                                    p.rel_peakshape_error**2 +
@@ -3427,7 +3466,10 @@ class spectrum:
                                   "`rel_stat_error` and `rel_recal_error` are "
                                   "defined. ").format(peak_idx)
                         warnings.warn(msg)
-            s_indeces = ",".join(map(str,POI[i_res]))
+                try:
+                    s_indeces = ",".join([s_indeces,str(peak_idx)])
+                except NameError: # handle first index in s_indeces
+                    s_indeces = str(peak_index)
             print("\nUpdated area error, peak-shape error and (total)"
                   " mass error of peak(s) "+s_indeces+".\n")
 
@@ -3733,7 +3775,8 @@ class spectrum:
                 p.red_chi = np.round(fit_result.redchi, 2)
 
 
-    def fit_peaks(self, index_mass_calib=None, species_mass_calib=None,
+    def fit_peaks(self, peak_indeces=[], index_mass_calib=None,
+                  species_mass_calib=None,
                   x_fit_cen=None, x_fit_range=None, fit_model=None,
                   cost_func='MLE', method ='least_squares', fit_kws=None,
                   init_pars=None, vary_shape=False, vary_baseline=True,
@@ -3742,18 +3785,24 @@ class spectrum:
                   show_shape_err_fits=False):
         """Fit peaks, update peaks properties and show results.
 
-        Fits peaks in either the entire spectrum or optionally only the peaks
-        in the mass range specified with `x_fit_cen` and `x_fit_range`.
+        By default, the full mass range and all peaks in the spectrum are
+        fitted. Optionally, only peaks specified with `peak_indeces` or peaks in
+        the mass range specified with `x_fit_cen` and `x_fit_range` are fitted.
 
-        Optionally, the mass recalibration can be performed simultaneous with
+        Optionally, the mass recalibration can be performed simultaneously with
         the IOI fit if the mass calibrant is in the fit range and specified with
         either the `index_mass_calib` or `species_mass_calib` arguments.
+        Otherwise a mass recalibration must have been performed upfront.
 
         Before running this method a successful peak-shape calibration must have
         been performed with :meth:`determine_peak_shape`.
 
         Parameters
         ----------
+        peak_indeces : list of int, optional
+            List of neighbouring peaks to fit. The fit range will be chosen such
+            that at least a mass range of `x_fit_range`/2 is included around
+            each peak.
         x_fit_cen : float [u], optional
             Center of mass range to fit (only specify if a subset of the
             spectrum is to be fitted)
@@ -3855,15 +3904,45 @@ class spectrum:
         if x_fit_range is None:
             x_fit_range = self.default_fit_range
 
-        if index_mass_calib is not None and (species_mass_calib is None):
-            peak = self.peaks[index_mass_calib]
-        elif species_mass_calib is not None:
-            index_mass_calib = [i for i in range(len(self.peaks)) if species_mass_calib == self.peaks[i].species][0]
-            peak = self.peaks[index_mass_calib]
+        if peak_indeces != []:
+            peak_indeces.sort()
+            if x_fit_cen is not None:
+                raise Exception(
+                        "Either select peaks to fit with `peak_indeces` OR by "
+                        "manually setting the fit range with `x_fit_cen`. If "
+                        "none of the above are specified all peaks are fitted.")
+            if peak_indeces[-1] - peak_indeces[0] != len(peak_indeces) - 1:
+                raise Exception(
+                        "All peaks in `peak_indeces` must be direct neighbours "
+                        "To process non-neighbouring peaks, run fit_peaks() "
+                        "separately on each group of neighbouring peaks.")
+            pos_first_peak = self.peaks[peak_indeces[0]].x_pos
+            pos_last_peak = self.peaks[peak_indeces[-1]].x_pos
+            x_fit_cen = (pos_last_peak + pos_first_peak)/2
+            x_fit_range = x_fit_range + (pos_last_peak - pos_first_peak)
+        elif x_fit_cen is not None:
+            x_min = x_fit_cen - x_fit_range/2
+            x_max = x_fit_cen + x_fit_range/2
+            # get peaks in fit range
+            peaks_to_fit = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)]
+            peak_indeces = [self.peaks.index(p) for p in peaks_to_fit]
+        else:
+            peaks_to_fit = self.peaks
+            peak_indeces = [self.peaks.index(p) for p in self.peaks]
+
+
+        if index_mass_calib is None and species_mass_calib is not None:
+            index_mass_calib = [i for i in range(len(self.peaks)) if
+                                species_mass_calib == self.peaks[i].species][0]
+            cal_pos = self.peaks[index_mass_calib].x_pos
         elif index_mass_calib is not None and species_mass_calib is not None:
             raise Exception("Definition of mass calibrant peak failed. Define "
                             "EITHER the index OR the species name of the peak "
                             "to use as mass calibrant! ")
+
+        if index_mass_calib is not None and index_mass_calib not in peak_indeces:
+            raise Exception("If a mass calibrant is specified its index "
+                            "must be contained in `peak_indeces`.")
 
         # FIT ALL PEAKS
         fit_result = spectrum.peakfit(self, fit_model=fit_model, cost_func=cost_func,
@@ -3877,17 +3956,10 @@ class spectrum:
                                       plot_filename=plot_filename)
 
         if index_mass_calib is not None:
-            self._update_calibrant_props(index_mass_calib,fit_result) # Update recalibration factor and calibrant properties
+            # Update recalibration factor and calibrant properties
+            self._update_calibrant_props(index_mass_calib,fit_result)
 
         # Determine peak-shape errors
-        if x_fit_cen:
-            x_min = x_fit_cen - x_fit_range/2
-            x_max = x_fit_cen + x_fit_range/2
-            peaks_to_fit = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)] # get peaks in fit range
-        else:
-            peaks_to_fit = self.peaks
-
-        peak_indeces = [self.peaks.index(p) for p in peaks_to_fit]
         try:
             self._eval_peakshape_errors(peak_indeces=peak_indeces,
                                         fit_result=fit_result, verbose=True,
