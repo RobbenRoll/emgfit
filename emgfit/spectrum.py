@@ -239,7 +239,7 @@ class spectrum:
         For the mass calibrant the dictionary holds the absolute shifts of the
         calibrant peak centroid (`calibrant centroid shift pm`). For more
         details see docs of :meth:`_eval_peakshape_errors`.
-    eff_mass_shifts : :class:`numpy.ndarray` of dict
+    eff_mass_shifts : :class:`numpy.ndarray` of dict 
         Maximal effective mass shifts for each peak obtained in peak-shape
         uncertainty evaluation by varying each shape parameter by plus and minus
         1 standard deviation and only keeping the shift with the larger absolute
@@ -270,7 +270,7 @@ class spectrum:
         Histogrammed spectrum data.
     mass_number : int
         Atomic mass number associated with central bin of spectrum.
-    default_fit_range : float
+    default_fit_range : float [u]
         Default mass range for fits, scaled to :attr:`mass_number` of spectrum.
 
     Notes
@@ -1330,10 +1330,11 @@ class spectrum:
     def _get_MCMC_par_samples(self, fit_result, steps=14000, burn=500, thin=250,
                               show_MCMC_fit_result=False, covar_map_fname=None,
                               n_cores=-1, MCMC_seed=1364):
-        """Map out parameter posterior distributions and covariances using
+        """Map out parameter covariances and posterior distributions using
         Markov-chain Monte Carlo (MCMC) sampling
 
-        *This Method is intended for internal usage and for single peaks only.*
+        **This method is intended for internal usage and for single peaks
+        only.**
 
         Parameters
         ----------
@@ -1436,13 +1437,13 @@ class spectrum:
         `"Data Analysis Recipes: Using Markov Chain Monte Carlo"`_ [2]_.
 
         .. _`emcee`: https://iopscience.iop.org/article/10.1086/670067
-        .. _`"emcee: The MCMC hammer"`: https://iopscience.iop.org/article/10.1086/670067`
+        .. _`"emcee: The MCMC hammer"`: https://iopscience.iop.org/article/10.1086/670067
         .. _`"Data Analysis Recipes: Using Markov Chain Monte Carlo"`:
            https://iopscience.iop.org/article/10.3847/1538-4365/aab76e
 
         See also
         --------
-        :meth:`determine_peak_shape` (specifically the `map_par_covar` option)
+        :meth:`determine_peak_shape`
         :meth:`get_MC_peakshape_errors`
 
         References
@@ -2984,6 +2985,8 @@ class spectrum:
         """Get peak-shape uncertainties for a fit result by re-fitting with many
         different MC-shape-parameter sets
 
+        **This method is primarily intended for internal usage.**
+
         A representative subset of the shape parameter sets which are supported
         by the data is obtained by performing MCMC sampling on the peak-shape
         calibrant. If this has not already been done using the `map_par_covar`
@@ -3329,12 +3332,12 @@ class spectrum:
         ion-of-interest masses. Therefore, the mass calibrant must be included
         in `peak_indeces`.
 
-        *When the `peak_indeces` argument is used, it must include the mass
-        calibrant.*
+        **When the `peak_indeces` argument is used, it must include the mass
+        calibrant.**
 
         Parameters
         ----------
-        peak_indeces : int or list of int
+        peak_indeces : int or list of int, optional
             Indeces of peaks to evaluate MC peak-shape uncertainties for.
         verbose : bool, optional
             Whether to print status updates and intermediate results.
@@ -3391,12 +3394,13 @@ class spectrum:
 
         This method only takes effective mass shifts relative to the calibrant
         peak into account. For each peak shape the calibrant peak is re-fitted
-        and the respective recalibration factors are used to calculate shifted
-        ion-of-interest masses.
+        and the respective recalibration factors are used to calculate the
+        shifted ion-of-interest masses.
 
         """
         if peak_indeces in ([], None):
             peak_indeces = np.arange(len(self.peaks)).tolist()
+        peak_indeces = np.atleast_1d(peak_indeces).tolist()
 
         if self.index_mass_calib not in peak_indeces:
             raise Exception("Mass calibrant must be in `peak_indeces`.")
