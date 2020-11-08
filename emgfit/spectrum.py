@@ -226,25 +226,20 @@ class spectrum:
         Modified recalibration factors obtained in peak-shape uncertainty
         evaluation by varying each shape parameter by plus and minus 1 standard
         deviation, respectively.
-    eff_mass_shifts_pm : :class:`numpy.ndarray` of dict
-        Effective mass shift obtained in peak-shape uncertainty evaluation by
-        varying each shape parameter by plus and minus 1 standard deviation,
-        respectively. The mass shifts are effective in the sense that they are
-        corrected for the corresponding shifts of the calibrant peak centroid.
-        The `eff_mass_shifts_pm` array contains a dictionary for each peak;
-        the dictionaries have the following structure:
-        {'<shape param. name> eff. mass shift pm' :
-        [<eff. mass shift for shape param. value +1 sigma>,
-        <eff. mass shift for shape param. value -1 sigma>], ...}
-        For the mass calibrant the dictionary holds the absolute shifts of the
-        calibrant peak centroid (`calibrant centroid shift pm`). For more
-        details see docs of :meth:`_eval_peakshape_errors`.
     eff_mass_shifts : :class:`numpy.ndarray` of dict
         Maximal effective mass shifts for each peak obtained in peak-shape
         uncertainty evaluation by varying each shape parameter by plus and minus
         1 standard deviation and only keeping the shift with the larger absolute
         magnitude. The `eff_mass_shifts` array contains a dictionary for each
         peak; the dictionaries have the following structure:
+        {'<shape param. name> eff. mass shift' : [<maximal eff. mass shift>],...}
+        For more details see docs of :meth:`_eval_peakshape_errors`.
+    area_shifts : :class:`numpy.ndarray` of dict
+        Maximal area change for each peak obtained in peak-shape uncertainty
+        evaluation by varying each shape parameter by plus and minus 1 standard
+        deviation and only keeping the shift with the larger absolute magnitude.
+        The `eff_mass_shifts` array contains a dictionary for each peak; the
+        dictionaries have the following structure:
         {'<shape param. name> eff. mass shift' : [<maximal eff. mass shift>],...}
         For the mass calibrant the dictionary holds the absolute shifts of the
         calibrant peak centroid (`calibrant centroid shift`). For more
@@ -359,14 +354,13 @@ class spectrum:
         self.recal_fac = 1.0
         self.rel_recal_error = None
         self.recal_facs_pm = None
-        self.eff_mass_shifts_pm = None
         self.eff_mass_shifts = None
+        self.eff_area_shifts = None
         self.MCMC_par_samples = None
         self.MC_recal_facs = None
         self.peaks_with_MC_PS_errors = []
         self.peaks = [] # list containing peaks associated with spectrum
         self.fit_results = [] # list containing fit results of all peaks
-        plt.rcParams.update({"font.size": 15})
         if m_start or m_stop: # cut input data to specified mass range
             self.data = data_uncut.loc[m_start:m_stop]
             plot_title = 'Spectrum with start and stop markers'
@@ -1521,7 +1515,7 @@ class spectrum:
         axes[0].set_title('MCMC traces before thinning with burn-in cut-off marker')
 
         # Check acceptance fraction of emcee
-        plt.figure()
+        plt.figure(figsize=(12,7))
         plt.plot(result_emcee.acceptance_fraction)
         plt.xlabel('walker')
         plt.ylabel('acceptance fraction')
@@ -2798,6 +2792,9 @@ class spectrum:
           finally obtained by adding the eff. mass shifts stored in the
           :attr:`eff_mass_shifts` dictionary in quadrature.
 
+        Mind that peak-shape area uncertainties are only calculated for ions-of-
+        interest, not for the mass calibrant.
+
         References
         ----------
         .. [#] San Andrés, Samuel Ayet, et al. "High-resolution, accurate
@@ -2813,8 +2810,6 @@ class spectrum:
 
         if verbose:
             print('\n##### Peak-shape uncertainty evaluation #####\n')
-            print('All mass shifts below are corrected for the corresponding '
-                  'shifts of the mass calibrant peak.\n')
         if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
         pref = 'p{0}_'.format(peak_indeces[0])
@@ -2832,10 +2827,14 @@ class spectrum:
                 print('Determining absolute centroid shifts of mass calibrant.\n')
         else:
             mass_calib_in_range = False
+
         if self.eff_mass_shifts is None:
             # initialize arrays of empty dictionaries
-            self.eff_mass_shifts_pm = np.array([{} for i in range(len(self.peaks))])
             self.eff_mass_shifts = np.array([{} for i in range(len(self.peaks))])
+            self.area_shifts = np.array([{} for i in range(len(self.peaks))])
+        if verbose:
+            print('All mass shifts below are corrected for the corresponding '
+                  'shifts of the mass calibrant peak.\n')
 
         # Vary each shape parameter by plus and minus one standard deviation and
         # re-fit with all other shape parameters held fixed. Record the
@@ -2911,26 +2910,20 @@ class spectrum:
                 pref = 'p{0}_'.format(cal_idx)
                 cen = fit_result.best_values[pref+'mu']
                 new_cen_p =  fit_result_p.best_values[pref+'mu']
-                dm_p = new_cen_p - cen
                 new_cen_m = fit_result_m.best_values[pref+'mu']
-                dm_m = new_cen_m - cen
                 # recalibration factors obtained with shifted calib. centroids:
                 recal_fac_p = cal_peak.m_AME/new_cen_p
                 recal_fac_m = cal_peak.m_AME/new_cen_m
                 self.recal_facs_pm[par+' recal facs pm'] = [recal_fac_p,recal_fac_m]
-                 # plus and minus 1 sigma shifts of calibrant centroid [u]:
-                self.eff_mass_shifts_pm[cal_idx][par+' calibrant centroid shift pm'] = [dm_p,dm_m]
-                # maximal shifts of calibrant centroid [u]:
-                max_eff_mass_shifts = np.where(np.abs(dm_p) > np.abs(dm_m),dm_p,dm_m).item()
-                self.eff_mass_shifts[cal_idx][par+' calibrant centroid shift'] = max_eff_mass_shifts
             else: # check if shifted recal. factors pre-exist, print error otherwise
                 try:
-                    isinstance(self.eff_mass_shifts_pm[cal_idx][par+' calibrant centroid shift pm'],list)
+                    isinstance(self.recal_facs_pm[par+' recal facs pm'],list)
                 except:
                     raise Exception(
-                    'No calibrant centroid shifts available for peak-shape error evaluation.\n'
+                    'No recalibration factors available for peak-shape '
+                    'error evaluation.\n'
                     'Ensure that: \n'
-                    '(a) either the mass calibrant is in the fit range and specified\n'
+                    '(a) Either the mass calibrant is in the fit range and specified\n'
                     '    with the `index_mass_calib` or `species_mass_calib` parameter, or\n'
                     '(b) if the mass calibrant is not in the fit range, a successful\n'
                     '    mass calibration has been performed upfront with fit_calibrant().')
@@ -2944,45 +2937,53 @@ class spectrum:
                 pref = 'p{0}_'.format(peak_idx)
                 cen = fit_result.best_values[pref+'mu']
                 bin_width = fit_result.x[1] - fit_result.x[0] # assume approx. uniform binning
-                area = fit_result.best_values[pref+'amp']/bin_width
-                print(area)
+                area = self.calc_peak_area(peak_idx,fit_result=fit_result)[0]
 
-                new_area_p = fit_result_p.best_values[pref+'amp']/bin_width
-                print(new_area_p)
+                new_area_p = self.calc_peak_area(peak_idx,fit_result=fit_result_p)[0]
                 new_cen_p =  fit_result_p.best_values[pref+'mu']
                 recal_fac_p = self.recal_facs_pm[par+' recal facs pm'][0]
-                # effective mass shift for +1 sigma parameter variation:
+                # effective mass & area shift for +1 sigma parameter variation:
                 dm_p = recal_fac_p*new_cen_p - self.recal_fac*cen
+                dA_p = new_area_p - area
 
-                new_area_m = fit_result_m.best_values[pref+'amp']/bin_width
-                print(new_area_m)
+                new_area_m = self.calc_peak_area(peak_idx,fit_result=fit_result_m)[0]
                 new_cen_m = fit_result_m.best_values[pref+'mu']
                 recal_fac_m = self.recal_facs_pm[par+' recal facs pm'][1]
-                # effective mass shift for -1 sigma parameter variation:
+                # effective mass & area shift for -1 sigma parameter variation:
                 dm_m = recal_fac_m*new_cen_m - self.recal_fac*cen
+                dA_m = new_area_m - area
                 if verbose:
-                    print(u'Re-fitting with {0} = {1: .2e} +/-{2: .2e} shifts peak {3} by {4: .3f} / {5: .3f} \u03BCu.'.format(
-                          par, self.shape_cal_pars[par], self.shape_cal_errors[par], peak_idx, dm_p*1e06, dm_m*1e06))
+                    print(u'Re-fitting with {0} = {1: .2e} +/-{2: .2e} shifts peak {3} by {4: .3f} / {5: .3f} \u03BCu  & its area by {6: 5.1f} / {7: 5.1f} counts.'.format(
+                          par, self.shape_cal_pars[par], self.shape_cal_errors[par], peak_idx, dm_p*1e06, dm_m*1e06, dA_p, dA_m))
                     if peak_idx == peak_indeces[-1]:
                         print()  # empty line between different parameter blocks
-                # shifts relative to calibrant centroid
-                self.eff_mass_shifts_pm[peak_idx][par+' eff. mass shift pm'] = [dm_p,dm_m]
-                # maximal shifts relative to calibrant centroid
+                # maximal shifts (mass shifts relative to calibrant centroid)
                 self.eff_mass_shifts[peak_idx][par+' eff. mass shift'] = np.where(np.abs(dm_p) > np.abs(dm_m),dm_p,dm_m).item()
+                self.area_shifts[peak_idx][par+' area shift'] = np.where(np.abs(dA_p) > np.abs(dA_m),dA_p,dA_m).item()
 
-        # Calculate and update relative peak-shape errors by summing effective
-        # mass shifts in quadrature
+        # Calculate and update peak-shape mass and area errors by summing all
+        # eff. mass shifts and all area shifts respectively in quadrature
         for peak_idx in peak_indeces:
-            # Add eff. mass shifts in quadrature to get total peakshape error:
+            # Add eff. mass shifts in quadrature to get total PS mass error:
             mass_shift_vals = list(self.eff_mass_shifts[peak_idx].values())
-            shape_error = np.sqrt(np.sum(np.square(mass_shift_vals)))
+            PS_mass_error = np.sqrt(np.sum(np.square(mass_shift_vals)))
+            # Add area shifts in quadrature to get total PS area error:
+            area_shift_vals = list(self.area_shifts[peak_idx].values())
+            PS_area_error = np.sqrt(np.sum(np.square(area_shift_vals)))
             p = self.peaks[peak_idx]
             pref = 'p{0}_'.format(peak_idx)
             m_ion = fit_result.best_values[pref+'mu']*self.recal_fac
-            p.rel_peakshape_error = shape_error/m_ion
+            p.rel_peakshape_error = PS_mass_error/m_ion
+            p.area_error = np.sqrt(self.calc_peak_area(peak_idx,fit_result=
+                                   fit_result)[1]**2 + PS_area_error**2)
+            try: # remove MC PS error flag
+                self.peaks_with_MC_PS_errors.remove(peak_idx)
+            except ValueError: # index not in peaks_with_MC_PS_errors
+                pass
             if verbose:
                 pref = 'p{0}_'.format(peak_idx)
-                print("Relative peak-shape error of peak "+str(peak_idx)+":",np.round(p.rel_peakshape_error,9))
+                print("Relative peak-shape error of peak "+str(peak_idx)+":",
+                      np.round(p.rel_peakshape_error,9))
 
 
     def _eval_MC_peakshape_errors(self, peak_indeces=[], fit_result=None,
@@ -3065,7 +3066,7 @@ class spectrum:
                   'No MC recalibration factors available for peak-shape '
                   'error evaluation.\n'
                   'Ensure that: \n'
-                  '(a) either the mass calibrant is in `peak_indeces`, or. \n'
+                  '(a) Either the mass calibrant is in `peak_indeces`, or \n'
                   '(b) this method has been performed on the mass calibrant\n'
                   '    peak upfront.')
 
@@ -3450,7 +3451,7 @@ class spectrum:
                     import warnings
                     msg = str("Properties of peak {} not updated since "
                               "MC estimates of mass or area peak-shape error "
-                              "is NaN.").format(peak_idx)
+                              "are NaN.").format(peak_idx)
                     warings.warn(msg)
                     continue # skip updating properties of this peak
                 p = self.peaks[peak_idx]
@@ -3458,7 +3459,14 @@ class spectrum:
                 m_ion = p.m_ion
                 area_err = self.calc_peak_area(peak_idx)[1]
                 # Add best-fit area error and peakshape area error in quadrature
-                p.area_error = np.sqrt(p.area_error**2 + PS_area_errs[i_p]**2)
+                try:
+                    pm_area_shifts = list(self.area_shifts[peak_idx].values())
+                except AttributeError: # area shifts not initialized
+                    pm_area_shifts = []
+                pm_PS_err = np.sqrt(np.sum(np.square(pm_area_shifts)))
+                # Remove PS errors obtained via +- 1 sigma variation
+                stat_area_err = np.sqrt(p.area_error**2 - pm_PS_err**2)
+                p.area_error = np.sqrt(stat_area_err**2 + PS_area_errs[i_p]**2)
                 if peak_idx != self.index_mass_calib:
                     p.rel_peakshape_error = PS_mass_errs[i_p]/p.m_ion
                     self.peaks_with_MC_PS_errors.append(peak_idx)
@@ -3757,7 +3765,9 @@ class spectrum:
                 p.fit_model = fit_result.fit_model
                 p.cost_func = fit_result.cost_func
                 p.area = self.calc_peak_area(peak_idx,fit_result=fit_result)[0]
-                p.area_error = self.calc_peak_area(peak_idx,fit_result=fit_result)[1]
+                if p.area_error is None:
+                    p.area_error = self.calc_peak_area(peak_idx,fit_result=
+                                                       fit_result)[1]
                 p.m_ion = self.recal_fac*fit_result.best_values[pref+'mu']
                 if p.fit_model == 'Gaussian':
                     std_dev = fit_result.best_values[pref+'sigma']
@@ -4048,6 +4058,8 @@ class spectrum:
         frames = []
         keys = []
         for peak_idx in range(len(self.eff_mass_shifts)):
+            if peak_idx == self.index_mass_calib:
+                continue # skip mass calibrant
             df = pd.DataFrame.from_dict(self.eff_mass_shifts[peak_idx], orient='index')
             df.columns = ['Value [u]']
             frames.append(df)
@@ -4068,7 +4080,7 @@ class spectrum:
             prop_sheet = writer.sheets['Peak properties']
             prop_sheet.insert_image(len(df_prop)+2,1, filename+'_log_plot.png',{'x_scale': 0.45,'y_scale':0.45})
             prop_sheet.insert_image(len(df_prop)+26,1, filename+'_lin_plot.png',{'x_scale': 0.45,'y_scale':0.45})
-            df_eff_mass_shifts.to_excel(writer,sheet_name='Mass shifts in PS error eval.')
+            df_eff_mass_shifts.to_excel(writer,sheet_name='PS errors from +-1 sigma var.')
         print("Fit results saved to file:",str(filename)+".xlsx")
 
         # Clean up temporary image files

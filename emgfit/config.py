@@ -25,6 +25,7 @@ A_stat_emg_default = 0.52  # constant of proportionality for calculating statist
 
 ##### Plot appearance
 plt.rcParams.update({'errorbar.capsize': 2})
+plt.rcParams.update({"font.size": 15})
 
 
 ################################################################################
