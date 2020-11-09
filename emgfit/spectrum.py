@@ -885,9 +885,8 @@ class spectrum:
         """
         dict_peaks = [p.__dict__ for p in self.peaks]
         df_prop = pd.DataFrame(dict_peaks)
-        def mark_MC_PS_errs(rows):
-            return ['background-color: lightblue' for i in rows]
 
+        # Mark peaks with MC PS errors with blue font
         df_prop = df_prop.style.apply(lambda col: ['color: royalblue'
                                       if i in self.peaks_with_MC_PS_errors
                                       else '' for i in range(col.size)],
@@ -1084,14 +1083,14 @@ class spectrum:
             for p in peaks:
                 x_idx = np.argmin(np.abs(data.index.values - p.x_pos))
                 ymin = data.iloc[x_idx]
-                plt.vlines(x=p.x_pos,ymin=ymin,ymax=1.38*ymax,linestyles='dashed')
-                plt.text(p.x_pos, 1.5*ymax, self.peaks.index(p), horizontalalignment='center', fontsize=12)
+                plt.vlines(x=p.x_pos,ymin=ymin,ymax=1.37*ymax,linestyles='dashed')
+                plt.text(p.x_pos, 1.45*ymax, self.peaks.index(p), horizontalalignment='center', fontsize=12)
         else:
             for p in peaks:
                 x_idx = np.argmin(np.abs(data.index.values - p.x_pos))
                 ymin = data.iloc[x_idx]
-                plt.vlines(x=p.x_pos,ymin=ymin,ymax=1.14*ymax,linestyles='dashed')
-                plt.text(p.x_pos, 1.16*ymax, self.peaks.index(p), horizontalalignment='center', fontsize=12)
+                plt.vlines(x=p.x_pos,ymin=ymin,ymax=1.11*ymax,linestyles='dashed')
+                plt.text(p.x_pos, 1.13*ymax, self.peaks.index(p), horizontalalignment='center', fontsize=12)
 
 
     def plot_fit(self,fit_result=None,plot_title=None,show_peak_markers=True,
@@ -1123,22 +1122,22 @@ class spectrum:
             **Caution: Existing files with identical name are overwritten.**
 
         """
+        if fit_result is None:
+           fit_result = self.fit_results[idx_first_peak]
         if x_min is None:
-            x_min = self.data.index.values[0]
+            x_min = min(fit_result.x)
         if x_max is None:
-            x_max = self.data.index.values[-1]
+            x_max = max(fit_result.x)
         # Select peaks in mass range of interest:
         peaks_to_plot = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)]
         idx_first_peak = self.peaks.index(peaks_to_plot[0])
-        if fit_result is None:
-           fit_result = self.fit_results[idx_first_peak]
+
         if plot_title is None:
            plot_title = fit_result.fit_model+' '+fit_result.cost_func+' fit'
         i_min = np.argmin(np.abs(fit_result.x - x_min))
         i_max = np.argmin(np.abs(fit_result.x - x_max))
         y_max_log = max( max(self.data.values[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
         y_max_lin = max( max(self.data.values[i_min:i_max]), max(fit_result.init_fit[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
-        weights = 1/fit_result.y_err[i_min:i_max]
 
         # Plot fit result with logarithmic y-scale
         plt.rcParams["errorbar.capsize"] = 0.5
@@ -1513,9 +1512,10 @@ class spectrum:
             ax.axvline(emcee_kws['burn'])
         axes[-1].set_xlabel('steps')
         axes[0].set_title('MCMC traces before thinning with burn-in cut-off marker')
+        plt.show()
 
         # Check acceptance fraction of emcee
-        plt.figure(figsize=(12,7))
+        plt.figure(figsize=(10,6))
         plt.plot(result_emcee.acceptance_fraction)
         plt.xlabel('walker')
         plt.ylabel('acceptance fraction')
@@ -3445,7 +3445,6 @@ class spectrum:
 
             # Update peak properties with refined stat. and area uncertainties
             # and set `MC_PS_errs` flag
-            s_indeces = "" # string for updated peak indeces
             for i_p, peak_idx in enumerate(POI[i_res]):
                 if PS_area_errs[i_p]==np.nan  or PS_mass_errs[i_p]==np.nan:
                     import warnings
@@ -3470,6 +3469,7 @@ class spectrum:
                 if peak_idx != self.index_mass_calib:
                     p.rel_peakshape_error = PS_mass_errs[i_p]/p.m_ion
                     self.peaks_with_MC_PS_errors.append(peak_idx)
+                    self.peaks_with_MC_PS_errors.sort()
                     try:
                         p.rel_mass_error = np.sqrt(p.rel_stat_error**2 +
                                                    p.rel_peakshape_error**2 +
@@ -3485,8 +3485,8 @@ class spectrum:
                         warnings.warn(msg)
                 try:
                     s_indeces = ",".join([s_indeces,str(peak_idx)])
-                except NameError: # handle first index in s_indeces
-                    s_indeces = str(peak_index)
+                except UnboundLocalError: # handle first index in s_indeces
+                    s_indeces = str(peak_idx)
             print("\nUpdated area error, peak-shape error and (total)"
                   " mass error of peak(s) "+s_indeces+".\n")
 
@@ -4070,22 +4070,54 @@ class spectrum:
         # Save lin. and log. plots of full fitted spectrum to temporary files
         # so they can be inserted into the XLSX file
         from IPython.utils import io
-        with io.capture_output() as captured: # suppress function output to Jupyter notebook
-            self.plot_fit(plot_filename=filename)
+        with io.capture_output() as captured: # suppress output to notebook
+            res_indeces = []
+            last_res = None
+            for i, res in enumerate(self.fit_results):
+                if res != last_res:
+                    self.plot_fit(fit_result=res,
+                                  plot_filename=filename+"_peak{}".format(i))
+                    # Store index of first peak contained in each fit result
+                    res_indeces.append(i)
+                last_res = res
 
-        # Write DataFrames to separate sheets of EXCEL file and save peak-shape calibration to TXT-file
+        # Write DataFrames to separate sheets of EXCEL file and save peak-shape
+        # calibration to TXT-file
         with pd.ExcelWriter(filename+'.xlsx',engine='xlsxwriter') as writer:
-            df_spec.to_excel(writer,sheet_name='Spectrum properties')
-            df_prop.to_excel(writer,sheet_name='Peak properties')
+            df_spec.to_excel(writer, sheet_name='Spectrum properties')
+            df_prop.to_excel(writer, sheet_name='Peak properties')
+            workbook = writer.book
             prop_sheet = writer.sheets['Peak properties']
-            prop_sheet.insert_image(len(df_prop)+2,1, filename+'_log_plot.png',{'x_scale': 0.45,'y_scale':0.45})
-            prop_sheet.insert_image(len(df_prop)+26,1, filename+'_lin_plot.png',{'x_scale': 0.45,'y_scale':0.45})
-            df_eff_mass_shifts.to_excel(writer,sheet_name='PS errors from +-1 sigma var.')
+            # Mark peaks with MC PS errors with blue font
+            if self.peaks_with_MC_PS_errors not in ([],None):
+                blue_font = workbook.add_format({'font_color': 'blue'})
+
+                for idx in self.peaks_with_MC_PS_errors:
+                    prop_sheet.conditional_format(idx+1, 15, idx+1, 15,
+                                                  {'type':     'cell',
+                                                   'criteria': '>=',
+                                                   'value' : 0,
+                                                   'format': blue_font})
+                prop_sheet.write_string(len(self.peaks)+1, 15,
+                                        "Monte Carlo peak-shape errors",
+                                        blue_font)
+            for i, i_res in enumerate(res_indeces): # loop over fit results
+                fname = filename+"_peak{}".format(i_res)
+                prop_sheet.insert_image(len(self.peaks)+4+50*i,1,
+                                        fname+'_log_plot.png',
+                                        {'x_scale': 0.57,'y_scale':0.57})
+                prop_sheet.insert_image(len(self.peaks)+27+50*i,1,
+                                        fname+'_lin_plot.png',
+                                        {'x_scale': 0.57,'y_scale':0.57})
+            df_eff_mass_shifts.to_excel(writer, sheet_name=
+                                        'PS errors from +-1 sigma var.')
         print("Fit results saved to file:",str(filename)+".xlsx")
 
         # Clean up temporary image files
-        os.remove(filename+'_log_plot.png')
-        os.remove(filename+'_lin_plot.png')
+        for i_res in res_indeces: # loop over fit results
+            fname = filename+"_peak{}".format(i_res)
+            os.remove(fname+'_log_plot.png')
+            os.remove(fname+'_lin_plot.png')
 
         try:
             self.save_peak_shape_cal(filename+"_peakshape_calib")
