@@ -1122,6 +1122,7 @@ class spectrum:
             **Caution: Existing files with identical name are overwritten.**
 
         """
+        idx_first_peak = self.peaks.index(peaks_to_plot[0])
         if fit_result is None:
            fit_result = self.fit_results[idx_first_peak]
         if x_min is None:
@@ -1129,8 +1130,8 @@ class spectrum:
         if x_max is None:
             x_max = max(fit_result.x)
         # Select peaks in mass range of interest:
-        peaks_to_plot = [peak for peak in self.peaks if (x_min < peak.x_pos < x_max)]
-        idx_first_peak = self.peaks.index(peaks_to_plot[0])
+        peaks_to_plot = [peak for peak in self.peaks
+                         if (x_min < peak.x_pos < x_max)]        
 
         if plot_title is None:
            plot_title = fit_result.fit_model+' '+fit_result.cost_func+' fit'
