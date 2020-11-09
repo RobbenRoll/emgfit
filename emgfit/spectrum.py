@@ -1093,9 +1093,14 @@ class spectrum:
                 plt.text(p.x_pos, 1.13*ymax, self.peaks.index(p), horizontalalignment='center', fontsize=12)
 
 
-    def plot_fit(self,fit_result=None,plot_title=None,show_peak_markers=True,
-                 sigmas_of_conf_band=0,x_min=None,x_max=None,plot_filename=None):
-        """Plot entire spectrum with fit curve in logarithmic and linear y-scale.
+    def plot_fit(self, fit_result=None, plot_title=None,
+                 show_peak_markers=True, sigmas_of_conf_band=0,
+                 x_min=None, x_max=None, plot_filename=None):
+        """Plot data and fit result in logarithmic and linear y-scale.
+
+        Only a single fit result can be plotted with this method. If neither
+        `fit_result` nor `x_min` and `x_max` are specified, the full mass range
+        is plotted.
 
         Plots can be saved to a file using the `plot_filename` argument.
 
@@ -1103,11 +1108,11 @@ class spectrum:
         ----------
         fit_result : :class:`lmfit.model.ModelResult`, optional, default: ``None``
             Fit result to plot. If ``None``, defaults to fit result of first
-            peak in `peaks` (taken from :attr:`fit_results` list).
+            peak in specified mass range (taken from :attr:`fit_results` list).
         plot_title : str or None, optional
             Title of plots. If ``None``, defaults to a string with the fit model
-            name and cost function of the `fit_result` to ensure clear indication
-            of how the fit was obtained.
+            name and cost function of the `fit_result` to ensure clear
+            indication of how the fit was obtained.
         show_peak_markers : bool, optional, default: ``True``
             If ``True``, peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
@@ -1115,35 +1120,47 @@ class spectrum:
             log-plot). If ``0``, no confidence band is shown (default).
         x_min, x_max : float [u], optional
             Start and end of mass range to plot. If ``None``, defaults to the
-            minimum and maximum of the spectrum's mass :attr:`data` is used.
+            minimum and maximum of the spectrum's mass :attr:`data`.
         plot_filename : str, optional, default: None
             If not ``None``, the plots will be saved to two separate files named
-            '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
+            '<`plot_filename`>_log_plot.png' & '<`plot_filename`>_lin_plot.png'.
             **Caution: Existing files with identical name are overwritten.**
 
         """
-        idx_first_peak = self.peaks.index(peaks_to_plot[0])
-        if fit_result is None:
-           fit_result = self.fit_results[idx_first_peak]
-        if x_min is None:
+        if fit_result is None and x_min is None and x_max is None: # full spec
+            x_min = min(self.data.index)
+            x_max = max(self.data.index)
+        if fit_result is not None and x_min is None:
             x_min = min(fit_result.x)
-        if x_max is None:
+        if fit_result is not None and x_max is None:
             x_max = max(fit_result.x)
         # Select peaks in mass range of interest:
-        peaks_to_plot = [peak for peak in self.peaks
-                         if (x_min < peak.x_pos < x_max)]        
+        peaks_to_plot = [p for p in self.peaks if (x_min < p.x_pos < x_max)]
+        idx_first_peak = self.peaks.index(peaks_to_plot[0])
+        # If still not defined, get fit result from 1st peak in mass range
+        if fit_result is None:
+           fit_result = self.fit_results[idx_first_peak]
+           idx_last_peak = self.peaks.index(peaks_to_plot[-1])
+           if fit_result != self.fit_results[idx_last_peak]:
+               raise Exception("Multiple fit results in specified mass range - "
+                               "chose range to only include peaks contained in "
+                               "a single fit result. ")
 
         if plot_title is None:
            plot_title = fit_result.fit_model+' '+fit_result.cost_func+' fit'
         i_min = np.argmin(np.abs(fit_result.x - x_min))
         i_max = np.argmin(np.abs(fit_result.x - x_max))
-        y_max_log = max( max(self.data.values[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
-        y_max_lin = max( max(self.data.values[i_min:i_max]), max(fit_result.init_fit[i_min:i_max]), max(fit_result.best_fit[i_min:i_max]) )
+        y_max_log = max( max(self.data.values[i_min:i_max]),
+                         max(fit_result.best_fit[i_min:i_max]) )
+        y_max_lin = max( max(self.data.values[i_min:i_max]),
+                         max(fit_result.init_fit[i_min:i_max]),
+                         max(fit_result.best_fit[i_min:i_max]) )
 
         # Plot fit result with logarithmic y-scale
         plt.rcParams["errorbar.capsize"] = 0.5
         f1 = plt.figure(figsize=(18,9))
-        plt.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',color='royalblue',linewidth=0.5)
+        plt.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',
+                     color='royalblue',linewidth=0.5)
         plt.plot(fit_result.x, fit_result.best_fit,'-',color='red',linewidth=2)
         comps = fit_result.eval_components(x=fit_result.x)
         for peak in peaks_to_plot: # loop over peaks to plot
@@ -1154,7 +1171,9 @@ class spectrum:
             self._add_peak_markers(yscale='log',ymax=y_max_log,peaks=peaks_to_plot)
         if sigmas_of_conf_band!=0 and fit_result.errorbars == True: # add confidence band with specified number of sigmas
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
-            plt.fill_between(fit_result.x, fit_result.best_fit-dely, fit_result.best_fit+dely, color="#ABABAB", label=str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band')
+            plt.fill_between(fit_result.x, fit_result.best_fit-dely,
+                             fit_result.best_fit+dely, color="#ABABAB",
+                             label=str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band')
         plt.title(plot_title)
         plt.xlabel('m/z [u]')
         plt.ylabel('Counts per bin')
@@ -1173,19 +1192,24 @@ class spectrum:
         y_max_res = np.max(np.abs(standardized_residual))
         x_fine = np.arange(x_min,x_max,0.2*(fit_result.x[1]-fit_result.x[0]))
         y_fine = fit_result.eval(x=x_fine)
-        f2, axs = plt.subplots(2,1,figsize=(18,9),gridspec_kw={'height_ratios': [1, 2.5]})
+        f2, axs = plt.subplots(2,1,figsize=(18,9),
+                               gridspec_kw={'height_ratios': [1, 2.5]})
         ax0 = axs[0]
         ax0.set_title(plot_title)
-        ax0.plot(fit_result.x, standardized_residual,'.',color='royalblue',markersize=8.5,label='residuals')
+        ax0.plot(fit_result.x, standardized_residual,'.',color='royalblue',
+                 markersize=8.5,label='residuals')
         #ax0.hlines(1,x_min,x_max,linestyle='dashed')
         ax0.hlines(0,x_min,x_max)
         #ax0.hlines(-1,x_min,x_max,linestyle='dashed')
         ax0.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
         ax0.set_ylabel('Residual / $\sigma$')
         ax1 = axs[1]
-        ax1.plot(x_fine, fit_result.eval(params=fit_result.init_params,x=x_fine),linestyle='dashdot',color='green',label='init-fit')
-        ax1.plot(x_fine, fit_result.eval(x=x_fine),'-',color='red',linewidth=2,label='best-fit')
-        ax1.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',color='royalblue',linewidth=1,markersize=8.5,label='data')
+        ax1.plot(x_fine, fit_result.eval(params=fit_result.init_params,x=x_fine),
+                 linestyle='dashdot',color='green',label='init-fit')
+        ax1.plot(x_fine, fit_result.eval(x=x_fine),'-',color='red',linewidth=2,
+                 label='best-fit')
+        ax1.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',
+                     color='royalblue',linewidth=1,markersize=8.5,label='data')
         ax1.set_title('')
         ax1.set_ylim(-0.05*y_max_lin, 1.2*y_max_lin)
         ax1.set_ylabel('Counts per bin')
@@ -1193,7 +1217,8 @@ class spectrum:
             ax.legend()
             ax.set_xlim(x_min,x_max)
         if show_peak_markers:
-            self._add_peak_markers(yscale='lin',ymax=y_max_lin,peaks=peaks_to_plot)
+            self._add_peak_markers(yscale='lin',ymax=y_max_lin,
+                                   peaks=peaks_to_plot)
         plt.xlabel('m/z [u]')
         if plot_filename is not None:
             try:
@@ -1206,23 +1231,23 @@ class spectrum:
     def plot_fit_zoom(self,peak_indeces=None,x_center=None,x_range=0.01,
                       plot_title=None,show_peak_markers=True,
                       sigmas_of_conf_band=0,plot_filename=None):
-        """Show logarithmic and linear plots of data and fit curve zoomed to peaks
-        or mass range of interest.
+        """Show logarithmic and linear plots of data and fit curve zoomed to
+        peaks or mass range of interest.
 
         There is two alternatives to define the plots' mass ranges:
 
         1. Specifying peaks-of-interest with the `peak_indeces`
            argument. The mass range is then automatically chosen to include all
-           peaks of interest. The minimal mass range to include around each peak of
-           interest can be adjusted using `x_range`.
+           peaks of interest. The minimal mass range to include around each peak
+           of interest can be adjusted using `x_range`.
         2. Specifying a mass range of interest with the `x_center` and `x_range`
            arguments.
 
         Parameters
         ----------
         peak_indeces : int or list of ints, optional
-            Index of single peak or indeces of multiple neighboring peaks to show
-            (peaks must belong to the same :attr:`fit_result`).
+            Index of single peak or indeces of multiple neighboring peaks to
+            show (peaks must belong to the same :attr:`fit_result`).
         x_center : float [u], optional
             Center of manually specified mass range to plot.
         x_range : float [u], optional, default: 0.01
@@ -1230,8 +1255,8 @@ class spectrum:
             to include around each specified peak of interest.
         plot_title : str or None, optional
             Title of plots. If ``None``, defaults to a string with the fit model
-            name and cost function of the `fit_result` to ensure clear indication
-            of how the fit was obtained.
+            name and cost function of the `fit_result` to ensure clear
+            indication of how the fit was obtained.
         show_peak_markers : bool, optional, default: ``True``
             If ``True``, peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
@@ -1242,7 +1267,7 @@ class spectrum:
             minimum and maximum of the spectrum's mass :attr:`data` is used.
         plot_filename : str or None, optional, default: None
             If not ``None``, the plots will be saved to two separate files named
-            '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
+            '<`plot_filename`>_log_plot.png' & '<`plot_filename`>_lin_plot.png'.
             **Caution: Existing files with identical name are overwritten.**
 
         """
@@ -1257,8 +1282,12 @@ class spectrum:
             x_min = x_center - x_range/2
             x_max = x_center + x_range/2
         else:
-            raise Exception("\nMass range to plot could not be determined. Check documentation on method parameters.\n")
-        self.plot_fit(x_min=x_min,x_max=x_max,plot_title=plot_title,show_peak_markers=show_peak_markers,sigmas_of_conf_band=sigmas_of_conf_band,plot_filename=plot_filename)
+            raise Exception("\nMass range to plot could not be determined. "
+                            "Check documentation on method parameters.\n")
+        self.plot_fit(x_min=x_min, x_max=x_max, plot_title=plot_title,
+                      show_peak_markers=show_peak_markers,
+                      sigmas_of_conf_band=sigmas_of_conf_band,
+                      plot_filename=plot_filename)
 
 
     def comp_model(self,peaks_to_fit,model='emg22',init_pars=None,
@@ -1415,7 +1444,7 @@ class spectrum:
         parameters. Since more data is discarded, a larger thinning interval
         comes with a loss of precision of the posterior PDF estimates. However,
         a sufficient amount of thinning is still advisable since emgfit's MC
-        peak-shape error determination (:meth:`get_MC_peakshape_errors) relies
+        peak-shape error determination (:meth:`get_MC_peakshape_errors`) relies
         on independent parameter samples.
 
         As a helpful measure for tuning MCMC chains, emgfit provides a plot of
