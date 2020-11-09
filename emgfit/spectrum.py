@@ -1523,7 +1523,7 @@ class spectrum:
 
         # Plot autocorrelation times of Parameters
         result_emcee.acor = result_emcee.sampler.get_autocorr_time(quiet=True)
-        if any(thin < 0.5*result_emcee.acor):
+        if any(thin < result_emcee.acor):
             import warnings
             warnings.warn("Thinning interval `thin` is less than half the "
                           "integrated autocorrelation time for at least one "
