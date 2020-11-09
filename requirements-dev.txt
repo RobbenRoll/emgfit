@@ -25,7 +25,8 @@ tqdm
 xlsxwriter >= 1.2.8
 xlrd >= 1.0.0
 fortranformat # for reading in AME database only
-doctr
+joblib 
+dill
 
 # These are dependencies of various sphinx extensions for documentation.
 ipython
@@ -39,7 +40,9 @@ nbconvert
 nbstripout
 sphinx-gallery
 jupyter_sphinx
+doctr # for publishing docs to Github-pages
 
 # For publishing to PyPI:
 twine
 wheel
+

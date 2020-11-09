@@ -12,10 +12,21 @@ vX.Y.Z
 * Fixed bug in remove_peaks() method.
 * Fixed bug in _eval_peakshape_errors() method.
 * Changed automatic tail order determination in determine_peak_shape(). Now tail
-  orders are excluded if either the corresponding eta *or tau* parameter agrees 
+  orders are excluded if either the corresponding eta *or tau* parameter agrees
   with zero within 1-sigma confidence.
 * Updated docs of assign_species() method. Fix bug in installation instructions.
 * Updated concept article on :-Notation.
+* Added `fit_kws` argument to peakfit method to enable more control over the
+  underlying scipy optimization algorithms.
+* Changed bounding of Pearson weights to addition of small number eps = 1e-10.
+  This ensures that the cost function asymptotically converges to a chi-squared
+  distribution. At the same time this still avoids numerical stabilities due to
+  overweighting of bins whose predicted number of counts approach zero.
+* Added :mod:`sample` module for easy generation of simulated spectra.
+* Implemented get_errors_from_resampling() method which can yield refined
+  estimates of the statistical and peak area errors for each peak individually
+  by performing a parametric bootstrap.
+* Updated formatting of peak properties table for more clarity.
 
 v0.2.3 (2020-09-18)
 -------------------

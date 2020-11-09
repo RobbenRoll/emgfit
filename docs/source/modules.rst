@@ -33,6 +33,15 @@ emgfit.fit\_models module
    :undoc-members:
    :show-inheritance:
 
+emgfit.sample module
+-------------------------
+
+.. automodule:: emgfit.sample
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 emgfit.spectrum module
 ----------------------
 
