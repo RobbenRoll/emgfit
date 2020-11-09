@@ -23,10 +23,18 @@ vX.Y.Z
   distribution. At the same time this still avoids numerical stabilities due to
   overweighting of bins whose predicted number of counts approach zero.
 * Added :mod:`sample` module for easy generation of simulated spectra.
-* Implemented get_errors_from_resampling() method which can yield refined
-  estimates of the statistical and peak area errors for each peak individually
-  by performing a parametric bootstrap.
+* Implemented :meth:`get_errors_from_resampling()` method which can yield
+  refined estimates of the statistical and peak area errors by performing a
+  parametric bootstrap for each fitted peak.
 * Updated formatting of peak properties table for more clarity.
+* Added a Markov-Chain Monte Carlo sampling method
+  (:meth:`spectrum._get_MCMC_par_samples()`) for mapping out the posterior
+  distributions and correlations of model parameters. This method can be called
+  with the `map_par_covar` option in the peak-shape determination.
+* Added a method (:meth:`spectrum.get_MC_peakshape_errors`) for obtaining
+  refined peak-shape error estimates that account for correlations and
+  non-normal posterior distributions of shape parameters. This method relies on
+  shape parameter sets obtained via Markov-Chain Monte Carlo sampling.
 
 v0.2.3 (2020-09-18)
 -------------------
