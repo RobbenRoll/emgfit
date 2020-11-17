@@ -11,7 +11,7 @@ from scipy.stats import exponnorm, uniform, poisson
 ##### Define Functions for drawing random variates from Hyper-EMG PDFs
 norm_precision = 1e-09
 
-def h_m_i_rvs(mu,sigma,tau_m,N_i):
+def _h_m_i_rvs(mu,sigma,tau_m,N_i):
     """Helper function for definition of h_m_emg_rvs """
     rvs = mu - exponnorm.rvs(loc=0,scale=sigma,K=tau_m/sigma,size=N_i)
     return rvs
@@ -19,6 +19,27 @@ def h_m_i_rvs(mu,sigma,tau_m,N_i):
 
 def h_m_emg_rvs(mu, sigma, *t_args,N_samples=None):
     """Draw random samples from neg. skewed Hyper-EMG PDF
+
+    Parameters
+    ----------
+    mu : float [u]
+        Nominal position of simulated peak (mean of underlying Gaussian).
+    sigma : float [u]
+        Nominal standard deviation (of the underlying Gaussian) of the simulated
+        hyper-EMG peak.
+    theta : float
+        Mixing weight of pos. & neg. skewed EMG distributions.
+    t_args : list of lists of float
+        List containing lists of the EMG tail parameters with the signature:
+        [[eta_m1, eta_m2, ...], [tau_m1, tau_m2, ...]]
+    N_samples : int
+        Number of random events to sample.
+
+    Returns
+    -------
+    :class:`numpy.ndarray` of floats
+        Array with simulated events.
+
     """
     if not isinstance(N_samples,int):
         raise TypeError("N_samples must be of type int")
@@ -35,12 +56,12 @@ def h_m_emg_rvs(mu, sigma, *t_args,N_samples=None):
     for i in range(t_order_m):
         N_i = np.count_nonzero(tail_nos == i)
         tau_m = li_tau_m[i]
-        rvs_i = h_m_i_rvs(mu,sigma,tau_m,N_i)
+        rvs_i = _h_m_i_rvs(mu,sigma,tau_m,N_i)
         rvs = np.append(rvs,rvs_i)
     return rvs
 
 
-def h_p_i_rvs(mu,sigma,tau_p,N_i):
+def _h_p_i_rvs(mu,sigma,tau_p,N_i):
     """Helper function for definition of h_p_emg_rvs """
     rvs = exponnorm.rvs(loc=mu,scale=sigma,K=tau_p/sigma,size=N_i)
     return rvs
@@ -48,6 +69,25 @@ def h_p_i_rvs(mu,sigma,tau_p,N_i):
 
 def h_p_emg_rvs(mu, sigma, *t_args,N_samples=None):
     """Draw random samples from pos. skewed Hyper-EMG PDF
+
+    Parameters
+    ----------
+    mu : float [u]
+        Nominal position of simulated peak (mean of underlying Gaussian).
+    sigma : float [u]
+        Nominal standard deviation (of the underlying Gaussian) of the simulated
+        hyper-EMG peak.
+    t_args : list of lists of float
+        List containing lists of the EMG tail parameters with the signature:
+        [[eta_p1, eta_p2, ...], [tau_p1, tau_p2, ...]]
+    N_samples : int
+        Number of random events to sample.
+
+    Returns
+    -------
+    :class:`numpy.ndarray` of floats
+        Array with simulated events.
+
     """
     if not isinstance(N_samples,int):
         raise TypeError("N_samples must be of type int")
@@ -64,13 +104,35 @@ def h_p_emg_rvs(mu, sigma, *t_args,N_samples=None):
     for i in range(t_order_p):
         N_i = np.count_nonzero(tail_nos == i)
         tau_p = li_tau_p[i]
-        rvs_i = h_p_i_rvs(mu,sigma,tau_p,N_i)
+        rvs_i = _h_p_i_rvs(mu,sigma,tau_p,N_i)
         rvs = np.append(rvs,rvs_i)
     return rvs
 
 
 def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
     """Draw random samples from Hyper-EMG PDF
+
+    Parameters
+    ----------
+    mu : float [u]
+        Nominal position of simulated peak (mean of underlying Gaussian).
+    sigma : float [u]
+        Nominal standard deviation (of the underlying Gaussian) of the simulated
+        hyper-EMG peak.
+    theta : float
+        Mixing weight of pos. & neg. skewed EMG distributions.
+    t_args : list of lists of float
+        List containing lists of the EMG tail parameters with the signature:
+        [[eta_m1, eta_m2, ...], [tau_m1, tau_m2, ...],
+        [eta_p1, eta_p2, ...], [tau_p1, tau_p2, ...]]
+    N_samples : int
+        Number of random events to sample.
+
+    Returns
+    -------
+    :class:`numpy.ndarray` of floats
+        Array with simulated events.
+
     """
     if not isinstance(N_samples,int):
         raise TypeError("N_samples must be of type int")
@@ -112,7 +174,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
         the structure of the :attr:`~spectrum.shape_cal_pars` attribute of the
         :class:`~spectrum.spectrum` class.
     mus : float or list of float [u]
-        Nominal peak centres of peaks in simulated spectrum.
+        Nominal peak positions of peaks in simulated spectrum.
     amps : float or list of float [counts per u]
         Nominal amplitudes of peaks in simulated spectrum.
     bkg_c : float [counts per bin], optional, default: 0.0
@@ -151,7 +213,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     Notes
     -----
     Random events are created via inverse-transform sampling using Hyper-EMG
-    extensions of Scipy's :meth:`scipy.exponnorm.rvs` method.
+    extensions of Scipy's :meth:`scipy.stats.exponnorm.rvs` method.
 
     Currently, all simulated peaks have identical width and shape (no re-scaling
     of mass-dependent shape parameters to a peak's mass centroid).
@@ -162,8 +224,8 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     Mind the different units for peak amplitudes `amps` (counts per u) and the
     background level `bkg_c` (counts per bin). When spectrum data is
     simulated counts are distributed between the different peaks and the
-    background with probability weights `amps`*<bin width in> and
-    `bkg_c`*<number of bins>, respectively. As a consequence, simply changing
+    background with probability weights `amps` * <bin width in> and
+    `bkg_c` * <number of bins>, respectively. As a consequence, simply changing
     `N_events` (while keeping all other arguments constant), will render `amps`
     and `bkg_c` away from their nominal units.
 
@@ -303,7 +365,7 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
     Notes
     -----
     Random events are created via inverse-transform sampling using Hyper-EMG
-    extensions of Scipy's :meth:`scipy.exponnorm.rvs` method.
+    extensions of Scipy's :meth:`scipy.stats.exponnorm.rvs` method.
 
     Currently, all simulated peaks have identical width and shape (no re-scaling
     of mass-dependent shape parameters to a peak's mass centroid).
@@ -313,8 +375,8 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
     Mind the different units for peak amplitudes `amps` (counts per u) and the
     background level `bkg_c` (counts per bin). When spectrum data is
     simulated counts are distributed between the different peaks and the
-    background with probability weights `amps`*<bin width in> and
-    `bkg_c`*<number of bins>, respectively. As a consequence, simply changing
+    background with probability weights `amps` * <bin width in> and
+    `bkg_c` * <number of bins>, respectively. As a consequence, simply changing
     `N_events` (while keeping all other arguments constant), will render `amps`
     and `bkg_c` away from their nominal units.
 

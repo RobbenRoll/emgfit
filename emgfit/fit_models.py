@@ -69,9 +69,9 @@ def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict,
     ----------
     peak_index :  int
         Index of peak to fit.
-    x_pos : float)
+    x_pos : float
        Initial guess of peak centroid.
-    amp : floatI
+    amp : float
         Initial guess of peak amplitude.
     init_pars : dict
         Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
@@ -121,9 +121,9 @@ def emg01(peak_index, x_pos, amp, init_pars=pars_dict,
     ----------
     peak_index :  int
         Index of peak to fit.
-    x_pos : float)
+    x_pos : float
        Initial guess of peak centroid.
-    amp : floatI
+    amp : float
         Initial guess of peak amplitude.
     init_pars : dict
         Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
@@ -175,9 +175,9 @@ def emg10(peak_index, x_pos, amp, init_pars=pars_dict,
     ----------
     peak_index :  int
         Index of peak to fit.
-    x_pos : float)
+    x_pos : float
        Initial guess of peak centroid.
-    amp : floatI
+    amp : float
         Initial guess of peak amplitude.
     init_pars : dict
         Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
@@ -230,9 +230,9 @@ def emg11(peak_index, x_pos, amp, init_pars=pars_dict,
     ----------
     peak_index :  int
         Index of peak to fit.
-    x_pos : float)
+    x_pos : float
        Initial guess of peak centroid.
-    amp : floatI
+    amp : float
         Initial guess of peak amplitude.
     init_pars : dict
         Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
@@ -288,9 +288,9 @@ def emg12(peak_index, x_pos, amp, init_pars=pars_dict,
     ----------
     peak_index :  int
         Index of peak to fit.
-    x_pos : float)
+    x_pos : float
        Initial guess of peak centroid.
-    amp : floatI
+    amp : float
         Initial guess of peak amplitude.
     init_pars : dict
         Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
@@ -352,9 +352,9 @@ def emg21(peak_index, x_pos, amp, init_pars=pars_dict,
     ----------
     peak_index :  int
         Index of peak to fit.
-    x_pos : float)
+    x_pos : float
        Initial guess of peak centroid.
-    amp : floatI
+    amp : float
         Initial guess of peak amplitude.
     init_pars : dict
         Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
@@ -416,9 +416,9 @@ def emg22(peak_index, x_pos, amp, init_pars=pars_dict,
     ----------
     peak_index :  int
         Index of peak to fit.
-    x_pos : float)
+    x_pos : float
        Initial guess of peak centroid.
-    amp : floatI
+    amp : float
         Initial guess of peak amplitude.
     init_pars : dict
         Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
@@ -486,9 +486,9 @@ def emg23(peak_index, x_pos, amp, init_pars=pars_dict,
     ----------
     peak_index :  int
         Index of peak to fit.
-    x_pos : float)
+    x_pos : float
        Initial guess of peak centroid.
-    amp : floatI
+    amp : float
         Initial guess of peak amplitude.
     init_pars : dict
         Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
@@ -567,9 +567,9 @@ def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True,
     ----------
     peak_index :  int
         Index of peak to fit.
-    x_pos : float)
+    x_pos : float
        Initial guess of peak centroid.
-    amp : floatI
+    amp : float
         Initial guess of peak amplitude.
     init_pars : dict
         Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`
@@ -648,9 +648,9 @@ def emg33(peak_index, x_pos, amp, init_pars=pars_dict,
     ----------
     peak_index :  int
         Index of peak to fit.
-    x_pos : float)
+    x_pos : float
        Initial guess of peak centroid.
-    amp : floatI
+    amp : float
         Initial guess of peak amplitude.
     init_pars : dict
         Initial parameters for fit ('amp' and 'mu' parameters in `init_pars`

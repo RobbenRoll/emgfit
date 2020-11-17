@@ -7,12 +7,6 @@ import scipy.constants as con
 import matplotlib.pyplot as plt
 import pandas as pd
 
-##### Set image resolution
-#from IPython.display import set_matplotlib_formats
-#set_matplotlib_formats('retina')
-# For even higher res, use the following instead:
-plt.rcParams['figure.dpi'] = 500
-
 ##### Define fundamental constants
 global m_e, u, u_to_keV
 m_e = con.physical_constants["electron mass in u"][0]  # or 548.5799.0907e-06 # electron mass [u] (from AME2016, Huang2017)
@@ -28,11 +22,19 @@ u_to_keV = con.physical_constants["atomic mass constant energy equivalent in MeV
 A_stat_emg_default = 0.52
 
 ##### Plot appearance
-plt.rcParams.update({'errorbar.capsize': 2})
-plt.rcParams.update({"font.size": 15})
+plt.rcParams.update({"errorbar.capsize": 2})
+plt.rcParams.update({"font.size": 12})
+plt.rcParams["errorbar.capsize"] = 1.0
+from IPython.display import set_matplotlib_formats
+plot_fmt = 'svg'
+set_matplotlib_formats(plot_fmt) # Defines default image format in notebooks
+dpi = None # manually set image resolution - not necessary with SVGs
+figwidth = 11.8 # width of spectrum figures
+msize = 4 # size of data point markers
+labelsize = 9 # size of peak labels
 
 ##### Appearance of DataFrames
-pd.set_option('precision',2) # global displayed float precision
+pd.set_option("precision",2) # global displayed float precision
 u_digits = 6 # displayed precision of mass values in atomic mass units u
 
 ################################################################################

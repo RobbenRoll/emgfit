@@ -7,34 +7,53 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
-vX.Y.Z
-------
-* Fixed bug in remove_peaks() method.
-* Fixed bug in _eval_peakshape_errors() method.
-* Changed automatic tail order determination in determine_peak_shape(). Now tail
-  orders are excluded if either the corresponding eta *or tau* parameter agrees
-  with zero within 1-sigma confidence.
-* Updated docs of assign_species() method. Fix bug in installation instructions.
-* Updated concept article on :-Notation.
-* Added `fit_kws` argument to peakfit method to enable more control over the
-  underlying scipy optimization algorithms.
+v0.3.0 (2020-11-17)
+-------------------
+
+Added
+^^^^^
+* Added :mod:`emgfit.sample` module for easy generation of simulated spectra.
+* Implemented :meth:`~emgfit.spectrum.spectrum.get_errors_from_resampling()`
+  method which can yield refined estimates of the statistical and peak area
+  errors by performing a parametric bootstrap for each fitted peak.
+* Added a Markov-Chain Monte Carlo sampling method
+  (:meth:`~emgfit.spectrum.spectrum._get_MCMC_par_samples`) for mapping out the
+  posterior distributions and correlations of model parameters. This method can
+  be called with the `map_par_covar` option in the peak-shape determination.
+* Added a method (
+  :meth:`~emgfit.spectrum.spectrum.spectrum.get_MC_peakshape_errors`) for
+  obtaining refined peak-shape error estimates that account for correlations and
+  non-normal posterior distributions of shape parameters. This method relies on
+  shape parameter sets obtained via Markov-Chain Monte Carlo sampling.
 * Changed bounding of Pearson weights to addition of small number eps = 1e-10.
   This ensures that the cost function asymptotically converges to a chi-squared
   distribution. At the same time this still avoids numerical stabilities due to
   overweighting of bins whose predicted number of counts approach zero.
-* Added :mod:`sample` module for easy generation of simulated spectra.
-* Implemented :meth:`get_errors_from_resampling()` method which can yield
-  refined estimates of the statistical and peak area errors by performing a
-  parametric bootstrap for each fitted peak.
-* Updated formatting of peak properties table for more clarity.
-* Added a Markov-Chain Monte Carlo sampling method
-  (:meth:`spectrum._get_MCMC_par_samples()`) for mapping out the posterior
-  distributions and correlations of model parameters. This method can be called
-  with the `map_par_covar` option in the peak-shape determination.
-* Added a method (:meth:`spectrum.get_MC_peakshape_errors`) for obtaining
-  refined peak-shape error estimates that account for correlations and
-  non-normal posterior distributions of shape parameters. This method relies on
-  shape parameter sets obtained via Markov-Chain Monte Carlo sampling.
+* Added `peak_indeces` argument to :meth:`~emgfit.spectrum.spectrum.fit_peaks`
+  to enable automatic fit range selection from the specified indeces of
+  interest.
+* Added `fit_kws` argument to peakfit method to enable more control over the
+  underlying scipy optimization algorithms.
+* Updated `emgfit` tutorial with new uncertainty estimation methods.
+* Add concept articles and apply various edits to the documentation.
+
+Changed
+^^^^^^^
+* Changed automatic tail order determination in
+  :meth:`~emgfit.spectrum.spectrum.determine_peak_shape` method. Now tail orders
+  are excluded if either the corresponding eta *or tau* parameter agrees with
+  zero within 1-sigma confidence.
+* Updated formatting of peak properties table for more clarity including color
+  coding to indicate the way uncertainties have been estimated.
+* Changed default image format in notebooks from PNG to SVG for higher
+  resolution plots.
+
+Fixed
+^^^^^
+* Fixed bug in :meth:`~emgfit.spectrum.spectrum.remove_peaks` method.
+* Fixed minor bug in :meth:`~emgfit.spectrum.spectrum._eval_peakshape_errors`
+  method.
+
 
 v0.2.3 (2020-09-18)
 -------------------
