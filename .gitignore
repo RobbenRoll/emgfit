@@ -85,6 +85,6 @@ target/
 emgfit/examples/tutoria/model.sav
 emgfit/examples/tutorial/outputs/**
 !emgfit/examples/tutorial/outputs/readme.txt
-emgfit/docs/source/model.sav
-emgfit/docs/source/outputs/**
-!emgfit/docs/source/outputs/readme.txt
+docs/source/model.sav
+docs/source/outputs/**
+!docs/source/outputs/readme.txt
