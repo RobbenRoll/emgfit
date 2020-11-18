@@ -13,6 +13,9 @@ v0.3.0 (2020-11-17)
 Added
 ^^^^^
 * Added :mod:`emgfit.sample` module for easy generation of simulated spectra.
+* Incorporated the option to perform blind analysis via the new
+  :meth:`~emgfit.spectrum.spectrum.set_blinded_peaks` method. The latter hides
+  the obtained mass values and positions of user-defined peaks-of-interest. 
 * Implemented :meth:`~emgfit.spectrum.spectrum.get_errors_from_resampling()`
   method which can yield refined estimates of the statistical and peak area
   errors by performing a parametric bootstrap for each fitted peak.
@@ -25,10 +28,6 @@ Added
   obtaining refined peak-shape error estimates that account for correlations and
   non-normal posterior distributions of shape parameters. This method relies on
   shape parameter sets obtained via Markov-Chain Monte Carlo sampling.
-* Changed bounding of Pearson weights to addition of small number eps = 1e-10.
-  This ensures that the cost function asymptotically converges to a chi-squared
-  distribution. At the same time this still avoids numerical stabilities due to
-  overweighting of bins whose predicted number of counts approach zero.
 * Added `peak_indeces` argument to :meth:`~emgfit.spectrum.spectrum.fit_peaks`
   to enable automatic fit range selection from the specified indeces of
   interest.
@@ -39,6 +38,10 @@ Added
 
 Changed
 ^^^^^^^
+* Changed bounding of Pearson weights to addition of small number eps = 1e-10.
+  This ensures that the cost function asymptotically converges to a chi-squared
+  distribution. At the same time this still avoids numerical stabilities due to
+  overweighting of bins whose predicted number of counts approach zero.
 * Changed automatic tail order determination in
   :meth:`~emgfit.spectrum.spectrum.determine_peak_shape` method. Now tail orders
   are excluded if either the corresponding eta *or tau* parameter agrees with

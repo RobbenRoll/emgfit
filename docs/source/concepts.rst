@@ -550,6 +550,19 @@ synthetic spectrum data by extending inverse transform sampling with `Scipy's`
 functionality is a valuable aid for Monte Carlo studies with count data.
 
 
+Blind analysis
+--------------
+The comparison of fit results to literature values can lead to biased
+results. To avoid that user bias (consciously or unconsciously) enters the final
+mass values `emgfit` incorporates the option to blind the obtained mass values
+and peak positions during the analysis process. Blindfolding is activated with
+the :meth:`~emgfit.spectrum.spectrum.set_blinded_peaks` method. The option to
+only blind specific peaks of interest leaves the option to use less interesting
+peaks with well-known literature masses as accuracy checks. The blinding is only
+lifted once the processing of the spectrum is finalized and the results are
+exported.
+
+
 References
 ----------
 .. [1] Purushothaman, S., et al. "Hyper-EMG: A new probability distribution

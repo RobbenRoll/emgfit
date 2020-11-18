@@ -266,6 +266,10 @@ class spectrum:
     fit_results : list of :class:`lmfit.model.ModelResult`
         List containing fit results (:class:`lmfit.model.ModelResult` objects)
         for peaks associated with spectrum.
+    blinded_peaks : list of int
+        List with indeces of peaks whose mass values and peak positions are to
+        be hidden to enable blind analysis. The mass values will be unblinded
+        upon export of the analysis results.
     data : :class:`pandas.DataFrame`
         Histogrammed spectrum data.
     mass_number : int
@@ -367,6 +371,7 @@ class spectrum:
         self.peaks_with_MC_PS_errors = []
         self.peaks = [] # list containing peaks associated with spectrum
         self.fit_results = [] # list containing fit results of all peaks
+        self.blinded_peaks = []
         if m_start or m_stop: # cut input data to specified mass range
             self.data = data_uncut.loc[m_start:m_stop]
             plot_title = 'Spectrum with cut-off markers'
@@ -384,7 +389,8 @@ class spectrum:
             plt.vlines(m_start,0,1.2*max(self.data['Counts']))
             plt.vlines(m_stop,0,1.2*max(self.data['Counts']))
             plt.yscale('log')
-            plt.ylabel('Counts')
+            plt.xlabel('m/z [u]')
+            plt.ylabel('Counts per bin')
             plt.show()
 
 
@@ -539,7 +545,8 @@ class spectrum:
         ax = f.gca()
         data.plot(ax=ax)
         plt.yscale(yscale)
-        plt.ylabel('Counts')
+        plt.xlabel('m/z [u]')
+        plt.ylabel('Counts per bin')
         plt.title(title)
         try:
             plt.vlines(x=vmarkers,ymin=0,ymax=data.max())
@@ -615,7 +622,8 @@ class spectrum:
         ax = f.gca()
         df.plot(ax=ax)
         plt.yscale(yscale)
-        plt.ylabel('Counts')
+        plt.xlabel('m/z [u]')
+        plt.ylabel('Counts per bin')
         plt.title(title)
         try:
             plt.vlines(x=vmarkers,ymin=0,ymax=1.05*df.max())
@@ -701,7 +709,8 @@ class spectrum:
             ax.legend(["Raw","Smoothed"])
             plt.ylim(0.1,)
             plt.yscale('log')
-            plt.ylabel('Counts')
+            plt.xlabel('m/z [u]')
+            plt.ylabel('Counts per bin')
             plt.show()
 
         # Second derivative
@@ -919,15 +928,26 @@ class spectrum:
         format_dict = {"x_pos" : u_format,
                        "m_AME" : u_format,
                        "m_AME_error" : u_format,
-                       "m_ion" : u_format,
+                       #"m_ion" : u_format,
                        "rel_stat_error" : rel_err_format,
                        "rel_recal_error" : rel_err_format,
                        "rel_peakshape_error" : rel_err_format,
                        "rel_mass_error" : rel_err_format,
                        "A" : "{:.0f}" }
-        df_prop = pd.DataFrame(peak_dicts).style.format(format_dict)
-        #dict_peaks = [p.__dict__ for p in self.peaks]
-        #df_prop = pd.DataFrame(dict_peaks)
+        df_prop = pd.DataFrame(peak_dicts)
+        # Hide peaks of interest if blindfolded mode is on
+        defined = [True if p.m_ion != None else False for p in self.peaks]
+        pindeces = range(len(self.peaks))
+        blinded = [True if i in self.blinded_peaks else False for i in pindeces]
+        mask = np.logical_and(blinded, defined)
+        df_prop.loc[mask, ['m_ion','atomic_ME_keV','m_dev_keV']] = 'blinded'
+
+        # Apply formatting
+        df_prop = df_prop.style.format(format_dict)
+        df_prop.apply(lambda col: [u_format if i == 11 and type(v) != str else
+                                   "" for i, v in enumerate(col)], axis=1)
+
+        #df_prop = pd.DataFrame(peak_dicts).style.format(format_dict)
 
         # Mark peaks with MC PS errors with blue font
         df_prop = df_prop.apply(lambda col: ['color: royalblue'
@@ -1114,7 +1134,72 @@ class spectrum:
                 peak.comment = peak.comment+comment
             print("Comment of peak",peak_index,"was changed to: ",peak.comment)
         except TypeError:
-            raise Exception("TYPE ERROR: 'comment' argument must be given as type string.")
+            raise TypeError("'comment' argument must be given as type string.")
+
+
+    def set_blinded_peaks(self, indeces, overwrite=False):
+        """Define peaks whose mass values will be hidden for blind analysis
+
+        This method adds peaks to the spectrum's list of
+        :attr:`~emgfit.spectrum.spectrum.blinded_peaks`. For these peaks, the
+        obtained mass values in the peak properties table and the peak position
+        parameters `mu` in fit reports will be hidden. Literature values and
+        mass uncertainties remain visible. All results are unblinded upon
+        export with the :meth:`save_results` method.
+
+        Parameters
+        ----------
+        indeces : int or list of int
+            Indeces of peaks of interest whose obtained mass values are to be
+            blinded.
+        overwrite : bool, optional, default: False
+            If `False` (default), the specified `indeces` are added to the
+            :attr:`blinded_peaks` list. If `True`, the current
+            :attr:`blinded_peaks` list is replaced by the specified `indeces`.
+
+        Examples
+        --------
+        Activate blinding for peaks 0 & 3 of spectrum object `spec`:
+        >>> spec.set_blinded_peaks([0,3])
+
+        Add peak 3 to list of blinded peaks:
+        >>> spec.set_blinded_peaks([3])
+
+        Turn off blinding by resetting the blinded peaks attribute to an empty
+        list:
+        >>> spec.set_blinded_peaks([], overwrite=True)
+
+        """
+        indeces = np.atleast_1d(indeces).tolist()
+        peak_indeces = range(len(self.peaks))
+        if any(i not in peak_indeces for i in indeces):
+            raise Exception("No peaks found for some of the specified indeces.")
+        if overwrite is False:
+            for idx in indeces:
+                if idx not in self.blinded_peaks:
+                    self.blinded_peaks.append(idx)
+        else:
+            self.blinded_peaks = indeces # overwrite list
+
+        self.blinded_peaks.sort()
+        s_list = ', '.join(map(str, self.blinded_peaks)) # convert list to str
+        print("Blinding is activated for peaks:", s_list)
+
+
+    def _show_blinded_report(self, result):
+        """Display fit result with positions of blinded peaks replaced by NaN
+        """
+        orig_pars = copy.deepcopy(result.params)
+        # Replace all `mu` parameter values of peaks to blind with NaN
+        for idx in self.blinded_peaks:
+            mu_key = 'p{0}_mu'.format(idx)
+            try:
+                result.params[mu_key].value = np.nan
+            except KeyError:
+                pass # skip blinded peaks that aren't in result
+        display(result)
+        # RESET parameter values
+        result.params = orig_pars
 
 
     def _add_peak_markers(self,yscale='log',ymax=None,peaks=None):
@@ -2714,7 +2799,7 @@ class spectrum:
                     print("\n"+str(model)+"-fit yields reduced chi-square of: "+str(li_red_chis[idx])+" +- "+str(li_red_chi_errs[idx]))
                     print()
                     if show_fit_reports:
-                        display(out) # show fit report
+                        self._show_blinded_report(out) # show fit report
                 except ValueError:
                     print('\nWARNING:',model+'-fit failed due to NaN-values and was skipped! ----------------------------------------------\n')
 
@@ -2759,7 +2844,7 @@ class spectrum:
             peak.comment = 'shape calibrant'
         elif 'shape calibrant' not in peak.comment:
             peak.comment = 'shape calibrant, '+peak.comment
-        display(out)  # print(out.fit_report())
+        self._show_blinded_report(out) # show fit report
         self.index_shape_calib = index_shape_calib
         self.red_chi_shape_cal = np.round(out.redchi,2)
         dict_pars = out.params.valuesdict()
@@ -3899,7 +3984,7 @@ class spectrum:
                                       sigmas_of_conf_band=sigmas_of_conf_band,
                                       plot_filename=plot_filename)
         if show_fit_report:
-            display(fit_result)
+            self._show_blinded_report(fit_result)
 
         # Update recalibration factor and calibrant properties
         self._update_calibrant_props(index_mass_calib,fit_result)
@@ -4196,7 +4281,7 @@ class spectrum:
                       "should be taken with caution when your MLE fit includes "
                       "bins with low statistics. For details see Notes section "
                       "in the spectrum.peakfit() method documentation.")
-            display(fit_result)
+            self._show_blinded_report(fit_result)
         for p in peaks_to_fit:
             self.fit_results[self.peaks.index(p)] = fit_result
 
@@ -4585,7 +4670,8 @@ class spectrum:
                       'fit_model','red_chi_shape_cal','fit_range_shape_cal',
                       'determined_A_stat_emg','A_stat_emg','A_stat_emg_error',
                       'peaks_with_errors_from_resampling','recal_fac',
-                      'rel_recal_error','peaks_with_MC_PS_errors']
+                      'rel_recal_error','peaks_with_MC_PS_errors',
+                      'blinded_peaks']
         for attr in attributes:
             attr_val = getattr(self,attr)
             spec_data = np.append(spec_data, [[attr,attr_val]],axis=0)
