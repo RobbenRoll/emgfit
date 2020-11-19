@@ -176,7 +176,7 @@ the same spectrum might be added in the future.
 Peak fitting approach
 ---------------------
 Peak fits with `emgfit` are executed by the internal
-:meth:`~emgfit.spectrum.spectrum.peakfit` method which builds on `lmfit's'
+:meth:`~emgfit.spectrum.spectrum.peakfit` method which builds on `lmfit's`
 :class:`~lmfit.model.Model` interface. However, usually the user only interacts
 with higher level methods (e.g. :meth:`~emgfit.spectrum.spectrum.determine_peak_shape`
 or :meth:`~emgfit.spectrum.spectrum.fit_peaks`) that internally call
@@ -235,11 +235,11 @@ Fits are performed by minimizing either of the following cost functions:
 
 A number of different optimization algorithms are available to perform the
 minimization.In principle, any of the algorithms listed under `lmfit's`
-fitting_methods_ can be used by passing the respective method name to the
+`fitting methods`_ can be used by passing the respective method name to the
 `method` option if `emgfit's` fitting routines. By default, the `least_squares`
 minimizer is used.
 
-.. _fitting_methods: https://lmfit.github.io/lmfit-py/fitting.html#choosing-different-fitting-methods
+.. _`fitting methods`: https://lmfit.github.io/lmfit-py/fitting.html#choosing-different-fitting-methods
 
 
 Peak-shape calibration
@@ -348,9 +348,10 @@ factor defined as:
    \gamma_\mathrm{recal} = \frac{m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}}.
 
 The calibrant peak can either be fitted individually upfront via the
-:meth:`~spectrum.fit_calibrant`  method or the calibrant fit can be performed
-simultaneous with the ion-of-interest fits using the `index_mass_calib` or
-`species_mass_calib` options of the :meth:`~spectrum.fit_peaks` method.
+:meth:`~emgfit.spectrum.spectrum.fit_calibrant`  method or the calibrant fit can
+be performed simultaneous with the ion-of-interest fits using the
+`index_mass_calib` or `species_mass_calib` options of the
+:meth:`~emgfit.spectrum.spectrum.fit_peaks` method.
 
 The uncertainty of the recalibraiton factor ("recalibration uncertainty") is
 obtained from the literature mass uncertainty :math:`\Delta m_\mathrm{cal, lit}`
@@ -546,8 +547,9 @@ Creating simulated spectra
 --------------------------
 The functions in the :mod:`emgfit.sample` module allow the fast creation of
 synthetic spectrum data by extending inverse transform sampling with `Scipy's`
-:class:`~scipy.stats.exponnorm` class to hyper-EMG distributions. This
-functionality is a valuable aid for Monte Carlo studies with count data.
+:class:`~scipy.stats._continuous_distns.exponnorm` class to hyper-EMG
+distributions. This can serve as a valuable tool for Monte Carlo studies with
+count data.
 
 
 Blind analysis

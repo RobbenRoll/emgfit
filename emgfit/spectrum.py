@@ -920,21 +920,35 @@ class spectrum:
         ``None`` despite appearing as ``nan`` in the peak properties table.
 
         """
-        def None_to_nan(dict): # convert None values to NaN
-            return { k: (np.nan if v is None else v) for k, v in dict.items() }
-        peak_dicts = [None_to_nan(p.__dict__) for p in self.peaks]
-        u_format = "{:."+str(int(u_digits))+"f}" # format of mass values in [u]
+        #def None_to_nan(dict): # convert None values to NaN
+        #    return { k: (np.nan if v is None else v) for k, v in dict.items() }
+        #peak_dicts = [None_to_nan(p.__dict__) for p in self.peaks]
+        peak_dicts = [p.__dict__ for p in self.peaks]
+        u_format = "{:."+str(int(u_decimals))+"f}" # format of mass vals in [u]
+        def fmt_m_u(value): # custom formatting to handle strings & None
+            if type(value) not in (str,type(None)):
+                value = u_format.format(value)
+            return value
         rel_err_format = "{:.2e}" # format of relative uncertainty values
-        format_dict = {"x_pos" : u_format,
-                       "m_AME" : u_format,
-                       "m_AME_error" : u_format,
-                       #"m_ion" : u_format,
-                       "rel_stat_error" : rel_err_format,
-                       "rel_recal_error" : rel_err_format,
-                       "rel_peakshape_error" : rel_err_format,
-                       "rel_mass_error" : rel_err_format,
-                       "A" : "{:.0f}" }
+        def fmt_rel_err(value): # custom formatting to handle strings & None
+            if type(value) not in (str,type(None)):
+                value = rel_err_format.format(value)
+            return value
+        def fmt_A(value): # custom formatting to handle strings & None
+            if type(value) not in (str,type(None)):
+                value = "{:.0f}".format(value)
+            return value
+        format_dict = {"x_pos" : fmt_m_u,
+                       "m_AME" : fmt_m_u,
+                       "m_AME_error" : fmt_m_u,
+                       "m_ion" : fmt_m_u,
+                       "rel_stat_error" : fmt_rel_err,
+                       "rel_recal_error" : fmt_rel_err,
+                       "rel_peakshape_error" : fmt_rel_err,
+                       "rel_mass_error" : fmt_rel_err,
+                       "A" : fmt_A }
         df_prop = pd.DataFrame(peak_dicts)
+        
         # Hide peaks of interest if blindfolded mode is on
         defined = [True if p.m_ion != None else False for p in self.peaks]
         pindeces = range(len(self.peaks))
@@ -944,10 +958,6 @@ class spectrum:
 
         # Apply formatting
         df_prop = df_prop.style.format(format_dict)
-        df_prop.apply(lambda col: [u_format if i == 11 and type(v) != str else
-                                   "" for i, v in enumerate(col)], axis=1)
-
-        #df_prop = pd.DataFrame(peak_dicts).style.format(format_dict)
 
         # Mark peaks with MC PS errors with blue font
         df_prop = df_prop.apply(lambda col: ['color: royalblue'
@@ -1138,7 +1148,7 @@ class spectrum:
 
 
     def set_blinded_peaks(self, indeces, overwrite=False):
-        """Define peaks whose mass values will be hidden for blind analysis
+        """Specify for which peaks mass values will be hidden for blind analysis
 
         This method adds peaks to the spectrum's list of
         :attr:`~emgfit.spectrum.spectrum.blinded_peaks`. For these peaks, the
@@ -1160,13 +1170,16 @@ class spectrum:
         Examples
         --------
         Activate blinding for peaks 0 & 3 of spectrum object `spec`:
+
         >>> spec.set_blinded_peaks([0,3])
 
         Add peak 3 to list of blinded peaks:
+
         >>> spec.set_blinded_peaks([3])
 
         Turn off blinding by resetting the blinded peaks attribute to an empty
         list:
+
         >>> spec.set_blinded_peaks([], overwrite=True)
 
         """
@@ -4332,6 +4345,10 @@ class spectrum:
         -------
         :class:`numpy.ndarray`, :class:`numpy.ndarray`
             Array with statistical errors [u], array with area errors [u]
+            Array elements correspond to the results for the peaks selected in
+            `peak_indeces` (in ascending order). If `peak_indeces` has not been
+            specified it defaults to the indeces of all peaks contained in
+            `fit_result`.
 
         See also
         --------
@@ -4361,7 +4378,7 @@ class spectrum:
             raise Exception("Not all peaks referenced in `peak_indeces` are "
                             "contained in `fit_result`.")
 
-        # Collect peaks, peak centroids and amplitudes
+        # Collect ALL peaks, peak centroids and amplitudes of fit_result
         mus = []
         amps = []
         for idx in fitted_peaks:
@@ -4460,25 +4477,29 @@ class spectrum:
 
         if show_hists: # plot histograms of centroids and areas
             boxprops = dict(boxstyle='round', facecolor='grey', alpha=0.5)
+            # Get offset in indexing between fitted_ peaks & peak_indeces:
+            offset = peak_indeces[0] - fitted_peaks[0]
             for i, idx in enumerate(peak_indeces):
+                best_fit_mu = mus[offset+i]
+                best_fit_area = amps[offset+i]/bin_width # assumes uniform binning
                 f, ax = plt.subplots(nrows=1,ncols=2,
                                      figsize=(figwidth,figwidth*4/18))
                 ax0, ax1 = ax.flatten()
-                ax0.set_title("Centroids - peak {0}".format(idx))
-                ax0.hist(transp_mus[i]*1e06,bins=19)
+                ax0.set_title("Centroid scatter - peak {0}".format(idx))
+                ax0.hist( (transp_mus[i]-best_fit_mu)*1e06,bins=19)
                 text0 = r"$\sigma = {0: .1f}$ $\mu$u".format(stat_errs[i]*1e06)
                 ax0.text(0.78, 0.92, text0, transform=ax0.transAxes, fontsize=10,
                          verticalalignment='top', bbox=boxprops)
-                ax0.axvline(mus[i]*1e06,color='black')
+                ax0.axvline(0 ,color='black')
                 ax0.xaxis.get_offset_text().set_fontsize(10)
-                ax0.set_xlabel("Centroid position [$\mu$u]")
+                ax0.set_xlabel("Peak position - best-fit value [$\mu$u]")
                 ax0.set_ylabel("Occurences")
-                ax1.set_title("Areas - peak {0}".format(idx))
-                ax1.hist(transp_amps[i]/bin_width,bins=19)
+                ax1.set_title("Area scatter - peak {0}".format(idx))
+                ax1.hist( transp_amps[i]/bin_width,bins=19)
                 text1 = r"$\sigma = {0: .1f} $ counts".format(area_errs[i])
                 ax1.text(0.7, 0.92, text1, transform=ax1.transAxes, fontsize=10,
                          verticalalignment='top', bbox=boxprops)
-                ax1.axvline(amps[i]/bin_width,color='black')
+                ax1.axvline(best_fit_area ,color='black')
                 ax1.xaxis.get_offset_text().set_fontsize(10)
                 ax1.set_xlabel("Peak area [counts]")
                 ax1.set_ylabel("Occurences")
@@ -4519,15 +4540,16 @@ class spectrum:
             Number of CPU cores to use for parallelized fitting of simulated
             spectra. When set to `-1` (default) all available cores are used.
         show_hists : bool, optional, default: False
-            If ``True``, histograms of the obtained peak centroids and areas are
+            If `True`, histograms of the obtained peak centroids and areas are
             shown. Black vertical lines indicate the best-fit values obtained
             from the measured data.
         show_peak_properties : bool, optional, default: True
-            If ``True``, the peak properties table is shown after updating the
+            If `True`, the peak properties table is shown after updating the
             statistical and area errors.
 
         See also
         --------
+        :meth:`~spectrum.determine_A_stat_emg`
         :meth:`~spectrum.parametric_bootstrap`
 
         Notes
@@ -4548,6 +4570,7 @@ class spectrum:
             if res is None:
                 raise Exception("No fit result found for peak {}".format(idx))
             if idx in self.peaks_with_errors_from_resampling:
+                # Raise error to avoid incorrect error calculation.
                 raise Exception("Peak has already been treated with this "
                                 "method. Re-perform peak fit before running "
                                 "this method again. ")
@@ -4561,11 +4584,11 @@ class spectrum:
         # Perform bootstrap for each fit_result and update peak properties
         for res_i, res in enumerate(results):
             stat_errs, area_errs = self.parametric_bootstrap(
-                                                res,
-                                                peak_indeces=POI[res_i],
-                                                N_spectra=N_spectra,
-                                                n_cores=n_cores,
-                                                show_hists=show_hists)
+                                                        res,
+                                                        peak_indeces=POI[res_i],
+                                                        N_spectra=N_spectra,
+                                                        n_cores=n_cores,
+                                                        show_hists=show_hists)
 
             # Update peak properties with refined stat. and area uncertainties
             for p_i, peak_idx in enumerate(POI[res_i]):

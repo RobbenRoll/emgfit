@@ -35,6 +35,6 @@ labelsize = 9 # size of peak labels
 
 ##### Appearance of DataFrames
 pd.set_option("precision",2) # global displayed float precision
-u_digits = 6 # displayed precision of mass values in atomic mass units u
+u_decimals = 6 # displayed decimals for mass values in atomic mass units u
 
 ################################################################################
