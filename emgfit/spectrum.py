@@ -948,7 +948,7 @@ class spectrum:
                        "rel_mass_error" : fmt_rel_err,
                        "A" : fmt_A }
         df_prop = pd.DataFrame(peak_dicts)
-        
+
         # Hide peaks of interest if blindfolded mode is on
         defined = [True if p.m_ion != None else False for p in self.peaks]
         pindeces = range(len(self.peaks))
@@ -1473,11 +1473,13 @@ class spectrum:
         init_pars : dict, optional, default: ``None``
             Default initial shape parameters for fit model. If ``None`` the
             default parameters defined in the :mod:`~emgfit.fit_models` module
-            will be used after scaling to the spectrum's :attr:`mass_number`.           #TODO: add reference to definition of 'shape parameters'
+            will be used after scaling to the spectrum's :attr:`mass_number`.
+            For more details and a list of all shape parameters see the
+            `peak-shape calibration`_ article.
         vary_shape : bool, optional
             If ``False`` only the amplitude (`amp`) and Gaussian centroid (`mu`)
             model parameters will be varied in the fit. If ``True``, the shape
-            parameters (`sigma`, `theta`,`etas` and `taus`) will also be varied.        #TODO: add reference to definition of 'shape parameters'
+            parameters (`sigma`, `theta`,`etas` and `taus`) will also be varied.
         vary_baseline : bool, optional
             If ``True`` a varying uniform baseline will be added to the fit
             model as varying model parameter `c_bkg`. If ``False``, the baseline
@@ -1823,7 +1825,7 @@ class spectrum:
             #ax.yaxis.set_offset_position('left')
             ax.xaxis.label.set_size(14)
             ax.yaxis.label.set_size(14)
-            labelpad = 0.42
+            labelpad = 0.41
             ax.xaxis.set_label_coords(0.5, -0.3 - labelpad)
             ax.yaxis.set_label_coords(-0.3 - labelpad, 0.5)
         if covar_map_fname is not None:
@@ -2478,7 +2480,7 @@ class spectrum:
                             "peaks. Please chose a smaller `x_range`!\n")
         li_N_counts = [10,30,100,300,1000,3000,10000,30000]
         print("Creating synthetic spectra via bootstrap re-sampling and "
-              "fitting  them for A_stat determination.")
+              "fitting them for A_stat determination.")
         print("Depending on the choice of `N_spectra` this can take a few "
               "minutes. Interrupt kernel if this takes too long.")
         np.random.seed(seed=34) # to make bootstrapped spectra reproducible
@@ -3002,7 +3004,7 @@ class spectrum:
           - If the calibrant is not included in the `peak_indeces` list, the
             calibrant centroid shifts and the corresponding shifted
             recalibration factors must already have been obtained in a foregoing
-            mass recalibration.                                                 #TODO: add reference to mass re-calibration article!
+            mass recalibration_.
 
         - All non-calibrant peaks referenced in `peak_indeces` are treated in a
           similar way. The original fit that yielded the specified `fit_result`
@@ -3350,10 +3352,17 @@ class spectrum:
                       "use smaller `N_samples`.")
             raise ValueError(msg)
         par_samples = self.MCMC_par_samples.sample(n=N_samples,
-                                                       replace=False,
-                                                       random_state=seed)
+                                                   replace=False,
+                                                   random_state=seed)
+
+        # Get index of first peak contained in shape calib. result:
+        xmin_shape_cal = min(self.shape_cal_result.x)
+        xmax_shape_cal = max(self.shape_cal_result.x)
+        first_idx_shape_cal = min([idx for idx, p in enumerate(self.peaks)
+                               if xmin_shape_cal < p.x_pos < xmax_shape_cal])
         par_samples.columns = par_samples.columns.str.replace('p'+str(
-                                                 self.index_shape_calib)+'_','')
+                                                    first_idx_shape_cal)+'_','')
+                                                 #self.index_shape_calib)+'_','')
         shape_par_samples = par_samples.to_dict(orient="row")
 
         # Determine tail order of fit model for normalization of initial etas
@@ -3412,9 +3421,9 @@ class spectrum:
             for par, val in shape_pars.items():
                 if par == "bkg_c":
                     pars[par].value = val
-                elif par in ['amp','mu']:
+                elif par.endswith(('amp','mu')):
                     pass
-                else:
+                else: # shape parameter
                     for idx in peak_indeces:
                         pref = "p{0}_".format(idx)
                         pars[pref+par].value = val
@@ -3482,9 +3491,6 @@ class spectrum:
                                 for pars in tqdm(shape_par_samples)))
 
         trp_mus, trp_amps = res[:,0], res[:,1]
-        isfinite = (~np.isnan(np.sum(trp_mus,axis=1)))
-        trp_mus = trp_mus[isfinite] # drop any row with NaN
-        trp_amps = trp_amps[isfinite] # drop any row with NaN
         mus = trp_mus.transpose()
         amps = trp_amps.transpose()
 
@@ -3508,10 +3514,12 @@ class spectrum:
             p = self.peaks[peak_idx]
 
             dm = self.MC_recal_facs*mus[i] - p.m_ion
+            dm = dm[~np.isnan(dm)] # drop NaN values
             PS_mass_err = np.sqrt(np.mean(dm**2))
             MC_PS_mass_errs.append(PS_mass_err)
 
             darea = amps[i]/bin_width - p.area
+            darea = darea[~np.isnan(darea)] # drop NaN values
             PS_area_err = np.sqrt(np.mean(darea**2))
             MC_PS_area_errs.append(PS_area_err)
 
@@ -3685,7 +3693,7 @@ class spectrum:
                 i_res = results.index(res)
                 POI[i_res].append(idx)
             if idx == self.index_mass_calib:
-                i_cal_res = len(results) - 1
+                i_cal_res = i_res
         # Move calibrant result and corresponding peaks to the front of the
         # results and POI lists to ensure that the calibrant centroid shifts are
         # determined before other results are treated below
@@ -4295,8 +4303,13 @@ class spectrum:
                       "bins with low statistics. For details see Notes section "
                       "in the spectrum.peakfit() method documentation.")
             self._show_blinded_report(fit_result)
+        # Add results to fit_results list, only overwrite calibrant result if a
+        # recalibration has been performed with this method
         for p in peaks_to_fit:
-            self.fit_results[self.peaks.index(p)] = fit_result
+            if self.peaks.index(p) != self.index_mass_calib: # non-calib peak
+                self.fit_results[self.peaks.index(p)] = fit_result
+            elif index_mass_calib is not None: # new recalibration performed
+                self.fit_results[self.peaks.index(p)] = fit_result
 
 
     def parametric_bootstrap(self, fit_result, peak_indeces=[],
@@ -4397,7 +4410,7 @@ class spectrum:
         funcdefs = {'constant': fit.models.ConstantModel,
                     str(fit_model): getattr(fit_models,fit_model)}
         print("Fitting {0} simulated spectra to ".format(N_spectra)+
-              "determine statistical and peak area errors.")
+              "determine statistical mass and peak area errors.")
         def refit():
             # create simulated spectrum data by sampling from fit-result PDF
             df =  simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
@@ -4477,11 +4490,10 @@ class spectrum:
 
         if show_hists: # plot histograms of centroids and areas
             boxprops = dict(boxstyle='round', facecolor='grey', alpha=0.5)
-            # Get offset in indexing between fitted_ peaks & peak_indeces:
-            offset = peak_indeces[0] - fitted_peaks[0]
             for i, idx in enumerate(peak_indeces):
-                best_fit_mu = mus[offset+i]
-                best_fit_area = amps[offset+i]/bin_width # assumes uniform binning
+                pref = 'p{0}_'.format(idx)
+                best_fit_mu = fit_result.best_values[pref+'mu']
+                best_fit_area = fit_result.best_values[pref+'amp']/bin_width # assumes uniform binning
                 f, ax = plt.subplots(nrows=1,ncols=2,
                                      figsize=(figwidth,figwidth*4/18))
                 ax0, ax1 = ax.flatten()
@@ -4495,7 +4507,7 @@ class spectrum:
                 ax0.set_xlabel("Peak position - best-fit value [$\mu$u]")
                 ax0.set_ylabel("Occurences")
                 ax1.set_title("Area scatter - peak {0}".format(idx))
-                ax1.hist( transp_amps[i]/bin_width,bins=19)
+                ax1.hist( transp_amps[i]/bin_width,bins=19) # assumes uniform binning
                 text1 = r"$\sigma = {0: .1f} $ counts".format(area_errs[i])
                 ax1.text(0.7, 0.92, text1, transform=ax1.transAxes, fontsize=10,
                          verticalalignment='top', bbox=boxprops)

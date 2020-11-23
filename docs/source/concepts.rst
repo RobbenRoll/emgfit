@@ -242,6 +242,8 @@ minimizer is used.
 .. _`fitting methods`: https://lmfit.github.io/lmfit-py/fitting.html#choosing-different-fitting-methods
 
 
+.. _`peak-shape calibration`:
+
 Peak-shape calibration
 ----------------------
 The peak-shape calibration is performed with the
@@ -300,7 +302,9 @@ peak area. To include these contributions in the uncertainty budget, `emgfit`
 provides specialized methods to quantify the `Peak-shape uncertainties`_.
 
 
-Mass re-calibration and calculation of final mass values
+.. _recalibration:
+
+Mass recalibration and calculation of final mass values
 --------------------------------------------------------
 Before being imported into `emgfit` mass spectra must have undergone a
 preliminary mass calibration. This initial mass scale will persist
