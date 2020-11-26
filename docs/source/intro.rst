@@ -25,7 +25,7 @@ Amongst other features, the `emgfit` toolbox includes:
 
 `emgfit` is designed to be used within Jupyter Notebooks which have become a
 standard tool in the data science community. The usage and capabilities of
-`emgfit` are best explored by looking at the introductory examples.
+`emgfit` are best explored by looking at the tutorial.
 
 .. _`lmfit`: https://lmfit.github.io/lmfit-py/
 .. _AME2016: http://amdc.in2p3.fr/web/masseval.html

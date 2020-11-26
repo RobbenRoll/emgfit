@@ -1,5 +1,6 @@
 ################################################################################
-##### Module with general Hyper-EMG functions
+##### Module with numerically robust implementation of the hyper-exponentially-
+##### modified Gaussian probability density function
 ##### Author: Stefan Paul
 
 ##### Import packages
@@ -116,17 +117,17 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
 
     .. math::
 
-        h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(\\left(\\frac{x-\mu}{2\\sigma}\\right)^2)} \mathrm{erfcx}(v)
+        h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(-\\left(\\frac{x-\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
         = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(u)} \mathrm{erfc}(v),
 
     where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\tau_{-i}}`
     and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
-    The `exp(u)`_ routine overflows if u > 709.78. The complementary error
-    function `erfc(v)`_ underflows to 0.0 if v > 26.54. The scaled complementary
-    error function `erfcx(v)`_ overflows if v < -26.62. To circumvent those
-    scenarios and always ensure an exact result, the underlying helper function
-    for the calculation of a negative EMG tail :func:`h_m_i` uses the
-    formulation in terms of `erfcx` whenever v >= 0 and switches to the
+    In double float precision, the `exp(u)`_ routine overflows if u > 709.78. The
+    complementary error function `erfc(v)`_ underflows to 0.0 if v > 26.54. The
+    scaled complementary error function `erfcx(v)`_ overflows if v < -26.62. To
+    circumvent those scenarios and always ensure an exact result, the underlying
+    helper function for the calculation of a negative EMG tail :func:`h_m_i`
+    uses the formulation in terms of `erfcx` whenever v >= 0 and switches to the
     `erfc`-formulation when v < 0.
 
     .. _`exp(u)`: https://numpy.org/doc/stable/reference/generated/numpy.exp.html#numpy.exp
@@ -227,17 +228,17 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
 
     .. math::
 
-        h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(\\left(\\frac{x-\mu}{2\\sigma}\\right)^2)} \mathrm{erfcx}(v)
+        h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(-\\left(\\frac{x-\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
         = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(u)} \mathrm{erfc}(v),
 
     where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\tau_{+i}}`
     and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
-    The `exp(u)`_ routine overflows if u > 709.78. The complementary error
-    function `erfc(v)`_ underflows to 0.0 if v > 26.54. The scaled complementary
-    error function `erfcx(v)`_ overflows if v < -26.62. To circumvent those
-    scenarios and always ensure an exact result, the underlying helper function
-    for the calculation of a negative EMG tail :func:`h_m_i` uses the
-    formulation in terms of `erfcx` whenever v >= 0 and switches to the
+    In double precision, the `exp(u)`_ routine overflows if u > 709.78. The
+    complementary error function `erfc(v)`_ underflows to 0.0 if v > 26.54. The
+    scaled complementary error function `erfcx(v)`_ overflows if v < -26.62. To
+    circumvent those scenarios and always ensure an exact result, the underlying
+    helper function for the calculation of a negative EMG tail :func:`h_m_i`
+    uses the formulation in terms of `erfcx` whenever v >= 0 and switches to the
     `erfc`-formulation when v < 0.
 
     .. _`exp(u)`: https://numpy.org/doc/stable/reference/generated/numpy.exp.html#numpy.exp

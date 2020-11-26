@@ -23,14 +23,14 @@ All emgfit versions >= 0.2.0 are available as pip install from PyPI.
   installed under your Python directory in `/Lib/site-packages`. If you want to
   install a specific emgfit version `x.y.z` run ``$ pip install emgfit==x.y.z``.
 
-2. To test whether the installation succeeded open Python from your command
-   line and import the package::
+2. To test whether the installation succeeded and if you got the correct version
+   open Python from your command line and run::
 
     $ python
     $ import emgfit
+    $ print(emgfit.__version__)
 
-  If the second line does not raise any errors you should be good to go with
-  emgfit!
+   If this doesn't raise any errors you're good to go with emgfit!
 
 The neater way: Installing emgfit into a virtual environment
 ------------------------------------------------------------
@@ -71,14 +71,14 @@ For pip users:
   `/Lib/site-packages`. If you want to install a specific emgfit version `x.y.z`
   run ``$ pip install emgfit==x.y.z``.
 
-4. To test whether the installation succeeded open Python from your command
-   line (after activating `emgfit-env`!) and import the package::
+4. To test whether the installation succeeded and if you got the correct version
+   open Python from your command line (after activating `emgfit-env`!) and run::
 
      (emgfit-env) $ python
      (emgfit-env) $ import emgfit
+     (emgfit-env) $ print(emgfit.__version__)
 
-   If the second line does not raise any errors you should be good to go with
-   emgfit!
+   If this doesn't raise any errors you're good to go with emgfit!
 
 For conda users:
 ^^^^^^^^^^^^^^^^
@@ -98,21 +98,21 @@ For conda users:
 3. Now you are inside your virtual environment and can install `emgfit`.
    Download and install emgfit by running::
 
-     (emgfit-env) $ python setup.py install
+     (emgfit-env) $ pip install --upgrade emgfit
 
    The latest version of the package and all its dependencies should now be
    installed inside your virtual environment `emgfit-env` under
    `/Lib/site-packages`. If you want to install a specific emgfit version `x.y.z`
    run ``$ pip install emgfit==x.y.z``.
 
-4. To test whether the installation succeeded open Python from your command
-   line and import the package::
+4. To test whether the installation succeeded and if you got the correct version
+   open Python from your command line and run::
 
      (emgfit-env) $ python
      (emgfit-env) $ import emgfit
+     (emgfit-env) $ print(emgfit.__version__)
 
-   If the second line does not raise any errors you should be good to go with
-   emgfit!
+   If this doesn't raise any errors you're good to go with emgfit!
 
 Launching Jupyter notebook
 --------------------------

@@ -1,4 +1,7 @@
 @ECHO OFF
+set file1=source\outputs\2019-09-13_004-_006 SUMMED High stats 62Ga fitting MLE.xlsx
+set file2=source\outputs\2019-09-13_004-_006 SUMMED High stats 62Ga fitting MLE_peakshape_calib.txt
+FOR %%f IN ("%file1%" "%file2%") DO DEL %%f
 
 pushd %~dp0
 
