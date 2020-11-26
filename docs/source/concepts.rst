@@ -1,10 +1,10 @@
 Central concepts
 ================
 Note that `emgfit` is tailored to the needs of analyzing high-precision
-time-of-flight mass spectra. This being said, both the selection of
-hyper-exponentially-modified Gaussian (Hyper-EMG) peak shapes as well as the
-implemented statistical techniques could be used as valuable tools for
-analyzing a variety of spectroscopic data sets.
+time-of-flight mass spectra. However, both the available selection of
+hyper-exponentially-modified Gaussian (Hyper-EMG) line shapes as well as the
+implemented statistical techniques could be used as powerful tools for
+analyzing spectroscopic data sets from a variety of fields.
 
 
 The peak and spectrum classes
@@ -284,7 +284,7 @@ Before the peak-shape calibration the user must decide which of the
 complicated model functions are performed on the shape calibration peak,
 starting from a regular Gaussian up to Hyper-EMG functions of successively
 increasing tail order. To avoid overfitting, models with any best-fit shape
-parameters agreeing with zero within 1:math:`\sigma`-confidence are excluded
+parameters agreeing with zero within 1:math:`\sigma` confidence are excluded
 from selection. Amongst the remaining models, the one yielding the lowest
 chi-square per degree of freedom is selected. Alternatively, this feature can be
 skipped by setting the `vary_tail_order` option to `False` and a peak shape can
@@ -322,14 +322,6 @@ the measured time of flight of the ion :math:`t_0` marks a small time offset due
 to electronic delays and N is the number of revolutions the ion has undergone.
 Since N is easy to infer, the factors c and b and the time offset :math:`t_0`
 remain as the calibration constants to be determined.
-.. In the special case of isobaric species (i.e. ions of interest and calibrant
-.. ions share the same atomic mass number) N and :math:`t_0` can be assumed to be
-.. identical for all species and the above relation simplifies to:
-..
-..   \frac{m}{z} = c' (t-t_0)^2,
-..
-.. where :math:`c' = \frac{c}{(1+Nb)^2}` is a calibration factor common to all
-.. isobars.
 
 There is a number of ways to determine the above calibration constants. To
 ensure high precision in the final mass values a second mass calibration - the
@@ -339,7 +331,7 @@ the calibrant peak position in the initial calibration and the positions of
 peaks of interest in the final fitting [5]_. Further, it renders the specific
 choice of the peak position parameter irrelevant as long as the same convention
 is followed for all peaks. In fact, instead of using the mean of the full
-hyper-EMG distribution (:math:`mu_\mathrm{emg}`) `emgfit` uses the mean of the
+hyper-EMG distribution (:math:`\mu_\mathrm{emg}`) `emgfit` uses the mean of the
 underlying Gaussian (:math:`\mu`) to establish peak positions.
 
 In the mass recalibration a calibrant peak with a well-known (ionic) literature
@@ -467,7 +459,7 @@ peak areas and the mass values `m_ion`:
   :meth:`~emgfit.spectrum.spectrum._eval_peakshape_errors` method. This routine
   adapts the approach of [5]_ and re-performs a given fit a number of times,
   each time changing a different shape parameter by plus and minus its
-  1-:math:`\sigma` confidence interval, respectively, while keeping all other
+  1:math:`\sigma` confidence interval, respectively, while keeping all other
   shape parameters fixed. For each shape parameter, the larger of the two shifts
   in a peak's mass and area is recorded and the peak-shape uncertainty is
   estimated for each peak by summing those values in quadrature. Mind that the
@@ -499,7 +491,7 @@ Saving fit results
 ------------------
 All critical results obtained in the analysis of a spectrum can be saved with
 the :meth:`~emgfit.spectrum.spectrum.save_results` spectrum method. This routine
-saves the analysis results to an xlsx-file with three worksheets containing:
+saves the analysis results to an XLSX-file with three worksheets containing:
 
 1. General properties of the spectrum, such as the input filename, the fit model
    used in the peak-shape calibration and the obtained mass recalibration

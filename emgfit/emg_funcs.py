@@ -1,5 +1,6 @@
 ################################################################################
-##### Module with general Hyper-EMG functions
+##### Module with numerically robust implementation of the hyper-exponentially-
+##### modified Gaussian probability density function
 ##### Author: Stefan Paul
 
 ##### Import packages

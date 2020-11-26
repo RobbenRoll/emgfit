@@ -1,6 +1,6 @@
 ################################################################################
-##### Python module for creating simulated TOF mass spectra via inverse
-##### transform sampling
+##### Python module for creating simulated time-of-flight mass spectra with
+##### Gaussian and hyper-exponentially-modified Gaussian lines shapes
 ##### Author: Stefan Paul
 
 import numpy as np
@@ -212,8 +212,8 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
 
     Notes
     -----
-    Random events are created via inverse-transform sampling using Hyper-EMG
-    extensions of Scipy's :meth:`scipy.stats.exponnorm.rvs` method.
+    Random events are created via custom Hyper-EMG extensions of Scipy's
+    :meth:`scipy.stats.exponnorm.rvs` method.
 
     Currently, all simulated peaks have identical width and shape (no re-scaling
     of mass-dependent shape parameters to a peak's mass centroid).
@@ -221,13 +221,13 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     Routine requires tail arguments in shape_cal_pars dict to be ordered
     (eta_m1,eta_m2,...) etc..
 
-    Mind the different units for peak amplitudes `amps` (counts per u) and the
-    background level `bkg_c` (counts per bin). When spectrum data is
-    simulated counts are distributed between the different peaks and the
-    background with probability weights `amps` * <bin width in> and
+    **Mind the different units for peak amplitudes `amps` (counts per u) and the
+    background level `bkg_c` (counts per bin)**. When spectrum data is
+    simulated counts are randomly distributed between the different peaks and
+    the background with probability weights `amps` * <bin width in> and
     `bkg_c` * <number of bins>, respectively. As a consequence, simply changing
-    `N_events` (while keeping all other arguments constant), will render `amps`
-    and `bkg_c` away from their nominal units.
+    `N_events` (while keeping all other arguments constant), will cause `amps`
+    and `bkg_c` to deviate from their nominal units.
 
     """
     # TODO: Implement rescaling of peak-shape parameters with mass
@@ -364,8 +364,8 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
 
     Notes
     -----
-    Random events are created via inverse-transform sampling using Hyper-EMG
-    extensions of Scipy's :meth:`scipy.stats.exponnorm.rvs` method.
+    Random events are created via custom Hyper-EMG extensions of Scipy's
+    :meth:`scipy.stats.exponnorm.rvs` method.
 
     Currently, all simulated peaks have identical width and shape (no re-scaling
     of mass-dependent shape parameters to a peak's mass centroid).

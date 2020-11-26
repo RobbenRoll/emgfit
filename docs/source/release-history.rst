@@ -7,15 +7,16 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
-v0.3.0 (2020-11-17)
+v0.3.0 (2020-11-25)
 -------------------
 
 Added
 ^^^^^
-* Added :mod:`emgfit.sample` module for easy generation of simulated spectra.
+* Added :mod:`emgfit.sample` module for easy generation of simulated spectra
+  with Gaussian and hyper-EMG line shapes.
 * Incorporated the option to perform blind analysis via the new
   :meth:`~emgfit.spectrum.spectrum.set_blinded_peaks` method. The latter hides
-  the obtained mass values and positions of user-defined peaks-of-interest. 
+  the obtained mass values and positions of user-defined peaks-of-interest.
 * Implemented :meth:`~emgfit.spectrum.spectrum.get_errors_from_resampling()`
   method which can yield refined estimates of the statistical and peak area
   errors by performing a parametric bootstrap for each fitted peak.
@@ -38,18 +39,20 @@ Added
 
 Changed
 ^^^^^^^
-* Changed bounding of Pearson weights to addition of small number eps = 1e-10.
-  This ensures that the cost function asymptotically converges to a chi-squared
-  distribution. At the same time this still avoids numerical stabilities due to
-  overweighting of bins whose predicted number of counts approach zero.
+* Changed bounding of Pearson weights to addition of small number eps = 1e-10 in
+  the denominator of the Pearson chi-square residuals. This ensures that the
+  cost function asymptotically converges to a chi-squared distribution while
+  still avoiding convergence issues due to overweighting of bins whose predicted
+  number of counts approach zero.
 * Changed automatic tail order determination in
   :meth:`~emgfit.spectrum.spectrum.determine_peak_shape` method. Now tail orders
   are excluded if either the corresponding eta *or tau* parameter agrees with
   zero within 1-sigma confidence.
+* Extended peak-shape error evaluation methods to also estimate the
+  corresponding peak area uncertainties and automatically add them in quadrature
+  to the statistical peak area uncertainties.
 * Updated formatting of peak properties table for more clarity including color
   coding to indicate the way uncertainties have been estimated.
-* Changed default image format in notebooks from PNG to SVG for higher
-  resolution plots.
 
 Fixed
 ^^^^^

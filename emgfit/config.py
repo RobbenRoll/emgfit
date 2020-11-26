@@ -1,5 +1,5 @@
 ################################################################################
-##### Configuration file for emgfit package
+##### Configuration file with general settings for emgfit package
 ##### Author: Stefan Paul
 
 # Load packages
@@ -23,15 +23,15 @@ A_stat_emg_default = 0.52
 
 ##### Plot appearance
 plt.rcParams.update({"errorbar.capsize": 2})
-plt.rcParams.update({"font.size": 12})
-plt.rcParams["errorbar.capsize"] = 1.0
-from IPython.display import set_matplotlib_formats
-plot_fmt = 'svg'
-set_matplotlib_formats(plot_fmt) # Defines default image format in notebooks
-dpi = None # manually set image resolution - not necessary with SVGs
+plt.rcParams.update({"font.size": 12.5})
+plt.rcParams.update({"errorbar.capsize": 1.0})
+#from IPython.display import set_matplotlib_formats
+#plot_fmt = 'retina'
+#set_matplotlib_formats(plot_fmt) # Defines default image format in notebooks
+dpi = 600 # manually set image resolution - not necessary with SVGs
 figwidth = 11.8 # width of spectrum figures
-msize = 4 # size of data point markers
-labelsize = 9 # size of peak labels
+msize = 5 # size of data point markers
+labelsize = 9.5 # size of peak labels
 
 ##### Appearance of DataFrames
 pd.set_option("precision",2) # global displayed float precision

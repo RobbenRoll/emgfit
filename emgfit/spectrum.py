@@ -503,7 +503,7 @@ class spectrum:
         return y[int(window_len/2+1):-int(window_len/2-1)]
 
 
-    def plot(self, peaks=None, title="", ax=None, yscale='log', vmarkers=None,
+    def plot(self, peaks=None, title="", fig=None, yscale='log', vmarkers=None,
              thres=None, ymin=None, xmin=None, xmax=None):
         """Plot mass spectrum (without fit curve).
 
@@ -516,8 +516,8 @@ class spectrum:
             :attr:`peaks`.
         title : str, optional
             Optional plot title.
-        ax : :class:`matplotlib.pyplot.axes`, optional
-            Axes object to plot onto.
+        fig : :class:`matplotlib.pyplot.figure`, optional
+            Figure object to plot onto.
         yscale : str, optional
             Scale of y-axis (``'lin'`` for logarithmic, ``'log'`` for
             logarithmic), defaults to ``'log'``.
@@ -541,8 +541,9 @@ class spectrum:
             peaks = self.peaks
         data = self.data # get spectrum data stored in dataframe 'self.data'
         ymax = data.max()[0]
-        f = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
-        ax = f.gca()
+        if fig is None:
+            fig = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
+        ax = fig.gca()
         data.plot(ax=ax)
         plt.yscale(yscale)
         plt.xlabel('m/z [u]')
@@ -574,14 +575,16 @@ class spectrum:
                 plt.ylim(0,1.1*ymax)
 
         if thres:
-            plt.hlines(y=thres,xmin=data.index.min(),xmax=data.index.max())
+            ax.axhline(y=thres, color='black')
         plt.xlim(xmin,xmax)
         ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
         plt.show()
 
 
     @staticmethod
-    def _plot_df(df,title="",ax=None,yscale='log',peaks=None,vmarkers=None,thres=None,ymin=None,xmin=None,xmax=None):
+    def _plot_df(df, title='', fig=None, yscale='log', peaks=None,
+                 vmarkers=None, thres=None, ymin=None, ylabel='Counts per bin',
+                 xmin=None, xmax=None):
         """Plots spectrum data stored in :class:`pandas.DataFrame` `df`.
 
         **Intended for internal use.**
@@ -594,8 +597,8 @@ class spectrum:
         ----------
         df : :class:`pandas.DataFrame`
             Spectrum data to plot.
-        ax : :class:`matplotlib.pyplot.axes`, optional
-            Axes object to plot onto.
+        fig : :class:`matplotlib.pyplot.figure`, optional
+            Figure object to plot onto.
         yscale : str, optional
             Scale of y-axis (``'lin'`` for logarithmic, ``'log'`` for
             logarithmic), defaults to ``'log'``.
@@ -608,6 +611,8 @@ class spectrum:
             threshold in peak detection).
         ymin : float, optional
             Lower bound of y-range to plot.
+        ylabel : str, optional
+            Custom label for y-axis.
         xmin, xmax : float [u], optional
             Lower/upper bound of mass range to plot.
 
@@ -618,12 +623,13 @@ class spectrum:
         :meth:`plot_fit_zoom`
 
         """
-        f = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
-        ax = f.gca()
+        if fig is None:
+            fig = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
+        ax = fig.gca()
         df.plot(ax=ax)
         plt.yscale(yscale)
         plt.xlabel('m/z [u]')
-        plt.ylabel('Counts per bin')
+        plt.ylabel(ylabel)
         plt.title(title)
         try:
             plt.vlines(x=vmarkers,ymin=0,ymax=1.05*df.max())
@@ -635,15 +641,15 @@ class spectrum:
         except TypeError:
             pass
         if thres:
-            plt.hlines(y=thres,xmin=df.index.min(),xmax=df.index.max())
+            ax.axhline(y=thres, color='black')
         if ymin:
             plt.ylim(ymin,)
         plt.xlim(xmin,xmax)
         ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
+        plt.legend()
         plt.show()
 
 
-    ##### Define peak detection routine
     def detect_peaks(self,thres=0.003,window_len=23,window='blackman',
                      width=2e-05, plot_smoothed_spec=True,
                      plot_2nd_deriv=True, plot_detection_result=True):
@@ -718,17 +724,23 @@ class spectrum:
         for i in range(len(data_smooth.index) - 2):
             scale = 1/(data_smooth['Counts'].iloc[i+1]+10) # scale data to decrease y range
             #dm = data_smooth.index[i+1]-data_smooth.index[i] # use dm in denominator of deriv if realistic units are desired
-            data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+1] - 2*data_smooth['Counts'].iloc[i] + data_smooth['Counts'].iloc[i-1])/1**2 # Used second order central finite difference
+            data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+1] -
+                                                      2*data_smooth['Counts'].iloc[i] +
+                                                      data_smooth['Counts'].iloc[i-1])/1**2 # Used second order central finite difference
             # data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+2] - 2*data_smooth['Counts'].iloc[i+1] + data_smooth['Counts'].iloc[i])/1**2    # data_sec_deriv = data_smooth.iloc[0:-2].copy()
         if plot_2nd_deriv:
-            self._plot_df(data_sec_deriv,title="Scaled second derivative of spectrum - set threshold indicated",yscale='linear',thres=-thres)
+            title = "Scaled second derivative of spectrum - set threshold indicated"
+            self._plot_df(data_sec_deriv, title=title, yscale='linear',
+                          ylabel='Amplitude [a.u.]', thres=-thres)
 
         # Take only negative part of re-scaled second derivative and invert
         data_sec_deriv_mod = data_smooth.iloc[1:-1].copy()
         for i in range(len(data_smooth.index) - 2):
             scale = -1/(data_smooth['Counts'].iloc[i]+10) # scale data to decrease y range
             # scale = -1/(data_smooth['Counts'].iloc[i+1]+10) # scale data to decrease y range
-            value = scale*(data_smooth['Counts'].iloc[i+1] - 2*data_smooth['Counts'].iloc[i] + data_smooth['Counts'].iloc[i-1])/1**2 # Used (second order central finite difference)
+            value = scale*(data_smooth['Counts'].iloc[i+1] -
+                           2*data_smooth['Counts'].iloc[i] +
+                           data_smooth['Counts'].iloc[i-1])/1**2 # Used (second order central finite difference)
             #value = scale*(data_smooth['Counts'].iloc[i+2] - 2*data_smooth['Counts'].iloc[i+1] + data_smooth['Counts'].iloc[i])/1**2 # Used (second order forward finite difference) # data_sec_deriv_mod = data_smooth.iloc[:-2].copy()
             if value > 0:
                 data_sec_deriv_mod['Counts'].iloc[i] = value
@@ -737,14 +749,16 @@ class spectrum:
 
         bin_width = self.data.index[1] - self.data.index[0]
         width_in_bins = int(width/bin_width) # width in units of bins, the prefactor is empirically determined and corrects for the width difference of the peak and its 2nd derivative
-        peak_find = sig.find_peaks(data_sec_deriv_mod['Counts'].values,height=thres,width=width_in_bins)
+        peak_find = sig.find_peaks(data_sec_deriv_mod['Counts'].values,
+                                   height=thres, width=width_in_bins)
         li_peak_pos = data_sec_deriv_mod.index.values[peak_find[0]]
         #peak_widths = sig.peak_widths(data_sec_deriv_mod['Counts'].values,peak_find[0])
         if plot_2nd_deriv:
             title = str("Negative part of scaled second derivative, inverted "
                         "- set threshold indicated")
-            self._plot_df(data_sec_deriv_mod,title=title,thres=thres,
-                          vmarkers=li_peak_pos,ymin=0.1*thres)
+            self._plot_df(data_sec_deriv_mod, title=title, thres=thres,
+                          vmarkers=li_peak_pos, ymin=0.1*thres,
+                          ylabel='Amplitude [a.u.]')
 
         # Create list of peak objects
         for x in li_peak_pos:
@@ -754,7 +768,8 @@ class spectrum:
 
         # Plot raw spectrum with detected peaks marked
         if plot_detection_result:
-            self.plot(peaks=self.peaks,title="Spectrum with detected peaks marked")
+            self.plot(peaks=self.peaks,
+                      title="Spectrum with detected peaks marked")
             print("Peak properties table after peak detection:")
             self.show_peak_properties()
 
@@ -1346,7 +1361,7 @@ class spectrum:
         ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
         if plot_filename is not None:
             try:
-                plt.savefig(plot_filename+'_log_plot.png',dpi=500)
+                plt.savefig(plot_filename+'_log_plot.png',dpi=600)
             except:
                 raise
         plt.show()
@@ -1388,7 +1403,7 @@ class spectrum:
         plt.xlabel('m/z [u]')
         if plot_filename is not None:
             try:
-                plt.savefig(plot_filename+'_lin_plot.png',dpi=500)
+                plt.savefig(plot_filename+'_lin_plot.png',dpi=600)
             except:
                 raise
         plt.show()
@@ -1475,7 +1490,7 @@ class spectrum:
             default parameters defined in the :mod:`~emgfit.fit_models` module
             will be used after scaling to the spectrum's :attr:`mass_number`.
             For more details and a list of all shape parameters see the
-            `peak-shape calibration`_ article.
+            :ref:`peak-shape calibration` article.
         vary_shape : bool, optional
             If ``False`` only the amplitude (`amp`) and Gaussian centroid (`mu`)
             model parameters will be varied in the fit. If ``True``, the shape
@@ -1708,25 +1723,29 @@ class spectrum:
         #hf.create_dataset('dataset_1', data=d1)
 
         # Plot MCMC traces
-        set_matplotlib_formats('png') # prevent excessive image file size
+        ##set_matplotlib_formats('png') # prevent excessive image file size
         fig, axes = plt.subplots(ndim,figsize=(figwidth, 2.7*ndim),sharex=True)
         samples = result_emcee.sampler.get_chain()[..., :, :] #result_emcee.chain # thinned chain without burn-in
         for i in range(ndim):
             par_chains = samples[:, :, i] # chains for i-th varied parameter
             ax = axes[i]
             ax.plot(par_chains, 'k', alpha=0.3)
-            ax.set_ylabel(varied_par_names[i])
+            ax.set_ylabel(varied_par_names[i],fontsize=16)
+            ax.tick_params(axis='both',labelsize=16)
             ax.axvline(emcee_kws['burn'])
-        axes[-1].set_xlabel('steps')
-        axes[0].set_title('MCMC traces before thinning with burn-in cut-off marker')
+        axes[-1].set_xlabel('steps',fontsize=16)
+        axes[0].set_title('MCMC traces before thinning with burn-in cut-off marker',
+                          fontdict={'fontsize':17})
         plt.show()
-        set_matplotlib_formats(plot_fmt)  # reset plot format
+        ##set_matplotlib_formats(plot_fmt)  # reset plot format
 
-        # Check acceptance fraction of emcee
-        plt.figure(figsize=(8,5),dpi=dpi)
+        # Plot acceptance fraction of emcee
+        f = plt.figure(figsize=(figwidth,figwidth*0.5))
+        ax = f.gca()
+        ax.tick_params(axis='both',labelsize=16)
         plt.plot(result_emcee.acceptance_fraction)
-        plt.xlabel('walker')
-        plt.ylabel('acceptance fraction')
+        plt.xlabel('walker',fontsize=16)
+        plt.ylabel('acceptance fraction',fontsize=16)
         plt.show()
 
         # Plot autocorrelation times of Parameters
@@ -1805,7 +1824,7 @@ class spectrum:
               "(dashed lines) and best-fit values (blue lines):".format(
               peak_idx))
         import corner
-        set_matplotlib_formats('png') # prevent excessive image file size
+        ##set_matplotlib_formats('png') # prevent excessive image file size
         percentile_range = [0.99]*ndim  # percentile of samples to plot
         fig_cor, axes = plt.subplots(ndim,ndim,figsize=(16,16))
         corner.corner(result_emcee.flatchain, #chain
@@ -1823,16 +1842,16 @@ class spectrum:
             ax.xaxis.offsetText.set_fontsize(10)
             ax.yaxis.offsetText.set_fontsize(10)
             #ax.yaxis.set_offset_position('left')
-            ax.xaxis.label.set_size(14)
-            ax.yaxis.label.set_size(14)
+            ax.xaxis.label.set_size(15)
+            ax.yaxis.label.set_size(15)
             labelpad = 0.41
             ax.xaxis.set_label_coords(0.5, -0.3 - labelpad)
             ax.yaxis.set_label_coords(-0.3 - labelpad, 0.5)
         if covar_map_fname is not None:
-            plt.savefig(covar_map_fname+"_covar_map.png", dpi=500,
+            plt.savefig(covar_map_fname+"_covar_map.png", dpi=600,
                         pad_inches=0.3, bbox_inches='tight')
         plt.show()
-        set_matplotlib_formats(plot_fmt) # reset image format
+        ##set_matplotlib_formats(plot_fmt) # reset image format
 
 
     def peakfit(self,fit_model='emg22', cost_func='chi-square', x_fit_cen=None,
@@ -1990,16 +2009,18 @@ class spectrum:
             L = 2\\sum_i L_i = 2\\sum_i \\left( \\sqrt{ L_i } \\right)^2.
 
 
-        Instead of minimizing the scalar log-likelihood ratio, de facto the
-        sum-of-squares of the square-root of the summands :math:`L_i` in the
-        log-likelihood ratio is minimized in emgfit. This is mathematically
-        equivanlent and facilitates the usage of Scipy's highly efficient
-        least-squares optimizers ('least_squares' & 'leastsq') and leads to
-        significant speed-ups compared to scalar optimizers such as Scipy's
-        'Nelder-Mead' or 'Powell' methods. By default, emgfit's 'MLE' fits are
-        performed with Scipy's 'least_squares' optimizer, a variant of a
-        Levenberg-Marquardt algorithm for bound-constrained problems. For more
-        details on these optimizers see the docs of
+        Instead of minimizing the scalar log-likelihood ratio, emgfit by default
+        minimizes the sum-of-squares of the square-roots of the summands
+        :math:`L_i` in the log-likelihood ratio. This is mathematically
+        equivalent to minimizing :math:`L` and facilitates the
+        usage of Scipy's highly efficient least-squares optimizers
+        ('least_squares' & 'leastsq'). The latter yield significant speed-ups
+        compared to scalar optimizers such as Scipy's 'Nelder-Mead' or 'Powell'
+        methods. By default, emgfit's 'MLE' fits are performed with Scipy's
+        'least_squares' optimizer, a variant of a Levenberg-Marquardt algorithm
+        for bound-constrained problems. If a scalar optimizaton method is
+        chosen emgfit uses the conventional approach of minimizing the scalar
+        :math:`L`. For more details on these optimizers see the docs of
         :func:`lmfit.minimizer.minimize` and :class:`scipy.optimize`.
 
         References
@@ -2310,7 +2331,8 @@ class spectrum:
         Returns
         -------
         :class:`pandas.DataFrame`
-            Histogram with simulated spectrum data from bootstrapping.
+            Histogram with simulated spectrum data from non-parametric
+            bootstrap.
 
         """
         if x_cen:
@@ -2515,7 +2537,8 @@ class spectrum:
                                                    show_plots=False)
                     # Record centroid and area of peak 0
                     mus = np.append(mus,fit_result.params['p0_mu'].value)
-                    area_i = spec_boot.calc_peak_area(0, fit_result=fit_result, decimals=2)[0]
+                    area_i = spec_boot.calc_peak_area(0, fit_result=fit_result,
+                                                      decimals=2)[0]
                     areas = np.append(areas,area_i)
                 except ValueError:
                     print("Fit #{1} for N_counts = {0} failed with ValueError "
@@ -2544,23 +2567,27 @@ class spectrum:
 
         A_stat_gauss = 1/(2*np.sqrt(2*np.log(2)))
         A_stat_emg = out.best_values['amplitude']/FWHM_emg
-        A_stat_emg_error = np.sqrt( (out.params['amplitude'].stderr/FWHM_emg)**2 + (out.best_values['amplitude']*FWHM_emg_err/FWHM_emg**2)**2 )
+        A_stat_emg_error = np.sqrt( (out.params['amplitude'].stderr/FWHM_emg)**2
+                                   +(out.best_values['amplitude']*FWHM_emg_err/FWHM_emg**2)**2 )
 
         y = std_devs_of_mus/mean_mu
-        f = plt.figure(figsize=(11,6),dpi=dpi)
-        plt.title('A_stat_emg determination from bootstrapped spectra - '+fit_model+' '+cost_func+' fits')
-        plt.plot(x,y,'o')
+        f = plt.figure(figsize=(11,6), dpi=dpi)
+        plt.title('A_stat_emg determination from bootstrapped spectra - '+fit_model+' '+cost_func+' fits',
+                  fontdict = {'fontsize' : 14})
+        plt.plot(x,y,'o',markersize=msize)
         plt.plot(x,out.best_fit/mean_mu)
         plt.plot(x,A_stat_gauss*FWHM_gauss/(np.sqrt(x)*mean_mu),'--')
         plt.xscale('log')
         plt.yscale('log')
-        plt.xlabel("Peak area [counts]")
-        plt.ylabel("Relative statistical uncertainty")
-        plt.legend(["Standard deviations of sample means","Stat. error of Hyper-EMG","Stat. error of underlying Gaussian"])
-        plt.annotate('A_stat_emg: '+str(np.round(A_stat_emg,3))+' +- '+str(np.round(A_stat_emg_error,3)), xy=(0.7, 0.75), xycoords='axes fraction')
+        plt.xlabel("Peak area [counts]",fontsize=14)
+        plt.ylabel("Relative statistical uncertainty",fontsize=14)
+        plt.legend(["Standard deviations of sample means",
+                    "Stat. error of Hyper-EMG","Stat. error of underlying Gaussian"])
+        plt.annotate('A_stat_emg: '+str(np.round(A_stat_emg,3))+' +- '+str(np.round(A_stat_emg_error,3)),
+                     xy=(0.65, 0.75), xycoords='axes fraction')
         if plot_filename is not None:
             try:
-                plt.savefig(plot_filename+'_A_stat_emg_determination.png',dpi=500)
+                plt.savefig(plot_filename+'_A_stat_emg_determination.png',dpi=600)
             except:
                 raise
         plt.show()
@@ -3004,7 +3031,7 @@ class spectrum:
           - If the calibrant is not included in the `peak_indeces` list, the
             calibrant centroid shifts and the corresponding shifted
             recalibration factors must already have been obtained in a foregoing
-            mass recalibration_.
+            mass :ref:`recalibration`.
 
         - All non-calibrant peaks referenced in `peak_indeces` are treated in a
           similar way. The original fit that yielded the specified `fit_result`
@@ -3125,6 +3152,7 @@ class spectrum:
                     ax.set_yscale("log")
                     ax.set_ylim(0.7,)
                 plt.show()
+                plt.rcParams["errorbar.capsize"] = 1.0 # reset
 
             # If mass calibrant is in fit range, determine its ABSOLUTE centroid
             # shifts first and use them to calculate 'shifted' mass
@@ -3526,26 +3554,30 @@ class spectrum:
             if show_hists:
                 # Plot histograms
                 f, ax = plt.subplots(nrows=1,ncols=2,
-                                     figsize=(figwidth,figwidth*4/18))
+                                     figsize=(figwidth*1.5,figwidth*4/18*1.5))
                 ax0, ax1 = ax.flatten()
-                ax0.set_title("Centroids - peak {0}".format(peak_idx))
+                ax0.set_title("Centroids - peak {0}".format(peak_idx),
+                              fontdict={'fontsize':17})
                 ax0.hist(dm*1e06,bins=19)
                 text0 = r"RMS dev. ={0: .1f} $\mu$u".format(PS_mass_err*1e06)
-                ax0.text(0.65, 0.94, text0,transform=ax0.transAxes, fontsize=10,
+                ax0.text(0.65, 0.94, text0,transform=ax0.transAxes, fontsize=14,
                          verticalalignment='top', bbox=boxprops)
-                ax0.axvline(0,color='black')# best-fit mu
-                ax0.xaxis.get_offset_text().set_fontsize(10)
-                ax0.set_xlabel("Effective mass shift [$\mu$u]")
-                ax0.set_ylabel("Occurences")
-                ax1.set_title("Areas - peak {0}".format(peak_idx))
+                ax0.axvline(0, color='black') # best-fit mu
+                ax0.xaxis.get_offset_text().set_fontsize(15)
+                ax0.tick_params(axis='both',labelsize=15)
+                ax0.set_xlabel("Effective mass shift [$\mu$u]", fontsize=16)
+                ax0.set_ylabel("Occurences", fontsize=16)
+                ax1.set_title("Areas - peak {0}".format(peak_idx),
+                              fontdict={'fontsize':17})
                 ax1.hist(p.area + darea,bins=19)
                 text1 = "RMS dev. ={0: .1f} counts".format(PS_area_err)
-                ax1.text(0.6, 0.94, text1, transform=ax1.transAxes, fontsize=10,
+                ax1.text(0.6, 0.94, text1, transform=ax1.transAxes, fontsize=14,
                          verticalalignment='top', bbox=boxprops)
-                ax1.axvline(p.area,color='black')
-                ax1.xaxis.get_offset_text().set_fontsize(10)
-                ax1.set_xlabel("Peak area [counts]")
-                ax1.set_ylabel("Occurences")
+                ax1.axvline(p.area, color='black')
+                ax1.xaxis.get_offset_text().set_fontsize(15)
+                ax1.tick_params(axis='both',labelsize=15)
+                ax1.set_xlabel("Peak area [counts]", fontsize=16)
+                ax1.set_ylabel("Occurences", fontsize=16)
                 plt.show()
 
         # Print results
@@ -4495,26 +4527,31 @@ class spectrum:
                 best_fit_mu = fit_result.best_values[pref+'mu']
                 best_fit_area = fit_result.best_values[pref+'amp']/bin_width # assumes uniform binning
                 f, ax = plt.subplots(nrows=1,ncols=2,
-                                     figsize=(figwidth,figwidth*4/18))
+                                     figsize=(figwidth*1.5,figwidth*4/18*1.5))
                 ax0, ax1 = ax.flatten()
-                ax0.set_title("Centroid scatter - peak {0}".format(idx))
+                ax0.set_title("Centroid scatter - peak {0}".format(idx),
+                               fontdict={'fontsize':17})
                 ax0.hist( (transp_mus[i]-best_fit_mu)*1e06,bins=19)
                 text0 = r"$\sigma = {0: .1f}$ $\mu$u".format(stat_errs[i]*1e06)
-                ax0.text(0.78, 0.92, text0, transform=ax0.transAxes, fontsize=10,
-                         verticalalignment='top', bbox=boxprops)
-                ax0.axvline(0 ,color='black')
-                ax0.xaxis.get_offset_text().set_fontsize(10)
-                ax0.set_xlabel("Peak position - best-fit value [$\mu$u]")
-                ax0.set_ylabel("Occurences")
-                ax1.set_title("Area scatter - peak {0}".format(idx))
+                ax0.text(0.78, 0.92, text0, transform=ax0.transAxes,
+                         fontsize=14, verticalalignment='top', bbox=boxprops)
+                ax0.axvline(0, color='black')
+                ax0.tick_params(axis='both',labelsize=15)
+                ax0.xaxis.get_offset_text().set_fontsize(15)
+                ax0.set_xlabel("Peak position - best-fit value [$\mu$u]",
+                               fontsize=16)
+                ax0.set_ylabel("Occurences", fontsize=16)
+                ax1.set_title("Area scatter - peak {0}".format(idx),
+                              fontdict={'fontsize':17})
                 ax1.hist( transp_amps[i]/bin_width,bins=19) # assumes uniform binning
                 text1 = r"$\sigma = {0: .1f} $ counts".format(area_errs[i])
-                ax1.text(0.7, 0.92, text1, transform=ax1.transAxes, fontsize=10,
+                ax1.text(0.7, 0.92, text1, transform=ax1.transAxes, fontsize=14,
                          verticalalignment='top', bbox=boxprops)
-                ax1.axvline(best_fit_area ,color='black')
-                ax1.xaxis.get_offset_text().set_fontsize(10)
-                ax1.set_xlabel("Peak area [counts]")
-                ax1.set_ylabel("Occurences")
+                ax1.axvline(best_fit_area, color='black')
+                ax1.tick_params(axis='both',labelsize=15)
+                ax1.xaxis.get_offset_text().set_fontsize(15)
+                ax1.set_xlabel("Peak area [counts]", fontsize=16)
+                ax1.set_ylabel("Occurences", fontsize=16)
                 plt.show()
 
         return stat_errs, area_errs
@@ -4653,6 +4690,7 @@ class spectrum:
                 warnings.warn(msg)
         s_updated = ", ".join(str(idx) for idx in updated_indeces)
         print("Updated total mass errors of peaks {}.".format(s_updated))
+        self.peaks_with_errors_from_resampling.sort()
 
         if show_peak_properties:
             print("\nUpdated peak properties table: ")
