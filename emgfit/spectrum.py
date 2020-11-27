@@ -386,8 +386,8 @@ class spectrum:
             fig  = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
             plt.title(plot_title)
             data_uncut.plot(ax=fig.gca())
-            plt.vlines(m_start,0,1.2*max(self.data['Counts']))
-            plt.vlines(m_stop,0,1.2*max(self.data['Counts']))
+            plt.vlines(m_start,0,1.2*max(self.data['Counts']), color='black')
+            plt.vlines(m_stop,0,1.2*max(self.data['Counts']), color='black')
             plt.yscale('log')
             plt.xlabel('m/z [u]')
             plt.ylabel('Counts per bin')
@@ -550,13 +550,14 @@ class spectrum:
         plt.ylabel('Counts per bin')
         plt.title(title)
         try:
-            plt.vlines(x=vmarkers,ymin=0,ymax=data.max())
+            plt.vlines(x=vmarkers, ymin=0, ymax=data.max(), color='black')
         except TypeError:
             pass
         if yscale == 'log':
             #x_idx = np.argmin(np.abs(data.index.values - p.x_pos)) # set ymin = data.iloc[x_idx] to get peak markers starting at peak max.
             for p in peaks:
-                plt.vlines(x=p.x_pos,ymin=0,ymax=1.05*ymax,linestyles='dashed')
+                plt.vlines(x=p.x_pos, ymin=0, ymax=1.05*ymax,
+                           linestyles='dashed', color='black')
                 plt.text(p.x_pos, 1.21*ymax, peaks.index(p),
                          horizontalalignment='center', fontsize=labelsize)
             if ymin:
@@ -566,7 +567,8 @@ class spectrum:
         else:
             #x_idx = np.argmin(np.abs(data.index.values - p.x_pos)) # set ymin = data.iloc[x_idx] to get peak markers starting at peak max.
             for p in peaks:
-                plt.vlines(x=p.x_pos,ymin=0,ymax=1.03*ymax,linestyles='dashed')
+                plt.vlines(x=p.x_pos, ymin=0, ymax=1.03*ymax,
+                           linestyles='dashed', color='black')
                 plt.text(p.x_pos, 1.05*ymax, peaks.index(p),
                          horizontalalignment='center', fontsize=labelsize)
             if ymin:
@@ -624,20 +626,20 @@ class spectrum:
 
         """
         if fig is None:
-            fig = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
+            fig = plt.figure(figsize=(figwidth,figwidth*4.5/18), dpi=dpi)
         ax = fig.gca()
-        df.plot(ax=ax)
+        df.plot(ax=ax, legend=None)
         plt.yscale(yscale)
         plt.xlabel('m/z [u]')
         plt.ylabel(ylabel)
         plt.title(title)
         try:
-            plt.vlines(x=vmarkers,ymin=0,ymax=1.05*df.max())
+            plt.vlines(x=vmarkers, ymin=0, ymax=1.05*df.max(), color='black')
         except TypeError:
             pass
         try:
             li_x_pos = [p.x_pos for p in peaks]
-            plt.vlines(x=li_x_pos,ymin=0,ymax=1.05*df.max())
+            plt.vlines(x=li_x_pos, ymin=0, ymax=1.05*df.max(), color='black')
         except TypeError:
             pass
         if thres:
@@ -646,7 +648,6 @@ class spectrum:
             plt.ylim(ymin,)
         plt.xlim(xmin,xmax)
         ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
-        plt.legend()
         plt.show()
 
 
@@ -1255,7 +1256,7 @@ class spectrum:
                 x_idx = np.argmin(np.abs(data.index.values - p.x_pos))
                 ymin = data.iloc[x_idx]
                 plt.vlines(x=p.x_pos, ymin=ymin, ymax=1.3*ymax,
-                           linestyles='dashed')
+                           linestyles='dashed', color='black')
                 plt.text(p.x_pos, 1.42*ymax, self.peaks.index(p),
                          horizontalalignment='center', fontsize=labelsize)
         else:
@@ -1263,7 +1264,7 @@ class spectrum:
                 x_idx = np.argmin(np.abs(data.index.values - p.x_pos))
                 ymin = data.iloc[x_idx]
                 plt.vlines(x=p.x_pos, ymin=ymin, ymax=1.11*ymax,
-                           linestyles='dashed')
+                           linestyles='dashed', color='black')
                 plt.text(p.x_pos, 1.13*ymax, self.peaks.index(p),
                          horizontalalignment='center', fontsize=labelsize)
 
@@ -1377,9 +1378,9 @@ class spectrum:
         ax0.set_title(plot_title)
         ax0.plot(fit_result.x, std_residual,'.',color='royalblue',
                  markersize=msize)
-        #ax0.hlines(1,x_min,x_max,linestyle='dashed')
-        ax0.hlines(0,x_min,x_max)
-        #ax0.hlines(-1,x_min,x_max,linestyle='dashed')
+        #ax0.hlines(1,x_min,x_max,linestyle='dashed', color='black')
+        ax0.hlines(0,x_min,x_max, color='black')
+        #ax0.hlines(-1,x_min,x_max,linestyle='dashed', color='black')
         ax0.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
         ax0.set_ylabel('Residual / $\sigma$')
         #ax0.tick_params(axis='x', labelsize=0) # hide tick labels
@@ -3390,8 +3391,7 @@ class spectrum:
                                if xmin_shape_cal < p.x_pos < xmax_shape_cal])
         par_samples.columns = par_samples.columns.str.replace('p'+str(
                                                     first_idx_shape_cal)+'_','')
-                                                 #self.index_shape_calib)+'_','')
-        shape_par_samples = par_samples.to_dict(orient="row")
+        shape_par_samples = par_samples.to_dict('records') #(orient="row")
 
         # Determine tail order of fit model for normalization of initial etas
         if fit_result.fit_model.startswith('emg'):
@@ -4728,7 +4728,7 @@ class spectrum:
         # Make DataFrame with spectrum propeties
         datetime = time.localtime() # get current date and time
         datetime_string = time.strftime("%Y/%m/%d, %H:%M:%S", datetime)
-        spec_data = np.array([["Saved on",datetime_string]]) # add datetime stamp
+        spec_data = np.array([["Saved on",datetime_string]], dtype=object) 
         import sys
         spec_data = np.append(spec_data,
                               [["Python version",sys.version_info[0:3]]],axis=0)

@@ -31,7 +31,7 @@ plt.rcParams.update({"errorbar.capsize": 1.0})
 dpi = 600 # manually set image resolution - not necessary with SVGs
 figwidth = 11.8 # width of spectrum figures
 msize = 5 # size of data point markers
-labelsize = 9.5 # size of peak labels
+labelsize = 10 # size of peak labels
 
 ##### Appearance of DataFrames
 pd.set_option("precision",2) # global displayed float precision
