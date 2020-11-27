@@ -544,7 +544,7 @@ class spectrum:
         if fig is None:
             fig = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
         ax = fig.gca()
-        data.plot(ax=ax)
+        data.plot(ax=ax, legend=False)
         plt.yscale(yscale)
         plt.xlabel('m/z [u]')
         plt.ylabel('Counts per bin')
@@ -561,9 +561,9 @@ class spectrum:
                 plt.text(p.x_pos, 1.21*ymax, peaks.index(p),
                          horizontalalignment='center', fontsize=labelsize)
             if ymin:
-                plt.ylim(ymin,2.35*ymax)
+                plt.ylim(ymin,2.45*ymax)
             else:
-                plt.ylim(0.1,2.35*ymax)
+                plt.ylim(0.1,2.45*ymax)
         else:
             #x_idx = np.argmin(np.abs(data.index.values - p.x_pos)) # set ymin = data.iloc[x_idx] to get peak markers starting at peak max.
             for p in peaks:
@@ -572,9 +572,9 @@ class spectrum:
                 plt.text(p.x_pos, 1.05*ymax, peaks.index(p),
                          horizontalalignment='center', fontsize=labelsize)
             if ymin:
-                plt.ylim(ymin,1.1*ymax)
+                plt.ylim(ymin,1.12*ymax)
             else:
-                plt.ylim(0,1.1*ymax)
+                plt.ylim(0,1.12*ymax)
 
         if thres:
             ax.axhline(y=thres, color='black')
@@ -628,7 +628,7 @@ class spectrum:
         if fig is None:
             fig = plt.figure(figsize=(figwidth,figwidth*4.5/18), dpi=dpi)
         ax = fig.gca()
-        df.plot(ax=ax, legend=None)
+        df.plot(ax=ax, legend=False)
         plt.yscale(yscale)
         plt.xlabel('m/z [u]')
         plt.ylabel(ylabel)
@@ -1243,7 +1243,7 @@ class spectrum:
         yscale : str, optional
             Scale of y-axis, either 'lin' or 'log'.
         ymax : float
-            Maximal y-value of spectrum data to plot. Used to set y-limits.
+            Maximal y-value of spectrum data to plot. Used to set marker length.
         peaks : list of :class:`peak`
             List of peaks to add peak markers for.
 
@@ -1257,7 +1257,7 @@ class spectrum:
                 ymin = data.iloc[x_idx]
                 plt.vlines(x=p.x_pos, ymin=ymin, ymax=1.3*ymax,
                            linestyles='dashed', color='black')
-                plt.text(p.x_pos, 1.42*ymax, self.peaks.index(p),
+                plt.text(p.x_pos, 1.44*ymax, self.peaks.index(p),
                          horizontalalignment='center', fontsize=labelsize)
         else:
             for p in peaks:
@@ -1333,16 +1333,17 @@ class spectrum:
                          max(fit_result.best_fit[i_min:i_max]) )
 
         # Plot fit result with logarithmic y-scale
-        f1 = plt.figure(figsize=(figwidth,figwidth*8.5/18),dpi=dpi)
+        f1 = plt.figure(figsize=(figwidth,figwidth*8.5/18), dpi=dpi)
         ax = f1.gca()
         plt.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',
-                     color='royalblue',linewidth=0.5,markersize=msize)
-        plt.plot(fit_result.x, fit_result.best_fit,'-',color='red',linewidth=2)
+                     color='royalblue',linewidth=0.5,markersize=msize,zorder=1)
+        plt.plot(fit_result.x, fit_result.best_fit, '-', color='red',
+                 linewidth=lwidth, zorder=10)
         comps = fit_result.eval_components(x=fit_result.x)
         for peak in peaks_to_plot: # loop over peaks to plot
             peak_index = self.peaks.index(peak)
             pref = 'p{0}_'.format(peak_index)
-            plt.plot(fit_result.x, comps[pref], '--',linewidth=2)
+            plt.plot(fit_result.x, comps[pref],'--', linewidth=lwidth, zorder=5)
         if show_peak_markers:
             self._add_peak_markers(yscale='log', ymax=y_max_log,
                                    peaks=peaks_to_plot)
@@ -1379,18 +1380,19 @@ class spectrum:
         ax0.plot(fit_result.x, std_residual,'.',color='royalblue',
                  markersize=msize)
         #ax0.hlines(1,x_min,x_max,linestyle='dashed', color='black')
-        ax0.hlines(0,x_min,x_max, color='black')
+        ax0.hlines(0,x_min,x_max, color='black', zorder=10)
         #ax0.hlines(-1,x_min,x_max,linestyle='dashed', color='black')
         ax0.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
         ax0.set_ylabel('Residual / $\sigma$')
         #ax0.tick_params(axis='x', labelsize=0) # hide tick labels
         ax1 = axs[1]
+        ax1.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
+                 color='royalblue', linewidth=1, markersize=msize, label='data',
+                 zorder=1)
         ax1.plot(x_fine, fit_result.eval(params=fit_result.init_params,x=x_fine),
-                 linestyle='dashdot',color='green',label='init-fit')
-        ax1.plot(x_fine, fit_result.eval(x=x_fine),'-',color='red',linewidth=2,
-                 label='best-fit')
-        ax1.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',
-                     color='royalblue',linewidth=1,markersize=msize,label='data')
+                 linestyle='dashdot', color='green', label='init-fit', zorder=5)
+        ax1.plot(x_fine, fit_result.eval(x=x_fine), '-', color='red',
+                 linewidth=lwidth, label='best-fit', zorder=10)
         ax1.set_title('')
         ax1.set_ylim(-0.05*y_max_lin, 1.2*y_max_lin)
         ax1.set_ylabel('Counts per bin')
@@ -1512,7 +1514,7 @@ class spectrum:
 
         """
         model = getattr(fit_models,model) # get single peak model from fit_models.py
-        mod = fit.models.ConstantModel(independent_vars='x',prefix='bkg_')
+        mod = fit.models.ConstantModel(prefix='bkg_') #(independent_vars='x',prefix='bkg_')
         if vary_baseline == True:
             mod.set_param_hint('bkg_c', value= 0.1, min=0,max=4, vary=True)
         else:
@@ -1539,7 +1541,7 @@ class spectrum:
         return mod
 
 
-    def _get_MCMC_par_samples(self, fit_result, steps=14000, burn=500, thin=250,
+    def _get_MCMC_par_samples(self, fit_result, steps=12000, burn=500, thin=250,
                               show_MCMC_fit_result=False, covar_map_fname=None,
                               n_cores=-1, MCMC_seed=1364):
         """Map out parameter covariances and posterior distributions using
@@ -3137,17 +3139,28 @@ class spectrum:
 
             if show_shape_err_fits:
                 plt.rcParams["errorbar.capsize"] = 0.5
-                fig, axs = plt.subplots(1,2,figsize=(figwidth,figwidth*6/18))
+                fig, axs = plt.subplots(1,2,
+                                        figsize=(figwidth*1.5, figwidth*6/18))
                 ax0 = axs[0]
-                ax0.set_title("Re-fit with ("+str(par)+" + 1 sigma) = {:.4E}".format(self.shape_cal_pars[par]+self.shape_cal_errors[par]))
-                ax0.errorbar(fit_result_p.x,fit_result_p.y,yerr=fit_result_p.y_err,fmt='.',color='royalblue',linewidth=0.5)
-                ax0.plot(fit_result.x, fit_result.best_fit,'--',color='black',linewidth=2,label="original fit")
-                ax0.plot(fit_result_p.x, fit_result_p.best_fit,'-',color='red',linewidth=2,label="re-fit")
+                ax0.set_title("Re-fit with ("+str(par)+" + 1 sigma) = {:.4E}".format(
+                                self.shape_cal_pars[par]+self.shape_cal_errors[par]))
+                ax0.errorbar(fit_result_p.x, fit_result_p.y,
+                             yerr=fit_result_p.y_err, fmt='.',
+                             color='royalblue', linewidth=0.5)
+                ax0.plot(fit_result.x, fit_result.best_fit, '--', color='black',
+                         linewidth=lwidth, label="original fit")
+                ax0.plot(fit_result_p.x, fit_result_p.best_fit, '-',
+                         color='red', linewidth=lwidth, label="re-fit")
                 ax1 = axs[1]
-                ax1.set_title("Re-fit with ("+str(par)+" - 1 sigma) = {:.4E}".format(self.shape_cal_pars[par]-self.shape_cal_errors[par]))
-                ax1.errorbar(fit_result_m.x,fit_result_m.y,yerr=fit_result_m.y_err,fmt='.',color='royalblue',linewidth=0.5)
-                ax1.plot(fit_result.x, fit_result.best_fit,'--',color='black',linewidth=2,label="original fit")
-                ax1.plot(fit_result_m.x, fit_result_m.best_fit,'-',color='red',linewidth=2,label="re-fit")
+                ax1.set_title("Re-fit with ("+str(par)+" - 1 sigma) = {:.4E}".format(
+                                self.shape_cal_pars[par]-self.shape_cal_errors[par]))
+                ax1.errorbar(fit_result_m.x, fit_result_m.y,
+                             yerr=fit_result_m.y_err, fmt='.',
+                             color='royalblue', linewidth=0.5)
+                ax1.plot(fit_result.x, fit_result.best_fit, '--', color='black',
+                         linewidth=lwidth, label="original fit")
+                ax1.plot(fit_result_m.x, fit_result_m.best_fit, '-',
+                         color='red', linewidth=lwidth, label="re-fit")
                 for ax in axs:
                     ax.legend()
                     ax.set_yscale("log")
@@ -4728,7 +4741,7 @@ class spectrum:
         # Make DataFrame with spectrum propeties
         datetime = time.localtime() # get current date and time
         datetime_string = time.strftime("%Y/%m/%d, %H:%M:%S", datetime)
-        spec_data = np.array([["Saved on",datetime_string]], dtype=object) 
+        spec_data = np.array([["Saved on",datetime_string]], dtype=object)
         import sys
         spec_data = np.append(spec_data,
                               [["Python version",sys.version_info[0:3]]],axis=0)

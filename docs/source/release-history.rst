@@ -7,6 +7,23 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+v0.3.1 (2020-11-27)
+-------------------
+
+Changed
+^^^^^^^
+* Optimized plot appearance.
+
+Fixed
+^^^^^
+* Fixed a bug causing crashes of parallelized fitting with
+  :meth:`~emgfit.spectrum.spectrum.get_errors_from_resampling` &
+  :meth:`~emgfit.spectrum.spectrum.get_MC_peakshape_errors` in Python3.8.
+* Fixed some deprecation warnings.
+* Added additional wait time to prevent Travis CI build from timing out
+  prematurely.
+
+
 v0.3.0 (2020-11-25)
 -------------------
 
@@ -17,7 +34,7 @@ Added
 * Incorporated the option to perform blind analysis via the new
   :meth:`~emgfit.spectrum.spectrum.set_blinded_peaks` method. The latter hides
   the obtained mass values and positions of user-defined peaks-of-interest.
-* Implemented :meth:`~emgfit.spectrum.spectrum.get_errors_from_resampling()`
+* Implemented :meth:`~emgfit.spectrum.spectrum.get_errors_from_resampling`
   method which can yield refined estimates of the statistical and peak area
   errors by performing a parametric bootstrap for each fitted peak.
 * Added a Markov-Chain Monte Carlo sampling method
@@ -25,7 +42,7 @@ Added
   posterior distributions and correlations of model parameters. This method can
   be called with the `map_par_covar` option in the peak-shape determination.
 * Added a method (
-  :meth:`~emgfit.spectrum.spectrum.spectrum.get_MC_peakshape_errors`) for
+  :meth:`~emgfit.spectrum.spectrum.get_MC_peakshape_errors`) for
   obtaining refined peak-shape error estimates that account for correlations and
   non-normal posterior distributions of shape parameters. This method relies on
   shape parameter sets obtained via Markov-Chain Monte Carlo sampling.
