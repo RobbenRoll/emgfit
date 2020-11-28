@@ -40,16 +40,14 @@ script:
 jobs:
   include:
     - stage: deploy
-      python: 3.7
       install:
-        - pip install .
-        - pip install -r requirements-dev.txt
         - pip install doctr
-      script:
-        # Publish the documentation, only for new version tags:
+      before_deploy:
+        # Publish the documentation, only for new version tags
+        # Exit if publishing docs fails
         - DEPLOY_DIR="$TRAVIS_TAG";
-        - if [ $TRAVIS_TAG != null ]; then
-            doctr deploy --build-tags --built-docs docs/build/html $DEPLOY_DIR --branch-whitelist;
+        - if [ "$TRAVIS_TAG" != null ]; then
+            doctr deploy --build-tags --built-docs docs/build/html $DEPLOY_DIR --branch-whitelist || travis_terminate 1;
           fi
       deploy:
         # Update gh-pages index
