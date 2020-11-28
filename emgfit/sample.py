@@ -305,9 +305,9 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     bkg = uniform.rvs(size=N_bkg,loc=x_min,scale=sample_range)
     events = np.append(events,bkg)
 
-    if out is 'list':  # return unbinned list of events
+    if out == 'list':  # return unbinned list of events
         return events
-    elif out is 'hist':  # return histogram
+    elif out == 'hist':  # return histogram
         y = np.histogram(events,bins=bin_edges)[0]
         df = pd.DataFrame(data=y,index=bin_cens,columns = ['Counts'])
         df.index.rename('Mass [u]',inplace=True)
