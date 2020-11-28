@@ -26,7 +26,6 @@ sudo: true
 before_script:
   - sudo apt-get -qq update
   - sudo apt-get install -y pandoc  # Install pandoc for markdown notebook cells
-  - pip install travispls
 
 script:
   - coverage run -m pytest  # Run the tests and check for test coverage.
@@ -35,7 +34,7 @@ script:
   # Enforce code style ('relaxed' line length limit is set in .flake8 config file):
   - flake8 . --exit-zero # Exit with status code "0" even if there are errors.
   - set -e # exit if building docs fails
-  - travis-pls make -C docs html  # Build the documentation with extended timeout.
+  - make -C docs html  # Build the documentation with extended timeout.
   - DEPLOY_DIR="$TRAVIS_TAG";
   - pip install doctr
   # Publish the documentation, only for new version tags:
