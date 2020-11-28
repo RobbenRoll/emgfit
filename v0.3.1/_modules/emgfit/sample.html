@@ -1,0 +1,654 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>emgfit.sample &mdash; emgfit 0.3.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/thebelab.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+        <script src="../../_static/thebelab-helper.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> emgfit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Getting started with emgfit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../emgfit_tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Central concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">emgfit API docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">emgfit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>emgfit.sample</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for emgfit.sample</h1><div class="highlight"><pre>
+<span></span><span class="c1">################################################################################</span>
+<span class="c1">##### Python module for creating simulated time-of-flight mass spectra with</span>
+<span class="c1">##### Gaussian and hyper-exponentially-modified Gaussian lines shapes</span>
+<span class="c1">##### Author: Stefan Paul</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">exponnorm</span><span class="p">,</span> <span class="n">uniform</span><span class="p">,</span> <span class="n">poisson</span>
+
+<span class="c1">################################################################################</span>
+<span class="c1">##### Define Functions for drawing random variates from Hyper-EMG PDFs</span>
+<span class="n">norm_precision</span> <span class="o">=</span> <span class="mf">1e-09</span>
+
+<div class="viewcode-block" id="_h_m_i_rvs"><a class="viewcode-back" href="../../modules.html#emgfit.sample._h_m_i_rvs">[docs]</a><span class="k">def</span> <span class="nf">_h_m_i_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">tau_m</span><span class="p">,</span><span class="n">N_i</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function for definition of h_m_emg_rvs &quot;&quot;&quot;</span>
+    <span class="n">rvs</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">-</span> <span class="n">exponnorm</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">tau_m</span><span class="o">/</span><span class="n">sigma</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">N_i</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rvs</span></div>
+
+
+<div class="viewcode-block" id="h_m_emg_rvs"><a class="viewcode-back" href="../../modules.html#emgfit.sample.h_m_emg_rvs">[docs]</a><span class="k">def</span> <span class="nf">h_m_emg_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="o">*</span><span class="n">t_args</span><span class="p">,</span><span class="n">N_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Draw random samples from neg. skewed Hyper-EMG PDF</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mu : float [u]</span>
+<span class="sd">        Nominal position of simulated peak (mean of underlying Gaussian).</span>
+<span class="sd">    sigma : float [u]</span>
+<span class="sd">        Nominal standard deviation (of the underlying Gaussian) of the simulated</span>
+<span class="sd">        hyper-EMG peak.</span>
+<span class="sd">    theta : float</span>
+<span class="sd">        Mixing weight of pos. &amp; neg. skewed EMG distributions.</span>
+<span class="sd">    t_args : list of lists of float</span>
+<span class="sd">        List containing lists of the EMG tail parameters with the signature:</span>
+<span class="sd">        [[eta_m1, eta_m2, ...], [tau_m1, tau_m2, ...]]</span>
+<span class="sd">    N_samples : int</span>
+<span class="sd">        Number of random events to sample.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`numpy.ndarray` of floats</span>
+<span class="sd">        Array with simulated events.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">N_samples</span><span class="p">,</span><span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;N_samples must be of type int&quot;</span><span class="p">)</span>
+    <span class="n">li_eta_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">li_tau_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">t_order_m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span> <span class="c1"># order of negative tail exponentials</span>
+    <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">norm_precision</span><span class="p">,</span> <span class="s2">&quot;eta_m&#39;s don&#39;t add up to 1.&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_tau_m</span><span class="p">)</span> <span class="o">!=</span> <span class="n">t_order_m</span><span class="p">:</span>  <span class="c1"># check if all arguments match tail order</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;orders of eta_m and tau_m do not match!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># randomly distribute ions between tails according to eta_m weights</span>
+    <span class="n">tail_nos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">t_order_m</span><span class="p">),</span><span class="n">size</span><span class="o">=</span><span class="n">N_samples</span><span class="p">,</span><span class="n">p</span> <span class="o">=</span> <span class="n">li_eta_m</span><span class="p">)</span>
+    <span class="n">rvs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_m</span><span class="p">):</span>
+        <span class="n">N_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">tail_nos</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">tau_m</span> <span class="o">=</span> <span class="n">li_tau_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">rvs_i</span> <span class="o">=</span> <span class="n">_h_m_i_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">tau_m</span><span class="p">,</span><span class="n">N_i</span><span class="p">)</span>
+        <span class="n">rvs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rvs</span><span class="p">,</span><span class="n">rvs_i</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rvs</span></div>
+
+
+<div class="viewcode-block" id="_h_p_i_rvs"><a class="viewcode-back" href="../../modules.html#emgfit.sample._h_p_i_rvs">[docs]</a><span class="k">def</span> <span class="nf">_h_p_i_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">tau_p</span><span class="p">,</span><span class="n">N_i</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function for definition of h_p_emg_rvs &quot;&quot;&quot;</span>
+    <span class="n">rvs</span> <span class="o">=</span> <span class="n">exponnorm</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">tau_p</span><span class="o">/</span><span class="n">sigma</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">N_i</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rvs</span></div>
+
+
+<div class="viewcode-block" id="h_p_emg_rvs"><a class="viewcode-back" href="../../modules.html#emgfit.sample.h_p_emg_rvs">[docs]</a><span class="k">def</span> <span class="nf">h_p_emg_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="o">*</span><span class="n">t_args</span><span class="p">,</span><span class="n">N_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Draw random samples from pos. skewed Hyper-EMG PDF</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mu : float [u]</span>
+<span class="sd">        Nominal position of simulated peak (mean of underlying Gaussian).</span>
+<span class="sd">    sigma : float [u]</span>
+<span class="sd">        Nominal standard deviation (of the underlying Gaussian) of the simulated</span>
+<span class="sd">        hyper-EMG peak.</span>
+<span class="sd">    t_args : list of lists of float</span>
+<span class="sd">        List containing lists of the EMG tail parameters with the signature:</span>
+<span class="sd">        [[eta_p1, eta_p2, ...], [tau_p1, tau_p2, ...]]</span>
+<span class="sd">    N_samples : int</span>
+<span class="sd">        Number of random events to sample.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`numpy.ndarray` of floats</span>
+<span class="sd">        Array with simulated events.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">N_samples</span><span class="p">,</span><span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;N_samples must be of type int&quot;</span><span class="p">)</span>
+    <span class="n">li_eta_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">li_tau_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">t_order_p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span> <span class="c1"># order of negative tail exponentials</span>
+    <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">norm_precision</span><span class="p">,</span> <span class="s2">&quot;eta_p&#39;s don&#39;t add up to 1.&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_tau_p</span><span class="p">)</span> <span class="o">!=</span> <span class="n">t_order_p</span><span class="p">:</span>  <span class="c1"># check if all arguments match tail order</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;orders of eta_p and tau_p do not match!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># randomly distribute ions between tails according to eta_p weights</span>
+    <span class="n">tail_nos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">t_order_p</span><span class="p">),</span><span class="n">size</span><span class="o">=</span><span class="n">N_samples</span><span class="p">,</span><span class="n">p</span> <span class="o">=</span> <span class="n">li_eta_p</span><span class="p">)</span>
+    <span class="n">rvs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_p</span><span class="p">):</span>
+        <span class="n">N_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">tail_nos</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">tau_p</span> <span class="o">=</span> <span class="n">li_tau_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">rvs_i</span> <span class="o">=</span> <span class="n">_h_p_i_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">tau_p</span><span class="p">,</span><span class="n">N_i</span><span class="p">)</span>
+        <span class="n">rvs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rvs</span><span class="p">,</span><span class="n">rvs_i</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rvs</span></div>
+
+
+<div class="viewcode-block" id="h_emg_rvs"><a class="viewcode-back" href="../../modules.html#emgfit.sample.h_emg_rvs">[docs]</a><span class="k">def</span> <span class="nf">h_emg_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span> <span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="o">*</span><span class="n">t_args</span><span class="p">,</span> <span class="n">N_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Draw random samples from Hyper-EMG PDF</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mu : float [u]</span>
+<span class="sd">        Nominal position of simulated peak (mean of underlying Gaussian).</span>
+<span class="sd">    sigma : float [u]</span>
+<span class="sd">        Nominal standard deviation (of the underlying Gaussian) of the simulated</span>
+<span class="sd">        hyper-EMG peak.</span>
+<span class="sd">    theta : float</span>
+<span class="sd">        Mixing weight of pos. &amp; neg. skewed EMG distributions.</span>
+<span class="sd">    t_args : list of lists of float</span>
+<span class="sd">        List containing lists of the EMG tail parameters with the signature:</span>
+<span class="sd">        [[eta_m1, eta_m2, ...], [tau_m1, tau_m2, ...],</span>
+<span class="sd">        [eta_p1, eta_p2, ...], [tau_p1, tau_p2, ...]]</span>
+<span class="sd">    N_samples : int</span>
+<span class="sd">        Number of random events to sample.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`numpy.ndarray` of floats</span>
+<span class="sd">        Array with simulated events.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">N_samples</span><span class="p">,</span><span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;N_samples must be of type int&quot;</span><span class="p">)</span>
+    <span class="n">li_eta_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">li_tau_m</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">li_eta_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">li_tau_p</span> <span class="o">=</span> <span class="n">t_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">theta</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">rvs</span> <span class="o">=</span> <span class="n">h_m_emg_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">,</span> <span class="n">N_samples</span><span class="o">=</span><span class="n">N_samples</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">theta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">rvs</span> <span class="o">=</span> <span class="n">h_p_emg_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span><span class="p">,</span> <span class="n">N_samples</span><span class="o">=</span><span class="n">N_samples</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">size</span><span class="o">=</span><span class="n">N_samples</span><span class="p">,</span><span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">theta</span><span class="p">,</span><span class="mi">1</span><span class="o">-</span><span class="n">theta</span><span class="p">])</span> <span class="c1"># randomly distribute ions between h_m_emg and h_p_emg according to weight theta</span>
+        <span class="n">N_m</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">neg</span><span class="p">))</span> <span class="c1">#int(np.round(theta*N_samples)) # np.rint(theta*N_samples,dtype=int)</span>
+        <span class="n">N_p</span> <span class="o">=</span> <span class="n">N_samples</span> <span class="o">-</span> <span class="n">N_m</span> <span class="c1"># np.rint((1-theta)*N_samples,dtype=int)</span>
+        <span class="n">rvs_m</span> <span class="o">=</span> <span class="n">h_m_emg_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">,</span> <span class="n">N_samples</span><span class="o">=</span><span class="n">N_m</span><span class="p">)</span>
+        <span class="n">rvs_p</span> <span class="o">=</span> <span class="n">h_p_emg_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span><span class="p">,</span> <span class="n">N_samples</span><span class="o">=</span><span class="n">N_p</span><span class="p">)</span>
+        <span class="n">rvs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rvs_m</span><span class="p">,</span><span class="n">rvs_p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rvs</span></div>
+
+<span class="c1">################################################################################</span>
+<span class="c1">##### Define functions for creating simulated spectra</span>
+
+<div class="viewcode-block" id="simulate_events"><a class="viewcode-back" href="../../modules.html#emgfit.sample.simulate_events">[docs]</a><span class="k">def</span> <span class="nf">simulate_events</span><span class="p">(</span><span class="n">shape_pars</span><span class="p">,</span> <span class="n">mus</span><span class="p">,</span> <span class="n">amps</span><span class="p">,</span> <span class="n">bkg_c</span><span class="p">,</span> <span class="n">N_events</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span>
+                    <span class="n">x_max</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="s1">&#39;hist&#39;</span><span class="p">,</span> <span class="n">N_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bin_cens</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create simulated ion events drawn from a user-defined probability</span>
+<span class="sd">    distribution function (PDF)</span>
+
+<span class="sd">    Events can either be output as a list of single events (mass stamps) or as a</span>
+<span class="sd">    histogram. In histogram output mode, uniform binning is easily realized by</span>
+<span class="sd">    specifying the `N_bins` argument. More control over the binning can be</span>
+<span class="sd">    achieved by parsing the desired bin centers to the `bin_cens` argument (e.g.</span>
+<span class="sd">    for non-uniform binning).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    shape_pars : dict</span>
+<span class="sd">        Peak-shape parameters to use for sampling. The dictionary must follow</span>
+<span class="sd">        the structure of the :attr:`~spectrum.shape_cal_pars` attribute of the</span>
+<span class="sd">        :class:`~spectrum.spectrum` class.</span>
+<span class="sd">    mus : float or list of float [u]</span>
+<span class="sd">        Nominal peak positions of peaks in simulated spectrum.</span>
+<span class="sd">    amps : float or list of float [counts per u]</span>
+<span class="sd">        Nominal amplitudes of peaks in simulated spectrum.</span>
+<span class="sd">    bkg_c : float [counts per bin], optional, default: 0.0</span>
+<span class="sd">        Nominal amplitude of uniform background in simulated spectrum.</span>
+<span class="sd">    x_min : float [u]</span>
+<span class="sd">        Beginning of sampling mass range.</span>
+<span class="sd">    x_max : float [u]</span>
+<span class="sd">        End of sampling mass range.</span>
+<span class="sd">    N_events : int, optional, default: 1000</span>
+<span class="sd">        Total number of events to simulate (signal and background events).</span>
+<span class="sd">    out : str, optional</span>
+<span class="sd">        Output format of sampled data. Options:</span>
+
+<span class="sd">        - ``&#39;hist&#39;`` for binned mass spectrum (default). The centres of the mass</span>
+<span class="sd">          bins must be specified with the `bin_cens` argument.</span>
+<span class="sd">        - ``&#39;list&#39;`` for unbinned list of single ion and background events.</span>
+
+<span class="sd">    N_bins : int, optional</span>
+<span class="sd">        Number of uniform bins to use in ``&#39;hist&#39;`` output mode. The **outer**</span>
+<span class="sd">        edges of the first and last bin are fixed to the start and end of the</span>
+<span class="sd">        sampling range respectively (i.e. `x_min` and `x_max`). In between, bins</span>
+<span class="sd">        are distributed with a fixed spacing of (`x_max`-`x_min`)/`N_bins`.</span>
+<span class="sd">    bin_cens : :class:`numpy.ndarray` [u]</span>
+<span class="sd">        Centres of mass bins to use in ``&#39;hist&#39;`` output mode. This argument</span>
+<span class="sd">        allows the realization of non-uniform binning. Bin edges are centred</span>
+<span class="sd">        between neighboring bins. Note: Bins outside the sampling range defined</span>
+<span class="sd">        with `x_min` and `x_max` will be empty.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`numpy.array` or :class:`pandas.Dataframe`</span>
+<span class="sd">       If out=&#39;hist&#39; a dataframe with a histogram of the format</span>
+<span class="sd">       [bin centre [u], counts in bin] is returned. If out=&#39;list&#39; an unbinned</span>
+<span class="sd">       array with mass values [u] of single ion or background events is returned.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Random events are created via custom Hyper-EMG extensions of Scipy&#39;s</span>
+<span class="sd">    :meth:`scipy.stats.exponnorm.rvs` method.</span>
+
+<span class="sd">    Currently, all simulated peaks have identical width and shape (no re-scaling</span>
+<span class="sd">    of mass-dependent shape parameters to a peak&#39;s mass centroid).</span>
+
+<span class="sd">    Routine requires tail arguments in shape_cal_pars dict to be ordered</span>
+<span class="sd">    (eta_m1,eta_m2,...) etc..</span>
+
+<span class="sd">    **Mind the different units for peak amplitudes `amps` (counts per u) and the</span>
+<span class="sd">    background level `bkg_c` (counts per bin)**. When spectrum data is</span>
+<span class="sd">    simulated counts are randomly distributed between the different peaks and</span>
+<span class="sd">    the background with probability weights `amps` * &lt;bin width in&gt; and</span>
+<span class="sd">    `bkg_c` * &lt;number of bins&gt;, respectively. As a consequence, simply changing</span>
+<span class="sd">    `N_events` (while keeping all other arguments constant), will cause `amps`</span>
+<span class="sd">    and `bkg_c` to deviate from their nominal units.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Implement rescaling of peak-shape parameters with mass</span>
+    <span class="n">mus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">mus</span><span class="p">)</span>
+    <span class="n">amps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">amps</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">mus</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">amps</span><span class="p">),</span> <span class="s2">&quot;Lengths of `mus` and `amps` arrays must match.&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mus</span> <span class="o">&lt;</span> <span class="n">x_min</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">mus</span> <span class="o">&gt;</span> <span class="n">x_max</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="kn">import</span> <span class="nn">warnings</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;At least one peak centroid in `mus` is outside the sampling range.&quot;</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+
+    <span class="n">sample_range</span> <span class="o">=</span> <span class="n">x_max</span> <span class="o">-</span> <span class="n">x_min</span>
+
+    <span class="k">if</span> <span class="n">N_bins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">bin_cens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span>  <span class="s2">&quot;Either specify the `N_bins` OR the `bin_cens` argument.&quot;</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">bin_cens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># user-defined bins</span>
+        <span class="n">N_bins</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_cens</span><span class="p">)</span>
+        <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">N_bins</span><span class="o">+</span><span class="mi">1</span><span class="p">,))</span>
+        <span class="n">spacings</span> <span class="o">=</span> <span class="n">bin_cens</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">bin_cens</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">inner_edges</span> <span class="o">=</span> <span class="n">bin_cens</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">spacings</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">bin_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">inner_edges</span> <span class="c1"># set inner bin edges</span>
+        <span class="c1"># Get outer edges</span>
+        <span class="n">width_start</span> <span class="o">=</span> <span class="n">bin_cens</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bin_cens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">bin_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">bin_cens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">width_start</span><span class="o">/</span><span class="mi">2</span> <span class="c1"># set first bin edge</span>
+        <span class="n">width_end</span> <span class="o">=</span> <span class="n">bin_cens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bin_cens</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">bin_edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">bin_cens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">width_end</span><span class="o">/</span><span class="mi">2</span> <span class="c1"># set last bin edge</span>
+        <span class="n">bin_width</span> <span class="o">=</span> <span class="p">(</span><span class="n">bin_edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bin_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">N_bins</span> <span class="c1"># AVERAGE bin width</span>
+    <span class="k">elif</span> <span class="n">N_bins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># automatic uniform binning</span>
+        <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">N_bins</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">bin_width</span> <span class="o">=</span> <span class="n">sample_range</span><span class="o">/</span><span class="n">N_bins</span>
+        <span class="n">bin_cens</span> <span class="o">=</span> <span class="n">bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">bin_width</span><span class="o">/</span><span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;`N_bins` or `bin_cens` argument must be specified!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Prepare shape parameters</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">shape_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">shape_pars</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span>
+    <span class="n">li_eta_m</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">li_tau_m</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">li_eta_p</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">li_tau_p</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">shape_pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;eta_m&#39;</span><span class="p">):</span>
+            <span class="n">li_eta_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;tau_m&#39;</span><span class="p">):</span>
+            <span class="n">li_tau_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;eta_p&#39;</span><span class="p">):</span>
+            <span class="n">li_eta_p</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;tau_p&#39;</span><span class="p">):</span>
+            <span class="n">li_tau_p</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_tau_m</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">li_eta_m</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_tau_p</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">li_eta_p</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Distribute counts over different peaks and background</span>
+    <span class="c1"># randomly distribute ions using amps and c_bkg as prob. weights</span>
+    <span class="n">N_peaks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">amps</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">amps</span><span class="o">/</span><span class="n">bin_width</span><span class="p">,</span><span class="n">bkg_c</span><span class="o">*</span><span class="n">N_bins</span><span class="p">)</span> <span class="c1"># cts in each peak &amp; background</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">counts</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span> <span class="c1"># normalized probability weights</span>
+
+    <span class="n">peak_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_peaks</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">size</span><span class="o">=</span><span class="n">N_events</span><span class="p">,</span><span class="n">p</span> <span class="o">=</span> <span class="n">weights</span><span class="p">)</span>
+    <span class="n">N_bkg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">peak_dist</span> <span class="o">==</span> <span class="n">N_peaks</span><span class="p">)</span> <span class="c1"># calc. number of background counts</span>
+
+    <span class="n">events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="c1"># Loop over peaks and create random samples from each peak</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_peaks</span><span class="p">):</span>
+        <span class="n">N_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">peak_dist</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span> <span class="c1"># get no. of ions in peak</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">mus</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">events_i</span> <span class="o">=</span> <span class="n">h_emg_rvs</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">theta</span><span class="p">,</span><span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span><span class="n">li_tau_p</span><span class="p">,</span> <span class="n">N_samples</span><span class="o">=</span><span class="n">N_i</span><span class="p">)</span>
+        <span class="n">events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="p">,</span><span class="n">events_i</span><span class="p">)</span>
+
+    <span class="c1"># Create background events</span>
+    <span class="n">bkg</span> <span class="o">=</span> <span class="n">uniform</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">N_bkg</span><span class="p">,</span><span class="n">loc</span><span class="o">=</span><span class="n">x_min</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="n">sample_range</span><span class="p">)</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="p">,</span><span class="n">bkg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="s1">&#39;list&#39;</span><span class="p">:</span>  <span class="c1"># return unbinned list of events</span>
+        <span class="k">return</span> <span class="n">events</span>
+    <span class="k">elif</span> <span class="n">out</span> <span class="ow">is</span> <span class="s1">&#39;hist&#39;</span><span class="p">:</span>  <span class="c1"># return histogram</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">events</span><span class="p">,</span><span class="n">bins</span><span class="o">=</span><span class="n">bin_edges</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">bin_cens</span><span class="p">,</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Counts&#39;</span><span class="p">])</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s1">&#39;Mass [u]&#39;</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="simulate_spectrum"><a class="viewcode-back" href="../../modules.html#emgfit.sample.simulate_spectrum">[docs]</a><span class="k">def</span> <span class="nf">simulate_spectrum</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">x_cen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">bkg_c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">N_events</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">copy_spec</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a simulated spectrum using the attributes of a reference spectrum</span>
+
+<span class="sd">    The peak shape of the sampling probability distribution function (PDF)</span>
+<span class="sd">    follows the shape calibration of the reference spectrum (`spec`). By</span>
+<span class="sd">    default, all other parameters of the sampling PDF are identical to the</span>
+<span class="sd">    best-fit parameters of the reference spectrum. If desired, the positions,</span>
+<span class="sd">    amplitudes and number of peaks in the sampling PDF as well as the background</span>
+<span class="sd">    level can be changed with the `mus`, `amps` and `bkg_c` arguments.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec : :class:`~emgfit.spectrum.spectrum`</span>
+<span class="sd">        Reference spectrum object whose best-fit parameters will be used to</span>
+<span class="sd">        sample from.</span>
+<span class="sd">    mus : float or list of float [u], optional</span>
+<span class="sd">        Nominal peak centres of peaks in simulated spectrum. Defaults to the</span>
+<span class="sd">        mus of the reference spectrum fit.</span>
+<span class="sd">    amps : float or list of float [counts per u], optional</span>
+<span class="sd">        Nominal amplitudes of peaks in simulated spectrum. Defaults to the</span>
+<span class="sd">        amplitudes of the reference spectrum fit.</span>
+<span class="sd">    bkg_c : float [counts per bin], optional</span>
+<span class="sd">        Nominal amplitude of uniform background in simulated spectrum. Defaults</span>
+<span class="sd">        to the c_bkg obtained in the fit of the first peak in the reference</span>
+<span class="sd">        spectrum.</span>
+<span class="sd">    x_cen : float [u], optional</span>
+<span class="sd">        Mass center of simulated spectrum. Defaults to `x_cen` of `spec`.</span>
+<span class="sd">    x_range : float [u], optional</span>
+<span class="sd">        Covered mass range of simulated spectrum. Defaults to `x_range` of</span>
+<span class="sd">        `spectrum`.</span>
+<span class="sd">    N_events : int, optional</span>
+<span class="sd">        Number of ion events to simulate (including background events). Defaults</span>
+<span class="sd">        to total number of events in `spec`.</span>
+<span class="sd">    copy_spec : bool, optional, default: False</span>
+<span class="sd">        If ``False`` (default), this function returns a fresh</span>
+<span class="sd">        :class:`~spectrum.spectrum` object created from the simulated mass data.</span>
+<span class="sd">        If ``True``, this function returns an exact copy of `spec` with only the</span>
+<span class="sd">        :attr`data` attribute replaced by the new simulated mass data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`spectrum.spectrum`</span>
+<span class="sd">       If `copy_spec = False` (default) a fresh spectrum object holding the</span>
+<span class="sd">       simulated mass data is returned. If `copy_spec = True`, a copy of the</span>
+<span class="sd">       reference spectrum `spec` is returned with only the :attr:`data`</span>
+<span class="sd">       attribute replaced by the new simulated mass data.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Random events are created via custom Hyper-EMG extensions of Scipy&#39;s</span>
+<span class="sd">    :meth:`scipy.stats.exponnorm.rvs` method.</span>
+
+<span class="sd">    Currently, all simulated peaks have identical width and shape (no re-scaling</span>
+<span class="sd">    of mass-dependent shape parameters to a peak&#39;s mass centroid).</span>
+
+<span class="sd">    The returned spectrum follows the binning of the reference spectrum.</span>
+
+<span class="sd">    Mind the different units for peak amplitudes `amps` (counts per u) and the</span>
+<span class="sd">    background level `bkg_c` (counts per bin). When spectrum data is</span>
+<span class="sd">    simulated counts are distributed between the different peaks and the</span>
+<span class="sd">    background with probability weights `amps` * &lt;bin width in&gt; and</span>
+<span class="sd">    `bkg_c` * &lt;number of bins&gt;, respectively. As a consequence, simply changing</span>
+<span class="sd">    `N_events` (while keeping all other arguments constant), will render `amps`</span>
+<span class="sd">    and `bkg_c` away from their nominal units.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">fit_results</span> <span class="ow">is</span> <span class="p">[]</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;No fit results found in reference spectrum `spec`.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x_cen</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">x_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x_min</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">x_max</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">indeces</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">peaks</span><span class="p">))</span> <span class="c1"># get peak indeces in sampling range</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x_min</span> <span class="o">=</span> <span class="n">x_cen</span> <span class="o">-</span> <span class="n">x_range</span>
+        <span class="n">x_max</span> <span class="o">=</span> <span class="n">x_cen</span> <span class="o">+</span> <span class="n">x_range</span>
+        <span class="c1"># Get peak indeces in sampling range:</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">peaks</span>
+        <span class="n">indeces</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">))</span> <span class="k">if</span> <span class="n">x_min</span> <span class="o">&lt;=</span> <span class="n">peaks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">x_pos</span> <span class="o">&lt;=</span> <span class="n">x_max</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">mus</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indeces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">warnings</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No peaks in sampling range.&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+        <span class="n">mus</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indeces</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">mus</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">best_values</span><span class="p">[</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">amps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">amps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indeces</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">amps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">best_values</span><span class="p">[</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">bkg_c</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">indeces</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Zero background and no peaks in sampling range.&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="n">indeces</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">bkg_c</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">best_values</span><span class="p">[</span><span class="s1">&#39;bkg_c&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">N_events</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">N_events</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Counts&#39;</span><span class="p">]))</span> <span class="c1"># total number of counts in spectrum</span>
+
+    <span class="c1"># Create histogram with Monte Carlo events</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">x_min</span><span class="p">:</span><span class="n">x_max</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">simulate_events</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">shape_cal_pars</span><span class="p">,</span><span class="n">mus</span><span class="p">,</span><span class="n">amps</span><span class="p">,</span><span class="n">bkg_c</span><span class="p">,</span><span class="n">N_events</span><span class="p">,</span><span class="n">x_min</span><span class="p">,</span>
+                         <span class="n">x_max</span><span class="p">,</span><span class="n">out</span><span class="o">=</span><span class="s1">&#39;hist&#39;</span><span class="p">,</span><span class="n">N_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">bin_cens</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="c1"># Copy original spectrum and overwrite data</span>
+    <span class="c1"># This copies all results such as peak assignments, PS calibration,</span>
+    <span class="c1"># fit_results etc.</span>
+    <span class="k">if</span> <span class="n">copy_spec</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+        <span class="n">new_spec</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="n">new_spec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">df</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># Define a fresh spectrum with sampled data</span>
+        <span class="kn">from</span> <span class="nn">emgfit</span> <span class="kn">import</span> <span class="n">spectrum</span>
+        <span class="n">new_spec</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">.</span><span class="n">spectrum</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_spec</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Stefan Paul
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
