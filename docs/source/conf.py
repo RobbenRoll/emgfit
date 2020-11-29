@@ -88,6 +88,7 @@ numpydoc_show_class_members = False
 # Options for building docs from Jupyter notebooks
 nbsphinx_execute = 'always' # re-run notebooks upon every doc build
 nbsphinx_allow_errors = False # ignore errors in notebook execution
+nbsphinx_timeout = 240 # extend default cell timeout
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -126,7 +127,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns = ['_build', '**.ipynb_checkpoints']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -229,6 +230,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'emgfit', 'emgfit Documentation',
-     author, 'emgfit', 'Fitting of MR-TOF mass spectra with Hyper-EMG models',
+     author, 'emgfit',
+     'Fitting of time-of-flight mass spectra with Hyper-EMG models',
      'Miscellaneous'),
 ]

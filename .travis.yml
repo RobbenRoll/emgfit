@@ -22,7 +22,6 @@ install:
   # Install extra requirements for running tests and building docs.
   - pip install -r requirements-dev.txt
 
-sudo: true
 before_script:
   - sudo apt-get -qq update
   - sudo apt-get install -y pandoc  # Install pandoc for markdown notebook cells
@@ -61,6 +60,8 @@ jobs:
           tags: true
     - stage: deploy-package
       Python: 3.7
+      before_script: skip
+      script: skip
       deploy:
         # Publish package on PyPi
         provider: pypi
