@@ -1350,7 +1350,7 @@ class spectrum:
         # add confidence band with specified number of sigmas
         if sigmas_of_conf_band!=0 and fit_result.errorbars == True:
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
-            label = str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band'
+            label = str(sigmas_of_conf_band)+'-$\\sigma$ uncertainty band'
             plt.fill_between(fit_result.x, fit_result.best_fit-dely,
                              fit_result.best_fit+dely, color="#ABABAB",
                              label=label)
@@ -1383,7 +1383,7 @@ class spectrum:
         ax0.hlines(0,x_min,x_max, color='black', zorder=10)
         #ax0.hlines(-1,x_min,x_max,linestyle='dashed', color='black')
         ax0.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
-        ax0.set_ylabel('Residual / $\sigma$')
+        ax0.set_ylabel('Residual / $\\sigma$')
         #ax0.tick_params(axis='x', labelsize=0) # hide tick labels
         ax1 = axs[1]
         ax1.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
@@ -1974,7 +1974,7 @@ class spectrum:
         -----
         In fits with the ``chi-square`` cost function the variance weights
         :math:`w_i` for the residuals are estimated using the latest model
-        predictions: :math:`w_i = 1/(\sigma_i^2 + \epsilon) = 1/(f(x_i)+ \epsilon)`,
+        predictions: :math:`w_i = 1/(\\sigma_i^2 + \epsilon) = 1/(f(x_i)+ \epsilon)`,
         where :math:`\epsilon = 1e-10` is a small number added to increase
         numerical robustness when :math:`f(x_i)` approaches zero. On each
         iteration the weights are updated with the new values of the model
@@ -3572,13 +3572,13 @@ class spectrum:
                 ax0.set_title("Centroids - peak {0}".format(peak_idx),
                               fontdict={'fontsize':17})
                 ax0.hist(dm*1e06,bins=19)
-                text0 = r"RMS dev. ={0: .1f} $\mu$u".format(PS_mass_err*1e06)
+                text0 = r"RMS dev. ={0: .1f} $\\mu$u".format(PS_mass_err*1e06)
                 ax0.text(0.65, 0.94, text0,transform=ax0.transAxes, fontsize=14,
                          verticalalignment='top', bbox=boxprops)
                 ax0.axvline(0, color='black') # best-fit mu
                 ax0.xaxis.get_offset_text().set_fontsize(15)
                 ax0.tick_params(axis='both',labelsize=15)
-                ax0.set_xlabel("Effective mass shift [$\mu$u]", fontsize=16)
+                ax0.set_xlabel("Effective mass shift [$\\mu$u]", fontsize=16)
                 ax0.set_ylabel("Occurences", fontsize=16)
                 ax1.set_title("Areas - peak {0}".format(peak_idx),
                               fontdict={'fontsize':17})
@@ -4545,13 +4545,13 @@ class spectrum:
                 ax0.set_title("Centroid scatter - peak {0}".format(idx),
                                fontdict={'fontsize':17})
                 ax0.hist( (transp_mus[i]-best_fit_mu)*1e06,bins=19)
-                text0 = r"$\sigma = {0: .1f}$ $\mu$u".format(stat_errs[i]*1e06)
+                text0 = r"$\sigma = {0: .1f}$ $\\mu$u".format(stat_errs[i]*1e06)
                 ax0.text(0.78, 0.92, text0, transform=ax0.transAxes,
                          fontsize=14, verticalalignment='top', bbox=boxprops)
                 ax0.axvline(0, color='black')
                 ax0.tick_params(axis='both',labelsize=15)
                 ax0.xaxis.get_offset_text().set_fontsize(15)
-                ax0.set_xlabel("Peak position - best-fit value [$\mu$u]",
+                ax0.set_xlabel("Peak position - best-fit value [$\\mu$u]",
                                fontsize=16)
                 ax0.set_ylabel("Occurences", fontsize=16)
                 ax1.set_title("Area scatter - peak {0}".format(idx),
