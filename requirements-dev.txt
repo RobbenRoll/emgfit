@@ -41,6 +41,7 @@ nbconvert
 nbstripout
 sphinx-gallery
 jupyter_sphinx
+nbval # test notebook execution
 doctr # for publishing docs to Github-pages
 
 # For publishing to PyPI:

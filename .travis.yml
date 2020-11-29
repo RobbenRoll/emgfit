@@ -33,12 +33,8 @@ script:
   # Enforce code style ('relaxed' line length limit is set in .flake8 config file):
   - flake8 . --exit-zero # Exit with status code "0" even if there are errors.
   - python -m ipykernel install --user --name python3
-  - sudo rm -f ./docs/source/outputs/*.xlsx
-  - sudo rm -f ./docs/source/outputs/*peakshape_calib.txt
-  - make -C docs clean # clear build directory
-  - set -e # exit if building docs fails
-  - travis_wait 20 make -C docs html  # Build the documentation, also runs tutorial as a test.
-  - DEPLOY_DIR="$TRAVIS_TAG";
+  - set -e # exit on error
+  - py.test --nbval-lax ./emgfit/examples/tutorial/emgfit_tutorial.ipynb # test tutorial notebook execution
 
 stages:
   - test
@@ -53,6 +49,14 @@ jobs:
       # Publish the documentation, only for new version tags
       # Exit if publishing docs fails
       Python: 3.7
+      script:
+      - python -m ipykernel install --user --name python3
+      - sudo rm -f ./docs/source/outputs/*.xlsx
+      - sudo rm -f ./docs/source/outputs/*peakshape_calib.txt
+      - make -C docs clean # clear build directory
+      - set -e # exit if building docs fails
+      - make -C docs html  # Build the documentation, also runs tutorial as a test.
+      - DEPLOY_DIR="$TRAVIS_TAG";
       before_deploy: if [ "$TRAVIS_TAG" != null ]; then doctr deploy --build-tags --built-docs docs/build/html $DEPLOY_DIR --branch-whitelist || travis_terminate 1; fi
       deploy:
         # Update gh-pages index
