@@ -21,6 +21,7 @@ install:
   - pip install .
   # Install extra requirements for running tests and building docs.
   - pip install -r requirements-dev.txt
+  - pip install travis-wait-improved
 
 before_script:
   - sudo apt-get -qq update
@@ -34,7 +35,7 @@ script:
   - flake8 . --exit-zero # Exit with status code "0" even if there are errors.
   - python -m ipykernel install --user --name python3
   - set -e # exit on error
-  - py.test --nbval-lax ./emgfit/examples/tutorial/emgfit_tutorial.ipynb # test tutorial notebook execution
+  - travis-wait-improved --timeout 20m py.test --nbval-lax ./emgfit/examples/tutorial/emgfit_tutorial.ipynb # test tutorial notebook execution
 
 stages:
   - test
