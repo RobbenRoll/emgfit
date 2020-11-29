@@ -33,8 +33,11 @@ script:
   # Enforce code style ('relaxed' line length limit is set in .flake8 config file):
   - flake8 . --exit-zero # Exit with status code "0" even if there are errors.
   - python -m ipykernel install --user --name python3
+  - sudo rm -f ./docs/source/outputs/*.xlsx
+  - sudo rm -f ./docs/source/outputs/*peakshape_calib.txt
+  - make -C docs clean # clear build directory
   - set -e # exit if building docs fails
-  - make -C docs html  # Build the documentation, also runs tutorial as a test.
+  - travis_wait 20 make -C docs html  # Build the documentation, also runs tutorial as a test.
   - DEPLOY_DIR="$TRAVIS_TAG";
 
 stages:

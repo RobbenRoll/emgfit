@@ -930,11 +930,6 @@ class spectrum:
     def show_peak_properties(self):
         """Print properties of all peaks in :attr:`peaks` list.
 
-        Note
-        ----
-        Numeric peak attributes without a defined value are intialized as
-        ``None`` despite appearing as ``nan`` in the peak properties table.
-
         """
         #def None_to_nan(dict): # convert None values to NaN
         #    return { k: (np.nan if v is None else v) for k, v in dict.items() }
