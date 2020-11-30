@@ -1,7 +1,7 @@
 language: python
 python:
   - 3.7
-  - 3.9
+  - 3.8
 cache:
   directories:
     - $HOME/.cache/pip
@@ -49,7 +49,7 @@ jobs:
     - stage: deploy-docs
       # Publish the documentation, only for new version tags
       # Exit if publishing docs fails
-      Python: 3.7
+      python: 3.7
       script:
       - python -m ipykernel install --user --name python3
       - sudo rm -f ./docs/source/outputs/*.xlsx
@@ -68,7 +68,7 @@ jobs:
         on:
           tags: true
     - stage: deploy-package
-      Python: 3.7
+      python: 3.7
       before_script: skip
       script: skip
       deploy:

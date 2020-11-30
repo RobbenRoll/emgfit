@@ -385,7 +385,7 @@ class spectrum:
         if show_plot:
             fig  = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
             plt.title(plot_title)
-            data_uncut.plot(ax=fig.gca())
+            data_uncut.plot(ax=fig.gca(), legend=False)
             plt.vlines(m_start,0,1.2*max(self.data['Counts']), color='black')
             plt.vlines(m_stop,0,1.2*max(self.data['Counts']), color='black')
             plt.yscale('log')
