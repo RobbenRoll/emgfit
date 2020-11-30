@@ -35,7 +35,7 @@ script:
   - flake8 . --exit-zero # Exit with status code "0" even if there are errors.
   - python -m ipykernel install --user --name python3
   - set -e # exit on error
-  - travis-wait-improved --timeout 20m py.test --nbval-lax ./emgfit/examples/tutorial/emgfit_tutorial.ipynb # test tutorial notebook execution
+  - travis-wait-improved --timeout 20m py.test --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb # test tutorial notebook execution
 
 stages:
   - test
