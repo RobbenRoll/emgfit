@@ -33,7 +33,7 @@ script:
   - codecov  # Upload the report to codecov.
   # Enforce code style ('relaxed' line length limit is set in .flake8 config file):
   - flake8 . --exit-zero # Exit with status code "0" even if there are errors.
-  - python -m ipykernel install --user --name python3
+  - python -m ipykernel install --user
   - set -e # exit on error
   - travis-wait-improved --timeout 20m py.test --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb # test tutorial notebook execution
 

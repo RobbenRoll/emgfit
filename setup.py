@@ -37,7 +37,7 @@ setup(
     name='emgfit',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="Fitting of MR-TOF mass spectra with Hyper-EMG models",
+    description="Fitting of time-of-flight mass spectra with Hyper-EMG models",
     long_description=readme,
     author="Stefan Paul",
     author_email='stefan.paul@triumf.ca',

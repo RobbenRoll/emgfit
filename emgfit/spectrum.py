@@ -3431,7 +3431,12 @@ class spectrum:
         from lmfit.model import save_model, load_model
         from lmfit.minimizer import minimize
         from copy import deepcopy
-        save_model(model, "model.sav")
+        import time
+        datetime = time.localtime() # get current date and time
+        datetime_str = time.strftime("%Y-%m-%d_%H-%M-%S", datetime)
+        data_fname = self.input_filename.rsplit('.', 1)[0] # del. file extension
+        modelfname =  data_fname+datetime_str+"MC_PS_model.sav"
+        save_model(model, modelfname)
         N_peaks = len(peak_indeces)
         N_events = int(np.sum(y))
         tiny = np.finfo(float).tiny # get smallest pos. float in numpy
@@ -3442,7 +3447,7 @@ class spectrum:
 
         # Define function for parallelized fitting
         def refit(shape_pars):
-            model = load_model("model.sav", funcdefs=funcdefs)
+            model = load_model(modelfname, funcdefs=funcdefs)
             pars = deepcopy(init_pars)
             # Calculate missing parameters from normalization
             if n_ltails == 2:
@@ -3525,7 +3530,9 @@ class spectrum:
         #res = np.array([refit(pars) for pars in tqdm(shape_par_samples)]) # serial version
         res = np.array(Parallel(n_jobs=n_cores)(delayed(refit)(pars)
                                 for pars in tqdm(shape_par_samples)))
+        os.remove(modelfname) # clean up
 
+        # Format results
         trp_mus, trp_amps = res[:,0], res[:,1]
         mus = trp_mus.transpose()
         amps = trp_amps.transpose()
@@ -4444,7 +4451,12 @@ class spectrum:
         from joblib import Parallel, delayed
         from lmfit.model import save_model, load_model
         from lmfit.minimizer import minimize
-        save_model(model, "model.sav")
+        import time
+        datetime = time.localtime() # get current date and time
+        datetime_str = time.strftime("%Y-%m-%d_%H-%M-%S", datetime)
+        data_fname = self.input_filename.rsplit('.', 1)[0] # del. file extension
+        modelfname = data_fname+datetime_str+"_resampl_model.sav"
+        save_model(model, modelfname)
         N_events = int(np.sum(y))
         tiny = np.finfo(float).tiny # get smallest pos. float in numpy
         funcdefs = {'constant': fit.models.ConstantModel,
@@ -4461,7 +4473,7 @@ class spectrum:
             # Weights for residuals: residual = (fit_model - y) * weights
             new_weights = 1./new_y_err
 
-            model = load_model("model.sav",funcdefs=funcdefs)
+            model = load_model(modelfname,funcdefs=funcdefs)
             if cost_func  == 'chi-square':
                 ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x))
                 eps = 1e-10 # small number to bound Pearson weights
@@ -4521,6 +4533,9 @@ class spectrum:
         #results = np.array([refit() for i in tqdm(range(N_spectra))]) # serial
         results = np.array(Parallel(n_jobs=n_cores)
                              (delayed(refit)() for i in tqdm(range(N_spectra))))
+        os.remove(modelfname) # clean up
+
+        # Format results
         arr_mus, arr_amps = results[:,0], results[:,1]
         transp_mus = arr_mus.transpose()
         transp_amps = arr_amps.transpose()
@@ -4734,19 +4749,19 @@ class spectrum:
                             " filename or delete the original file and re-try.")
 
         # Make DataFrame with spectrum propeties
+        spec_data = []
         datetime = time.localtime() # get current date and time
         datetime_string = time.strftime("%Y/%m/%d, %H:%M:%S", datetime)
-        spec_data = np.array([["Saved on",datetime_string]], dtype=object)
+        spec_data.append([["Saved on",datetime_string]])
         import sys
-        spec_data = np.append(spec_data,
-                              [["Python version",sys.version_info[0:3]]],axis=0)
+        spec_data.append(["Python version",sys.version_info[0:3]])
         from . import __version__ # get emgfit version
-        spec_data = np.append(spec_data, [["emgfit version",__version__]],axis=0)
-        spec_data = np.append(spec_data, [["lmfit version",fit.__version__]],axis=0)
+        spec_data.append(["emgfit version",__version__])
+        spec_data.append(["lmfit version",fit.__version__])
         from scipy import __version__ as scipy_version
-        spec_data = np.append(spec_data, [["scipy version",scipy_version]],axis=0)
-        spec_data = np.append(spec_data, [["numpy version",np.__version__]],axis=0)
-        spec_data = np.append(spec_data, [["pandas version",pd.__version__]],axis=0)
+        spec_data.append(["scipy version",scipy_version])
+        spec_data.append(["numpy version",np.__version__])
+        spec_data.append(["pandas version",pd.__version__])
         attributes = ['input_filename','mass_number','spectrum_comment',
                       'fit_model','red_chi_shape_cal','fit_range_shape_cal',
                       'determined_A_stat_emg','A_stat_emg','A_stat_emg_error',
@@ -4755,8 +4770,8 @@ class spectrum:
                       'blinded_peaks']
         for attr in attributes:
             attr_val = getattr(self,attr)
-            spec_data = np.append(spec_data, [[attr,attr_val]],axis=0)
-        df_spec = pd.DataFrame(data=spec_data)
+            spec_data.append([attr,attr_val])
+        df_spec = pd.DataFrame(data=spec_data, dtype=str)
         df_spec.set_index(df_spec.columns[0],inplace=True)
 
         # Make peak properties & eff. mass shifts DataFrames
