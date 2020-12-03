@@ -40,14 +40,14 @@ jobs:
       uses: dawidd6/action-get-tag@v1
     - name: Publish docs to gh-pages
       uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/build/html
-          destination_dir: ${{steps.tag.outputs.tag}}
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs/build/html
+        destination_dir: ${{steps.tag.outputs.tag}}
     - name: Update gh-pages index
       uses: actions/checkout@v2
-        with:
-          ref: gh-pages
+      with:
+        ref: gh-pages
       run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
@@ -56,7 +56,7 @@ jobs:
         git commit --allow-empty -m "Update gh-pages index with new tagged version."
         git push -fq origin gh-pages
       shell: bash
-    # - name: Build and release package 
+    # - name: Build and release package
     #   env:
     #     TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
     #     TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
