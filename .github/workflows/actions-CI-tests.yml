@@ -2,7 +2,7 @@
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 # Consider adding: cache pip,
 
-name: Test package
+name: Run CI tests
 
 on:
   push:
@@ -40,9 +40,21 @@ jobs:
     - name: Test with pytest & nbval
       run: |
         set -e  # exit on error
-        coverage run -m pytest  # Run the tests and check for test coverage.
-        python -m ipykernel install --user
+        pytest --cov=emgfit  # Run the tests and check for test coverage.
+        ipykernel install --user
         # Test tutorial notebook execution:
-        coverage run -a -m pytest --timeout=180 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
-        coverage report -m  # Generate test coverage report.
-        codecov  # Upload the report to codecov.
+        pytest --cov=emgfit --cov-append --timeout=180 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
+        pytest --cov-report=xml term-missing --cov=emgfit # Generate test coverage report.
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
+        directory: ./coverage/reports/
+        fail_ci_if_error: false
+        #path_to_write_report: ./coverage/codecov_report.txt
+        verbose: true
