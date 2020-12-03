@@ -117,7 +117,7 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
 
     .. math::
 
-        h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(-\\left(\\frac{x-\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
+        h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
         = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(u)} \mathrm{erfc}(v),
 
     where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\tau_{-i}}`
@@ -228,7 +228,7 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
 
     .. math::
 
-        h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(-\\left(\\frac{x-\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
+        h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
         = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(u)} \mathrm{erfc}(v),
 
     where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\tau_{+i}}`

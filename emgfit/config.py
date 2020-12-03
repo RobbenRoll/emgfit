@@ -30,8 +30,9 @@ plt.rcParams.update({"errorbar.capsize": 1.0})
 #set_matplotlib_formats(plot_fmt) # Defines default image format in notebooks
 dpi = 600 # manually set image resolution - not necessary with SVGs
 figwidth = 11.8 # width of spectrum figures
-msize = 5 # size of data point markers
-labelsize = 9.5 # size of peak labels
+msize = 6 # size of data point markers
+lwidth = 1.5 # linewidth of fit curves
+labelsize = 10 # size of peak labels
 
 ##### Appearance of DataFrames
 pd.set_option("precision",2) # global displayed float precision
