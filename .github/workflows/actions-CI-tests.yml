@@ -40,11 +40,11 @@ jobs:
     - name: Test with pytest & nbval
       run: |
         set -e  # exit on error
-        pytest --cov=emgfit emgfit/tests/  # Run the tests and check for test coverage.
         python -m ipykernel install --user
+        pytest --cov=emgfit emgfit/tests/  # Run the tests and check for test coverage.
         # Test tutorial notebook execution:
-        pytest --cov=emgfit --cov-append --timeout=300 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
-        pytest --cov-report term-missing --cov-report=xml --cov=emgfit # Print & save test coverage report.
+        pytest --cov=emgfit --timeout=300 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
+        pytest --cov=emgfit --cov-append --cov-report=xml  # Print & save test coverage report.
     - name: Archive code coverage results
       uses: actions/upload-artifact@v2
       with:
@@ -63,4 +63,4 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         fail_ci_if_error: false
-        verbose: true
+        verbose: false
