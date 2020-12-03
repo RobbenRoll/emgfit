@@ -41,17 +41,17 @@ jobs:
       run: |
         set -e  # exit on error
         python -m ipykernel install --user
-        pytest --cov=emgfit emgfit/tests/  # Run the tests and check for test coverage.
+        pytest --cov=emgfit --cov-report=xml:testcoverage.xml emgfit/tests/  # Run the tests and check for test coverage.
         # Test tutorial notebook execution:
-        pytest --cov=emgfit --timeout=300 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
-        pytest --cov=emgfit --cov-append --cov-report=xml  # Print & save test coverage report.
+        pytest --cov=emgfit --cov-report=xml:nbcoverage.xml --timeout=300 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
     - name: Archive code coverage results
       uses: actions/upload-artifact@v2
       with:
         name: code-coverage-report
-        path: coverage.xml
+        path: testcoverage.xml, nbconverage.xml
   release:
     needs: build
+    name: Upload coverage results to codecov
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
