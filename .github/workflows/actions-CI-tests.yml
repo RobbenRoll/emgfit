@@ -43,6 +43,6 @@ jobs:
         coverage run -m pytest  # Run the tests and check for test coverage.
         python -m ipykernel install --user
         # Test tutorial notebook execution:
-        pytest --timeout=180 --cov-append --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
+        coverage run -a -m pytest --timeout=180 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
         coverage report -m  # Generate test coverage report.
         codecov  # Upload the report to codecov.
