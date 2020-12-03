@@ -3,3 +3,6 @@ emgfit/_version.py export-subst
 *.ipynb	diff=jupyternotebook
 
 *.ipynb	merge=jupyternotebook
+
+*.ipynb filter=nbstripout
+*.ipynb diff=ipynb
