@@ -1,8 +1,8 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-# Consider adding: cache pip, 
+# Consider adding: cache pip,
 
-name: emgfit
+name: Test package
 
 on:
   push:
@@ -27,9 +27,9 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get install -y pandoc # for markdown notebook cells
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest 
-        python -m pip install . # install package with requirements
-        python -m pip install -r requirements-dev.txt 
+        pip install flake8 pytest
+        pip install . # install package with requirements
+        pip install -r requirements-dev.txt
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -41,6 +41,6 @@ jobs:
         coverage run -m pytest  # Run the tests and check for test coverage.
         coverage report -m  # Generate test coverage report.
         codecov  # Upload the report to codecov.
-        python -m ipykernel install --user 
+        python -m ipykernel install --user
         set -e # exit on error
         py.test --timeout=180 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb # test tutorial notebook execution
