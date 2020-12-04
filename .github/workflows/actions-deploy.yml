@@ -1,14 +1,52 @@
 # Publish docs to gh-pages and release package on PyPi
 
-name: Deploy docs and package
+name: Run CI tests & deploy docs and package
 
 on:
   push:
     tags:
     - '*'
+    #branches: master
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8']
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        sudo apt-get -qq update
+        sudo apt-get install -y pandoc  # for markdown notebook cells
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        pip install .  # install package with requirements
+        pip install -r requirements-dev.txt
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest & nbval
+      run: |
+        set -e  # exit on error
+        python -m ipykernel install --user --name python3
+         # Run tests and save coverage:
+        pytest --cov=emgfit --cov-report term-missing --cov-report=xml:testcoverage.xml emgfit/tests/
+        # Test tutorial notebook execution and save coverage:
+        pytest --cov=emgfit --cov-append --cov-report term-missing --cov-report=xml:nbcoverage.xml --timeout=300 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
+        # Upload code coverage report to Codecov
+        codecov
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
@@ -34,13 +72,6 @@ jobs:
         make -C docs clean   # clear build directory
         set -e   # exit if building docs fails
         make -C docs html
-    - name: Wait on CI tests
-      uses: lewagon/wait-on-check-action@v0.1
-      with:
-        ref: gh-actions-CI #${{ github.sha }}  # can be commit SHA or tag too
-        check-name: Publish coverage results to codecov # name of the existing check - omit to wait for all checks
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        wait-interval: 20 # seconds
     - name: Get tag
       id: tag
       uses: dawidd6/action-get-tag@v1
