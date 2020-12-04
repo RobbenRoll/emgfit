@@ -37,8 +37,8 @@ jobs:
     - name: Wait on CI tests
       uses: lewagon/wait-on-check-action@v0.1
       with:
-        ref: ${{ github.sha }}  # can be commit SHA or tag too
-        #check-name: test # name of the existing check - omit to wait for all checks
+        ref: gh-actions-CI #${{ github.sha }}  # can be commit SHA or tag too
+        check-name: Publish coverage results to codecov # name of the existing check - omit to wait for all checks
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         wait-interval: 20 # seconds
     - name: Get tag
