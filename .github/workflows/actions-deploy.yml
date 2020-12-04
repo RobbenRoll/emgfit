@@ -40,9 +40,9 @@ jobs:
         set -e  # exit on error
         python -m ipykernel install --user --name python3
          # Run tests and save coverage:
-        pytest --cov=emgfit --cov-report term-missing --cov-report=xml:testcoverage.xml emgfit/tests/
+        pytest --cov=emgfit --cov-report term-missing emgfit/tests/
         # Test tutorial notebook execution and save coverage:
-        pytest --cov=emgfit --cov-append --cov-report term-missing --cov-report=xml:nbcoverage.xml --timeout=300 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
+        pytest --cov=emgfit --cov-append --cov-report term-missing --timeout=300 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
         # Upload code coverage report to Codecov
         codecov
   deploy:
@@ -87,6 +87,7 @@ jobs:
         git config user.email github-actions@github.com
         git fetch origin
         git checkout gh-pages
+        chmod +x make-index.sh
         ./make-index.sh
         git add -f .
         git commit --allow-empty -m "Update gh-pages index with new tagged version."
