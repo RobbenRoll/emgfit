@@ -28,7 +28,7 @@ jobs:
         pip install .   # install package with requirements
         pip install -r requirements-dev.txt
         pip install setuptools wheel twine
-        python -m ipykernel install --user
+        python -m ipykernel install --user --name python3
     - name: Build sphinx documentation
       run: |
         sudo rm -f ./docs/source/outputs/*.xlsx
