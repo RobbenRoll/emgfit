@@ -1,0 +1,326 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>emgfit Documentation &mdash; emgfit 0.0.43 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
+        <script src="_static/thebelab-helper.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting started with emgfit" href="intro.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home" alt="Documentation Home"> emgfit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.43
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Getting started with emgfit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="emgfit_tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Central concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">emgfit API docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">emgfit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>emgfit Documentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="emgfit-documentation">
+<h1>emgfit Documentation<a class="headerlink" href="#emgfit-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Getting started with emgfit</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#the-quick-and-dirty-way">The quick and dirty way</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#the-neater-way-installing-emgfit-into-a-virtual-environment">The neater way: Installing emgfit into a virtual environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#launching-jupyter-notebook">Launching Jupyter notebook</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="emgfit_tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Import-the-package">Import the package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#How-to-access-the-documentation">How to access the documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Import-data">Import data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Add-peaks-to-the-spectrum">Add peaks to the spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Assign-species-to-the-peaks-(optional)">Assign species to the peaks (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Activate-hiding-of-mass-values-for-blind-analysis-(optional)">Activate hiding of mass values for blind analysis (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Select-the-optimal-fit-model-and-perform-the-peak-shape-calibration">Select the optimal fit model and perform the peak-shape calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Determine-A_stat_emg-for-subsequent-stat.-error-estimations-(optional)">Determine A_stat_emg for subsequent stat. error estimations (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Fit-all-peaks,-perform-mass-re-calibration-&amp;-obtain-final-mass-values">Fit all peaks, perform mass re-calibration &amp; obtain final mass values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Plot-the-fit-curve-zoomed-to-a-region-of-interest-(optional)">Plot the fit curve zoomed to a region of interest (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Perform-parametric-bootstrap-to-get-refined-statistical-uncertainties-(optional)">Perform parametric bootstrap to get refined statistical uncertainties (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Get-refined-peak-shape-uncertainties-using-MCMC-parameter-samples-(optional)">Get refined peak-shape uncertainties using MCMC parameter samples (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Export-fit-results">Export fit results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emgfit_tutorial.html#Alternative-procedures:">Alternative procedures:</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Central concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#the-peak-and-spectrum-classes">The peak and spectrum classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#adding-peaks-to-a-spectrum">Adding peaks to a spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#assigning-species-to-peaks-and-fetching-ame-values">Assigning species to peaks and fetching AME values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#hyper-emg-distributions">Hyper-EMG distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#available-fit-models">Available fit models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#multi-peak-fits">Multi-peak fits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#peak-fitting-approach">Peak fitting approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#peak-shape-calibration">Peak-shape calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#mass-recalibration-and-calculation-of-final-mass-values">Mass recalibration and calculation of final mass values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#fitting-peaks-of-interest">Fitting peaks of interest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#estimation-of-statistical-uncertainties">Estimation of statistical uncertainties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#peak-shape-uncertainties">Peak-shape uncertainties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#saving-fit-results">Saving fit results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#notation-of-chemical-substances">:-notation of chemical substances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#creating-simulated-spectra">Creating simulated spectra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#blind-analysis">Blind analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">emgfit API docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#emgfit-ame-funcs-module">emgfit.ame_funcs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#emgfit-config-module">emgfit.config module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#emgfit-emg-funcs-module">emgfit.emg_funcs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#emgfit-fit-models-module">emgfit.fit_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#emgfit-sample-module">emgfit.sample module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#emgfit-spectrum-module">emgfit.spectrum module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="release-history.html#v0-3-1-2020-11-27">v0.3.1 (2020-11-27)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-history.html#v0-3-0-2020-11-25">v0.3.0 (2020-11-25)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-history.html#v0-2-3-2020-09-18">v0.2.3 (2020-09-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-history.html#v0-2-2-2020-09-16">v0.2.2 (2020-09-16)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-history.html#v0-2-1">v0.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-history.html#v0-2-0-2020-09-09">v0.2.0 (2020-09-09):</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-history.html#v0-1-0-2020-06-08">v0.1.0 (2020-06-08)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="intro.html" class="btn btn-neutral float-right" title="Getting started with emgfit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Stefan Paul
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
