@@ -8,26 +8,7 @@ on:
     - '*'
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-    # This step will retry until required check passes
-    # and will fail the whole workflow if the check conclusion is not a success
-    - name: Wait and check for successful tests
-      uses: fountainhead/action-wait-for-check@v1.0.0
-      id: wait-for-tests
-      with:
-        #ref: ${{ GITHUB_SHA }} # can be commit SHA or tag too  
-        checkName: build # name of the existing check - omit to wait for all checks
-        token: ${{ secrets.GITHUB_TOKEN }}
-        intervalSeconds: 20 # seconds
-    - name: Print failed status
-      if: steps.wait-for-build.outputs.conclusion == 'failure'
-      run: echo 'Skipping deployment since CI tests failed.'
-
   deploy:
-    needs: check
-    if: needs.check.steps.wait-for-tests.outputs.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
@@ -53,6 +34,13 @@ jobs:
         make -C docs clean   # clear build directory
         set -e   # exit if building docs fails
         make -C docs html
+    - name: Wait on CI tests
+      uses: lewagon/wait-on-check-action@v0.1
+      with:
+        ref: ${{ github.sha }}  # can be commit SHA or tag too
+        #check-name: test # name of the existing check - omit to wait for all checks
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        wait-interval: 20 # seconds
     - name: Get tag
       id: tag
       uses: dawidd6/action-get-tag@v1

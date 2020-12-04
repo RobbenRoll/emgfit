@@ -12,6 +12,7 @@ on:
 
 jobs:
   build:
+    name: Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -54,7 +55,7 @@ jobs:
           nbcoverage.xml
   release:
     needs: build
-    name: Upload coverage results to codecov
+    name: Publish coverage results to codecov
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
