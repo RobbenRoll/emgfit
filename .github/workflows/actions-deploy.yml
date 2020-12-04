@@ -39,6 +39,15 @@ jobs:
     - name: Get tag
       id: tag
       uses: dawidd6/action-get-tag@v1
+    # This step will retry until required check passes
+    # and will fail the whole workflow if the check conclusion is not a success
+    - name: Wait on tests
+      uses: lewagon/wait-on-check-action@v0.1
+      with:
+        ref: gh-actions-CI # can be commit SHA or tag too  #TODO change to master
+        check-name: "Run CI tests" # name of the existing check - omit to wait for all checks
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        wait-interval: 20 # seconds
     - name: Publish docs to gh-pages
       uses: peaceiris/actions-gh-pages@v3
       with:

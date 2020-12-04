@@ -6,9 +6,9 @@ name: Run CI tests
 
 on:
   push:
-    branches: gh-actions-CI
+    branches: gh-actions-CI   #TODO change to master
   pull_request:
-    branches: gh-actions-CI
+    branches: gh-actions-CI   #TODO change to master
 
 jobs:
   build:
@@ -42,9 +42,9 @@ jobs:
         set -e  # exit on error
         python -m ipykernel install --user --name python3
          # Run tests and save coverage:
-        pytest --cov=emgfit --cove-report --cov-report=xml:testcoverage.xml emgfit/tests/
+        pytest --cov=emgfit --cov-report --cov-report=xml:testcoverage.xml emgfit/tests/
         # Test tutorial notebook execution and save coverage:
-        pytest --cov=emgfit --cove-report --cov-report=xml:nbcoverage.xml --timeout=300 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
+        pytest --cov=emgfit --cov-report --cov-report=xml:nbcoverage.xml --timeout=300 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
     - name: Archive code coverage results
       uses: actions/upload-artifact@v2
       with:
