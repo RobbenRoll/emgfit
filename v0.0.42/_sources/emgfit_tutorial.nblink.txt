@@ -1,0 +1,3 @@
+{
+    "path": "../../emgfit/examples/tutorial/emgfit_tutorial.ipynb"
+}
