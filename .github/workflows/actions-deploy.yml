@@ -86,7 +86,7 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         git fetch origin
-        git pull checkout gh-pages
+        git checkout gh-pages
         ./make-index.sh
         git add -f .
         git commit --allow-empty -m "Update gh-pages index with new tagged version."
