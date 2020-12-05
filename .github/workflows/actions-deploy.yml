@@ -6,7 +6,6 @@ on:
   push:
     tags:
     - '*'
-    #branches: master
 
 jobs:
   test:
@@ -47,6 +46,7 @@ jobs:
         codecov
   deploy:
     needs: test
+    if: github.event.base_ref == 'refs/heads/gh-actions-CI'  # only for tags on master branch # TODO change to master
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
