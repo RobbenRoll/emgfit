@@ -2,30 +2,30 @@
 emgfit
 ======
 
-.. image:: https://travis-ci.org/RobbenRoll/emgfit.svg?branch=master
-        :target: https://travis-ci.org/RobbenRoll/emgfit.svg?branch=master
+.. image:: https://github.com/RobbenRoll/emgfit/workflows/Run%20CI%20tests/badge.svg?branch=master
+        :target: https://github.com/RobbenRoll/emgfit/workflows/Run%20CI%20tests/badge.svg?branch=master
 
 .. image:: https://img.shields.io/pypi/v/emgfit.svg
         :target: https://pypi.python.org/pypi/emgfit
 
 
-Fitting of MR-TOF mass spectra with Hyper-EMG models
+Fitting of time-of-flight mass spectra with Hyper-EMG models
 
 * Free software: 3-clause BSD license
 * Online documentation: https://RobbenRoll.github.io/emgfit.
 * Source code: https://github.com/RobbenRoll/emgfit
 
-`emgfit` is a Python package for peak fitting of MR-TOF mass spectra with
-hyper-exponentially modified Gaussian (Hyper-EMG_ [1]_) model functions. `emgfit` is a
-wrapper around the `lmfit`_ [2]_ curve fitting package and uses many of lmfit's
-user-friendly high-level features. Experience with `lmfit` can be helpful but is
-not an essential prerequisite for using `emgfit` since the `lmfit` features stay
-largely 'hidden under the hood'. `emgfit` is designed to be user-friendly and
-offers automation features whenever reasonable while also supporting a
-large amount of flexibility and control for the user. Depending on the user's
-preferences an entire spectrum can be rapidly analyzed with only a few lines of
-code. Alternatively, various optional features are available to aid the user in
-a more rigorous analysis.
+`emgfit` is a Python package for peak fitting of time-of-flight (TOF) mass
+spectra with hyper-exponentially modified Gaussian (Hyper-EMG_ [1]_) model
+functions. `emgfit` is a wrapper around the `lmfit`_ [2]_ curve fitting package
+and uses many of lmfit's user-friendly high-level features. Experience with
+`lmfit` can be helpful but is not an essential prerequisite for using `emgfit`
+since the `lmfit` routines stay largely 'hidden under the hood'. `emgfit` is
+designed for user-friendliness. The package offers automation features whenever
+reasonable while still supporting a large amount of flexibility and control for
+the user. Depending on the user's preferences a multi-peak spectrum can be
+rapidly analyzed with only a few lines of code. Alternatively, various optional
+features are available to aid the user in a more rigorous analysis.
 
 Amongst other features, the `emgfit` toolbox includes:
 

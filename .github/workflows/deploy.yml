@@ -1,6 +1,6 @@
 # Publish docs to gh-pages and release package on PyPi
 
-name: Run CI tests & deploy docs and package
+name: CI tests & deployment
 
 on:
   push:
