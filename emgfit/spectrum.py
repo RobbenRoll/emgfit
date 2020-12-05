@@ -18,6 +18,7 @@ import emgfit.fit_models as fit_models
 import lmfit as fit
 import os
 
+
 ################################################################################
 ##### Define peak class
 class peak:
@@ -920,10 +921,11 @@ class spectrum:
 
         """
         import warnings
-        warnings.simplefilter('once')
-        msg = str("remove_peak is deprecated in v0.1.1 and will likely be "
-                  "removed in future versions, use remove_peaks instead!")
-        warnings.warn(msg, PendingDeprecationWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter('once')
+            msg = str("remove_peak is deprecated in v0.1.1 and will likely be "
+                      "removed in future versions, use remove_peaks instead!")
+            warnings.warn(msg, PendingDeprecationWarning)
         self.remove_peaks(peak_indeces=peak_index,x_pos=x_pos,species=species)
 
 
@@ -1345,7 +1347,7 @@ class spectrum:
         # add confidence band with specified number of sigmas
         if sigmas_of_conf_band!=0 and fit_result.errorbars == True:
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
-            label = str(sigmas_of_conf_band)+'-$\\sigma$ uncertainty band'
+            label = str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band'
             plt.fill_between(fit_result.x, fit_result.best_fit-dely,
                              fit_result.best_fit+dely, color="#ABABAB",
                              label=label)
@@ -1378,7 +1380,7 @@ class spectrum:
         ax0.hlines(0,x_min,x_max, color='black', zorder=10)
         #ax0.hlines(-1,x_min,x_max,linestyle='dashed', color='black')
         ax0.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
-        ax0.set_ylabel('Residual / $\\sigma$')
+        ax0.set_ylabel('Residual / $\sigma$')
         #ax0.tick_params(axis='x', labelsize=0) # hide tick labels
         ax1 = axs[1]
         ax1.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
@@ -1708,9 +1710,13 @@ class spectrum:
         y = fit_result.y
         weights = fit_result.weights
         # Perform emcee MCMC sampling
-        result_emcee = mod.fit(y, x=x, params=emcee_params, weights=weights,
-                               method='emcee', nan_policy='propagate',
-                               fit_kws=emcee_kws)
+        import warnings
+        with warnings.catch_warnings(): # suppress DeprecationWarning from emcee
+            warnings.filterwarnings("ignore", message=
+                                 "This function will be removed in tqdm==5.0.0")
+            result_emcee = mod.fit(y, x=x, params=emcee_params, weights=weights,
+                                   method='emcee', nan_policy='propagate',
+                                   fit_kws=emcee_kws)
         fit_result.flatchain = result_emcee.flatchain # store sampling chain
 
         # Save chain to HDF5 file #TODO
@@ -2062,7 +2068,14 @@ class spectrum:
         else:
             # Use shape parameters asociated with spectrum unless other
             # parameters have been specified
+            if self.shape_cal_pars is None:
+                raise Exception("No shape calibration parameters found. Either "
+                                "perform a shape calibration upfront with "
+                                "determine_peak_shape() or provide initial "
+                                "shape parameter values with the `init_params` "
+                                "argument.")
             init_params = self.shape_cal_pars
+
 
         if vary_shape == True:
             # Enforce shared shape parameters for all peaks
@@ -3530,6 +3543,9 @@ class spectrum:
         #res = np.array([refit(pars) for pars in tqdm(shape_par_samples)]) # serial version
         res = np.array(Parallel(n_jobs=n_cores)(delayed(refit)(pars)
                                 for pars in tqdm(shape_par_samples)))
+        # Force workers to shut down
+        from joblib.externals.loky import get_reusable_executor
+        get_reusable_executor().shutdown(wait=True)
         os.remove(modelfname) # clean up
 
         # Format results
@@ -3574,13 +3590,13 @@ class spectrum:
                 ax0.set_title("Centroids - peak {0}".format(peak_idx),
                               fontdict={'fontsize':17})
                 ax0.hist(dm*1e06,bins=19)
-                text0 = r"RMS dev. ={0: .1f} $\\mu$u".format(PS_mass_err*1e06)
+                text0 = r"RMS dev. ={0: .1f} $\mu$u".format(PS_mass_err*1e06)
                 ax0.text(0.65, 0.94, text0,transform=ax0.transAxes, fontsize=14,
                          verticalalignment='top', bbox=boxprops)
                 ax0.axvline(0, color='black') # best-fit mu
                 ax0.xaxis.get_offset_text().set_fontsize(15)
                 ax0.tick_params(axis='both',labelsize=15)
-                ax0.set_xlabel("Effective mass shift [$\\mu$u]", fontsize=16)
+                ax0.set_xlabel("Effective mass shift [$\mu$u]", fontsize=16)
                 ax0.set_ylabel("Occurences", fontsize=16)
                 ax1.set_title("Areas - peak {0}".format(peak_idx),
                               fontdict={'fontsize':17})
@@ -3793,12 +3809,13 @@ class spectrum:
                         p.mass_error_keV = p.rel_mass_error*p.m_ion*u_to_keV
                     except TypeError:
                         import warnings
-                        warnings.simplefilter("once")
-                        msg = str("Could not update total mass error of peak "
-                                  "{0} due to TypeError. Check if the "
-                                  "`rel_stat_error` and `rel_recal_error` are "
-                                  "defined. ").format(peak_idx)
-                        warnings.warn(msg)
+                        with warnings.catch_warnings():
+                            warnings.simplefilter("once")
+                            msg = str("Could not update total mass error of "
+                                      "peak {0} due to TypeError. Check if the "
+                                      "`rel_stat_error` and `rel_recal_error` "
+                                      "are defined. ").format(peak_idx)
+                            warnings.warn(msg)
                 try:
                     s_indeces = ",".join([s_indeces,str(peak_idx)])
                 except UnboundLocalError: # handle first index in s_indeces
@@ -4124,11 +4141,12 @@ class spectrum:
                     p.rel_recal_error = self.rel_recal_error
                 else:
                     import warnings
-                    warnings.simplefilter('once')
-                    msg  = str('Could not set mass recalibration errors - no '
-                               'successful mass recalibration performed on '
-                               'spectrum yet.')
-                    warnings.warn(msg)
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('once')
+                        msg  = str('Could not set mass recalibration errors - '
+                                   'no successful mass recalibration performed '
+                                   'on spectrum yet.')
+                        warnings.warn(msg)
                 try:
                     # total relative uncertainty of mass value - includes:
                     # stat. mass uncertainty, peakshape uncertainty &
@@ -4139,10 +4157,11 @@ class spectrum:
                     p.mass_error_keV = p.rel_mass_error*p.m_ion*u_to_keV
                 except TypeError:
                     import warnings
-                    warnings.simplefilter('once')
-                    msg = 'Could not calculate total mass error due to TypeError.'
-                    warnings.warn(msg)
-                    pass
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('once')
+                        msg = str('Could not calculate total mass error due to '
+                                  'TypeError.')
+                        warnings.warn(msg)
                 if p.A:
                     # atomic Mass excess (includes electron mass) [keV]
                     p.atomic_ME_keV = np.round((p.m_ion + m_e - p.A)*u_to_keV,3)
@@ -4190,7 +4209,7 @@ class spectrum:
         fit_model : str, optional
             Name of fit model to use (e.g. ``'Gaussian'``, ``'emg12'``,
             ``'emg33'``, ... - for full list see :ref:`fit_model_list`). If
-            ``None``, defaults to :attr:`~spectrum.best_model` spectrum
+            ``None``, defaults to :attr:`~spectrum.fit_model` spectrum
             attribute.
         cost_func : str, optional, default: 'chi-square'
             Name of cost function to use for minimization.
@@ -4272,6 +4291,11 @@ class spectrum:
         """
         if fit_model is None:
             fit_model = self.fit_model
+            if self.fit_model is None:
+                raise Exception(
+                        "No fit model found. Either perform a peak-shape "
+                        "calibration upfront with determine_peak_shape() or "
+                        "define a model with the `fit_model` argument.")
         if x_fit_range is None:
             x_fit_range = self.default_fit_range
 
@@ -4522,10 +4546,11 @@ class spectrum:
 
             except ValueError:
                 import warnings
-                warnings.simplefilter('always')
-                msg = str("Fit failed with ValueError (likely NaNs in y-model "
-                           "array) and will be excluded.")
-                warnings.warn(msg, UserWarning)
+                with warnings.catch_warnings():
+                    warnings.simplefilter('always')
+                    msg = str("Fit failed with ValueError (likely NaNs in "
+                               "y-model array) and will be excluded.")
+                    warnings.warn(msg, UserWarning)
                 N_POI = len(peak_indeces)
                 return np.array([[np.NaN]*N_POI, [np.NaN]*N_POI])
 
@@ -4533,6 +4558,9 @@ class spectrum:
         #results = np.array([refit() for i in tqdm(range(N_spectra))]) # serial
         results = np.array(Parallel(n_jobs=n_cores)
                              (delayed(refit)() for i in tqdm(range(N_spectra))))
+        # Force workers to shut down
+        from joblib.externals.loky import get_reusable_executor
+        get_reusable_executor().shutdown(wait=True)
         os.remove(modelfname) # clean up
 
         # Format results
@@ -4555,13 +4583,13 @@ class spectrum:
                 ax0.set_title("Centroid scatter - peak {0}".format(idx),
                                fontdict={'fontsize':17})
                 ax0.hist( (transp_mus[i]-best_fit_mu)*1e06,bins=19)
-                text0 = r"$\sigma = {0: .1f}$ $\\mu$u".format(stat_errs[i]*1e06)
+                text0 = r"$\sigma = {0: .1f}$ $\mu$u".format(stat_errs[i]*1e06)
                 ax0.text(0.78, 0.92, text0, transform=ax0.transAxes,
                          fontsize=14, verticalalignment='top', bbox=boxprops)
                 ax0.axvline(0, color='black')
                 ax0.tick_params(axis='both',labelsize=15)
                 ax0.xaxis.get_offset_text().set_fontsize(15)
-                ax0.set_xlabel("Peak position - best-fit value [$\\mu$u]",
+                ax0.set_xlabel("Peak position - best-fit value [$\mu$u]",
                                fontsize=16)
                 ax0.set_ylabel("Occurences", fontsize=16)
                 ax1.set_title("Area scatter - peak {0}".format(idx),
@@ -4707,10 +4735,11 @@ class spectrum:
                     updated_indeces.append(peak_idx)
             except TypeError:
                 import warnings
-                warnings.simplefilter("once")
-                msg = str("Could not update total mass error of peak "
-                          "{0} due to TypeError.".format(peak_idx))
-                warnings.warn(msg)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("once")
+                    msg = str("Could not update total mass error of peak "
+                              "{0} due to TypeError.".format(peak_idx))
+                    warnings.warn(msg)
         s_updated = ", ".join(str(idx) for idx in updated_indeces)
         print("Updated total mass errors of peaks {}.".format(s_updated))
         self.peaks_with_errors_from_resampling.sort()
