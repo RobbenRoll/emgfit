@@ -46,7 +46,6 @@ jobs:
         codecov
   deploy:
     needs: test
-    if: github.event.base_ref == 'refs/heads/master'  # deploy only tags on master branch
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
