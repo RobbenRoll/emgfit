@@ -2,8 +2,8 @@
 emgfit
 ======
 
-.. image:: https://github.com/RobbenRoll/emgfit/workflows/Run%20CI%20tests/badge.svg?branch=master
-        :target: https://github.com/RobbenRoll/emgfit/workflows/Run%20CI%20tests/badge.svg?branch=master
+.. image:: https://github.com/RobbenRoll/emgfit/workflows/CI%20tests/badge.svg?branch=master
+        :target: https://github.com/RobbenRoll/emgfit/workflows/CI%20tests/badge.svg?branch=master
 
 .. image:: https://img.shields.io/pypi/v/emgfit.svg
         :target: https://pypi.python.org/pypi/emgfit

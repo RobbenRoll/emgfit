@@ -7,6 +7,16 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+v0.3.2 (2020-12-04)
+-------------------
+
+Fixed
+^^^^^
+* Resolved some incompatibility issues observed in notebooks for certain ipython
+  and ipykernel versions.
+* Fixed failing notebook start-up due to pywin32 ImportError.
+
+
 v0.3.1 (2020-11-27)
 -------------------
 
