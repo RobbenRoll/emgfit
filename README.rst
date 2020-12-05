@@ -3,7 +3,7 @@ emgfit
 ======
 
 .. image:: https://github.com/RobbenRoll/emgfit/workflows/CI%20tests/badge.svg?branch=master
-        :target: https://github.com/RobbenRoll/emgfit/workflows/CI%20tests/badge.svg?branch=master
+        :target: https://github.com/RobbenRoll/emgfit/actions?query=workflow%3A%22CI+tests%22
 
 .. image:: https://img.shields.io/pypi/v/emgfit.svg
         :target: https://pypi.python.org/pypi/emgfit
