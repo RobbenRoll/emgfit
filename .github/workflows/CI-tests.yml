@@ -6,10 +6,13 @@ name: Run CI tests
 
 on:
   push:
-    branches: gh-actions-CI   #TODO change to master
+    branches:
+      - master
+      - develop
   pull_request:
-    branches: gh-actions-CI   #TODO change to master
-
+    branches:
+      - master
+      - develop
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -47,25 +50,3 @@ jobs:
         pytest --cov=emgfit --cov-append --cov-report term-missing --timeout=300 --nbval-lax --current-env ./emgfit/examples/tutorial/emgfit_tutorial.ipynb
         # Upload code coverage report to Codecov
         codecov
-  #   - name: Archive code coverage results
-  #     uses: actions/upload-artifact@v2
-  #     with:
-  #       name: code-coverage-report
-  #       path: |
-  #         testcoverage.xml
-  #         nbcoverage.xml
-  # release:
-  #   needs: test
-  #   name: Publish coverage results to codecov
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Download all artifacts
-  #     uses: actions/download-artifact@v2
-  #     with:
-  #       name: code-coverage-report
-  #   - name: Upload coverage to Codecov
-  #     uses: codecov/codecov-action@v1
-  #     with:
-  #       fail_ci_if_error: false
-  #       verbose: false

@@ -46,7 +46,7 @@ jobs:
         codecov
   deploy:
     needs: test
-    if: github.event.base_ref == 'refs/heads/gh-actions-CI'  # only for tags on master branch # TODO change to master
+    if: github.event.base_ref == 'refs/heads/master'  # deploy only tags on master branch
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
@@ -107,16 +107,8 @@ jobs:
       with:
         password: ${{ secrets.test_pypi_password }}
         repository_url: https://test.pypi.org/legacy/
-    # - name: Publish package to PyPI
-    #   if: startsWith(github.ref, 'refs/tags')
-    #   uses: pypa/gh-action-pypi-publish@master
-    #   with:
-    #     password: ${{ secrets.pypi_password }}
-
-    # - name: Build and publish package
-    #   env:
-    #     TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-    #     TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-    #   run: |
-    #     python setup.py sdist bdist_wheel
-    #     twine upload dist/*
+    - name: Publish package to PyPI
+      if: startsWith(github.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.pypi_password }}
