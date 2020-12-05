@@ -89,6 +89,7 @@ numpydoc_show_class_members = False
 nbsphinx_execute = 'always' # re-run notebooks upon every doc build
 nbsphinx_allow_errors = False # ignore errors in notebook execution
 nbsphinx_timeout = 600 # extend default cell timeout
+nbsphinx_kernel_name = 'python3'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
