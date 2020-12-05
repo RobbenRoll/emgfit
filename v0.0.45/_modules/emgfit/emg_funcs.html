@@ -1,0 +1,713 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>emgfit.emg_funcs &mdash; emgfit 0.0.45 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/thebelab.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+        <script src="../../_static/thebelab-helper.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> emgfit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.45
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Getting started with emgfit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../emgfit_tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Central concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">emgfit API docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">emgfit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>emgfit.emg_funcs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for emgfit.emg_funcs</h1><div class="highlight"><pre>
+<span></span><span class="c1">################################################################################</span>
+<span class="c1">##### Module with numerically robust implementation of the hyper-exponentially-</span>
+<span class="c1">##### modified Gaussian probability density function</span>
+<span class="c1">##### Author: Stefan Paul</span>
+
+<span class="c1">##### Import packages</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">lmfit</span> <span class="k">as</span> <span class="nn">fit</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">exp</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="kn">import</span> <span class="nn">scipy.special.cython_special</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">erfc</span><span class="p">,</span> <span class="n">erfcx</span>
+<span class="kn">from</span> <span class="nn">numba.extending</span> <span class="kn">import</span> <span class="n">get_cython_function_address</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">vectorize</span><span class="p">,</span> <span class="n">njit</span>
+<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">import</span> <span class="nn">mpmath</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="n">erfc_mp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frompyfunc</span><span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">erfc</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">exp_mp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frompyfunc</span><span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">norm_precision</span> <span class="o">=</span> <span class="mf">1e-06</span> <span class="c1"># level on which eta parameters must agree with unity</span>
+
+<span class="c1">################################################################################</span>
+<span class="c1">##### Define numba versions of scipy.special&#39;s erfc and erfcx functions using</span>
+<span class="c1">##### the corresponding C functions from scipy.special.cython_special</span>
+<span class="n">erfc_addr</span> <span class="o">=</span> <span class="n">get_cython_function_address</span><span class="p">(</span><span class="s2">&quot;scipy.special.cython_special&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;__pyx_fuse_1erfc&quot;</span><span class="p">)</span>
+<span class="n">erfc_functype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">CFUNCTYPE</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)</span>
+<span class="n">c_erfc</span> <span class="o">=</span> <span class="n">erfc_functype</span><span class="p">(</span><span class="n">erfc_addr</span><span class="p">)</span>
+
+<span class="nd">@vectorize</span><span class="p">(</span><span class="s1">&#39;float64(float64)&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_vec_erfc</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">c_erfc</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">_erfc_jit</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_vec_erfc</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+<span class="n">erfcx_addr</span> <span class="o">=</span> <span class="n">get_cython_function_address</span><span class="p">(</span><span class="s2">&quot;scipy.special.cython_special&quot;</span><span class="p">,</span>
+                                         <span class="s2">&quot;__pyx_fuse_1erfcx&quot;</span><span class="p">)</span>
+<span class="n">erfcx_functype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">CFUNCTYPE</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)</span>
+<span class="n">c_erfcx</span> <span class="o">=</span> <span class="n">erfcx_functype</span><span class="p">(</span><span class="n">erfcx_addr</span><span class="p">)</span>
+
+<span class="nd">@vectorize</span><span class="p">(</span><span class="s1">&#39;float64(float64)&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_vec_erfcx</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">c_erfcx</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">_erfcx_jit</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_vec_erfcx</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+
+<span class="c1">################################################################################</span>
+<span class="c1">##### Define general Hyper-EMG functions</span>
+
+<div class="viewcode-block" id="h_m_i"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.h_m_i">[docs]</a><span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">h_m_i</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">eta_m</span><span class="p">,</span><span class="n">tau_m</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Internal helper function to calculate single negative EMG tail for</span>
+<span class="sd">    h_m_emg.&quot;&quot;&quot;</span>
+    <span class="n">erfcarg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">sigma</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">tau_m</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="p">))</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">erfcarg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="c1"># Use Gauss*erfcx formulation to avoid overflow of exp and underflow of</span>
+    <span class="c1"># erfc at larger pos. arguments:</span>
+    <span class="n">Gauss_erfcx</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">sigma</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span><span class="o">*</span><span class="n">_erfcx_jit</span><span class="p">(</span><span class="n">erfcarg</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">])</span>
+    <span class="n">ret</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">eta_m</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">tau_m</span><span class="p">)</span><span class="o">*</span><span class="n">Gauss_erfcx</span>
+    <span class="c1"># Use exp*erfc formulation to avoid overflow of erfcx at larger neg.</span>
+    <span class="c1"># arguments:</span>
+    <span class="n">exp_erfc</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">sigma</span><span class="o">/</span><span class="n">tau_m</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">tau_m</span><span class="p">)</span><span class="o">*</span><span class="n">_erfc_jit</span><span class="p">(</span><span class="n">erfcarg</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span>
+    <span class="n">ret</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">eta_m</span><span class="o">/</span><span class="n">tau_m</span><span class="o">*</span><span class="n">exp_erfc</span>
+
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="h_m_i_prec"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.h_m_i_prec">[docs]</a><span class="k">def</span> <span class="nf">h_m_i_prec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">eta_m</span><span class="p">,</span><span class="n">tau_m</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Arbitrary precision version of internal helper function for h_m_emg.&quot;&quot;&quot;</span>
+    <span class="n">expval</span> <span class="o">=</span> <span class="n">exp_mp</span><span class="p">(</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">sigma</span><span class="o">/</span><span class="n">tau_m</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">tau_m</span> <span class="p">)</span>
+    <span class="n">erfcval</span> <span class="o">=</span> <span class="n">erfc_mp</span><span class="p">(</span> <span class="n">sigma</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">tau_m</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">eta_m</span><span class="o">/</span><span class="n">tau_m</span><span class="o">*</span><span class="n">expval</span><span class="o">*</span><span class="n">erfcval</span>
+    <span class="k">return</span> <span class="n">ret</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="h_m_emg"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.h_m_emg">[docs]</a><span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">h_m_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_m</span><span class="p">,</span><span class="n">li_tau_m</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Negative skewed exponentially-modified Gaussian (EMG) distribution.</span>
+
+<span class="sd">    The lengths of `li_eta_m` &amp; `li_tau_m` must match and define the order of</span>
+<span class="sd">    negative tails.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x  : float &gt;= 0</span>
+<span class="sd">        Abscissa data (mass data).</span>
+<span class="sd">    mu : float &gt;= 0</span>
+<span class="sd">        Mean value of underlying Gaussian distribution.</span>
+<span class="sd">    sigma : float &gt;= 0</span>
+<span class="sd">        Standard deviation of underlying Gaussian distribution.</span>
+<span class="sd">    li_eta_m : tuple</span>
+<span class="sd">        Tuple containing the neg. tail weights with the signature:</span>
+<span class="sd">        ``(eta_m1, eta_m2, ...)``.</span>
+<span class="sd">    li_tau_m : tuple</span>
+<span class="sd">        Tuple containing the neg. tail decay constants with the signature:</span>
+<span class="sd">        ``(tau_m1, tau_m2, ...)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Ordinate values of the negative skewed EMG distribution.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The Hyper-EMG probability distribution function was first introduced in</span>
+<span class="sd">    `this publication`_ by Purushothaman et al. [#]_. The basic definitions and</span>
+<span class="sd">    notations used here are adapted from this work.</span>
+
+<span class="sd">    Each negative tail of a Hyper-EMG function can be expressed in two</span>
+<span class="sd">    equivalent ways:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)</span>
+<span class="sd">        = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(u)} \mathrm{erfc}(v),</span>
+
+<span class="sd">    where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\tau_{-i}}`</span>
+<span class="sd">    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\sigma}`.</span>
+<span class="sd">    In double float precision, the `exp(u)`_ routine overflows if u &gt; 709.78. The</span>
+<span class="sd">    complementary error function `erfc(v)`_ underflows to 0.0 if v &gt; 26.54. The</span>
+<span class="sd">    scaled complementary error function `erfcx(v)`_ overflows if v &lt; -26.62. To</span>
+<span class="sd">    circumvent those scenarios and always ensure an exact result, the underlying</span>
+<span class="sd">    helper function for the calculation of a negative EMG tail :func:`h_m_i`</span>
+<span class="sd">    uses the formulation in terms of `erfcx` whenever v &gt;= 0 and switches to the</span>
+<span class="sd">    `erfc`-formulation when v &lt; 0.</span>
+
+<span class="sd">    .. _`exp(u)`: https://numpy.org/doc/stable/reference/generated/numpy.exp.html#numpy.exp</span>
+<span class="sd">    .. _`erfc(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfc.html</span>
+<span class="sd">    .. _`erfcx(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfcx.html</span>
+<span class="sd">    .. _`this publication`: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [#] Purushothaman, S., et al. &quot;Hyper-EMG: A new probability distribution</span>
+<span class="sd">       function composed of Exponentially Modified Gaussian distributions to</span>
+<span class="sd">       analyze asymmetric peak shapes in high-resolution time-of-flight mass</span>
+<span class="sd">       spectrometry.&quot; International Journal of Mass Spectrometry 421 (2017):</span>
+<span class="sd">       245-254.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">li_eta_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+    <span class="n">li_tau_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">li_tau_m</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+    <span class="n">t_order_m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span> <span class="c1"># order of negative tail exponentials</span>
+    <span class="n">sum_eta_m</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_m</span><span class="p">):</span>
+        <span class="n">sum_eta_m</span> <span class="o">+=</span> <span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">sum_eta_m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">norm_precision</span><span class="p">:</span>  <span class="c1"># check normalization of eta_m&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_m&#39;s don&#39;t add up to 1.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_tau_m</span><span class="p">)</span> <span class="o">!=</span> <span class="n">t_order_m</span><span class="p">:</span>  <span class="c1"># check if all arguments match tail order</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;orders of eta_m and tau_m do not match!&quot;</span><span class="p">)</span>
+
+    <span class="n">h_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_m</span><span class="p">):</span>
+        <span class="n">eta_m</span> <span class="o">=</span> <span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">tau_m</span> <span class="o">=</span> <span class="n">li_tau_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">h_m</span> <span class="o">+=</span> <span class="n">h_m_i</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">eta_m</span><span class="p">,</span><span class="n">tau_m</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">h_m</span></div>
+
+
+<div class="viewcode-block" id="h_p_i"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.h_p_i">[docs]</a><span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">h_p_i</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">eta_p</span><span class="p">,</span><span class="n">tau_p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Internal helper function to calculate single positive EMG tail for</span>
+<span class="sd">    h_p_emg.&quot;&quot;&quot;</span>
+    <span class="n">erfcarg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">sigma</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">tau_p</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="p">))</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">erfcarg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="c1"># Use Gauss*erfcx formulation to avoid overflow of exp and underflow of</span>
+    <span class="c1"># erfc at larger pos. arguments:</span>
+    <span class="n">Gauss_erfcx</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">sigma</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span><span class="o">*</span><span class="n">_erfcx_jit</span><span class="p">(</span><span class="n">erfcarg</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">])</span>
+    <span class="n">ret</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">eta_p</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">tau_p</span><span class="p">)</span><span class="o">*</span><span class="n">Gauss_erfcx</span>
+    <span class="c1"># Use exp*erfc formulation to avoid overflow of erfcx at larger neg.</span>
+    <span class="c1"># arguments:</span>
+    <span class="n">exp_erfc</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">sigma</span><span class="o">/</span><span class="n">tau_p</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">tau_p</span><span class="p">)</span><span class="o">*</span><span class="n">_erfc_jit</span><span class="p">(</span><span class="n">erfcarg</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span>
+    <span class="n">ret</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">eta_p</span><span class="o">/</span><span class="n">tau_p</span><span class="o">*</span><span class="n">exp_erfc</span>
+
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="h_p_i_prec"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.h_p_i_prec">[docs]</a><span class="k">def</span> <span class="nf">h_p_i_prec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">eta_p</span><span class="p">,</span><span class="n">tau_p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Arbitrary precision version of internal helper function for h_p_emg.&quot;&quot;&quot;</span>
+    <span class="n">expval</span> <span class="o">=</span> <span class="n">exp_mp</span><span class="p">(</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">sigma</span><span class="o">/</span><span class="n">tau_p</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">tau_p</span> <span class="p">)</span>
+    <span class="n">erfcval</span> <span class="o">=</span> <span class="n">erfc_mp</span><span class="p">(</span> <span class="n">sigma</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">tau_p</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">eta_p</span><span class="o">/</span><span class="n">tau_p</span><span class="o">*</span><span class="n">expval</span><span class="o">*</span><span class="n">erfcval</span>
+    <span class="k">return</span> <span class="n">ret</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="h_p_emg"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.h_p_emg">[docs]</a><span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">h_p_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Positive skewed exponentially-modified Gaussian (EMG) distribution.</span>
+
+<span class="sd">    The lengths of `li_eta_p` &amp; `li_tau_p` must match and define the order of</span>
+<span class="sd">    positive tails.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x  : float &gt;= 0</span>
+<span class="sd">        Abscissa data (mass data).</span>
+<span class="sd">    mu : float &gt;= 0</span>
+<span class="sd">        Mean value of underlying Gaussian distribution.</span>
+<span class="sd">    sigma : float &gt;= 0</span>
+<span class="sd">        Standard deviation of underlying Gaussian distribution.</span>
+<span class="sd">    li_eta_p : tuple</span>
+<span class="sd">        Tuple containing the pos. tail weights with the signature:</span>
+<span class="sd">        ``(eta_p1, eta_p2, ...)``.</span>
+<span class="sd">    li_tau_p : tuple</span>
+<span class="sd">        Tuple containing the pos. tail decay constants with the signature:</span>
+<span class="sd">        ``(tau_p1, tau_p2, ...)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Ordinate values of the positive skewed EMG distribution.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The Hyper-EMG probability distribution function was first introduced in</span>
+<span class="sd">    `this publication`_ by Purushothaman et al. [#]_. The basic definitions and</span>
+<span class="sd">    notations used here are adapted from this work.</span>
+
+<span class="sd">    Each positive tail of a Hyper-EMG function can be expressed in two</span>
+<span class="sd">    equivalent ways:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)</span>
+<span class="sd">        = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(u)} \mathrm{erfc}(v),</span>
+
+<span class="sd">    where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\tau_{+i}}`</span>
+<span class="sd">    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\sigma}`.</span>
+<span class="sd">    In double precision, the `exp(u)`_ routine overflows if u &gt; 709.78. The</span>
+<span class="sd">    complementary error function `erfc(v)`_ underflows to 0.0 if v &gt; 26.54. The</span>
+<span class="sd">    scaled complementary error function `erfcx(v)`_ overflows if v &lt; -26.62. To</span>
+<span class="sd">    circumvent those scenarios and always ensure an exact result, the underlying</span>
+<span class="sd">    helper function for the calculation of a negative EMG tail :func:`h_m_i`</span>
+<span class="sd">    uses the formulation in terms of `erfcx` whenever v &gt;= 0 and switches to the</span>
+<span class="sd">    `erfc`-formulation when v &lt; 0.</span>
+
+<span class="sd">    .. _`exp(u)`: https://numpy.org/doc/stable/reference/generated/numpy.exp.html#numpy.exp</span>
+<span class="sd">    .. _`erfc(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfc.html</span>
+<span class="sd">    .. _`erfcx(v)`: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.erfcx.html</span>
+<span class="sd">    .. _`this publication`: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [#] Purushothaman, S., et al. &quot;Hyper-EMG: A new probability distribution</span>
+<span class="sd">       function composed of Exponentially Modified Gaussian distributions to</span>
+<span class="sd">       analyze asymmetric peak shapes in high-resolution time-of-flight mass</span>
+<span class="sd">       spectrometry.&quot; International Journal of Mass Spectrometry 421 (2017):</span>
+<span class="sd">       245-254.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">li_eta_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+    <span class="n">li_tau_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">li_tau_p</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+    <span class="n">t_order_p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span> <span class="c1"># order of positive tails</span>
+    <span class="n">sum_eta_p</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_p</span><span class="p">):</span>
+        <span class="n">sum_eta_p</span> <span class="o">+=</span> <span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">sum_eta_p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">norm_precision</span><span class="p">:</span>  <span class="c1"># check normalization of eta_p&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_p&#39;s don&#39;t add up to 1.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_tau_p</span><span class="p">)</span> <span class="o">!=</span> <span class="n">t_order_p</span><span class="p">:</span>  <span class="c1"># check if all arguments match tail order</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;orders of eta_p and tau_p do not match!&quot;</span><span class="p">)</span>
+
+    <span class="n">h_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_p</span><span class="p">):</span>
+        <span class="n">eta_p</span> <span class="o">=</span> <span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">tau_p</span> <span class="o">=</span> <span class="n">li_tau_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">h_p</span> <span class="o">+=</span> <span class="n">h_p_i</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">eta_p</span><span class="p">,</span><span class="n">tau_p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">h_p</span></div>
+
+
+<div class="viewcode-block" id="h_emg"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.h_emg">[docs]</a><span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span> <span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Hyper-exponentially-modified Gaussian distribution (hyper-EMG).</span>
+
+<span class="sd">    The lengths of `li_eta_m` &amp; `li_tau_m` must match and define the order of</span>
+<span class="sd">    negative tails. Likewise, the lengths of `li_eta_p` &amp; `li_tau_p` must match</span>
+<span class="sd">    and define the order of positive tails.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x  : float &gt;= 0</span>
+<span class="sd">        Abscissa data (mass data).</span>
+<span class="sd">    mu : float &gt;= 0</span>
+<span class="sd">        Mean value of underlying Gaussian distribution.</span>
+<span class="sd">    sigma : float &gt;= 0</span>
+<span class="sd">        Standard deviation of underlying Gaussian distribution.</span>
+<span class="sd">    theta : float, 0 &lt;= theta &lt;= 1</span>
+<span class="sd">        Left-right-weight factor (negative-skewed EMG weight: theta;</span>
+<span class="sd">        positive-skewed EMG weight: 1 - theta).</span>
+<span class="sd">    li_eta_m : tuple</span>
+<span class="sd">        Tuple containing the neg. tail weights with the signature:</span>
+<span class="sd">        ``(eta_m1, eta_m2, ...)``.</span>
+<span class="sd">    li_tau_m : tuple</span>
+<span class="sd">        Tuple containing the neg. tail decay constants with the signature:</span>
+<span class="sd">        ``(tau_m1, tau_m2, ...)``.</span>
+<span class="sd">    li_eta_p : tuple</span>
+<span class="sd">        Tuple containing the pos. tail weights with the signature:</span>
+<span class="sd">        ``(eta_p1, eta_p2, ...)``.</span>
+<span class="sd">    li_tau_p : tuple</span>
+<span class="sd">        Tuple containing the pos. tail decay constants with the signature:</span>
+<span class="sd">        ``(tau_p1, tau_p2, ...)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Ordinate of hyper-EMG distribution</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :func:`h_m_emg`</span>
+<span class="sd">    :func:`h_p_emg`</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The Hyper-EMG probability distribution function was first introduced in</span>
+<span class="sd">    `this publication`_ by Purushothaman et al. [#]_. The basic definitions and</span>
+<span class="sd">    notations used here are adapted from this work.</span>
+
+<span class="sd">    The total hyper-EMG distribution `h_m_emg` is comprised of the negative- and</span>
+<span class="sd">    positive-skewed EMG distributions `h_m_emg` and `h_p_emg` respectively and</span>
+<span class="sd">    is calculated as:</span>
+<span class="sd">    ``h_emg(x, mu, sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p) =``</span>
+<span class="sd">    ``theta*h_m_emg(x, mu, sigma, li_eta_m, li_tau_m) +</span>
+<span class="sd">    (1-theta)*h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)``.</span>
+
+<span class="sd">    For algorithmic details, see `Notes` of :func:`h_m_emg` and :func:`h_p_emg`.</span>
+
+<span class="sd">    .. _`this publication`: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [#] Purushothaman, S., et al. &quot;Hyper-EMG: A new probability distribution</span>
+<span class="sd">       function composed of Exponentially Modified Gaussian distributions to</span>
+<span class="sd">       analyze asymmetric peak shapes in high-resolution time-of-flight mass</span>
+<span class="sd">       spectrometry.&quot; International Journal of Mass Spectrometry 421 (2017):</span>
+<span class="sd">       245-254.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">theta</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">h_m_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">theta</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">h_p_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neg_tail</span> <span class="o">=</span> <span class="n">h_m_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">)</span>
+        <span class="n">pos_tail</span> <span class="o">=</span> <span class="n">h_p_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">theta</span><span class="o">*</span><span class="n">neg_tail</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="n">pos_tail</span>
+    <span class="k">return</span> <span class="n">h</span></div>
+
+
+<div class="viewcode-block" id="mu_emg"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.mu_emg">[docs]</a><span class="k">def</span> <span class="nf">mu_emg</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate mean of hyper-EMG distribution.</span>
+
+<span class="sd">    The lengths of `li_eta_m` &amp; `li_tau_m` must match and define the order of</span>
+<span class="sd">    negative tails. Likewise, the lengths of `li_eta_p` &amp; `li_tau_p` must match</span>
+<span class="sd">    and define the order of positive tails.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mu : float &gt;= 0</span>
+<span class="sd">        Mean value of underlying Gaussian distribution.</span>
+<span class="sd">    theta : float, 0 &lt;= theta &lt;= 1</span>
+<span class="sd">        Left-right-weight factor (negative-skewed EMG weight: theta;</span>
+<span class="sd">        positive-skewed EMG weight: 1 - theta).</span>
+<span class="sd">    li_eta_m : tuple</span>
+<span class="sd">        Tuple containing the neg. tail weights with the signature:</span>
+<span class="sd">        ``(eta_m1, eta_m2, ...)``.</span>
+<span class="sd">    li_tau_m : tuple</span>
+<span class="sd">        Tuple containing the neg. tail decay constants with the signature:</span>
+<span class="sd">        ``(tau_m1, tau_m2, ...)``.</span>
+<span class="sd">    li_eta_p : tuple</span>
+<span class="sd">        Tuple containing the pos. tail weights with the signature:</span>
+<span class="sd">        ``(eta_p1, eta_p2, ...)``.</span>
+<span class="sd">    li_tau_p : tuple</span>
+<span class="sd">        Tuple containing the pos. tail decay constants with the signature:</span>
+<span class="sd">        ``(tau_p1, tau_p2, ...)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Mean of hyper-EMG distribution.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The Hyper-EMG probability distribution function was first introduced in</span>
+<span class="sd">    `this publication`_ by Purushothaman et al. [#]_. The basic definitions and</span>
+<span class="sd">    notations used here are adapted from this work.</span>
+
+<span class="sd">    .. _`this publication`: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [#] Purushothaman, S., et al. &quot;Hyper-EMG: A new probability distribution</span>
+<span class="sd">       function composed of Exponentially Modified Gaussian distributions to</span>
+<span class="sd">       analyze asymmetric peak shapes in high-resolution time-of-flight mass</span>
+<span class="sd">       spectrometry.&quot; International Journal of Mass Spectrometry 421 (2017):</span>
+<span class="sd">       245-254.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">norm_precision</span><span class="p">:</span>  <span class="c1"># check normalization of eta_m&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_m&#39;s don&#39;t add up to 1.&quot;</span><span class="p">)</span>
+    <span class="n">t_order_m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span>
+    <span class="n">sum_M_mh</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_m</span><span class="p">):</span>
+        <span class="n">sum_M_mh</span> <span class="o">+=</span> <span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">li_tau_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">norm_precision</span><span class="p">:</span>  <span class="c1"># check normalization of eta_p&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_p&#39;s don&#39;t add up to 1.&quot;</span><span class="p">)</span>
+    <span class="n">t_order_p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span>
+    <span class="n">sum_M_ph</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_p</span><span class="p">):</span>
+        <span class="n">sum_M_ph</span> <span class="o">+=</span> <span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">li_tau_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">mu</span> <span class="o">-</span> <span class="n">theta</span><span class="o">*</span><span class="n">sum_M_mh</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="n">sum_M_ph</span></div>
+
+
+<div class="viewcode-block" id="sigma_emg"><a class="viewcode-back" href="../../modules.html#emgfit.emg_funcs.sigma_emg">[docs]</a><span class="k">def</span> <span class="nf">sigma_emg</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate standard deviation of hyper-EMG distribution.</span>
+
+<span class="sd">    The lengths of `li_eta_m` &amp; `li_tau_m` must match and define the order of</span>
+<span class="sd">    negative tails. Likewise, the lengths of `li_eta_p` &amp; `li_tau_p` must match</span>
+<span class="sd">    and define the order of positive tails.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sigma : float &gt;= 0</span>
+<span class="sd">        Standard deviation of underlying Gaussian distribution.</span>
+<span class="sd">    theta : float, 0 &lt;= theta &lt;= 1</span>
+<span class="sd">        Left-right-weight factor (negative-skewed EMG weight: theta;</span>
+<span class="sd">        positive-skewed EMG weight: 1 - theta).</span>
+<span class="sd">    li_eta_m : tuple</span>
+<span class="sd">        Tuple containing the neg. tail weights with the signature:</span>
+<span class="sd">        ``(eta_m1, eta_m2, ...)``.</span>
+<span class="sd">    li_tau_m : tuple</span>
+<span class="sd">        Tuple containing the neg. tail decay constants with the signature:</span>
+<span class="sd">        ``(tau_m1, tau_m2, ...)``.</span>
+<span class="sd">    li_eta_p : tuple</span>
+<span class="sd">        Tuple containing the pos. tail weights with the signature:</span>
+<span class="sd">        ``(eta_p1, eta_p2, ...)``.</span>
+<span class="sd">    li_tau_p : tuple</span>
+<span class="sd">        Tuple containing the pos. tail decay constants with the signature:</span>
+<span class="sd">        ``(tau_p1, tau_p2, ...)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Standard deviation of hyper-EMG distribution.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The Hyper-EMG probability distribution function was first introduced in</span>
+<span class="sd">    `this publication`_ by Purushothaman et al. [#]_. The basic definitions and</span>
+<span class="sd">    notations used here are adapted from this work.</span>
+
+<span class="sd">    .. _`this publication`: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [#] Purushothaman, S., et al. &quot;Hyper-EMG: A new probability distribution</span>
+<span class="sd">       function composed of Exponentially Modified Gaussian distributions to</span>
+<span class="sd">       analyze asymmetric peak shapes in high-resolution time-of-flight mass</span>
+<span class="sd">       spectrometry.&quot; International Journal of Mass Spectrometry 421 (2017):</span>
+<span class="sd">       245-254.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">norm_precision</span><span class="p">:</span>  <span class="c1"># check normalization of eta_m&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_m&#39;s don&#39;t add up to 1.&quot;</span><span class="p">)</span>
+    <span class="n">t_order_m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">)</span>
+
+    <span class="n">sum_M_mh</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">sum_S_mh</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_m</span><span class="p">):</span>
+        <span class="n">sum_M_mh</span> <span class="o">+=</span> <span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span> <span class="n">li_tau_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">sum_S_mh</span> <span class="o">+=</span> <span class="p">(</span><span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">li_eta_m</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">li_tau_m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">norm_precision</span><span class="p">:</span>  <span class="c1"># check normalization of eta_p&#39;s</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;eta_p&#39;s don&#39;t add up to 1.&quot;</span><span class="p">)</span>
+    <span class="n">t_order_p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">)</span>
+    <span class="n">sum_M_ph</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">sum_S_ph</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_p</span><span class="p">):</span>
+        <span class="n">sum_M_ph</span> <span class="o">+=</span> <span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span> <span class="n">li_tau_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">sum_S_ph</span> <span class="o">+=</span> <span class="p">(</span><span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">li_eta_p</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">li_tau_p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="n">S_h</span> <span class="o">=</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">theta</span><span class="o">*</span><span class="n">sum_S_mh</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="n">sum_S_ph</span> <span class="o">+</span> <span class="n">theta</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">sum_M_mh</span> <span class="o">+</span> <span class="n">sum_M_ph</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">S_h</span><span class="p">)</span></div>
+
+
+<span class="c1">################################################################################</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Stefan Paul
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
