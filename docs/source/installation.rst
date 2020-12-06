@@ -86,7 +86,7 @@ For venv users:
 
 The first time you open a new Jupyter notebook you'll have to ensure that
 the correct kernel is used (indicated on the top right of the notebook). If this
-is not the case, switch to the `emgfit-env` kernel using the ```Change kernel``
+is not the case, switch to the `emgfit-env` kernel using the ``Change kernel``
 option under the ``Kernel`` tab. Now you're good to go with emgfit!
 
 For conda users:
@@ -127,7 +127,7 @@ For conda users:
 
 The first time you open a new Jupyter notebook you'll have to ensure that
 the correct kernel is used (indicated on the top right of the notebook). If this
-is not the case, switch to the `emgfit-env` kernel using the ```Change kernel``
+is not the case, switch to the `emgfit-env` kernel using the ``Change kernel``
 option under the ``Kernel`` tab. Now you're good to go with emgfit!
 
 Launching Jupyter notebook

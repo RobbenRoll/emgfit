@@ -12,8 +12,8 @@ while also supporting a large amount of flexibility and control for the user.
 Depending on the user's preferences an entire spectrum can be rapidly analyzed
 with only a few lines of code. Alternatively, various optional features are
 available to aid the user in a more rigorous analysis. The model functions and
-methods provided by emgfit could be useful for analyses of spectroscopic data
-from a variety of other fields.
+statistical methods provided by emgfit could be useful for analyses of
+spectroscopic data from a variety of other fields.
 
 Amongst other features, the `emgfit` toolbox includes:
 
