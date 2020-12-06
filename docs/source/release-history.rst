@@ -7,6 +7,16 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+v0.3.3 (2020-12-05)
+-------------------
+
+Fixed
+^^^^^
+* Resolve CPU-parallelized fits failing with PickleErrors in Python 3.7.
+* Improve filtering of user warnings, thus avoiding printing of unnecessary
+  deprecation warnings.
+  
+
 v0.3.2 (2020-12-04)
 -------------------
 
