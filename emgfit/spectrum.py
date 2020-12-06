@@ -17,6 +17,10 @@ import emgfit.emg_funcs as emg_funcs
 import emgfit.fit_models as fit_models
 import lmfit as fit
 import os
+import dill
+# Remove dill types from pickle registry to avoid pickle errors in parallelized
+# fits:
+dill.extend(False)
 
 
 ################################################################################
@@ -1332,10 +1336,11 @@ class spectrum:
         # Plot fit result with logarithmic y-scale
         f1 = plt.figure(figsize=(figwidth,figwidth*8.5/18), dpi=dpi)
         ax = f1.gca()
-        plt.errorbar(fit_result.x,fit_result.y,yerr=fit_result.y_err,fmt='.',
-                     color='royalblue',linewidth=0.5,markersize=msize,zorder=1)
+        plt.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
+                     color='royalblue', linewidth=0.5, markersize=msize,
+                     label='data', zorder=1)
         plt.plot(fit_result.x, fit_result.best_fit, '-', color='red',
-                 linewidth=lwidth, zorder=10)
+                 linewidth=lwidth, label='best-fit', zorder=10)
         comps = fit_result.eval_components(x=fit_result.x)
         for peak in peaks_to_plot: # loop over peaks to plot
             peak_index = self.peaks.index(peak)
@@ -1347,10 +1352,10 @@ class spectrum:
         # add confidence band with specified number of sigmas
         if sigmas_of_conf_band!=0 and fit_result.errorbars == True:
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
-            label = str(sigmas_of_conf_band)+'-$\sigma$ uncertainty band'
+            label = str(sigmas_of_conf_band)+r'$\sigma$ confidence band'
             plt.fill_between(fit_result.x, fit_result.best_fit-dely,
-                             fit_result.best_fit+dely, color="#ABABAB",
-                             label=label)
+                             fit_result.best_fit+dely, color='tomato',
+                             alpha=0.5, label=label)
         plt.title(plot_title)
         plt.xlabel('m/z [u]')
         plt.ylabel('Counts per bin')
@@ -1380,7 +1385,7 @@ class spectrum:
         ax0.hlines(0,x_min,x_max, color='black', zorder=10)
         #ax0.hlines(-1,x_min,x_max,linestyle='dashed', color='black')
         ax0.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
-        ax0.set_ylabel('Residual / $\sigma$')
+        ax0.set_ylabel(r'Residual / $\sigma$')
         #ax0.tick_params(axis='x', labelsize=0) # hide tick labels
         ax1 = axs[1]
         ax1.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
@@ -3071,8 +3076,10 @@ class spectrum:
 
         """
         if self.shape_cal_pars is None:
-            print('\nWARNING: Could not calculate peak-shape errors - '
-                  'no peak-shape calibration yet!\n')
+            import warnings
+            msg = str('Could not calculate peak-shape errors - no peak-shape '
+                      'calibration yet!')
+            warnings.warn(msg)
             return
 
         if verbose:
@@ -3596,7 +3603,7 @@ class spectrum:
                 ax0.axvline(0, color='black') # best-fit mu
                 ax0.xaxis.get_offset_text().set_fontsize(15)
                 ax0.tick_params(axis='both',labelsize=15)
-                ax0.set_xlabel("Effective mass shift [$\mu$u]", fontsize=16)
+                ax0.set_xlabel(r"Effective mass shift [$\mu$u]", fontsize=16)
                 ax0.set_ylabel("Occurences", fontsize=16)
                 ax1.set_title("Areas - peak {0}".format(peak_idx),
                               fontdict={'fontsize':17})
@@ -4589,7 +4596,7 @@ class spectrum:
                 ax0.axvline(0, color='black')
                 ax0.tick_params(axis='both',labelsize=15)
                 ax0.xaxis.get_offset_text().set_fontsize(15)
-                ax0.set_xlabel("Peak position - best-fit value [$\mu$u]",
+                ax0.set_xlabel(r"Peak position - best-fit value [$\mu$u]",
                                fontsize=16)
                 ax0.set_ylabel("Occurences", fontsize=16)
                 ax1.set_title("Area scatter - peak {0}".format(idx),
