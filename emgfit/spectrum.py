@@ -1365,7 +1365,8 @@ class spectrum:
         ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
         if plot_filename is not None:
             try:
-                plt.savefig(plot_filename+'_log_plot.png',dpi=600)
+                plt.savefig(plot_filename+'_log_plot.png', transparent=False,
+                            dpi=600)
             except:
                 raise
         plt.show()
@@ -1408,7 +1409,8 @@ class spectrum:
         plt.xlabel('m/z [u]')
         if plot_filename is not None:
             try:
-                plt.savefig(plot_filename+'_lin_plot.png',dpi=600)
+                plt.savefig(plot_filename+'_lin_plot.png', transparent=False,
+                            dpi=600)
             except:
                 raise
         plt.show()
@@ -3260,8 +3262,9 @@ class spectrum:
             pref = 'p{0}_'.format(peak_idx)
             m_ion = fit_result.best_values[pref+'mu']*self.recal_fac
             p.rel_peakshape_error = PS_mass_error/m_ion
-            p.area_error = np.sqrt(self.calc_peak_area(peak_idx,fit_result=
-                                   fit_result)[1]**2 + PS_area_error**2)
+            p.area_error = np.round(np.sqrt(self.calc_peak_area(peak_idx,
+                                            fit_result=fit_result)[1]**2
+                                            + PS_area_error**2), 2)
             try: # remove MC PS error flag
                 self.peaks_with_MC_PS_errors.remove(peak_idx)
             except ValueError: # index not in peaks_with_MC_PS_errors
@@ -3493,7 +3496,7 @@ class spectrum:
                 ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x_i))
                 eps = 1e-10 # small number to bound Pearson weights
                 def resid_Pearson_chi_square(pars,y_data,weights,x=x):
-                    y_m = mod_Pearson.eval(pars,x=x)
+                    y_m = model.eval(pars,x=x)
                     # Calculate weights for current iteration, add tiny number `eps`
                     # in denominator for numerical stability
                     weights = 1/np.sqrt(y_m + eps)
@@ -3804,7 +3807,8 @@ class spectrum:
                 pm_PS_err = np.sqrt(np.sum(np.square(pm_area_shifts)))
                 # Remove PS errors obtained via +- 1 sigma variation
                 stat_area_err = np.sqrt(p.area_error**2 - pm_PS_err**2)
-                p.area_error = np.sqrt(stat_area_err**2 + PS_area_errs[i_p]**2)
+                p.area_error = np.round(np.sqrt(stat_area_err**2 +
+                                                PS_area_errs[i_p]**2), 2)
                 if peak_idx != self.index_mass_calib:
                     p.rel_peakshape_error = PS_mass_errs[i_p]/p.m_ion
                     self.peaks_with_MC_PS_errors.append(peak_idx)
@@ -3813,7 +3817,8 @@ class spectrum:
                         p.rel_mass_error = np.sqrt(p.rel_stat_error**2 +
                                                    p.rel_peakshape_error**2 +
                                                    p.rel_recal_error**2)
-                        p.mass_error_keV = p.rel_mass_error*p.m_ion*u_to_keV
+                        p.mass_error_keV = np.round(
+                                            p.rel_mass_error*p.m_ion*u_to_keV,3)
                     except TypeError:
                         import warnings
                         with warnings.catch_warnings():
@@ -3917,7 +3922,7 @@ class spectrum:
         peak.m_ion = self.recal_fac*peak.m_ion # update calibrant centroid mass
         if peak.A:
             # atomic Mass excess (includes electron mass) [keV]
-            peak.atomic_ME_keV = np.round((peak.m_ion + m_e - peak.A)*u_to_keV,3)
+            peak.atomic_ME_keV = np.round((peak.m_ion+m_e-peak.A)*u_to_keV, 3)
         if peak.m_AME:
             peak.m_dev_keV = np.round( (peak.m_ion - peak.m_AME)*u_to_keV, 3)
 
@@ -4161,7 +4166,8 @@ class spectrum:
                     p.rel_mass_error = np.sqrt(p.rel_stat_error**2 +
                                                p.rel_peakshape_error**2 +
                                                p.rel_recal_error**2)
-                    p.mass_error_keV = p.rel_mass_error*p.m_ion*u_to_keV
+                    p.mass_error_keV = np.round(
+                                           p.rel_mass_error*p.m_ion*u_to_keV, 3)
                 except TypeError:
                     import warnings
                     with warnings.catch_warnings():
@@ -4509,7 +4515,7 @@ class spectrum:
                 ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x))
                 eps = 1e-10 # small number to bound Pearson weights
                 def resid_Pearson_chi_square(pars,y_data,weights,x=x):
-                    y_m = mod_Pearson.eval(pars,x=x)
+                    y_m = mod.eval(pars,x=x)
                     # Calculate weights for current iteration, add tiny number
                     # `eps` in denominator for numerical stability
                     weights = 1/sqrt(y_m + eps)
@@ -4707,7 +4713,8 @@ class spectrum:
                 # preserving the peakshape error contribution to area_error:
                 old_stat_area_err = self.calc_peak_area(peak_idx)[1]
                 PS_area_err = np.sqrt(p.area_error**2 - old_stat_area_err**2)
-                p.area_error = np.sqrt(area_errs[p_i]**2 + PS_area_err**2)
+                p.area_error = np.round(np.sqrt(area_errs[p_i]**2 +
+                                                PS_area_err**2), 2)
                 self.peaks_with_errors_from_resampling.append(peak_idx)
             s_indeces = ", ".join(["{}".format(idx) for idx in POI[res_i]])
             print("Updated the statistical and peak area uncertainties of "
@@ -4733,7 +4740,7 @@ class spectrum:
                 p.rel_mass_error = np.sqrt(p.rel_stat_error**2 +
                                            p.rel_peakshape_error**2 +
                                            p.rel_recal_error**2)
-                p.mass_error_keV = p.rel_mass_error*p.m_ion*u_to_keV
+                p.mass_error_keV = np.round(p.rel_mass_error*p.m_ion*u_to_keV,3)
                 if self.index_mass_calib in peak_indeces:
                     # update all peaks due to new recal_fac_error
                     updated_indeces.append(peak_idx)
@@ -4756,26 +4763,37 @@ class spectrum:
             self.show_peak_properties()
 
 
-    def save_results(self, filename):
+    def save_results(self, filename, save_plots=True):
         """Write the fit results to a XLSX file and the peak-shape calibration
         to a TXT file.
 
-        Write results to an XLSX Excel file named `'filename'` and save
-        peak-shape calibration parameters to TXT file named
-        `'<filename>_peakshape_calib'`.
+        Write results to an XLSX Excel file named `<filename>_results.xlsx`
+        and save peak-shape calibration parameters to TXT file named
+        `<filename>_peakshape_calib.txt`.
 
-        The EXCEL file will contain critical spectrum properties and all peak
-        properties (including the mass values) in two separate sheets.
+        The EXCEL file contains the following three worksheets:
+        * general spectrum properties
+        * peak properties and images of all obtained fit curves
+        * results of the regular peakshape-error evaluation in which shape
+          parameters are varied by +-1 sigma
+
+        PNG images are of all peak fits
+        will be saved in both linear and logarithmic scale.
 
         Parameters
         ----------
         filename : string
-            Prefix of the files to be saved to (the .xlsx & .txt file endings
-            are automatically appended).
+            Prefix of the files to be saved to (any provided file extensions are
+            automatically removed and the necessary .xlsx & .txt extensions are
+            appended).
+        save_plots : bool, optional
+            Whether to save images of all obtained fit curves to separate PNG
+            files (default: `True`).
+
 
         """
         # Ensure no files are overwritten
-        if os.path.isfile(str(filename)+".xlsx"):
+        if os.path.isfile(str(filename)+"_results.xlsx"):
             raise Exception("File "+str(filename)+".xlsx already exists. No "
                             "files saved! Choose a different filename or "
                             "delete the original file and re-try.")
@@ -4788,7 +4806,7 @@ class spectrum:
         spec_data = []
         datetime = time.localtime() # get current date and time
         datetime_string = time.strftime("%Y/%m/%d, %H:%M:%S", datetime)
-        spec_data.append([["Saved on",datetime_string]])
+        spec_data.append(["Saved on",datetime_string])
         import sys
         spec_data.append(["Python version",sys.version_info[0:3]])
         from . import __version__ # get emgfit version
@@ -4826,27 +4844,55 @@ class spectrum:
         df_eff_mass_shifts = pd.concat(frames, keys=keys)
         df_eff_mass_shifts.index.names = ['Peak index','Parameter']
 
-        # Save lin. and log. plots of full fitted spectrum to temporary files
-        # so they can be inserted into the XLSX file
+        # Save lin. and log. plots of all fit results
         from IPython.utils import io
         with io.capture_output() as captured: # suppress output to notebook
-            res_indeces = []
+            n_res = 0
             last_res = None
             for i, res in enumerate(self.fit_results):
                 if res != last_res:
                     self.plot_fit(fit_result=res,
-                                  plot_filename=filename+"_peak{}".format(i))
-                    # Store index of first peak contained in each fit result
-                    res_indeces.append(i)
+                                  plot_filename=filename+"_fit{}".format(n_res))
+                    # Count the different fit results
+                    n_res += 1
                 last_res = res
 
-        # Write DataFrames to separate sheets of EXCEL file and save peak-shape
-        # calibration to TXT-file
-        with pd.ExcelWriter(filename+'.xlsx',engine='xlsxwriter') as writer:
-            df_spec.to_excel(writer, sheet_name='Spectrum properties')
+        # Define functions to get column widths for auto-cell-width adjustmen
+        def lwidth(val):
+            # get width, limited to <= 8.3 in case of numbers
+            try: # string
+                return len(val)
+            except:  # number
+                return min(len(str(val)), 9)
+        def get_col_widths(dataframe):
+            # Find the maximum length of the index column
+            idx_max = max([len(str(s)) for s in dataframe.index.values] +
+                                               [len(str(dataframe.index.name))])
+            # Find max length of each column (add some width to colnames)
+            cols_max = [max(max(lwidth(v) for v in dataframe[col].values),
+                            len(str(col))+1)  for col in dataframe.columns]
+            # return concatenated lengths of idx and cols
+            return np.array([idx_max] + cols_max)
+
+        # Write DataFrames to separate sheets of EXCEL file
+        fname = filename+'_results.xlsx'
+        with pd.ExcelWriter(fname, engine='xlsxwriter') as writer:
+            df_spec.to_excel(writer, sheet_name='Spectrum properties',
+                             header=False,)
             df_prop.to_excel(writer, sheet_name='Peak properties')
+            df_eff_mass_shifts.to_excel(writer, sheet_name=
+                                        'PS errors from +-1 sigma var.')
             workbook = writer.book
+            spec_sheet = writer.sheets['Spectrum properties']
             prop_sheet = writer.sheets['Peak properties']
+            mshift_sheet = writer.sheets['PS errors from +-1 sigma var.']
+            # Adjust column widths
+            for i, width in enumerate(get_col_widths(df_spec)):
+                spec_sheet.set_column(i, i, width)
+            for i, width in enumerate(get_col_widths(df_prop)):
+                prop_sheet.set_column(i, i, width)
+            for i, width in enumerate(get_col_widths(df_eff_mass_shifts)):
+                mshift_sheet.set_column(i, i, width)
             # Mark peaks with stat errors from resampling with green font
             if self.peaks_with_MC_PS_errors not in ([],None):
                 green_font = workbook.add_format({'font_color': 'green'})
@@ -4876,28 +4922,29 @@ class spectrum:
                 prop_sheet.write_string(len(self.peaks)+1, 15,
                                         "Monte Carlo peak-shape errors",
                                         blue_font) # add legend
-            for i, i_res in enumerate(res_indeces): # loop over fit results
-                fname = filename+"_peak{}".format(i_res)
+            for i in range(n_res): # loop over fit results
+                fname = filename+"_fit{}".format(i)
                 prop_sheet.insert_image(len(self.peaks)+4+56*i,1,
                                         fname+'_log_plot.png',
                                         {'x_scale': 1.0,'y_scale':1.0})
                 prop_sheet.insert_image(len(self.peaks)+30+56*i,1,
                                         fname+'_lin_plot.png',
                                         {'x_scale': 1.0,'y_scale':1.0})
-            df_eff_mass_shifts.to_excel(writer, sheet_name=
-                                        'PS errors from +-1 sigma var.')
         print("Fit results saved to file:",str(filename)+".xlsx")
 
-        # Clean up temporary image files
-        for i_res in res_indeces: # loop over fit results
-            fname = filename+"_peak{}".format(i_res)
-            os.remove(fname+'_log_plot.png')
-            os.remove(fname+'_lin_plot.png')
-
+        # Save peak-shape calibration to TXT-file
         try:
             self.save_peak_shape_cal(filename+"_peakshape_calib")
         except:
             raise
+
+        if not save_plots: # Clean up temporary image files
+            for i in range(n_res): # loop over fit results
+                fname = filename+"_fit{}".format(i)
+                os.remove(fname+'_log_plot.png')
+                os.remove(fname+'_lin_plot.png')
+
+
 
 
 ################################################################################
