@@ -498,7 +498,7 @@ saves the analysis results to an XLSX-file with three worksheets containing:
    factor. For details on what the respective parameters refer to see the
    attribute list of the :class:`~emgfit.spectrum.spectrum` class.
 2. The peak properties table with the attributes of all peaks as well as
-   PNG-images of all best-fit curves. Check the attribute list of the
+   images of all best-fit curves. Check the attribute list of the
    :class:`~emgfit.spectrum.peak` class for short descriptions of what the
    different columns contain.
 3. The :attr:`eff_mass_shifts` dictionary holding for each peak the larger of
@@ -508,7 +508,8 @@ saves the analysis results to an XLSX-file with three worksheets containing:
    with the :meth:`~emgfit.spectrum.spectrum.get_MC_peakshape_errors` routine.
 
 Additionally, the spectrum's peak-shape calibration parameters and their
-uncertainties are saved to a separate TXT-file.
+uncertainties are saved to a separate TXT-file and plots with the obtained fit
+curves are saved to PNG-files (optional).
 
 .. _:-notation:
 
@@ -557,7 +558,7 @@ and peak positions during the analysis process. Blindfolding is activated with
 the :meth:`~emgfit.spectrum.spectrum.set_blinded_peaks` method. The option to
 only blind specific peaks of interest leaves the possibility to use less
 interesting peaks with well-known literature masses as accuracy checks. The
-blinding is automatically lifted once the processing of the spectrum is 
+blinding is automatically lifted once the processing of the spectrum is
 finalized and the results are exported.
 
 

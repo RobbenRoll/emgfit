@@ -4772,13 +4772,14 @@ class spectrum:
         `<filename>_peakshape_calib.txt`.
 
         The EXCEL file contains the following three worksheets:
-        * general spectrum properties
-        * peak properties and images of all obtained fit curves
-        * results of the regular peakshape-error evaluation in which shape
+
+        - general spectrum properties
+        - peak properties and images of all obtained fit curves
+        - results of the regular peakshape-error evaluation in which shape
           parameters are varied by +-1 sigma
 
-        PNG images are of all peak fits
-        will be saved in both linear and logarithmic scale.
+        By default, PNG images of all peak fits are saved to PNG-images in both
+        linear and logarithmic scale.
 
         Parameters
         ----------
