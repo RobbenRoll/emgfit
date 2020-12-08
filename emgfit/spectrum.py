@@ -4515,7 +4515,7 @@ class spectrum:
                 ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x))
                 eps = 1e-10 # small number to bound Pearson weights
                 def resid_Pearson_chi_square(pars,y_data,weights,x=x):
-                    y_m = mod.eval(pars,x=x)
+                    y_m = model.eval(pars,x=x)
                     # Calculate weights for current iteration, add tiny number
                     # `eps` in denominator for numerical stability
                     weights = 1/sqrt(y_m + eps)
