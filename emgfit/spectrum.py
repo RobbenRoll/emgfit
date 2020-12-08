@@ -3290,8 +3290,8 @@ class spectrum:
 
     def _eval_MC_peakshape_errors(self, peak_indeces=[], fit_result=None,
                                   verbose=True, show_hists=False,
-                                  N_samples=1000,  n_cores=-1,
-                                  seed=872,**MCMC_kwargs):
+                                  N_samples=1000,  n_cores=-1, seed=872,
+                                  rerun_MCMC_sampling=False, **MCMC_kwargs):
         """Get peak-shape uncertainties for a fit result by re-fitting with many
         different MC-shape-parameter sets
 
@@ -3334,6 +3334,11 @@ class spectrum:
             spectra. When set to `-1` (default) all available cores are used.
         seed : int, optional
             Random seed to use for reproducibility. Defaults to 872.
+        rerun_MCMC_sampling : bool, optional
+            When `False` (default) pre-existing MCMC parameter samples (e.g.
+            obtained with :meth:`determine_peak_shape`) are used. If `True` or
+            when there's no pre-existing MCMC samples, the MCMC sampling will be
+            performed by this method.
         **MCMC_kwargs
             Keyword arguments to send to :meth:`_get_MCMC_par_samples` for
             control over the MCMC sampling.
@@ -3390,7 +3395,7 @@ class spectrum:
         # If MCMC parameter samples have not already been obtained in PS
         # calibration, perform MCMC sampling on peak-shape calibrant here to get
         # shape parameter samples
-        if self.MCMC_par_samples is None:
+        if (self.MCMC_par_samples is None) or (rerun_MCMC_sampling is True):
             try:
                 MCMC_kwargs['n_cores'] = n_cores
                 try: # check if `MCMC_seed` is specified, else set to `seed`
@@ -3797,6 +3802,8 @@ class spectrum:
                                                        N_samples=N_samples,
                                                        n_cores=n_cores,
                                                        seed=seed,
+                                                       rerun_MCMC_sampling=
+                                                       rerun_MCMC_sampling,
                                                        **MCMC_kwargs)
 
             # Update peak properties with refined stat. and area uncertainties
@@ -4913,7 +4920,7 @@ class spectrum:
             for i, width in enumerate(get_col_widths(df_eff_mass_shifts)):
                 mshift_sheet.set_column(i, i, width)
             # Mark peaks with stat errors from resampling with green font
-            if self.peaks_with_MC_PS_errors not in ([],None):
+            if self.peaks_with_errors_from_resampling not in ([],None):
                 green_font = workbook.add_format({'font_color': 'green'})
                 for idx in self.peaks_with_errors_from_resampling:
                     prop_sheet.conditional_format(idx+1, 10, idx+1, 10,
