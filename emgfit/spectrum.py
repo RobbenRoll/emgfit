@@ -1271,7 +1271,7 @@ class spectrum:
 
 
     def plot_fit(self, fit_result=None, plot_title=None,
-                 show_peak_markers=True, sigmas_of_conf_band=0,
+                 show_peak_markers=True, sigmas_of_conf_band=0, error_every=1,
                  x_min=None, x_max=None, plot_filename=None):
         """Plot data and fit result in logarithmic and linear y-scale.
 
@@ -1295,6 +1295,8 @@ class spectrum:
         sigmas_of_conf_band : int, optional, default: 0
             Coverage probability of confidence band in sigma (only shown in
             log-plot). If ``0``, no confidence band is shown (default).
+        error_every : int, optional, default: 1
+            Show error bars only for every `error_every`-th data point.
         x_min, x_max : float [u], optional
             Start and end of mass range to plot. If ``None``, defaults to the
             minimum and maximum of the spectrum's mass :attr:`data`.
@@ -1338,7 +1340,7 @@ class spectrum:
         ax = f1.gca()
         plt.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
                      color='royalblue', linewidth=0.5, markersize=msize,
-                     label='data', zorder=1)
+                     errorevery=error_every, label='data', zorder=1)
         plt.plot(fit_result.x, fit_result.best_fit, '-', color='red',
                  linewidth=lwidth, label='best-fit', zorder=10)
         comps = fit_result.eval_components(x=fit_result.x)
@@ -1391,7 +1393,7 @@ class spectrum:
         ax1 = axs[1]
         ax1.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
                  color='royalblue', linewidth=1, markersize=msize, label='data',
-                 zorder=1)
+                 errorevery=error_every, zorder=1)
         ax1.plot(x_fine, fit_result.eval(params=fit_result.init_params,x=x_fine),
                  linestyle='dashdot', color='green', label='init-fit', zorder=5)
         ax1.plot(x_fine, fit_result.eval(x=x_fine), '-', color='red',
@@ -1416,9 +1418,9 @@ class spectrum:
         plt.show()
 
 
-    def plot_fit_zoom(self,peak_indeces=None,x_center=None,x_range=0.01,
-                      plot_title=None,show_peak_markers=True,
-                      sigmas_of_conf_band=0,plot_filename=None):
+    def plot_fit_zoom(self, peak_indeces=None, x_center=None, x_range=0.01,
+                      plot_title=None, show_peak_markers=True, error_every=1,
+                      sigmas_of_conf_band=0, plot_filename=None):
         """Show logarithmic and linear plots of data and fit curve zoomed to
         peaks or mass range of interest.
 
@@ -1447,12 +1449,11 @@ class spectrum:
             indication of how the fit was obtained.
         show_peak_markers : bool, optional, default: `True`
             If `True`, peak markers are added to the plots.
+        error_every : int, optional, default: 1
+            Show error bars only for every `error_every`-th data point.
         sigmas_of_conf_band : int, optional, default: 0
             Coverage probability of confidence band in sigma (only shown in
             log-plot). If ``0``, no confidence band is shown (default).
-        x_min, x_max : float [u], optional
-            Start and end of mass range to plot. If ``None``, defaults to the
-            minimum and maximum of the spectrum's mass :attr:`data` is used.
         plot_filename : str or None, optional, default: None
             If not ``None``, the plots will be saved to two separate files named
             '<`plot_filename`>_log_plot.png' & '<`plot_filename`>_lin_plot.png'.
@@ -1474,6 +1475,7 @@ class spectrum:
                             "Check documentation on method parameters.\n")
         self.plot_fit(x_min=x_min, x_max=x_max, plot_title=plot_title,
                       show_peak_markers=show_peak_markers,
+                      error_every=error_every,
                       sigmas_of_conf_band=sigmas_of_conf_band,
                       plot_filename=plot_filename)
 
@@ -1869,7 +1871,8 @@ class spectrum:
                 x_fit_range=None, init_pars=None, vary_shape=False,
                 vary_baseline=True, method='least_squares', fit_kws=None,
                 show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0,
-                plot_filename=None, map_par_covar=False, **MCMC_kwargs):
+                error_every=1, plot_filename=None, map_par_covar=False,
+                **MCMC_kwargs):
         """Internal routine for fitting peaks.
 
         Fits full spectrum or subrange (if `x_fit_cen` and `x_fit_range` are
@@ -1956,6 +1959,8 @@ class spectrum:
             Confidence level of confidence band around best fit curve in sigma.
             Note that the confidence band is only derived from the uncertainties
             of the parameters that are varied during the fit.
+        error_every : int, optional, default: 1
+            Show error bars only for every `error_every`-th data point.
         plot_filename : str, optional, default: None
             If not ``None``, the plots will be saved to two separate files named
             '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
@@ -2162,7 +2167,8 @@ class spectrum:
         if show_plots:
             self.plot_fit(fit_result=out, show_peak_markers=show_peak_markers,
                           sigmas_of_conf_band=sigmas_of_conf_band, x_min=x_min,
-                          x_max=x_max,plot_filename=plot_filename)
+                          x_max=x_max, error_every=error_every,
+                          plot_filename=plot_filename)
 
         return out
 
@@ -2601,8 +2607,9 @@ class spectrum:
         plt.ylabel("Relative statistical uncertainty",fontsize=14)
         plt.legend(["Standard deviations of sample means",
                     "Stat. error of Hyper-EMG","Stat. error of underlying Gaussian"])
-        plt.annotate('A_stat_emg: '+str(np.round(A_stat_emg,3))+' +- '+str(np.round(A_stat_emg_error,3)),
-                     xy=(0.65, 0.75), xycoords='axes fraction')
+        plt.annotate('A_stat_emg: '+str(np.round(A_stat_emg,3))+' +- '+str(
+                     np.round(A_stat_emg_error,3)), xy=(0.65, 0.75),
+                     xycoords='axes fraction')
         if plot_filename is not None:
             try:
                 plt.savefig(plot_filename+'_A_stat_emg_determination.png',dpi=600)
@@ -2614,8 +2621,10 @@ class spectrum:
         self.A_stat_emg = A_stat_emg
         self.A_stat_emg_error = A_stat_emg_error
         print("A_stat of a Gaussian model:",np.round(A_stat_gauss,3))
-        print("Default A_stat_emg for Hyper-EMG models:",np.round(A_stat_emg_default,3))
-        print("A_stat_emg for this spectrum's",self.fit_model,"fit model:",np.round(self.A_stat_emg,3),"+-",np.round(self.A_stat_emg_error,3))
+        print("Default A_stat_emg for Hyper-EMG models:",
+              np.round(A_stat_emg_default,3))
+        print("A_stat_emg for this spectrum's",self.fit_model,"fit model:",
+             np.round(self.A_stat_emg,3),"+-",np.round(self.A_stat_emg_error,3))
 
 
     def determine_peak_shape(self, index_shape_calib=None,
@@ -2624,9 +2633,9 @@ class spectrum:
                              x_fit_cen=None, x_fit_range=None,
                              vary_baseline=True, method='least_squares',
                              fit_kws=None, vary_tail_order=True,
-                             show_fit_reports=False,
-                             show_plots=True, show_peak_markers=True,
-                             sigmas_of_conf_band=0, plot_filename=None,
+                             show_fit_reports=False, show_plots=True,
+                             show_peak_markers=True, sigmas_of_conf_band=0,
+                             error_every=1, plot_filename=None,
                              map_par_covar=False, **MCMC_kwargs):
         """Determine optimal peak-shape parameters by fitting the specified
         peak-shape calibrant.
@@ -2730,6 +2739,8 @@ class spectrum:
             If `True` (default), peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
             Confidence level of confidence band around best fit curve in sigma.
+        error_every : int, optional, default: 1
+            Show error bars only for every `error_every`-th data point.
         plot_filename : str, optional, default: None
             If not ``None``, the plots of the shape-calibration will be saved to
             two separate files named '<`plot_filename`>_log_plot.png' and
@@ -2805,7 +2816,8 @@ class spectrum:
                                            fit_kws=fit_kws,
                                            show_plots=show_plots,
                                            show_peak_markers=show_peak_markers,
-                                           sigmas_of_conf_band=sigmas_of_conf_band)
+                                           sigmas_of_conf_band=sigmas_of_conf_band,
+                                           error_every=error_every)
                     idx = li_fit_models.index(model)
                     li_red_chis[idx] = np.round(out.redchi,2)
                     li_red_chi_errs[idx] =  np.round(np.sqrt(2/out.nfree),2)
@@ -2883,6 +2895,7 @@ class spectrum:
                                fit_kws=fit_kws, show_plots=show_plots,
                                show_peak_markers=show_peak_markers,
                                sigmas_of_conf_band=sigmas_of_conf_band,
+                               error_every=error_every,
                                plot_filename=plot_filename,
                                map_par_covar=map_par_covar, **MCMC_kwargs)
 
@@ -2909,7 +2922,9 @@ class spectrum:
         self.red_chi_shape_cal = np.round(out.redchi,2)
         dict_pars = out.params.valuesdict()
         self.shape_cal_result = out # save fit result
-        self.shape_cal_pars = {key.lstrip('p'+str(index_shape_calib)+'_'): val for key, val in dict_pars.items() if key.startswith('p'+str(index_shape_calib))}
+        self.shape_cal_pars = {key.lstrip('p'+str(index_shape_calib)+'_'): val
+                               for key, val in dict_pars.items()
+                               if key.startswith('p'+str(index_shape_calib))}
         self.shape_cal_pars['bkg_c'] = dict_pars['bkg_c']
         self.shape_cal_errors = {} # dict for shape calibration parameter errors
         for par in out.params:
@@ -3155,35 +3170,33 @@ class spectrum:
             #display(fit_result_m) # show fit result
 
             if show_shape_err_fits:
-                plt.rcParams["errorbar.capsize"] = 0.5
                 fig, axs = plt.subplots(1,2,
                                         figsize=(figwidth*1.5, figwidth*6/18))
                 ax0 = axs[0]
                 ax0.set_title("Re-fit with ("+str(par)+" + 1 sigma) = {:.4E}".format(
                                 self.shape_cal_pars[par]+self.shape_cal_errors[par]))
-                ax0.errorbar(fit_result_p.x, fit_result_p.y,
-                             yerr=fit_result_p.y_err, fmt='.',
-                             color='royalblue', linewidth=0.5)
+                ax0.errorbar(fit_result_p.x, fit_result_p.y, fmt='.',
+                             yerr=fit_result_p.y_err, errorevery=error_every,
+                             color='royalblue', linewidth=0.5, zorder=1)
                 ax0.plot(fit_result.x, fit_result.best_fit, '--', color='black',
-                         linewidth=lwidth, label="original fit")
-                ax0.plot(fit_result_p.x, fit_result_p.best_fit, '-',
+                         linewidth=lwidth, label="original fit",zorder=5)
+                ax0.plot(fit_result_p.x, fit_result_p.best_fit, '-', zorder=9,
                          color='red', linewidth=lwidth, label="re-fit")
                 ax1 = axs[1]
                 ax1.set_title("Re-fit with ("+str(par)+" - 1 sigma) = {:.4E}".format(
                                 self.shape_cal_pars[par]-self.shape_cal_errors[par]))
-                ax1.errorbar(fit_result_m.x, fit_result_m.y,
-                             yerr=fit_result_m.y_err, fmt='.',
-                             color='royalblue', linewidth=0.5)
+                ax1.errorbar(fit_result_m.x, fit_result_m.y, fmt='.',
+                             yerr=fit_result_m.y_err, errorevery=error_every,
+                             color='royalblue', linewidth=0.5, zorder=1)
                 ax1.plot(fit_result.x, fit_result.best_fit, '--', color='black',
-                         linewidth=lwidth, label="original fit")
-                ax1.plot(fit_result_m.x, fit_result_m.best_fit, '-',
+                         linewidth=lwidth, label="original fit", zorder=5)
+                ax1.plot(fit_result_m.x, fit_result_m.best_fit, '-', zorder=9,
                          color='red', linewidth=lwidth, label="re-fit")
                 for ax in axs:
                     ax.legend()
                     ax.set_yscale("log")
                     ax.set_ylim(0.7,)
                 plt.show()
-                plt.rcParams["errorbar.capsize"] = 1.0 # reset
 
             # If mass calibrant is in fit range, determine its ABSOLUTE centroid
             # shifts first and use them to calculate 'shifted' mass
@@ -3939,7 +3952,7 @@ class spectrum:
                       x_fit_range=None, vary_baseline=True,
                       method='least_squares', fit_kws=None, show_plots=True,
                       show_peak_markers=True, sigmas_of_conf_band=0,
-                      show_fit_report=True, plot_filename=None):
+                      error_every=1, show_fit_report=True, plot_filename=None):
         """Determine mass re-calibration factor by fitting the selected
         calibrant peak.
 
@@ -4002,6 +4015,8 @@ class spectrum:
             Confidence level of confidence band around best fit curve in sigma.
             Note that the confidence band is only derived from the uncertainties
             of the parameters that are varied during the fit.
+        error_every : int, optional, default: 1
+            Show error bars only for every `error_every`-th data point.
         show_fit_report : bool, optional
             If `True` (default) the fit results are reported.
         plot_filename : str, optional, default: None
@@ -4079,6 +4094,7 @@ class spectrum:
                                       show_plots=show_plots,
                                       show_peak_markers=show_peak_markers,
                                       sigmas_of_conf_band=sigmas_of_conf_band,
+                                      error_every=error_every,
                                       plot_filename=plot_filename)
         if show_fit_report:
             self._show_blinded_report(fit_result)
@@ -4184,13 +4200,12 @@ class spectrum:
 
 
     def fit_peaks(self, peak_indeces=[], index_mass_calib=None,
-                  species_mass_calib=None,
-                  x_fit_cen=None, x_fit_range=None, fit_model=None,
-                  cost_func='MLE', method ='least_squares', fit_kws=None,
-                  init_pars=None, vary_shape=False, vary_baseline=True,
-                  show_plots=True, show_peak_markers=True,sigmas_of_conf_band=0,
-                  plot_filename=None,show_fit_report=True,
-                  show_shape_err_fits=False):
+                  species_mass_calib=None, x_fit_cen=None, x_fit_range=None,
+                  fit_model=None, cost_func='MLE', method ='least_squares',
+                  fit_kws=None, init_pars=None, vary_shape=False,
+                  vary_baseline=True, show_plots=True, show_peak_markers=True,
+                  sigmas_of_conf_band=0, error_every=1, plot_filename=None,
+                  show_fit_report=True, show_shape_err_fits=False):
         """Fit peaks, update peaks properties and show results.
 
         By default, the full mass range and all peaks in the spectrum are
@@ -4287,6 +4302,8 @@ class spectrum:
             Confidence level of confidence band around best-fit curve in sigma.
             Note that the confidence band is only derived from the uncertainties
             of the parameters that are varied during the fit.
+        error_every : int, optional, default: 1
+            Show errorbar only for every `error_every`-th data point.
         plot_filename : str, optional, default: None
             If not ``None``, the plots will be saved to two separate files named
             '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
@@ -4361,6 +4378,7 @@ class spectrum:
                                       show_plots=show_plots,
                                       show_peak_markers=show_peak_markers,
                                       sigmas_of_conf_band=sigmas_of_conf_band,
+                                      error_every=error_every,
                                       plot_filename=plot_filename)
 
         if index_mass_calib is not None:
