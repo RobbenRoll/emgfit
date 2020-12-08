@@ -87,7 +87,7 @@ def Gaussian(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Returns
     -------
-    :class:`lmfit.model`
+    :class:`lmfit.model.Model`
         `lmfit` model object
 
     """
@@ -139,7 +139,7 @@ def emg01(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Returns
     -------
-    :class:`lmfit.model`
+    :class:`lmfit.model.Model`
         `lmfit` model object
 
     """
@@ -194,7 +194,7 @@ def emg10(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Returns
     -------
-    :class:`lmfit.model`
+    :class:`lmfit.model.Model`
         `lmfit` model object
 
     """
@@ -248,7 +248,7 @@ def emg11(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Returns
     -------
-    :class:`lmfit.model`
+    :class:`lmfit.model.Model`
         `lmfit` model object
 
     """
@@ -306,7 +306,7 @@ def emg12(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Returns
     -------
-    :class:`lmfit.model`
+    :class:`lmfit.model.Model`
         `lmfit` model object
 
     """
@@ -370,7 +370,7 @@ def emg21(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Returns
     -------
-    :class:`lmfit.model`
+    :class:`lmfit.model.Model`
         `lmfit` model object
 
     """
@@ -434,7 +434,7 @@ def emg22(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Returns
     -------
-    :class:`lmfit.model`
+    :class:`lmfit.model.Model`
         `lmfit` model object
 
     """
@@ -504,7 +504,7 @@ def emg23(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Returns
     -------
-    :class:`lmfit.model`
+    :class:`lmfit.model.Model`
         `lmfit` model object
 
     """
@@ -585,7 +585,7 @@ def emg32(peak_index, x_pos, amp, init_pars=pars_dict, vary_shape_pars=True,
 
     Returns
     -------
-    :class:`lmfit.model`
+    :class:`lmfit.model.Model`
         `lmfit` model object
 
     """
@@ -666,7 +666,7 @@ def emg33(peak_index, x_pos, amp, init_pars=pars_dict,
 
     Returns
     -------
-    :class:`lmfit.model`
+    :class:`lmfit.model.Model`
         `lmfit` model object
 
     """

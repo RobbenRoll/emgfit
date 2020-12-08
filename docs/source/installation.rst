@@ -9,7 +9,8 @@ that want to keep their Python setup cleaner by using virtual environments.
 The quick and dirty way
 -----------------------
 
-All emgfit versions >= 0.2.0 are available as pip install from PyPI.
+This will install emgfit system-wide for your global Python version. All emgfit
+versions >= 0.2.0 are available as pip install from PyPI.
 
 0. Ensure that Python3 and its package installer pip are available on your
    system and have been added to your `PATH` (pip comes pre-installed with most
@@ -37,7 +38,9 @@ All emgfit versions >= 0.2.0 are available as pip install from PyPI.
 The neater way: Installing emgfit into a virtual environment
 ------------------------------------------------------------
 
-Find instructions for both venv and conda users below.
+Virtual environments can help you to keep emgfit isolated from other projects
+and are particularly useful if you want to use multiple emgfit versions on the
+same system. Find instructions for both venv and conda users below.
 
 For venv users:
 ^^^^^^^^^^^^^^^
@@ -84,10 +87,7 @@ For venv users:
 
     (emgfit-env) $ python -m ipykernel install --user --name emgfit-env
 
-The first time you open a new Jupyter notebook you'll have to ensure that
-the correct kernel is used (indicated on the top right of the notebook). If this
-is not the case, switch to the `emgfit-env` kernel using the ``Change kernel``
-option under the ``Kernel`` tab. Now you're good to go with emgfit!
+Now you're good to go with emgfit!
 
 For conda users:
 ^^^^^^^^^^^^^^^^
@@ -125,13 +125,10 @@ For conda users:
 
      (emgfit-env) $ python -m ipykernel install --user --name emgfit-env
 
-The first time you open a new Jupyter notebook you'll have to ensure that
-the correct kernel is used (indicated on the top right of the notebook). If this
-is not the case, switch to the `emgfit-env` kernel using the ``Change kernel``
-option under the ``Kernel`` tab. Now you're good to go with emgfit!
+Now you're good to go with emgfit!
 
-Launching Jupyter notebook
---------------------------
+Launching Jupyter notebooks
+---------------------------
 
 To start working with emgfit, start up the Jupyter notebook server using the
 following command::
@@ -143,6 +140,11 @@ their emgfit environment (see step 2 above) before running this command.**
 
 This will make a window pop up in your default browser. In there, you can
 navigate to different directories and create new notebooks (using the `new`
-panel on the top right) or open existing ones. Make sure that you use the
-default kernel (usually called `Python3`). Once you have imported the `emgfit`
-package you should be ready to analyze some data.
+panel on the top right) or open existing ones. Ensure the correct kernel is
+selected (indicated on the top right of the notebook). If you installed emgfit
+globally you can simply use the default kernel (usually named `Python3`). If you
+installed the package into a virtual environment you must use the kernel
+registered for your emgfit environment (above named `emgfit-env`). You can
+easily switch kernels using the ``Change kernel`` option under the ``Kernel``
+tab. Once you have imported the `emgfit` package you should be ready to analyze
+some data.

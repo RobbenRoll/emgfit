@@ -212,7 +212,7 @@ class spectrum:
     determined_A_stat_emg : bool
         Boolean flag for whether :attr:`A_stat_emg` was determined for this
         spectrum specifically using the :meth:`determine_A_stat_emg` method.
-        If ``True``, :attr:`A_stat_emg` was set using
+        If `True`, :attr:`A_stat_emg` was set using
         :meth:`determine_A_stat_emg`, otherwise the default value
         `emgfit.config.A_stat_emg_default` from the :mod:`~emgfit.config` module
         was used. For more details see docs of :meth:`determine_A_stat_emg`
@@ -329,7 +329,7 @@ class spectrum:
 	    m_stop : float [u], optional
             Stop of fit range, data at higher masses will be discarded.
         show_plot : bool, optional, default: True
-            If ``True``, shows a plot of full spectrum with vertical markers for
+            If `True`, shows a plot of full spectrum with vertical markers for
             `m_start` and `m_stop` cut-offs.
         df : :class:`pandas.DataFrame`, optional
             DataFrame with spectrum data to use, this enables the creation of a
@@ -403,7 +403,7 @@ class spectrum:
         """Add a general comment to the spectrum.
 
         By default the `comment` argument will be appended to the end of the current
-        :attr:`spectrum_comment` attribute. If `overwrite` is set to ``True``
+        :attr:`spectrum_comment` attribute. If `overwrite` is set to `True`
         the current :attr:`spectrum_comment` is overwritten with `comment`.
 
         Parameters
@@ -411,7 +411,7 @@ class spectrum:
         comment : str
             Comment to add to spectrum.
         overwrite : bool
-            If ``True``, the current :attr:`spectrum_comment` attribute will be
+            If `True`, the current :attr:`spectrum_comment` attribute will be
             overwritten with `comment`, else `comment` is appended to the end of
             :attr:`spectrum_comment`.
 
@@ -685,15 +685,15 @@ class spectrum:
             sensitivity for overlapping peaks this number might have to be set
             to less than the peak's FWHM! In challenging cases use the plot of
             the scaled inverted second derivative (by setting `plot_2nd_deriv`
-            to ``True``) to ensure that the detection threshold is set properly.
+            to `True`) to ensure that the detection threshold is set properly.
         plot_smoothed_spec : bool, optional
-            If ``True`` a plot with the original and the smoothed spectrum is
+            If `True` a plot with the original and the smoothed spectrum is
             shown.
         plot_2nd_deriv : bool, optional
-            If ``True`` a plot with the scaled, inverted second derivative of
+            If `True` a plot with the scaled, inverted second derivative of
             the smoothed spectrum is shown.
         plot_detection_result : bool, optional
-            If ``True`` a plot of the spectrum with markers for the detected
+            If `True` a plot of the spectrum with markers for the detected
             peaks is shown.
 
         See also
@@ -805,8 +805,8 @@ class spectrum:
         m_AME_error : float [u], optional
             User-defined literature mass uncertainty for peak to be added.
             Overwrites pre-existing :attr:`peak.m_AME_error`.
-        verbose : bool, optional, default: ``True``
-            If ``True``, a message is printed after successful peak addition.
+        verbose : bool, optional, default: `True`
+            If `True`, a message is printed after successful peak addition.
             Intended for internal use only.
 
         See also
@@ -1103,7 +1103,7 @@ class spectrum:
 
         By default the `comment` argument will be appended to the end of the
         current :attr:`peak.comment` attribute (if the current comment is '-' it
-        is overwritten by the `comment` argument). If `overwrite` is set ``True``,
+        is overwritten by the `comment` argument). If `overwrite` is set `True`,
         the current :attr:`peak.comment` is overwritten with the 'comment' argument.
 
         Parameters
@@ -1118,7 +1118,7 @@ class spectrum:
         species : str, optional
             :attr:`species` of peak to add comment to.
         overwrite : bool
-            If ``True`` the current peak :attr:`comment` will be overwritten
+            If `True` the current peak :attr:`comment` will be overwritten
             by `comment`, else `comment` is appended to the end of the current
             peak :attr:`comment`.
 
@@ -1290,8 +1290,8 @@ class spectrum:
             Title of plots. If ``None``, defaults to a string with the fit model
             name and cost function of the `fit_result` to ensure clear
             indication of how the fit was obtained.
-        show_peak_markers : bool, optional, default: ``True``
-            If ``True``, peak markers are added to the plots.
+        show_peak_markers : bool, optional, default: `True`
+            If `True`, peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
             Coverage probability of confidence band in sigma (only shown in
             log-plot). If ``0``, no confidence band is shown (default).
@@ -1445,8 +1445,8 @@ class spectrum:
             Title of plots. If ``None``, defaults to a string with the fit model
             name and cost function of the `fit_result` to ensure clear
             indication of how the fit was obtained.
-        show_peak_markers : bool, optional, default: ``True``
-            If ``True``, peak markers are added to the plots.
+        show_peak_markers : bool, optional, default: `True`
+            If `True`, peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
             Coverage probability of confidence band in sigma (only shown in
             log-plot). If ``0``, no confidence band is shown (default).
@@ -1499,12 +1499,12 @@ class spectrum:
             For more details and a list of all shape parameters see the
             :ref:`peak-shape calibration` article.
         vary_shape : bool, optional
-            If ``False`` only the amplitude (`amp`) and Gaussian centroid (`mu`)
-            model parameters will be varied in the fit. If ``True``, the shape
+            If `False` only the amplitude (`amp`) and Gaussian centroid (`mu`)
+            model parameters will be varied in the fit. If `True`, the shape
             parameters (`sigma`, `theta`,`etas` and `taus`) will also be varied.
         vary_baseline : bool, optional
-            If ``True`` a varying uniform baseline will be added to the fit
-            model as varying model parameter `c_bkg`. If ``False``, the baseline
+            If `True` a varying uniform baseline will be added to the fit
+            model as varying model parameter `c_bkg`. If `False`, the baseline
             parameter `c_bkg` will be kept fixed at 0.
         index_first_peak : int, optional
             Index of first (lowest mass) peak in fit range, used for enforcing
@@ -1931,15 +1931,15 @@ class spectrum:
               varying baseline is used in the fit, the baseline parameter
               `bgd_c` is always initialized at a value of 0.1.
 
-        vary_shape : bool, optional, default: ``False``
-            If ``False`` peak-shape parameters (`sigma`, `theta`,`etas` and
-            `taus`) are kept fixed at their initial values. If ``True`` the
+        vary_shape : bool, optional, default: `False`
+            If `False` peak-shape parameters (`sigma`, `theta`,`etas` and
+            `taus`) are kept fixed at their initial values. If `True` the
             shared shape parameters are varied (ensuring identical shape
             parameters for all peaks).
-        vary_baseline : bool, optional, default: ``True``
-            If ``True``, the constant background will be fitted with a varying
+        vary_baseline : bool, optional, default: `True`
+            If `True`, the constant background will be fitted with a varying
             uniform baseline parameter `bkg_c` (initial value: 0.1).
-            If ``False``, the baseline parameter `bkg_c` will be fixed to 0.
+            If `False`, the baseline parameter `bkg_c` will be fixed to 0.
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
@@ -1947,11 +1947,11 @@ class spectrum:
             Options to pass to lmfit minimizer used in
             :meth:`lmfit.model.Model.fit` method.
         show_plots : bool, optional
-            If ``True`` (default) linear and logarithmic plots of the spectrum
+            If `True` (default) linear and logarithmic plots of the spectrum
             with the best fit curve are displayed. For details see
             :meth:`spectrum.plot_fit`.
         show_peak_markers : bool, optional
-            If ``True`` (default) peak markers are added to the plots.
+            If `True` (default) peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
             Confidence level of confidence band around best fit curve in sigma.
             Note that the confidence band is only derived from the uncertainties
@@ -1961,7 +1961,7 @@ class spectrum:
             '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
             **Caution: Existing files with identical name are overwritten.**
         map_par_covar : bool, optional
-            If ``True`` the parameter covariances will be mapped using
+            If `True` the parameter covariances will be mapped using
             Markov-Chain Monte Carlo (MCMC) sampling and shown in a corner plot.
             This feature is only recommended for single-peak fits.
         **MCMC_kwargs : optional
@@ -2454,10 +2454,10 @@ class spectrum:
         fit_kws : dict, optional, default: None
             Options to pass to lmfit minimizer used in
             :meth:`lmfit.model.Model.fit` method.
-        vary_baseline : bool, optional, default: ``True``
-            If ``True``, the constant background will be fitted with a varying
+        vary_baseline : bool, optional, default: `True`
+            If `True`, the constant background will be fitted with a varying
             uniform baseline parameter `bkg_c` (initial value: 0.1).
-            If ``False``, the baseline parameter `bkg_c` will be fixed to 0.
+            If `False`, the baseline parameter `bkg_c` will be fixed to 0.
         plot_filename : str, optional, default: None
             If not ``None``, the plots will be saved to two separate files named
             '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
@@ -2631,7 +2631,7 @@ class spectrum:
         """Determine optimal peak-shape parameters by fitting the specified
         peak-shape calibrant.
 
-        If `vary_tail_order` is ``True`` (default) an automatic model selection
+        If `vary_tail_order` is `True` (default) an automatic model selection
         is performed before the calibration of the peak-shape parameters.
 
         It is recommended to visually check whether the fit residuals
@@ -2703,9 +2703,9 @@ class spectrum:
         x_fit_range : float [u], optional
             Mass range to fit. If ``None``, defaults to the
             :attr:`default_fit_range` spectrum attribute.
-        vary_baseline : bool, optional, default: ``True``
-            If ``True``, the background will be fitted with a varying uniform
-            baseline parameter `bkg_c` (initial value: 0.1). If ``False``, the
+        vary_baseline : bool, optional, default: `True`
+            If `True`, the background will be fitted with a varying uniform
+            baseline parameter `bkg_c` (initial value: 0.1). If `False`, the
             baseline parameter `bkg_c` will be fixed to 0.
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
@@ -2714,20 +2714,20 @@ class spectrum:
             Options to pass to lmfit minimizer used in
             :meth:`lmfit.model.Model.fit` method.
         vary_tail_order : bool, optional
-            If ``True`` (default), before the calibration of the peak-shape
+            If `True` (default), before the calibration of the peak-shape
             parameters an automatized fit model selection is performed. For
             details on the automatic model selection, see `Notes` section below.
-            If ``False``, the specified `fit_model` argument is used as model
+            If `False`, the specified `fit_model` argument is used as model
             for the peak-shape determination.
         show_fit_reports : bool, optional, default: True
             Whether to print fit reports for the fits in the automatic model
             selection.
         show_plots : bool, optional
-            If ``True`` (default), linear and logarithmic plots of the spectrum
+            If `True` (default), linear and logarithmic plots of the spectrum
             and the best fit curve are displayed. For details see
             :meth:`spectrum.plot_fit`.
         show_peak_markers : bool, optional
-            If ``True`` (default), peak markers are added to the plots.
+            If `True` (default), peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
             Confidence level of confidence band around best fit curve in sigma.
         plot_filename : str, optional, default: None
@@ -2736,7 +2736,7 @@ class spectrum:
             '<`plot_filename`>_lin_plot.png'. **Caution: Existing files with
             identical name are overwritten.**
         map_par_covar : bool, optional
-            If ``True`` the parameter covariances will be mapped using
+            If `True` the parameter covariances will be mapped using
             Markov-Chain Monte Carlo (MCMC) sampling and shown in a corner plot.
             This feature is only recommended for single-peak fits.
         **MCMC_kwargs : optional
@@ -2998,11 +2998,11 @@ class spectrum:
             ``peak_indeces=[0,3]``.
         fit_result : :class:`lmfit.model.ModelResult`, optional
             Fit result object to evaluate peak-shape error for.
-        verbose : bool, optional, default: ``False``
-            If ``True``, print all individual eff. mass shifts obtained by
+        verbose : bool, optional, default: `False`
+            If `True`, print all individual eff. mass shifts obtained by
             varying the shape parameters.
-        show_shape_err_fits : bool, optional, default: ``False``
-            If ``True``, show individual plots of re-fits for peak-shape error
+        show_shape_err_fits : bool, optional, default: `False`
+            If `True`, show individual plots of re-fits for peak-shape error
             determination.
 
         See also
@@ -3982,10 +3982,10 @@ class spectrum:
             if None, defaults to marker position (x_pos) of mass calibrant peak
         x_fit_range : float [u], optional
             width of mass range to fit; if None, defaults to 'default_fit_range' spectrum attribute
-        vary_baseline : bool, optional, default: ``True``
-            If ``True``, the constant background will be fitted with a varying
+        vary_baseline : bool, optional, default: `True`
+            If `True`, the constant background will be fitted with a varying
             uniform baseline parameter `bkg_c` (initial value: 0.1).
-            If ``False``, the baseline parameter `bkg_c` will be fixed to 0.
+            If `False`, the baseline parameter `bkg_c` will be fixed to 0.
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
@@ -3993,17 +3993,17 @@ class spectrum:
             Options to pass to lmfit minimizer used in
             :meth:`lmfit.model.Model.fit` method.
         show_plots : bool, optional
-            If ``True`` (default) linear and logarithmic plots of the spectrum
+            If `True` (default) linear and logarithmic plots of the spectrum
             with the best fit curve are displayed. For details see
             :meth:`spectrum.plot_fit`.
         show_peak_markers : bool, optional
-            If ``True`` (default) peak markers are added to the plots.
+            If `True` (default) peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
             Confidence level of confidence band around best fit curve in sigma.
             Note that the confidence band is only derived from the uncertainties
             of the parameters that are varied during the fit.
         show_fit_report : bool, optional
-            If ``True`` (default) the fit results are reported.
+            If `True` (default) the fit results are reported.
         plot_filename : str, optional, default: None
             If not ``None``, the plots will be saved to two separate files named
             '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
@@ -4268,21 +4268,21 @@ class spectrum:
           estimated from the counts at the bin closest to `x_cen`. If a
           varying baseline is used in the fit, the baseline parameter
           `bgd_c` is always initialized at a value of 0.1.
-        vary_shape : bool, optional, default: ``False``
-            If ``False`` peak-shape parameters (`sigma`, `theta`,`etas` and
-            `taus`) are kept fixed at their initial values. If ``True`` the
+        vary_shape : bool, optional, default: `False`
+            If `False` peak-shape parameters (`sigma`, `theta`,`etas` and
+            `taus`) are kept fixed at their initial values. If `True` the
             shared shape parameters are varied (ensuring identical shape
             parameters for all peaks).
-        vary_baseline : bool, optional, default: ``True``
-            If ``True``, the constant background will be fitted with a varying
+        vary_baseline : bool, optional, default: `True`
+            If `True`, the constant background will be fitted with a varying
             uniform baseline parameter `bkg_c` (initial value: 0.1).
-            If ``False``, the baseline parameter `bkg_c` will be fixed to 0.
+            If `False`, the baseline parameter `bkg_c` will be fixed to 0.
         show_plots : bool, optional
-            If ``True`` (default) linear and logarithmic plots of the spectrum
+            If `True` (default) linear and logarithmic plots of the spectrum
             with the best fit curve are displayed. For details see
             :meth:`spectrum.plot_fit`.
         show_peak_markers : bool, optional
-            If ``True`` (default) peak markers are added to the plots.
+            If `True` (default) peak markers are added to the plots.
         sigmas_of_conf_band : int, optional, default: 0
             Confidence level of confidence band around best-fit curve in sigma.
             Note that the confidence band is only derived from the uncertainties
@@ -4292,9 +4292,9 @@ class spectrum:
             '<`plot_filename`>_log_plot.png' and '<`plot_filename`>_lin_plot.png'.
             **Caution: Existing files with identical name are overwritten.**
         show_fit_report : bool, optional
-            If ``True`` (default) the detailed lmfit fit report is printed.
+            If `True` (default) the detailed lmfit fit report is printed.
         show_shape_err_fits : bool, optional, default: True
-            If ``True``, plots of all fits performed for the peak-shape
+            If `True`, plots of all fits performed for the peak-shape
             uncertainty evaluation are shown.
 
         Notes
@@ -4434,7 +4434,7 @@ class spectrum:
             Number of CPU cores to use for parallelized fitting of simulated
             spectra. When set to `-1` (default) all available cores are used.
         show_hists : bool, optional, default: False
-            If ``True``, histograms of the obtained peak centroids and areas are
+            If `True`, histograms of the obtained peak centroids and areas are
             shown. Black vertical lines indicate the best-fit values obtained
             from the measured data.
 
@@ -4775,7 +4775,7 @@ class spectrum:
 
         - general spectrum properties
         - peak properties and images of all obtained fit curves
-        - results of the regular peakshape-error evaluation in which shape
+        - results of the default peakshape-error evaluation in which shape
           parameters are varied by +-1 sigma
 
         By default, PNG images of all peak fits are saved to PNG-images in both
@@ -4858,7 +4858,7 @@ class spectrum:
                     n_res += 1
                 last_res = res
 
-        # Define functions to get column widths for auto-cell-width adjustmen
+        # Define functions to get column widths for auto-cell-width adjustment
         def lwidth(val):
             # get width, limited to <= 8.3 in case of numbers
             try: # string

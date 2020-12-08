@@ -28,7 +28,8 @@ def mdata_AME(El,A):
     Returns
     -------
     list (str,int,float,float,bool)
-        [Element, Z, A, atomic AME mass, atomic AME mass error, boolean flag for extrapolated AME mass]
+        [Element, Z, A, atomic AME mass, atomic AME mass error, boolean flag for
+        extrapolated AME mass]
 
     """
     Z = df_AME['Z'].loc[(A,El)]

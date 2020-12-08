@@ -172,7 +172,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     shape_pars : dict
         Peak-shape parameters to use for sampling. The dictionary must follow
         the structure of the :attr:`~spectrum.shape_cal_pars` attribute of the
-        :class:`~spectrum.spectrum` class.
+        :class:`~emgfit.spectrum.spectrum` class.
     mus : float or list of float [u]
         Nominal peak positions of peaks in simulated spectrum.
     amps : float or list of float [counts per u]
@@ -205,7 +205,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
 
     Returns
     -------
-    :class:`numpy.array` or :class:`pandas.Dataframe`
+    :class:`numpy.ndarray` or :class:`pandas.Dataframe`
        If out='hist' a dataframe with a histogram of the format
        [bin centre [u], counts in bin] is returned. If out='list' an unbinned
        array with mass values [u] of single ion or background events is returned.
@@ -349,14 +349,14 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         Number of ion events to simulate (including background events). Defaults
         to total number of events in `spec`.
     copy_spec : bool, optional, default: False
-        If ``False`` (default), this function returns a fresh
-        :class:`~spectrum.spectrum` object created from the simulated mass data.
-        If ``True``, this function returns an exact copy of `spec` with only the
-        :attr`data` attribute replaced by the new simulated mass data.
+        If `False` (default), this function returns a fresh
+        :class:`~emgfit.spectrum.spectrum` object created from the simulated
+        mass data. If `True`, this function returns an exact copy of `spec` with
+        only the :attr`data` attribute replaced by the new simulated mass data.
 
     Returns
     -------
-    :class:`spectrum.spectrum`
+    :class:`~emgfit.spectrum.spectrum`
        If `copy_spec = False` (default) a fresh spectrum object holding the
        simulated mass data is returned. If `copy_spec = True`, a copy of the
        reference spectrum `spec` is returned with only the :attr:`data`
