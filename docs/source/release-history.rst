@@ -8,6 +8,20 @@ versions can be found `here`_.
 .. _here: https://RobbenRoll.github.io/emgfit
 
 
+v0.3.5 (2020-12-08)
+-------------------
+
+Added
+^^^^^
+* Plotting of subsample of all error bars with the new `error_every` option.
+
+Fixed
+^^^^^
+* Fixed bug causing `chi-square` fits in
+  :meth:`~emgfit.spectrum.spectrum.parametric_bootstrap` method to fail.
+* Fixed broken crosslinks and other minor bugs in docs.
+
+
 v0.3.4 (2020-12-06)
 -------------------
 

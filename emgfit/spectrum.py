@@ -3173,29 +3173,29 @@ class spectrum:
                 fig, axs = plt.subplots(1,2,
                                         figsize=(figwidth*1.5, figwidth*6/18))
                 ax0 = axs[0]
-                ax0.set_title("Re-fit with ("+str(par)+" + 1 sigma) = {:.4E}".format(
+                ax0.set_title(r"Re-fit with ("+str(par)+" + 1$\sigma$) = {:.4E}".format(
                                 self.shape_cal_pars[par]+self.shape_cal_errors[par]))
                 ax0.errorbar(fit_result_p.x, fit_result_p.y, fmt='.',
-                             yerr=fit_result_p.y_err, errorevery=error_every,
-                             color='royalblue', linewidth=0.5, zorder=1)
-                ax0.plot(fit_result.x, fit_result.best_fit, '--', color='black',
-                         linewidth=lwidth, label="original fit",zorder=5)
-                ax0.plot(fit_result_p.x, fit_result_p.best_fit, '-', zorder=9,
-                         color='red', linewidth=lwidth, label="re-fit")
+                             yerr=fit_result_p.y_err, errorevery=10,
+                             color="royalblue", linewidth=0.5, zorder=1)
+                ax0.plot(fit_result.x, fit_result.best_fit, "--", color="red",
+                         linewidth=lwidth, label="original fit",zorder=10)
+                ax0.plot(fit_result_p.x, fit_result_p.best_fit, '-', zorder=5,
+                         color="black", linewidth=lwidth, label="re-fit")
                 ax1 = axs[1]
-                ax1.set_title("Re-fit with ("+str(par)+" - 1 sigma) = {:.4E}".format(
+                ax1.set_title(r"Re-fit with ("+str(par)+" - 1$\sigma$) = {:.4E}".format(
                                 self.shape_cal_pars[par]-self.shape_cal_errors[par]))
                 ax1.errorbar(fit_result_m.x, fit_result_m.y, fmt='.',
-                             yerr=fit_result_m.y_err, errorevery=error_every,
-                             color='royalblue', linewidth=0.5, zorder=1)
-                ax1.plot(fit_result.x, fit_result.best_fit, '--', color='black',
-                         linewidth=lwidth, label="original fit", zorder=5)
-                ax1.plot(fit_result_m.x, fit_result_m.best_fit, '-', zorder=9,
-                         color='red', linewidth=lwidth, label="re-fit")
+                             yerr=fit_result_m.y_err, errorevery=10,
+                             color="royalblue", linewidth=0.5, zorder=1)
+                ax1.plot(fit_result.x, fit_result.best_fit, "--", color="red",
+                         linewidth=lwidth, label="original fit", zorder=10)
+                ax1.plot(fit_result_m.x, fit_result_m.best_fit, '-', zorder=5,
+                         color="black", linewidth=lwidth, label="re-fit")
                 for ax in axs:
                     ax.legend()
                     ax.set_yscale("log")
-                    ax.set_ylim(0.7,)
+                    ax.set_ylim(0.1,)
                 plt.show()
 
             # If mass calibrant is in fit range, determine its ABSOLUTE centroid
