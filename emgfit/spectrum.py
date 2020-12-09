@@ -3136,10 +3136,10 @@ class spectrum:
             pars[par] = self.shape_cal_pars[par] + self.shape_cal_errors[par]
             if par == 'delta_m':
                 pars['eta_m2'] = pars[par] - self.shape_cal_pars['eta_m1']
-                pars['eta_m3'] = 1 - self.shape_cal_pars['eta_m1'] + pars['eta_m2']
+                pars['eta_m3'] = 1 - self.shape_cal_pars['eta_m1'] - pars['eta_m2']
             elif par == 'delta_p':
                 pars['eta_p2'] = pars[par] - self.shape_cal_pars['eta_p1']
-                pars['eta_p3'] = 1 - self.shape_cal_pars['eta_p1'] + pars['eta_p2']
+                pars['eta_p3'] = 1 - self.shape_cal_pars['eta_p1'] - pars['eta_p2']
             fit_result_p = self.peakfit(fit_model=fit_result.fit_model,
                                         cost_func=fit_result.cost_func,
                                         x_fit_cen=fit_result.x_fit_cen,
@@ -3154,10 +3154,10 @@ class spectrum:
             pars[par] = self.shape_cal_pars[par] - self.shape_cal_errors[par]
             if par == 'delta_m':
                 pars['eta_m2'] =  pars[par] - self.shape_cal_pars['eta_m1']
-                pars['eta_m3'] = 1 - self.shape_cal_pars['eta_m1'] +  pars['eta_m2']
+                pars['eta_m3'] = 1 - self.shape_cal_pars['eta_m1'] -  pars['eta_m2']
             elif par == 'delta_p':
                 pars['eta_p2'] =  pars[par] - self.shape_cal_pars['eta_p1']
-                pars['eta_m3'] = 1 - self.shape_cal_pars['eta_p1'] +  pars['eta_p2']
+                pars['eta_m3'] = 1 - self.shape_cal_pars['eta_p1'] -  pars['eta_p2']
             fit_result_m = self.peakfit(fit_model=fit_result.fit_model,
                                         cost_func=fit_result.cost_func,
                                         x_fit_cen=fit_result.x_fit_cen,
@@ -3476,7 +3476,7 @@ class spectrum:
         datetime = time.localtime() # get current date and time
         datetime_str = time.strftime("%Y-%m-%d_%H-%M-%S", datetime)
         data_fname = self.input_filename.rsplit('.', 1)[0] # del. file extension
-        modelfname =  data_fname+datetime_str+"MC_PS_model.sav"
+        modelfname =  data_fname+datetime_str+"_MC_PS_model.sav"
         save_model(model, modelfname)
         N_peaks = len(peak_indeces)
         N_events = int(np.sum(y))
@@ -3494,11 +3494,13 @@ class spectrum:
             if n_ltails == 2:
                 shape_pars['eta_m2'] = 1 - shape_pars['eta_m1']
             elif n_ltails == 3:
-                shape_pars['eta_m3'] = 1 - shape_pars['eta_m1'] - shape_pars['eta_m2']
+                eta_m2 = shape_pars['delta_m'] - shape_pars['eta_m1']
+                shape_pars['eta_m3'] = 1 - shape_pars['eta_m1'] - eta_m2
             if n_rtails == 2:
                 shape_pars['eta_p2'] = 1 - shape_pars['eta_p1']
             elif n_rtails == 3:
-                shape_pars['eta_p3'] = 1 - shape_pars['eta_p1'] - shape_pars['eta_p2']
+                eta_p2 = shape_pars['delta_p'] - shape_pars['eta_p1']
+                shape_pars['eta_p3'] = 1 - shape_pars['eta_p1'] - eta_p2
             # Update model parameters
             for par, val in shape_pars.items():
                 if par == "bkg_c":
@@ -3676,12 +3678,9 @@ class spectrum:
 
         This method only takes effective mass shifts relative to the calibrant
         peak into account. For each peak shape the calibrant peak is re-fitted
-        and the respective recalibration factors are used to calculate shifted
-        ion-of-interest masses. Therefore, the mass calibrant must be included
-        in `peak_indeces`.
-
-        **When the `peak_indeces` argument is used, it must include the mass
-        calibrant.**
+        and the new recalibration factor is used to calculate the shifted
+        ion-of-interest masses. Therefore, when the `peak_indeces` argument is
+        used, it must include the mass calibrant index.
 
         Parameters
         ----------
@@ -3750,16 +3749,17 @@ class spectrum:
         references on MCMC sampling with emgfit see the docs of the underlying
         :meth:`_get_MCMC_par_samples` method.
 
-        For the peak-shape mass errors only effective mass shifts relative to
-        the calibrant centroid are relevant. Therefore the mass calibrant and
-        the ions of interest (IOI) are fitted with the same peak-shape-parameter
-        sets and the final mass values are calculated with the obtained IOI
-        centroids and the respective mass recalibration factors.
+        For the peak-shape mass uncertainties only effective mass shifts
+        relative to the calibrant centroid are relevant. Therefore, the mass
+        calibrant and the ions of interest (IOI) are fitted with the same
+        peak-shape-parameter sets and the final mass values are calculated from
+        the obtained IOI peak positions and the corresponding mass recalibration
+        factors.
 
-        This method only takes effective mass shifts relative to the calibrant
-        peak into account. For each peak shape the calibrant peak is re-fitted
-        and the respective recalibration factors are used to calculate the
-        shifted ion-of-interest masses.
+        The `delta_m` or `delta_p` parameters occuring in the case of hyper-EMG
+        models with 3 pos. or 3 neg. tails are defined as
+        ``delta_m = eta_p1 + eta_p2`` and ``delta_p = eta_p1 + eta_p2``,
+        respectively.
 
         """
         if peak_indeces in ([], None):
@@ -3856,7 +3856,8 @@ class spectrum:
                   " mass error of peak(s) "+s_indeces+".\n")
 
         if show_peak_properties:
-            print("\nPeak properties table after MC peak-shape error evaluation:")
+            print() # insert blank line
+            print("Peak properties table after MC peak-shape error evaluation:")
             self.show_peak_properties()
 
 
