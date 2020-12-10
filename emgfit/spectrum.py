@@ -341,18 +341,22 @@ class spectrum:
         The option to import data via the `df` argument was added to enable the
         processing of bootstrapped spectra as regular :class:`spectrum` objects
         in the :meth:`determine_A_stat_emg` method. This feature is primarily
-        intended for internal use.
+        intended for internal use. The parsed DataFrame must have an index
+        column named 'Mass [u]' and a value column named 'Counts'.
 
 	    """
         if filename is not None:
-            data_uncut = pd.read_csv(filename,header=None,names=['Mass [u]', 'Counts'],
-                                     skiprows=skiprows,delim_whitespace=True,index_col=False,dtype=float)
+            data_uncut = pd.read_csv(filename, header=None,
+                                     names=['Mass [u]', 'Counts'],
+                                     skiprows=skiprows, delim_whitespace=True,
+                                     index_col=False, dtype=float)
             data_uncut.set_index('Mass [u]',inplace =True)
             self.input_filename = filename
         elif df is not None:
             data_uncut = df
         else:
-            raise Exception("ERROR: Import failed, since input data was neither specified with `filename` nor `df`.")
+            raise Exception("Import failed, since input data was neither "
+                            "specified with `filename` nor `df`.")
         self.spectrum_comment = '-'
         self.fit_model = None
         self.index_shape_calib = None
@@ -391,8 +395,12 @@ class spectrum:
             fig  = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
             plt.title(plot_title)
             data_uncut.plot(ax=fig.gca(), legend=False)
-            plt.vlines(m_start,0,1.2*max(self.data['Counts']), color='black')
-            plt.vlines(m_stop,0,1.2*max(self.data['Counts']), color='black')
+            if m_start is not None:
+                plt.vlines(m_start, 0, 1.2*np.max(self.data['Counts']), 
+                           color='black')
+            if m_stop is not None:
+                plt.vlines(m_stop, 0, 1.2*np.max(self.data['Counts']),
+                           color='black')
             plt.yscale('log')
             plt.xlabel('m/z [u]')
             plt.ylabel('Counts per bin')

@@ -52,7 +52,7 @@ Alternatively or additionally, peaks can be added manually with the
 :meth:`~emgfit.spectrum.spectrum.add_peak` method. By default, markers of the
 associated peaks are added to plots of spectrum data. Peaks can be removed from
 a spectrum object using the :meth:`~emgfit.spectrum.spectrum.remove_peaks`
-method. **To avoid ambiguities peaks should only the added or removed in the
+method. **To avoid ambiguities peaks should only be added or removed in the
 initial analysis stage, i.e. before the shape calibration or any other fits have
 been performed.**
 

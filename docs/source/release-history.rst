@@ -7,6 +7,20 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+v0.3.6 (2020-12-09)
+-------------------
+
+Added
+^^^^^
+* Updated docs of :meth:`~emgfit.spectrum.spectrum.get_MC_peakshape_errors`.
+
+Fixed
+^^^^^
+* Resolved bug in `rerun_MCMC_sampling` option of
+  :meth:`~emgfit.spectrum.spectrum._eval_MC_peakshape_errors`.
+* Fixed bug in calculation of third order eta parameters in peak-shape error
+  evaluations for models with 3 positive or 3 negative tails. 
+
 
 v0.3.5 (2020-12-08)
 -------------------
