@@ -146,7 +146,7 @@ class peak:
         self.rel_peakshape_error = None
         self.rel_mass_error = None
         self.A = A_tot
-        self.atomic_ME_keV = None # (atomic) Mass excess = atomic mass[u] - A    [keV]
+        self.atomic_ME_keV = None # Mass excess = atomic mass[u] - A [keV]
         self.mass_error_keV = None
         self.m_dev_keV = None # TITAN - AME [keV]
 
@@ -154,7 +154,7 @@ class peak:
         """Updates :attr:`m_AME`, :attr:`m_AME_error` and :attr:`extrapolated`
         peak attributes with AME2016 values for specified species."""
 
-        m, m_error, extrapol, A_tot = get_AME_values(self.species) # calculate values for species
+        m, m_error, extrapol, A_tot = get_AME_values(self.species)
         self.m_AME = m
         self.m_AME_error = m_error
         self.extrapolated = extrapol
@@ -396,7 +396,7 @@ class spectrum:
             plt.title(plot_title)
             data_uncut.plot(ax=fig.gca(), legend=False)
             if m_start is not None:
-                plt.vlines(m_start, 0, 1.2*np.max(self.data['Counts']), 
+                plt.vlines(m_start, 0, 1.2*np.max(self.data['Counts']),
                            color='black')
             if m_stop is not None:
                 plt.vlines(m_stop, 0, 1.2*np.max(self.data['Counts']),
@@ -410,9 +410,10 @@ class spectrum:
     def add_spectrum_comment(self,comment,overwrite=False):
         """Add a general comment to the spectrum.
 
-        By default the `comment` argument will be appended to the end of the current
-        :attr:`spectrum_comment` attribute. If `overwrite` is set to `True`
-        the current :attr:`spectrum_comment` is overwritten with `comment`.
+        By default the `comment` argument will be appended to the end of the
+        current :attr:`spectrum_comment` attribute. If `overwrite` is set to
+        `True` the current :attr:`spectrum_comment` is overwritten with
+        `comment`.
 
         Parameters
         ----------
@@ -429,8 +430,8 @@ class spectrum:
 
         Notes
         -----
-        The :attr:`spectrum_comment` will be included in the output file storing all fit
-        results and can hence be useful to pass on information for the
+        The :attr:`spectrum_comment` will be included in the output file storing
+        all fit results and can hence be useful to pass on information for
         post-processing.
 
         If :attr:`spectrum_comment` is '-' (default value) it is always
@@ -438,7 +439,7 @@ class spectrum:
 
         """
         try:
-            if self.spectrum_comment == '-' or self.spectrum_comment is None or overwrite:
+            if self.spectrum_comment in ('-', None) or overwrite:
                 self.spectrum_comment = comment
             else:
                 self.spectrum_comment = self.spectrum_comment+comment
@@ -504,7 +505,8 @@ class spectrum:
             return x
 
         if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-            raise ValueError("Window must be one of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
+            raise ValueError("Window must be one of 'flat', 'hanning', "
+                             "'hamming', 'bartlett', 'blackman'.")
 
         s=np.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
         if window == 'flat': #moving average
@@ -532,8 +534,7 @@ class spectrum:
         fig : :class:`matplotlib.pyplot.figure`, optional
             Figure object to plot onto.
         yscale : str, optional
-            Scale of y-axis (``'lin'`` for logarithmic, ``'log'`` for
-            logarithmic), defaults to ``'log'``.
+            Scale of y-axis (`'linear'` or `'log'`), defaults to `'log'`.
         vmarkers : list of float [u], optional
             List with mass positions [u] to add vertical markers at.
         thres : float, optional
@@ -567,7 +568,6 @@ class spectrum:
         except TypeError:
             pass
         if yscale == 'log':
-            #x_idx = np.argmin(np.abs(data.index.values - p.x_pos)) # set ymin = data.iloc[x_idx] to get peak markers starting at peak max.
             for p in peaks:
                 plt.vlines(x=p.x_pos, ymin=0, ymax=1.05*ymax,
                            linestyles='dashed', color='black')
@@ -578,7 +578,6 @@ class spectrum:
             else:
                 plt.ylim(0.1,2.45*ymax)
         else:
-            #x_idx = np.argmin(np.abs(data.index.values - p.x_pos)) # set ymin = data.iloc[x_idx] to get peak markers starting at peak max.
             for p in peaks:
                 plt.vlines(x=p.x_pos, ymin=0, ymax=1.03*ymax,
                            linestyles='dashed', color='black')
@@ -615,8 +614,7 @@ class spectrum:
         fig : :class:`matplotlib.pyplot.figure`, optional
             Figure object to plot onto.
         yscale : str, optional
-            Scale of y-axis (``'lin'`` for logarithmic, ``'log'`` for
-            logarithmic), defaults to ``'log'``.
+            Scale of y-axis (`'linear'` or `'log'`), defaults to `'log'`.
         peaks : list of :class:`peaks`, optional
             List of :class:`peaks` to show peak markers for.
         vmarkers : list of float [u], optional
@@ -709,6 +707,10 @@ class spectrum:
         :meth:`add_peak`
         :meth:`remove_peak`
 
+        Note
+        ----
+        Running this method removes any pre-existing peaks.
+
         Notes
         -----
         For details on the smoothing, see docs of :meth:`_smooth` by calling:
@@ -718,7 +720,9 @@ class spectrum:
         """
         # Smooth spectrum (moving average with window function)
         data_smooth = self.data.copy()
-        data_smooth['Counts'] = spectrum._smooth(self.data['Counts'].values,window_len=window_len,window=window)
+        data_smooth['Counts'] = spectrum._smooth(self.data['Counts'].values,
+                                                 window=window,
+                                                 window_len=window_len)
         if plot_smoothed_spec:
             # Plot smoothed and original spectrum
             f = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
@@ -733,46 +737,40 @@ class spectrum:
             plt.ylabel('Counts per bin')
             plt.show()
 
-        # Second derivative
-        data_sec_deriv = data_smooth.iloc[1:-1].copy()
-        for i in range(len(data_smooth.index) - 2):
-            scale = 1/(data_smooth['Counts'].iloc[i+1]+10) # scale data to decrease y range
-            #dm = data_smooth.index[i+1]-data_smooth.index[i] # use dm in denominator of deriv if realistic units are desired
-            data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+1] -
-                                                      2*data_smooth['Counts'].iloc[i] +
-                                                      data_smooth['Counts'].iloc[i-1])/1**2 # Used second order central finite difference
-            # data_sec_deriv['Counts'].iloc[i] = scale*(data_smooth['Counts'].iloc[i+2] - 2*data_smooth['Counts'].iloc[i+1] + data_smooth['Counts'].iloc[i])/1**2    # data_sec_deriv = data_smooth.iloc[0:-2].copy()
+        # Calculate second derivative using 2nd order central finite differences
+        scale = 1/(data_smooth.values[1:-1] + 10) # scale to decrease y range
+        # Use dm in denominator of sec_deriv if realistic units are desired:
+        #dm = data_smooth.index[i+1]-data_smooth.index[i]
+        sec_deriv = scale*(data_smooth.values[2:] - 2*data_smooth.values[1:-1] +
+                           data_smooth.values[0:-2])/1**2
+        data_sec_deriv = pd.DataFrame(data=sec_deriv, columns=['Counts'],
+                                      index=data_smooth.iloc[1:-1].index)
         if plot_2nd_deriv:
-            title = "Scaled second derivative of spectrum - set threshold indicated"
+            title = str("Scaled second derivative of spectrum - set threshold "
+                        "indicated")
             self._plot_df(data_sec_deriv, title=title, yscale='linear',
                           ylabel='Amplitude [a.u.]', thres=-thres)
 
         # Take only negative part of re-scaled second derivative and invert
-        data_sec_deriv_mod = data_smooth.iloc[1:-1].copy()
-        for i in range(len(data_smooth.index) - 2):
-            scale = -1/(data_smooth['Counts'].iloc[i]+10) # scale data to decrease y range
-            # scale = -1/(data_smooth['Counts'].iloc[i+1]+10) # scale data to decrease y range
-            value = scale*(data_smooth['Counts'].iloc[i+1] -
-                           2*data_smooth['Counts'].iloc[i] +
-                           data_smooth['Counts'].iloc[i-1])/1**2 # Used (second order central finite difference)
-            #value = scale*(data_smooth['Counts'].iloc[i+2] - 2*data_smooth['Counts'].iloc[i+1] + data_smooth['Counts'].iloc[i])/1**2 # Used (second order forward finite difference) # data_sec_deriv_mod = data_smooth.iloc[:-2].copy()
-            if value > 0:
-                data_sec_deriv_mod['Counts'].iloc[i] = value
-            else:
-                data_sec_deriv_mod['Counts'].iloc[i] = 0
+        sec_deriv_mod = np.where(sec_deriv < 0, -1.*sec_deriv, 0.0)
+        data_sec_deriv_mod = pd.DataFrame(data=sec_deriv_mod,
+                                          columns=['Counts'],
+                                          index=data_smooth.iloc[1:-1].index)
 
-        bin_width = self.data.index[1] - self.data.index[0]
-        width_in_bins = int(width/bin_width) # width in units of bins, the prefactor is empirically determined and corrects for the width difference of the peak and its 2nd derivative
+        bin_width = self.data.index[1] - self.data.index[0] #assume uniform bins
+        width_in_bins = int(width/bin_width) # width in units of bins
         peak_find = sig.find_peaks(data_sec_deriv_mod['Counts'].values,
                                    height=thres, width=width_in_bins)
         li_peak_pos = data_sec_deriv_mod.index.values[peak_find[0]]
-        #peak_widths = sig.peak_widths(data_sec_deriv_mod['Counts'].values,peak_find[0])
         if plot_2nd_deriv:
             title = str("Negative part of scaled second derivative, inverted "
                         "- set threshold indicated")
             self._plot_df(data_sec_deriv_mod, title=title, thres=thres,
                           vmarkers=li_peak_pos, ymin=0.1*thres,
                           ylabel='Amplitude [a.u.]')
+
+        # Reset peak list
+        self.peaks = []
 
         # Create list of peak objects
         for x in li_peak_pos:
@@ -788,12 +786,13 @@ class spectrum:
             self.show_peak_properties()
 
 
-    def add_peak(self,x_pos,species="?",m_AME=None,m_AME_error=None,verbose=True):
+    def add_peak(self, x_pos, species="?", m_AME=None, m_AME_error=None,
+                 verbose=True):
         """Manually add a peak to the spectrum's :attr:`peaks` list.
 
         The position of the peak must be specified with the `x_pos` argument.
-        If the peak's ionic species is provided with the `species` argument
-        the corresponding AME literature values will be added to the :attr:`peak`.
+        If the peak's ionic species is provided with the `species` argument the
+        corresponding AME literature values will be added to the :attr:`peak`.
         Alternatively, user-defined literature values can be provided with the
         `m_AME` and `m_AME_error` arguments. This option is helpful for isomers
         or in case of very recent measurements that haven't entered the AME yet.
@@ -828,13 +827,14 @@ class spectrum:
         by ``+1``.
 
         """
-        p = peak(x_pos,species,m_AME=m_AME,m_AME_error=m_AME_error) # instantiate new peak
-        if m_AME is not None: # set mass number to closest integer of m_AME value
+        # Instantiate new peak:
+        p = peak(x_pos,species,m_AME=m_AME,m_AME_error=m_AME_error)
+        if m_AME is not None: # set mass number to closest int to m_AME value
             p.A = int(np.round(m_AME,0))
         self.peaks.append(p)
         self.fit_results.append(None)
-        ##### Helper function for sorting list of peaks by marker positions 'x_pos'
         def sort_x(peak):
+            """Helper function for sorting peak list by marker pos. x_pos """
             return peak.x_pos
         self.peaks.sort(key=sort_x) # sort peak positions in ascending order
         if verbose:
@@ -870,7 +870,8 @@ class spectrum:
 
         """
         # Get indeces of peaks to remove
-        err_msg1 = "Use EITHER the `peak_indeces`, `x_pos` or `species` argument."
+        err_msg1 = str("Use EITHER the `peak_indeces`, `x_pos` OR `species` "
+                       "argument.")
         if peak_indeces is not None:
             assert x_pos is None and species == "?", err_msg1
             indeces = np.atleast_1d(peak_indeces)
@@ -878,14 +879,18 @@ class spectrum:
             assert x_pos is None, err_msg1
             species = np.atleast_1d(species)
             peaks = self.peaks
-            indeces = [i for i in range(len(peaks)) if peaks[i].species in species]
-            err_msg2 = "Selection of one or multiple peaks from specified `species` failed."
+            indeces = [i for i in range(len(peaks))
+                       if peaks[i].species in species]
+            err_msg2 = str("Selection of one or multiple peaks from specified "
+                           "`species` failed.")
             assert len(indeces) == len(species), err_msg2
         elif x_pos:
             x_pos = np.atleast_1d(x_pos)
             peaks = self.peaks
-            indeces = [i for i in range(len(peaks)) if np.round(peaks[i].x_pos,6) in np.round(x_pos,6)]
-            err_msg3 = "Selection of one or multiple peaks from specified `x_pos` failed."
+            indeces = [i for i in range(len(peaks))
+                       if np.round(peaks[i].x_pos,6) in np.round(x_pos,6)]
+            err_msg3 = str("Selection of one or multiple peaks from specified "
+                           "`x_pos` failed.")
             assert len(indeces) == len(x_pos), err_msg3
         # Make safety copies for case of error in peak removals
         orig_peaks = copy.deepcopy(self.peaks)
@@ -900,7 +905,8 @@ class spectrum:
                 # Restore original peaks and fit_results lists
                 self.peaks = orig_peaks
                 self.fit_results = orig_results
-                msg = "Removal of peak {0} failed! Restored original peaks list.".format(i)
+                msg = str("Removal of peak {0} failed! Restored original peaks "
+                          "list.").format(i)
                 raise Exception(msg)
         if verbose:
             rem_pos.reverse() # switch to ascending order
@@ -1099,7 +1105,9 @@ class spectrum:
                         p.update_lit_values()
                         print("Species of peak",i,"assigned as",p.species)
             else:
-                raise Exception('Species assignment failed. Check method documentation for details on peak selection.\n')
+                msg = str("Species assignment failed. Check method "
+                          "documentation for details on peak selection.")
+                raise Exception(msg)
         except:
             print('Species assignment failed with')
             raise
@@ -1112,7 +1120,8 @@ class spectrum:
         By default the `comment` argument will be appended to the end of the
         current :attr:`peak.comment` attribute (if the current comment is '-' it
         is overwritten by the `comment` argument). If `overwrite` is set `True`,
-        the current :attr:`peak.comment` is overwritten with the 'comment' argument.
+        the current :attr:`peak.comment` is overwritten with the 'comment'
+        argument.
 
         Parameters
         ----------
@@ -1133,36 +1142,50 @@ class spectrum:
         Note
         ----
         The shape and mass calibrant peaks are automatically marked during the
-        shape and mass calibration by inserting the protected flags ``'shape calibrant'``,
-        ``'mass calibrant'`` or ``'shape and mass calibrant'`` into their peak
-        comments. When user-defined comments are added to these peaks, it is
-        ensured that the protected flags cannot be overwritten. **The above
-        shape and mass calibrant flags should never be added to comments
-        manually by the user!**
+        shape and mass calibration by inserting the protected flags
+        ``'shape calibrant'``, ``'mass calibrant'`` or
+        ``'shape and mass calibrant'`` into their peak comments. When
+        user-defined comments are added to these peaks, it is ensured that the
+        protected flags cannot be overwritten. **The above shape and mass
+        calibrant flags should never be added to comments manually by the
+        user!**
 
         """
         if peak_index is not None:
             pass
-        elif species != "?":
-            peak_index = [i for i in range(len(self.peaks)) if species == self.peaks[i].species][0] # select peak with species label 'species'
-        elif x_pos is not None:
-            peak_index = [i for i in range(len(self.peaks)) if np.round(x_pos,6) == np.round(self.peaks[i].x_pos,6)][0] # select peak at position 'x_pos'
+        elif species != "?": # select peak with label 'species'
+            peak_index = [i for i in range(len(self.peaks))
+                          if species == self.peaks[i].species][0]
+        elif x_pos is not None: # select peak at position 'x_pos'
+            peak_index = [i for i in range(len(self.peaks)) if np.round(x_pos,6)
+                          == np.round(self.peaks[i].x_pos,6)][0]
         else:
-            raise Exception("\nERROR: Peak specification failed. Check method documentation for details on peak selection.\n")
+            msg = str("Peak specification failed. Check method "
+                      "documentation for details on peak selection.")
+            raise Exception(msg)
         peak = self.peaks[peak_index]
 
-        protected_flags = ('shape calibrant','shape & mass calibrant','mass calibrant') # item order matters for comment overwriting!
+        protected_flags = ('shape calibrant', 'shape & mass calibrant',
+                           'mass calibrant') # order matters for overwriting!
         try:
-            if any(s in comment for s in ('shape calibrant','mass calibrant','shape & mass calibrant')):
-                print("ERROR: 'shape calibrant','mass calibrant' and 'shape & mass calibrant' are protected flags. User-defined comments must not contain these flags. Re-phrase comment argument!")
-                return
+            if any(s in comment for s in protected_flags):
+                msg =  str("'shape calibrant','mass calibrant' and "
+                           "'shape & mass calibrant' are protected flags. "
+                           "User-defined comments must not contain these "
+                           "flags. Re-phrase comment argument!")
+                raise Exception(msg)
             if peak.comment == '-' or peak.comment is None:
                 peak.comment = comment
             elif overwrite:
                 if any(s in peak.comment for s in protected_flags):
-                    print("WARNING: The protected flags 'shape calibrant','mass calibrant' or 'shape & mass calibrant' cannot be overwritten.")
+                    import warnings
+                    wmsg = str("The protected flags 'shape calibrant', "
+                               "'mass calibrant' or 'shape & mass calibrant' "
+                               "cannot be overwritten.")
+                    warnings.warn(wmsg)
                     flag = [s for s in protected_flags if s in peak.comment][0]
-                    peak.comment = peak.comment.replace(peak.comment,flag+', '+comment)
+                    peak.comment = peak.comment.replace(peak.comment,
+                                                        flag+', '+comment)
                 else:
                     peak.comment = comment
             else:
@@ -1243,14 +1266,13 @@ class spectrum:
     def _add_peak_markers(self,yscale='log',ymax=None,peaks=None):
         """Internal function for adding peak markers to current figure object.
 
-        Place this function inside spectrum methods as ``self._add_peak_markers(...)``
-        between ``plt.figure()`` and ``plt.show()``. Only for use on already
-        fitted spectra!
+        Place this function inside spectrum methods between ``plt.figure()`` and
+        ``plt.show()``. Only for use on already fitted spectra!
 
         Parameters
         ----------
         yscale : str, optional
-            Scale of y-axis, either 'lin' or 'log'.
+            Scale of y-axis, either 'linear' or 'log'.
         ymax : float
             Maximal y-value of spectrum data to plot. Used to set marker length.
         peaks : list of :class:`peak`
@@ -1746,7 +1768,7 @@ class spectrum:
         # Plot MCMC traces
         ##set_matplotlib_formats('png') # prevent excessive image file size
         fig, axes = plt.subplots(ndim,figsize=(figwidth, 2.7*ndim),sharex=True)
-        samples = result_emcee.sampler.get_chain()[..., :, :] #result_emcee.chain # thinned chain without burn-in
+        samples = result_emcee.sampler.get_chain()[..., :, :] # thinned chain without burn-in
         for i in range(ndim):
             par_chains = samples[:, :, i] # chains for i-th varied parameter
             ax = axes[i]
@@ -1857,7 +1879,7 @@ class spectrum:
                       hist_bin_factor=2,
                       range=percentile_range,
                       levels=(1-np.exp(-0.5),),
-                      quantiles=[0.1587, 0.5, 0.8413]) # 1-sigma level contour assumes Gaussian PDFs
+                      quantiles=[0.1587, 0.5, 0.8413]) # 1-sigma contour assumes Gaussian PDFs
         for ax in fig_cor.get_axes():
             ax.tick_params(axis='both', labelsize=10)
             ax.xaxis.offsetText.set_fontsize(10)
@@ -2344,7 +2366,7 @@ class spectrum:
 
     @staticmethod
     def bootstrap_spectrum(df,N_events=None,x_cen=None,x_range=0.02):
-        """Create simulated spectrum via bootstrap re-sampling from spectrum `df`.
+        """Create simulated spectrum via bootstrap resampling from dataset `df`.
 
         Parameters
         ----------
@@ -2376,21 +2398,23 @@ class spectrum:
 
         # Convert histogrammed spectrum (equivalent to MAc HIST export mode) to
         # list of events (equivalent to MAc LIST export mode)
-        orig_events =  np.repeat(mass_bins,counts,axis=0)
+        orig_events =  np.repeat(mass_bins, counts, axis=0)
 
         # Create new DataFrame of events by bootstrapping from `orig_events`
         if N_events == None:
             N_events = len(orig_events)
-        random_indeces = np.random.randint(0,len(orig_events),N_events)
+        random_indeces = np.random.randint(0, len(orig_events), N_events)
         events = orig_events[random_indeces]
         df_events = pd.DataFrame(events)
 
         # Convert list of events back to a DataFrame with histogram data
         bin_centers = df.index.values
         bin_width = df.index.values[1] - df.index.values[0]
-        bin_edges = np.append(bin_centers-0.5*bin_width,bin_centers[-1]+0.5*bin_width)
-        hist = np.histogram(df_events,bins=bin_edges)
-        df_new = pd.DataFrame(data=hist[0],index=bin_centers,dtype=float,columns=["Counts"])
+        bin_edges = np.append(bin_centers-0.5*bin_width,
+                              bin_centers[-1]+0.5*bin_width)
+        hist = np.histogram(df_events, bins=bin_edges)
+        df_new = pd.DataFrame(data=hist[0], index=bin_centers, dtype=float,
+                              columns=["Counts"])
         df_new.index.name = "Mass [u]"
         return df_new
 
@@ -2604,8 +2628,8 @@ class spectrum:
 
         y = std_devs_of_mus/mean_mu
         f = plt.figure(figsize=(11,6), dpi=dpi)
-        plt.title('A_stat_emg determination from bootstrapped spectra - '+fit_model+' '+cost_func+' fits',
-                  fontdict = {'fontsize' : 14})
+        plt.title('A_stat_emg determination from bootstrapped spectra - '+
+                  fit_model+' '+cost_func+' fits', fontdict = {'fontsize' : 14})
         plt.plot(x,y,'o',markersize=msize)
         plt.plot(x,out.best_fit/mean_mu)
         plt.plot(x,A_stat_gauss*FWHM_gauss/(np.sqrt(x)*mean_mu),'--')
@@ -2614,13 +2638,15 @@ class spectrum:
         plt.xlabel("Peak area [counts]",fontsize=14)
         plt.ylabel("Relative statistical uncertainty",fontsize=14)
         plt.legend(["Standard deviations of sample means",
-                    "Stat. error of Hyper-EMG","Stat. error of underlying Gaussian"])
+                    "Stat. error of Hyper-EMG",
+                    "Stat. error of underlying Gaussian"])
         plt.annotate('A_stat_emg: '+str(np.round(A_stat_emg,3))+' +- '+str(
                      np.round(A_stat_emg_error,3)), xy=(0.65, 0.75),
                      xycoords='axes fraction')
         if plot_filename is not None:
             try:
-                plt.savefig(plot_filename+'_A_stat_emg_determination.png',dpi=600)
+                plt.savefig(plot_filename+'_A_stat_emg_determination.png',
+                            dpi=600)
             except:
                 raise
         plt.show()
@@ -2784,7 +2810,8 @@ class spectrum:
         if index_shape_calib is not None and (species_shape_calib is None):
             peak = self.peaks[index_shape_calib]
         elif species_shape_calib:
-            index_shape_calib = [i for i in range(len(self.peaks)) if species_shape_calib == self.peaks[i].species][0]
+            index_shape_calib = [i for i in range(len(self.peaks)) if
+                                 species_shape_calib == self.peaks[i].species][0]
             peak = self.peaks[index_shape_calib]
         else:
             raise Exception("Definition of peak shape calibrant failed. Define "
@@ -2955,9 +2982,11 @@ class spectrum:
             Name of output file ('.txt' extension is automatically appended).
 
         """
-        df1 = pd.DataFrame.from_dict(self.shape_cal_pars,orient='index',columns=['Value'])
+        df1 = pd.DataFrame.from_dict(self.shape_cal_pars, orient='index',
+                                     columns=['Value'])
         df1.index.rename('Model: '+str(self.fit_model),inplace=True)
-        df2 = pd.DataFrame.from_dict(self.shape_cal_errors,orient='index',columns=['Error'])
+        df2 = pd.DataFrame.from_dict(self.shape_cal_errors,orient='index',
+                                     columns=['Error'])
         df = df1.join(df2)
         df.to_csv(str(filename)+'.txt', index=True,sep='\t')
         print('\nPeak-shape calibration saved to file: '+str(filename)+'.txt')
@@ -2986,8 +3015,8 @@ class spectrum:
         print('\nLoaded peak shape calibration from '+str(filename)+'.txt')
 
 
-    def _eval_peakshape_errors(self,peak_indeces=[],fit_result=None,
-                               verbose=False,show_shape_err_fits=False):
+    def _eval_peakshape_errors(self, peak_indeces=[], fit_result=None,
+                               verbose=False, show_shape_err_fits=False):
         """Calculate the relative peak-shape uncertainty of the specified peaks.
 
         **This internal method is automatically called by the :meth:`fit_peaks`
@@ -3123,7 +3152,7 @@ class spectrum:
             self.recal_facs_pm = {}
             peak_indeces.remove(self.index_mass_calib)
             if verbose:
-                print('Determining absolute centroid shifts of mass calibrant.\n')
+                print('Determining centroid shifts of mass calibrant.\n')
         else:
             mass_calib_in_range = False
 
@@ -3140,7 +3169,7 @@ class spectrum:
         # corresponding fit results including the shifts of the (Gaussian) peak
         # centroids `mu`
         for par in shape_pars:
-            pars = copy.deepcopy(self.shape_cal_pars) # deepcopy to avoid changes in original dictionary
+            pars = copy.deepcopy(self.shape_cal_pars) # avoid changes in original dict
             pars[par] = self.shape_cal_pars[par] + self.shape_cal_errors[par]
             if par == 'delta_m':
                 pars['eta_m2'] = pars[par] - self.shape_cal_pars['eta_m1']
@@ -3940,11 +3969,11 @@ class spectrum:
               self.recal_fac,self.recal_fac-1))
         if np.abs(self.recal_fac - 1) > 1e-03:
             import warnings
-            msg = str("Recalibration factor `recal_fac` deviates from unity by"
+            msg = str("Recalibration factor `recal_fac` deviates from unity by "
                       "more than a permille. Potentially, mass errors should "
                       "also be re-scaled with `recal_fac` (currently not "
-                      "implemented in emgfit)!",UserWarning)
-            warnings.warn(msg)
+                      "implemented in emgfit)!")
+            warnings.warn(msg, UserWarning)
         # Set mass calibrant flag to prevent overwriting of calibration results
         self.index_mass_calib = index_mass_calib
         # Update peak properties with new calibrant centroid
@@ -4103,10 +4132,14 @@ class spectrum:
             fit_model = self.fit_model
         if x_fit_cen is None:
             x_fit_cen = peak.x_pos
-        fit_result = spectrum.peakfit(self, fit_model=fit_model, cost_func=cost_func,
-                                      x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
-                                      vary_shape=False, vary_baseline=vary_baseline,
-                                      method=method, fit_kws=fit_kws,
+        fit_result = spectrum.peakfit(self, fit_model=fit_model,
+                                      cost_func=cost_func,
+                                      x_fit_cen=x_fit_cen,
+                                      x_fit_range=x_fit_range,
+                                      vary_shape=False,
+                                      vary_baseline=vary_baseline,
+                                      method=method,
+                                      fit_kws=fit_kws,
                                       show_plots=show_plots,
                                       show_peak_markers=show_peak_markers,
                                       sigmas_of_conf_band=sigmas_of_conf_band,
@@ -4386,10 +4419,14 @@ class spectrum:
                             "must be contained in `peak_indeces`.")
 
         # FIT ALL PEAKS
-        fit_result = spectrum.peakfit(self, fit_model=fit_model, cost_func=cost_func,
-                                      x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
-                                      init_pars=init_pars, vary_shape=vary_shape,
-                                      vary_baseline=vary_baseline, method=method,
+        fit_result = spectrum.peakfit(self, fit_model=fit_model,
+                                      cost_func=cost_func,
+                                      x_fit_cen=x_fit_cen,
+                                      x_fit_range=x_fit_range,
+                                      init_pars=init_pars,
+                                      vary_shape=vary_shape,
+                                      vary_baseline=vary_baseline,
+                                      method=method,
                                       fit_kws=fit_kws,
                                       show_plots=show_plots,
                                       show_peak_markers=show_peak_markers,

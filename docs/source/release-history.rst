@@ -14,12 +14,16 @@ Added
 ^^^^^
 * Updated docs of :meth:`~emgfit.spectrum.spectrum.get_MC_peakshape_errors`.
 
+Changed
+^^^^^^^
+* Optimize speed of :meth:`~emgfit.spectrum.spectrum.detect_peaks`.
+
 Fixed
 ^^^^^
 * Resolved bug in `rerun_MCMC_sampling` option of
   :meth:`~emgfit.spectrum.spectrum._eval_MC_peakshape_errors`.
 * Fixed bug in calculation of third order eta parameters in peak-shape error
-  evaluations for models with 3 positive or 3 negative tails. 
+  evaluations for models with 3 positive or 3 negative tails.
 
 
 v0.3.5 (2020-12-08)
