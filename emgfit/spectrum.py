@@ -85,7 +85,8 @@ class peak:
         Deviation from literature value (:attr:`m_ion` - :attr:`m_AME`).
 
     """
-    def __init__(self,x_pos,species,m_AME=None,m_AME_error=None):
+    def __init__(self, x_pos, species, m_AME=None, m_AME_error=None, Ex=0.0,
+                 Ex_error=0.0):
         """Instantiate a new :class:`peak` object.
 
         If a valid ion species is assigned with the `species` parameter the
@@ -120,6 +121,15 @@ class peak:
         m_AME_error : float [u], optional
             User-defined literature mass uncertainty. Overwrites value fetched
             from AME2016.
+        Ex : float [keV], optional, default : 0.0
+            Isomer excitation energy in keV to add to ground-state literature
+            mass. Irrelevant if the `m_AME` argument is used or if the peak is
+            not marked as isomer.
+        Ex_error : float [keV], optional, default : 0.0
+            Uncertainty of isomer excitation energy in keV to add in quadrature
+            to ground-state literature mass uncertainty. Irrelevant if the
+            `m_AME_error` argument is used or if the peak is not marked as
+            isomer.
 
         """
         self.x_pos = x_pos
@@ -127,7 +137,8 @@ class peak:
         self.comment = '-'
         self.m_AME = m_AME #
         self.m_AME_error = m_AME_error
-        m, m_error, extrapol, A_tot = get_AME_values(species) # grab AME values
+        m, m_error, extrapol, A_tot = get_AME_values(species, Ex=Ex,
+                                                     Ex_error=Ex_error)
         # If `m_AME` has not been user-defined, set it to AME value
         if self.m_AME is None:
              self.m_AME = m
@@ -150,11 +161,22 @@ class peak:
         self.mass_error_keV = None
         self.m_dev_keV = None # TITAN - AME [keV]
 
-    def update_lit_values(self):
-        """Updates :attr:`m_AME`, :attr:`m_AME_error` and :attr:`extrapolated`
-        peak attributes with AME2016 values for specified species."""
 
-        m, m_error, extrapol, A_tot = get_AME_values(self.species)
+    def update_lit_values(self, Ex=0.0, Ex_error=0.0):
+        """Updates :attr:`m_AME`, :attr:`m_AME_error` and :attr:`extrapolated`
+        peak attributes with AME2016 values for specified species.
+
+        Parameters
+        ----------
+        Ex : float [keV], optional, default : 0.0
+            Isomer excitation energy in keV to add to ground-state literature
+            mass.
+        Ex_error : float [keV], optional, default : 0.0
+            Uncertainty of isomer excitation energy in keV to add in quadrature
+            to ground-state literature mass uncertainty.
+        """
+        m, m_error, extrapol, A_tot = get_AME_values(self.species, Ex=Ex,
+                                                     Ex_error=Ex_error)
         self.m_AME = m
         self.m_AME_error = m_error
         self.extrapolated = extrapol
@@ -173,12 +195,12 @@ class peak:
             print("Peak area: "+str(self.area)+" +- "+str(self.peak_area_error)+" counts")
             print("(Ionic) mass:",self.m_ion,"u     (",np.round(self.m_ion*u_to_keV,3),"keV )")
             print("Stat. mass uncertainty:",self.rel_stat_error*self.m_ion,"u     (",np.round(self.rel_stat_error*self.m_ion*u_to_keV,3),"keV )")
-            print("Peakshape mass uncertainty:",self.rel_peakshape_error*self.m_ion,"u     (",np.round(self.rel_peakshape_error*self.m_ion*u_to_keV,3),"keV )")
+            print("Peak-shape mass uncertainty:",self.rel_peakshape_error*self.m_ion,"u     (",np.round(self.rel_peakshape_error*self.m_ion*u_to_keV,3),"keV )")
             print("Re-calibration mass uncertainty:",self.rel_recal_error*self.m_ion,"u     (",np.round(self.rel_recal_error*self.m_ion*u_to_keV,3),"keV )")
-            print("Total mass uncertainty (before systematics):",self.rel_mass_error*self.m_ion,"u     (",np.round(self.mass_error_keV,3),"keV )")
+            print("Total mass uncertainty:",self.rel_mass_error*self.m_ion,"u     (",np.round(self.mass_error_keV,3),"keV )")
             print("Atomic mass excess:",np.round(self.atomic_ME_keV,3),"keV")
-            print("TITAN - AME:",np.round(self.m_dev_keV,3),"keV")
-            print("χ_sq_red:",np.round(self.red_chi))
+            print("m_ion - m_AME:",np.round(self.m_dev_keV,3),"keV")
+            print("Reduced chi square:",np.round(self.red_chi))
 
 
 ################################################################################
@@ -389,7 +411,8 @@ class spectrum:
             plot_title = 'Spectrum (fit full range)'
         # Set `mass_number` using median of mass bins after cutting spectrum and
         # round to closest integer:
-        self.mass_number = int(np.round(self.data.index.values[int(len(self.data)/2)]))
+        self.mass_number = int(np.round(self.data.index.values[
+                                                        int(len(self.data)/2)]))
         self.default_fit_range = 0.01*(self.mass_number/100)
         if show_plot:
             fig  = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
@@ -445,8 +468,8 @@ class spectrum:
                 self.spectrum_comment = self.spectrum_comment+comment
             print("Spectrum comment was changed to: ",self.spectrum_comment)
         except TypeError:
-            print("ERROR: 'comment' argument must be given as type string.")
-            return
+            raise("Could not add comment 'comment' argument must of type "
+                  "string.")
 
 
     @staticmethod
@@ -786,8 +809,8 @@ class spectrum:
             self.show_peak_properties()
 
 
-    def add_peak(self, x_pos, species="?", m_AME=None, m_AME_error=None,
-                 verbose=True):
+    def add_peak(self, x_pos, species="?", m_AME=None, m_AME_error=None, Ex=0.0,
+                 Ex_error=0.0, verbose=True):
         """Manually add a peak to the spectrum's :attr:`peaks` list.
 
         The position of the peak must be specified with the `x_pos` argument.
@@ -807,11 +830,21 @@ class spectrum:
             :attr:`peak.m_AME_error` & :attr:`peak.extrapolated` are
             automatically updated with the corresponding AME literature values.
         m_AME : float [u], optional
-            User-defined literature mass for peak to be added. Overwrites pre-
+            User-defined literature mass of peak to be added. Overwrites pre-
             existing :attr:`peak.m_AME` value.
         m_AME_error : float [u], optional
-            User-defined literature mass uncertainty for peak to be added.
+            User-defined literature mass uncertainty of peak to be added.
             Overwrites pre-existing :attr:`peak.m_AME_error`.
+        Ex : float [keV], optional, default: 0.0
+            Excitation energy of isomeric state in keV. When the peak is marked
+            as isomeric species the peak's literature mass `m_AME` is
+            calculated by adding `Ex` to the AME value for the ground-state
+            mass.
+        Ex_error : float [keV], optional, default: 0.0
+            Uncertainty of the excitation energy of the isomeric state in keV.
+            When the peak is marked as isomeric species the peak's literature
+            mass uncertainty `m_AME_error` is calculated by adding `Ex_error` in
+            quadrature to the AME uncertainty of the ground-state mass.
         verbose : bool, optional, default: `True`
             If `True`, a message is printed after successful peak addition.
             Intended for internal use only.
@@ -823,22 +856,28 @@ class spectrum:
 
         Note
         ----
-        Adding a peak will shift the peak_indeces of all peaks at higher masses
+        Adding a peak will shift the peak indeces of all peaks at higher masses
         by ``+1``.
 
         """
+        # Check if there is already a peak with this marker position:
+        if np.round(x_pos,6) in [np.round(p.x_pos,6) for p in self.peaks]:
+            raise Exception("There is already a peak with the specified "
+                            "`x_pos`.")
         # Instantiate new peak:
-        p = peak(x_pos,species,m_AME=m_AME,m_AME_error=m_AME_error)
+        p = peak(x_pos, species, m_AME=m_AME, m_AME_error=m_AME_error, Ex=Ex,
+                 Ex_error=Ex_error)
         if m_AME is not None: # set mass number to closest int to m_AME value
-            p.A = int(np.round(m_AME,0))
+            p.A = int(np.round(m_AME))
         self.peaks.append(p)
-        self.fit_results.append(None)
         def sort_x(peak):
             """Helper function for sorting peak list by marker pos. x_pos """
             return peak.x_pos
         self.peaks.sort(key=sort_x) # sort peak positions in ascending order
+        peak_idx = self.peaks.index(p)
+        self.fit_results.insert(peak_idx, None) # create empty fit result
         if verbose:
-            print("Added peak at ",x_pos," u")
+            print("Added peak at",x_pos,"u")
 
 
     def remove_peaks(self,peak_indeces=None,x_pos=None,species="?",verbose=True):
@@ -861,12 +900,17 @@ class spectrum:
             :attr:`species` label(s) of peak(s) to remove from the spectrum's
             :attr:`peaks` list.
 
+        Note
+        ----
+        Removing a peak will shift the peak indeces of all peaks at higher
+        masses by ``-1``.
+
         Notes
         -----
         The current :attr:`peaks` list can be viewed by calling the
         :meth:`~spectrum.show_peak_properties` spectrum method.
 
-        Added in version 0.2.0 (as successor method to `remove_peak`)
+        Added in version 0.2.0 (as successor method to `remove_peak`).
 
         """
         # Get indeces of peaks to remove
@@ -905,8 +949,8 @@ class spectrum:
                 # Restore original peaks and fit_results lists
                 self.peaks = orig_peaks
                 self.fit_results = orig_results
-                msg = str("Removal of peak {0} failed! Restored original peaks "
-                          "list.").format(i)
+                msg = str("Removal of peak {0} failed! Restored the original "
+                          " peaks and fit_results lists.").format(i)
                 raise Exception(msg)
         if verbose:
             rem_pos.reverse() # switch to ascending order
@@ -1016,14 +1060,15 @@ class spectrum:
             print('        ',colored('stat. errors from resampling','green'))
 
 
-    def assign_species(self,species,peak_index=None,x_pos=None):
+    def assign_species(self, species, peak_index=None, x_pos=None, Ex=0.0,
+                       Ex_error=0.0):
         """Assign species label(s) to a single peak (or all peaks at once).
 
         If no single peak is selected with `peak_index` or `x_pos`, a list with
         species names for **all** peaks in the peak list must be passed to
         `species`. For already specified or unkown species insert ``None`` as a
-        placeholder to skip the species assignment for this peak. See `Notes`
-        and `Examples` sections below for details on usage.
+        placeholder into the list to skip the species assignment for this peak.
+        See `Notes` and `Examples` sections below for details on usage.
 
         Parameters
         ----------
@@ -1038,6 +1083,16 @@ class spectrum:
         x_pos : float [u], optional
             :attr:`x_pos` of single peak to assign `species` name to. Must be
             specified up to 6th decimal.
+        Ex : float [keV], optional, default: 0.0
+            Excitation energy of isomeric state in keV. When the peak is marked
+            as isomeric species the peak's literature mass `m_AME` is
+            calculated by adding `Ex` to the AME value for the ground-state
+            mass.
+        Ex_error : float [keV], optional, default: 0.0
+            Uncertainty of the excitation energy of the isomeric state in keV.
+            When the peak is marked as isomeric species the peak's literature
+            mass uncertainty `m_AME_error` is calculated by adding `Ex_error`
+            and the AME uncertainty of the ground-state mass in quadrature.
 
         Notes
         -----
@@ -1055,6 +1110,17 @@ class spectrum:
           species assignments are overwritten, also see examples below for
           usage.
 
+         - Tentative assignments and isomers:
+           Use ``'?'`` at the end of the `species` string or constituent element
+           strings to indicate tentative assignments. Literature values are
+           also fetched for peaks with tentative assignments.
+
+         - Isomeric species:
+           Isomers can be marked by appending a ``'m'`` or ``'m0'`` up to
+           ``'m9'`` to the end of the respective element substring in `species`.
+           For isomers no literature values are calculated unless the respective
+           excitation energy is manually specified with the `Ex` argument.
+
         Examples
         --------
         Assign the peak with peak_index 2 (third-lowest-mass peak) as
@@ -1063,7 +1129,7 @@ class spectrum:
         >>> import emgfit as emg
         >>> spec = emg.spectrum(<input_file>) # mock code for foregoing data import
         >>> spec.detect_peaks() # mock code for foregoing peak detection
-        >>> spec.assign_species('1Cs133:-1e',peak_index = 2)
+        >>> spec.assign_species('1Cs133:-1e', peak_index = 2)
 
         Assign multiple peaks:
 
@@ -1074,11 +1140,29 @@ class spectrum:
 
         This assigns the species of the first, second, third and fourth peak
         with the respective labels in the specified list and fetches their AME
-        values. The `'?'` in the ``'Rh102:-1e?'`` argument indicates a tentative
-        species assignment, literature values will not be calculated for this
-        peak. The ``None`` argument leaves the species assignment of the 4th
+        values. The `'?'` ending of the ``'Rh102:-1e?'`` argument indicates a
+        tentative species assignment, mind that literature values will still be
+        calculated for this peak. Equivalently, ``'Rh102?:-1e'`` could have been
+        used. The ``None`` argument leaves the species assignment of the 4th
         peak unchanged. The ``'?'`` argument overwrites any former species
-        assignments to the highest-mass peak and marks the peak as unidentified.
+        assignments to the last peak and marks the peak as unidentified.
+
+        Mark peaks as isomers:
+
+        >>> import emgfit as emg
+        >>> spec = emg.spectrum(<input_file>) # mock code for foregoing data import
+        >>> spec.detect_peaks() # mock code for foregoing peak detection
+        >>> spec.assign_species('1In127:-1e', peak_index=0)    # ground state
+        >>> spec.assign_species('1In127m:-1e', peak_index=1)   # first isomer
+        >>> spec.assign_species('1In127m1:-1e', peak_index=2, Ex=1863,
+                                Ex_error=58) # second isomer
+
+        The above assigns peak 0 as ground state and fetches the corresponding
+        literature values. Peak 1 is marked as the first isomeric state of
+        In-127 but no literature values are calculated (since `Ex` is not
+        specified). Peak 2 is marked as the second isomeric state of In-127 and
+        the literature mass and its uncertainty are calculated from the
+        respective ground-state AME values and the provided `Ex` and `Ex_error`.
 
         """
         try:
@@ -1087,14 +1171,14 @@ class spectrum:
                 assert x_pos is None, msg
                 p = self.peaks[peak_index]
                 p.species = species
-                p.update_lit_values()
+                p.update_lit_values(Ex=Ex, Ex_error=Ex_error)
                 print("Species of peak",peak_index,"assigned as",p.species)
             elif x_pos is not None:
                 # Select peak at position 'x_pos'
                 i = [i for i in range(len(self.peaks)) if abs(x_pos - self.peaks[i].x_pos) < 1e-06][0]
                 p = self.peaks[i]
                 p.species = species
-                p.update_lit_values()
+                p.update_lit_values(Ex=Ex, Ex_error=Ex_error)
                 print("Species of peak",i,"assigned as",p.species)
             elif len(species) == len(self.peaks):
                 for i in range(len(species)): # loop over multiple species
@@ -1102,20 +1186,58 @@ class spectrum:
                     if species_i: # skip peak if 'None' given as argument
                         p = self.peaks[i]
                         p.species = species_i
-                        p.update_lit_values()
+                        p.update_lit_values(Ex=Ex, Ex_error=Ex_error)
                         print("Species of peak",i,"assigned as",p.species)
             else:
-                msg = str("Species assignment failed. Check method "
-                          "documentation for details on peak selection.")
+                msg = str("Peak selection in assign_species() failed. Check "
+                          "method documentation for details on how to select "
+                          "the peak of interest.")
                 raise Exception(msg)
         except:
-            print('Species assignment failed with')
+            print("\nSpecies assignment failed with the exception below. Check "
+                  "method documentation for usage examples and syntax of "
+                  "`species` strings.")
             raise
 
 
-    def add_peak_comment(self,comment,peak_index=None,x_pos=None,species="?",
-                         overwrite=False):
-        """Add a comment to a peak.
+    def set_lit_values(self, peak_idx, m_AME, m_AME_error, extrapolated=False,
+                       verbose=True):
+        """Manually define the (ionic) literature mass and its error for a peak
+
+        Existing values are overwritten.
+
+        Parameters
+        ----------
+        peak_idx : int
+            Index of peak to assign literature values for.
+        m_AME : float [u]
+            New literature mass.
+        m_AME_error : float [u]
+            New liteature mass uncertainty.
+        extrapolated : bool, optional, default: False
+            Flag indicating whether this literature value has been extrapolated.
+        verbose : bool, optional, default: True
+            Whether to print a status update after completion.
+
+        Notes
+        -----
+        Added in version 0.3.6.
+
+        """
+        peak = self.peaks[peak_idx]
+        peak.m_AME = m_AME
+        peak.m_AME_error = m_AME_error
+        peak.extrapolated = extrapolated
+        peak.A = int(round(m_AME))
+        if verbose is True:
+            msg = str("Set literature mass of peak {} to m_AME = ({} +- {}) u"
+                               ).format(peak_idx, peak.m_AME, peak.m_AME_error)
+            print(msg)
+
+
+    def add_peak_comment(self, comment, peak_index=None, x_pos=None,
+                         species="?", overwrite=False):
+        """Add a comment to a peak
 
         By default the `comment` argument will be appended to the end of the
         current :attr:`peak.comment` attribute (if the current comment is '-' it
