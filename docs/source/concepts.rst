@@ -52,7 +52,7 @@ Alternatively or additionally, peaks can be added manually with the
 :meth:`~emgfit.spectrum.spectrum.add_peak` method. By default, markers of the
 associated peaks are added to plots of spectrum data. Peaks can be removed from
 a spectrum object using the :meth:`~emgfit.spectrum.spectrum.remove_peaks`
-method. **To avoid ambiguities peaks should only the added or removed in the
+method. **To avoid ambiguities peaks should only be added or removed in the
 initial analysis stage, i.e. before the shape calibration or any other fits have
 been performed.**
 
@@ -524,12 +524,19 @@ given isotope and `A` is the respective atomic mass number. In the case
 `n = 1`, the number indication `n` can be omitted. The charge state of the ion
 is indicated by subtracting the desired number of electrons from the atomic
 species (i.e. ``':-1e'`` for singly charged cations, ``':-2e'`` for doubly
-charged cations etc.). The subtraction of the electron is important since
-otherwise the atomic instead of the ionic mass is used for subsequent
-calculations. Mind that `emgfit` currently only supports singly charged ions.
-The calculated literature mass values do not account for electron binding
-energies which can in most applications safely be neglected for singly charged
-ions.
+charged cations etc.). Once the ionic species of a peak is assigned `emgfit`
+automatically fetches the respective literature value from the AME2016_ [6]_
+mass database. The subtraction of the electron is important since otherwise the
+atomic instead of the ionic mass is used for subsequent calculations. Mind that
+`emgfit` currently only supports singly charged ions. The calculated literature
+mass values do not account for electron binding energies which can in most
+applications safely be neglected for singly charged ions.
+`emgfit` does currently not interface with an isomer database. However, isomers
+can be marked by appending an ``'m'`` or ``'m0'`` up to ``'m9'`` to the end of
+an isotope substring (see last example below). The literature mass (and mass
+error) of an isomer are automatically calculated from the respective
+ground-state AME mass when the excitation energy is passed to the `Ex`
+(and `Ex_error`) option of the relevant spectrum methods.
 
 Examples:
 
@@ -538,6 +545,7 @@ Examples:
 - The most abundant isotope of the ammonium cation :math:`N H_{4}^{+}` can be
   denoted as ``'4H1:1N14:-1e'`` or ``'4H1:N14:-e'`` or ``'N14:4H1:-1e'`` or ...
 - The proton is denoted as ``'1H1:-1e'`` or ``'H1:-1e'`` or ``'H1:-e'``.
+- A Indium-127 ion in the second isomeric state is denoted as ``'1In127m1:-1e'``
 
 
 Creating simulated spectra
@@ -562,6 +570,8 @@ blinding is automatically lifted once the processing of the spectrum is
 finalized and the results are exported.
 
 
+.. _AME2016: http://amdc.in2p3.fr/web/masseval.html
+
 References
 ----------
 .. [1] Purushothaman, S., et al. "Hyper-EMG: A new probability distribution
@@ -583,3 +593,6 @@ References
   multiple-reflection time-of-flight mass spectrometry for short-lived,
   exotic nuclei of a few events in their ground and low-lying isomeric
   states." Physical Review C 99.6 (2019): 064313.
+
+.. [6] Wang, M., et al. "The AME2016 atomic mass evaluation (II). Tables, graphs
+   and references." Chinese Physics C 41.3 (2017): 030003.

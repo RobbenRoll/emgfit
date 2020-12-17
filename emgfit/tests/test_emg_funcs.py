@@ -5,7 +5,8 @@ import numpy as np
 
 class Test_h_emg(object):
 
-    def h_emg_mpmath(self, x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
+    def h_emg_mpmath(self, x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p,
+                     li_tau_p):
         norm_precision = 1e-06
         # Define precision Hyper-EMG components with mpmath functions
         def h_m(x, mu, sigma, li_eta_m,li_tau_m):
@@ -66,11 +67,15 @@ class Test_h_emg(object):
         tau_p3 = 1000e-06*scl_factor # [u]
         x = np.linspace(mu-10,mu+10,10000)
 
-        ret = emg.emg_funcs.h_emg(x, mu, sigma , theta, (eta_m1,eta_m2,eta_m3),
-                                  (tau_m1,tau_m2,tau_m3),(eta_p1,eta_p2,eta_p3),
+        ret = emg.emg_funcs.h_emg(x, mu, sigma , theta,
+                                  (eta_m1,eta_m2,eta_m3),
+                                  (tau_m1,tau_m2,tau_m3),
+                                  (eta_p1,eta_p2,eta_p3),
                                   (tau_p1,tau_p2,tau_p3))
-        ret_mpmath = self.h_emg_mpmath(x, mu, sigma , theta, (eta_m1,eta_m2,eta_m3),
-                                       (tau_m1,tau_m2,tau_m3),(eta_p1,eta_p2,eta_p3),
+        ret_mpmath = self.h_emg_mpmath(x, mu, sigma , theta,
+                                       (eta_m1,eta_m2,eta_m3),
+                                       (tau_m1,tau_m2,tau_m3),
+                                       (eta_p1,eta_p2,eta_p3),
                                        (tau_p1,tau_p2,tau_p3))
 
         assert np.allclose(ret,ret_mpmath,rtol=1e-12)
@@ -97,7 +102,7 @@ class Test_h_emg(object):
         x0 = np.array([0.,50.,150.,200.,300.])
 
         ret = emg.emg_funcs.h_emg(x0, mu, sigma , theta, (eta_m1,eta_m2,eta_m3),
-                                     (tau_m1,tau_m2,tau_m3),(eta_p1,eta_p2,eta_p3),
-                                     (tau_p1,tau_p2,tau_p3))
+                                  (tau_m1,tau_m2,tau_m3),(eta_p1,eta_p2,eta_p3),
+                                  (tau_p1,tau_p2,tau_p3))
 
         assert np.all(np.isfinite(ret))

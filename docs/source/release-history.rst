@@ -7,6 +7,31 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+v0.3.6 (2020-12-17)
+-------------------
+
+Added
+^^^^^
+* Support marking of isomers in `species` labels and enable quick calculation of
+  literature mass values for isomers via the new `Ex` and `Ex_error` options of
+  :meth:`~emgfit.spectrum.spectrum.assign_species` and
+  :meth:`~emgfit.spectrum.spectrum.add_peak`.
+* Enable easy manual definition of literature values via new
+  :meth:`~emgfit.spectrum.spectrum.set_lit_values` spectrum method.
+
+Changed
+^^^^^^^
+* Optimize speed of :meth:`~emgfit.spectrum.spectrum.detect_peaks`.
+* Updated docs of :meth:`~emgfit.spectrum.spectrum.get_MC_peakshape_errors`.
+
+
+Fixed
+^^^^^
+* Resolved bug in `rerun_MCMC_sampling` option of
+  :meth:`~emgfit.spectrum.spectrum._eval_MC_peakshape_errors`.
+* Fixed bug in calculation of third order eta parameters in peak-shape error
+  evaluations for models with 3 positive or 3 negative tails.
+
 
 v0.3.5 (2020-12-08)
 -------------------
