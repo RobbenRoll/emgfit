@@ -167,7 +167,8 @@ def get_AME_values(species, Ex=0.0, Ex_error=0.0):
 
         # Abort when encountering unidentified species
         if ptype == '?':
-            return None, None, False, None
+            m, m_error, extrapol, A_tot = None, None, False, None
+            break # still check warnings below
 
         # Remove trailing '?' (flag for tentative species IDs)
         ptype = ptype.rstrip('? ')
@@ -190,6 +191,7 @@ def get_AME_values(species, Ex=0.0, Ex_error=0.0):
             ptype = ptype.rstrip('0123456789')
             ptype = ptype.rstrip('m')
 
+        # Update lit. values
         n, El, A = splitparticle(ptype)
         if El == 'e' and m is not None: # electron
             m += n*m_e
@@ -197,24 +199,24 @@ def get_AME_values(species, Ex=0.0, Ex_error=0.0):
         elif isomer_count == 1:
             m += n*(mdata_AME(El,A)[3] + Ex/u_to_keV)
             m_error_sq += (n*mdata_AME(El,A)[4])**2 + (n*Ex_error/u_to_keV)**2
+            m_error = np.sqrt(m_error_sq)
             A_tot += n*A
             if mdata_AME(El,A)[5]:
                 extrapol = True # boolean flag for any extrapolated masses contained in species
         else: # regular atom
             m += n*(mdata_AME(El,A)[3])
             m_error_sq += (n*mdata_AME(El,A)[4])**2
+            m_error = np.sqrt(m_error_sq)
             A_tot += n*A
             if mdata_AME(El,A)[5]:
                 extrapol = True # boolean flag for any extrapolated masses contained in species
-
-    m_error = np.sqrt(m_error_sq)
 
     # Issue warnings for isomers if needed
     if Ex != 0.0 and isomer_count == 0: # no isomer flag but Ex given
         from warnings import warn
         msg = str("The specified isomer excitation energy `Ex` and its "
                   "error `Ex_error` are ignored since the species label "
-                  "{} does not contain any isomer markers.").format(species)
+                  "'{}' does not contain any isomer markers.").format(species)
         warn(msg)
     elif isomer_count > 1:
         from warnings import warn
