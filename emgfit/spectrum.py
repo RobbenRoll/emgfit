@@ -122,14 +122,14 @@ class peak:
             User-defined literature mass uncertainty. Overwrites value fetched
             from AME2016.
         Ex : float [keV], optional, default : 0.0
-            Isomer excitation energy in keV to add to ground-state literature
+            Isomer excitation energy (in keV) to add to ground-state literature
             mass. Irrelevant if the `m_AME` argument is used or if the peak is
-            not marked as isomer.
+            not labelled as isomer.
         Ex_error : float [keV], optional, default : 0.0
-            Uncertainty of isomer excitation energy in keV to add in quadrature
-            to ground-state literature mass uncertainty. Irrelevant if the
-            `m_AME_error` argument is used or if the peak is not marked as
-            isomer.
+            Uncertainty of isomer excitation energy (in keV) to add in
+            quadrature to ground-state literature mass uncertainty. Irrelevant
+            if the `m_AME_error` argument is used or if the peak is not labelled
+            as isomer.
 
         """
         self.x_pos = x_pos
@@ -169,11 +169,12 @@ class peak:
         Parameters
         ----------
         Ex : float [keV], optional, default : 0.0
-            Isomer excitation energy in keV to add to ground-state literature
+            Isomer excitation energy (in keV) to add to ground-state literature
             mass.
         Ex_error : float [keV], optional, default : 0.0
-            Uncertainty of isomer excitation energy in keV to add in quadrature
-            to ground-state literature mass uncertainty.
+            Uncertainty of isomer excitation energy (in keV) to add in
+            quadrature to ground-state literature mass uncertainty.
+
         """
         m, m_error, extrapol, A_tot = get_AME_values(self.species, Ex=Ex,
                                                      Ex_error=Ex_error)
@@ -836,15 +837,14 @@ class spectrum:
             User-defined literature mass uncertainty of peak to be added.
             Overwrites pre-existing :attr:`peak.m_AME_error`.
         Ex : float [keV], optional, default: 0.0
-            Excitation energy of isomeric state in keV. When the peak is marked
-            as isomeric species the peak's literature mass `m_AME` is
-            calculated by adding `Ex` to the AME value for the ground-state
-            mass.
+            Excitation energy of isomeric state in keV. When the peak is
+            labelled as an isomer its literature mass :attr:`peak.m_AME`
+            is calculated by adding `Ex` to the AME ground-state mass.
         Ex_error : float [keV], optional, default: 0.0
             Uncertainty of the excitation energy of the isomeric state in keV.
-            When the peak is marked as isomeric species the peak's literature
-            mass uncertainty `m_AME_error` is calculated by adding `Ex_error` in
-            quadrature to the AME uncertainty of the ground-state mass.
+            When the peak is labelled as isomer its literature mass uncertainty
+            :attr:`peak.m_AME_error` is calculated by adding `Ex_error` and the
+            AME uncertainty of the ground-state mass in quadrature.
         verbose : bool, optional, default: `True`
             If `True`, a message is printed after successful peak addition.
             Intended for internal use only.
@@ -1084,15 +1084,14 @@ class spectrum:
             :attr:`x_pos` of single peak to assign `species` name to. Must be
             specified up to 6th decimal.
         Ex : float [keV], optional, default: 0.0
-            Excitation energy of isomeric state in keV. When the peak is marked
-            as isomeric species the peak's literature mass `m_AME` is
-            calculated by adding `Ex` to the AME value for the ground-state
-            mass.
+            Excitation energy of isomeric state in keV. When the peak is
+            labelled as isomer its literature mass :attr:`peak.m_AME` is
+            calculated by adding `Ex` to the AME ground-state mass.
         Ex_error : float [keV], optional, default: 0.0
             Uncertainty of the excitation energy of the isomeric state in keV.
-            When the peak is marked as isomeric species the peak's literature
-            mass uncertainty `m_AME_error` is calculated by adding `Ex_error`
-            and the AME uncertainty of the ground-state mass in quadrature.
+            When the peak is labelled as isomer its literature mass uncertainty
+            :attr:`peak.m_AME_error` is calculated by adding `Ex_error` and the
+            AME uncertainty of the ground-state mass in quadrature.
 
         Notes
         -----
@@ -1155,7 +1154,7 @@ class spectrum:
         >>> spec.assign_species('1In127:-1e', peak_index=0)    # ground state
         >>> spec.assign_species('1In127m:-1e', peak_index=1)   # first isomer
         >>> spec.assign_species('1In127m1:-1e', peak_index=2, Ex=1863,
-                                Ex_error=58) # second isomer
+        >>>                     Ex_error=58) # second isomer
 
         The above assigns peak 0 as ground state and fetches the corresponding
         literature values. Peak 1 is marked as the first isomeric state of
