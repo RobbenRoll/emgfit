@@ -18,9 +18,9 @@ class Test_get_AME_values(object):
                                                           Ex=1863,
                                                           Ex_error=58)
         msg0 = "`m_AME` of In127m1:-1e deviates from reference"
-        assert np.round(m_AME, prec) == np.round(m_ref, prec), msg0
+        assert np.round(m_AME, prec) == np.round(m_ref,prec), msg0
         msg1 = "`m_AME_error` of In127m1:-1e deviates from reference"
-        assert np.round(m_AME_error, prec) == np.round(m_ref_error, prec), msg1
+        assert np.round(m_AME_error, prec) == np.round(m_ref_error,prec), msg1
         msg2 = "wrong extrapol. flag for In127m1:-1e"
         assert extrapol == extrapol_ref, msg2
         msg3 = "atomic mass number of In127m1:-1e deviates from reference "
