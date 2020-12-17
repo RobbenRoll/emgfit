@@ -1,0 +1,806 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Central concepts &mdash; emgfit 0.3.6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
+        <script src="_static/thebelab-helper.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="emgfit API docs" href="modules.html" />
+    <link rel="prev" title="Tutorial" href="emgfit_tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> emgfit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3.6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Getting started with emgfit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="emgfit_tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Central concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-peak-and-spectrum-classes">The peak and spectrum classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-peaks-to-a-spectrum">Adding peaks to a spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#assigning-species-to-peaks-and-fetching-ame-values">Assigning species to peaks and fetching AME values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hyper-emg-distributions">Hyper-EMG distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#available-fit-models">Available fit models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multi-peak-fits">Multi-peak fits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#peak-fitting-approach">Peak fitting approach</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#peak-shape-calibration">Peak-shape calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mass-recalibration-and-calculation-of-final-mass-values">Mass recalibration and calculation of final mass values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fitting-peaks-of-interest">Fitting peaks of interest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#estimation-of-statistical-uncertainties">Estimation of statistical uncertainties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#peak-shape-uncertainties">Peak-shape uncertainties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-fit-results">Saving fit results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notation-of-chemical-substances">:-notation of chemical substances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-simulated-spectra">Creating simulated spectra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#blind-analysis">Blind analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">emgfit API docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">emgfit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Central concepts</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/concepts.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="central-concepts">
+<h1>Central concepts<a class="headerlink" href="#central-concepts" title="Permalink to this headline">¶</a></h1>
+<p>Note that <cite>emgfit</cite> is tailored to the needs of analyzing high-precision
+time-of-flight mass spectra. However, both the available selection of
+hyper-exponentially-modified Gaussian (Hyper-EMG) line shapes as well as the
+implemented statistical techniques could be used as powerful tools for
+analyzing spectroscopic data sets from a variety of fields.</p>
+<div class="section" id="the-peak-and-spectrum-classes">
+<h2>The peak and spectrum classes<a class="headerlink" href="#the-peak-and-spectrum-classes" title="Permalink to this headline">¶</a></h2>
+<p>The data analysis approach of <cite>emgfit</cite> is highly object oriented. The central
+objects that users interact with are instances of the
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum" title="emgfit.spectrum.spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">spectrum</span></code></a> and <a class="reference internal" href="modules.html#emgfit.spectrum.peak" title="emgfit.spectrum.peak"><code class="xref py py-class docutils literal notranslate"><span class="pre">peak</span></code></a> classes.
+A spectrum object is instantiated by importing a data set. All relevant
+information about this data set is stored in attributes of the spectrum object.
+Initially, the user adds a number of peak objects to the spectrum which are then
+stored as a list in the spectrum’s <code class="xref py py-attr docutils literal notranslate"><span class="pre">peaks</span></code>
+attribute. Each peak object holds specific information about a given peak (e.g.
+peak position, peak area, …). A table with all relevant information about the
+peaks in the spectrum can be viewed with the
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.show_peak_properties" title="emgfit.spectrum.spectrum.show_peak_properties"><code class="xref py py-meth docutils literal notranslate"><span class="pre">show_peak_properties()</span></code></a> spectrum method.</p>
+<p>The different peaks are fitted and more and more information is obtained by
+progressively calling different methods on the spectrum object. An outline of a
+typical analysis with <cite>emgfit</cite> is given in the tutorial. Once a peak has been
+fitted the obtained <a class="reference external" href="https://lmfit.github.io/lmfit-py/model.html#lmfit.model.ModelResult" title="(in lmfit v1.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelResult</span></code></a> (or “fit result”) is
+stored at the corresponding position in the spectrum’s
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">fit_results</span></code> list. Comprehensive lists of the
+available methods and attributes of the spectrum and peak classes are compiled
+along with detailed usage information in the <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum" title="emgfit.spectrum.spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">spectrum</span></code></a>
+and <a class="reference internal" href="modules.html#emgfit.spectrum.peak" title="emgfit.spectrum.peak"><code class="xref py py-class docutils literal notranslate"><span class="pre">peak</span></code></a> sections of the API docs. The
+spectrum and peak classes are tailored to the analysis needs of multi-reflection
+time-of-flight mass spectrometry. However, the statistical techniques
+incorporated in the spectrum class could be applied to analyses of spectroscopic
+data from various other fields. If specific needs emerge other specialized
+classes could be derived from the above.</p>
+</div>
+<div class="section" id="adding-peaks-to-a-spectrum">
+<h2>Adding peaks to a spectrum<a class="headerlink" href="#adding-peaks-to-a-spectrum" title="Permalink to this headline">¶</a></h2>
+<p>The easiest way to add peaks to a spectrum is to use <cite>emgfit’s</cite> automatic
+peak detection method <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.detect_peaks" title="emgfit.spectrum.spectrum.detect_peaks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">detect_peaks()</span></code></a>. This
+method applies some smoothing to the spectrum and then detects peaks via minima
+in the second derivative of the smoothed data. This approach yields a high
+sensitivity in the identification of overlapping or low-intensity peaks.
+Increased sensitivity can be achieved by adapting the method’s tuning parameters
+such as the minimal threshold for peak detection to the specifics of the
+given data set - see the method docs for the available options.</p>
+<p>Alternatively or additionally, peaks can be added manually with the
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.add_peak" title="emgfit.spectrum.spectrum.add_peak"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_peak()</span></code></a> method. By default, markers of the
+associated peaks are added to plots of spectrum data. Peaks can be removed from
+a spectrum object using the <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.remove_peaks" title="emgfit.spectrum.spectrum.remove_peaks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_peaks()</span></code></a>
+method. <strong>To avoid ambiguities peaks should only be added or removed in the
+initial analysis stage, i.e. before the shape calibration or any other fits have
+been performed.</strong></p>
+</div>
+<div class="section" id="assigning-species-to-peaks-and-fetching-ame-values">
+<h2>Assigning species to peaks and fetching AME values<a class="headerlink" href="#assigning-species-to-peaks-and-fetching-ame-values" title="Permalink to this headline">¶</a></h2>
+<p>The following attributes can be used to select a peak:</p>
+<ul class="simple">
+<li><p>Peak index (i.e. index in the <code class="xref py py-attr docutils literal notranslate"><span class="pre">peaks</span></code> list)</p></li>
+<li><p>Peak marker position <cite>x_pos</cite></p></li>
+<li><p>Ionic <cite>species</cite> label (if assigned)</p></li>
+</ul>
+<p>The peak index and <cite>x_pos</cite> are always defined as soon as a peak is added to a
+spectrum. The optional <cite>species</cite> attribute can either be set in
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.add_peak" title="emgfit.spectrum.spectrum.add_peak"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_peak()</span></code></a> or with
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.assign_species" title="emgfit.spectrum.spectrum.assign_species"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assign_species()</span></code></a>. The <cite>species</cite> labels must
+follow the <a class="reference internal" href="#notation"><span class="std std-ref">:-notation of chemical substances</span></a>. As soon as a <cite>species</cite> is assigned to a peak the
+corresponding literature mass and its uncertainty are automatically fetched
+from the <a class="reference external" href="http://amdc.in2p3.fr/web/masseval.html">AME2016</a> mass database. When a AME mass value is not purely based on
+experimental data the peak’s <cite>extrapolated</cite> attribute is set to <cite>True</cite>.</p>
+</div>
+<div class="section" id="hyper-emg-distributions">
+<h2>Hyper-EMG distributions<a class="headerlink" href="#hyper-emg-distributions" title="Permalink to this headline">¶</a></h2>
+<p>A core feature of <cite>emgfit</cite> is its numerically robust implementation of
+hyper-exponentially-modified Gaussian (hyper-EMG) distribution functions.
+Exponentially-modified Gaussian distributions have been demonstrated to be a
+powerful tool for fitting spectroscopic data from various fields including mass
+spectrometry <a class="footnote-reference brackets" href="#id16" id="id1">1</a>, alpha-particle spectrometry <a class="footnote-reference brackets" href="#id17" id="id2">2</a> and chromatography <a class="footnote-reference brackets" href="#id18" id="id3">3</a>.
+Hyper-EMG distributions <span class="math notranslate nohighlight">\(h_\mathrm{emg}(x)\)</span> as introduced in <a class="footnote-reference brackets" href="#id16" id="id4">1</a> are
+mixture models that allow the convolution of a Gaussian with an arbitrary number
+of left-hand and right-hand exponential tails, respectively:</p>
+<div class="math notranslate nohighlight">
+\[h_\mathrm{emg}(x; \mu, \sigma, \Theta, \eta_-, \tau_-, \eta_+, \tau_+) =
+\Theta h_\mathrm{-emg}(x; \mu, \sigma, \eta_-, \tau_-) +
+(1-\Theta) h_\mathrm{+emg}(x; \mu, \sigma, \eta_+, \tau_+).\]</div>
+<p>where <span class="math notranslate nohighlight">\(0 \leq \Theta \leq 1\)</span> is the mixing weight that determines the
+relative contribution of the negative and positive skewed EMG distributions,
+<span class="math notranslate nohighlight">\(h_\mathrm{-emg}\)</span> and <span class="math notranslate nohighlight">\(h_\mathrm{+emg}\)</span>, respectively. The latter
+are defined as:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}h_\mathrm{-emg}(x; \mu, \sigma, \eta_-, \tau_-)
+= \sum_{i=1}^{N_-}{\frac{\eta_{-i}}{2\tau_{-i}}
+    \exp{\left(\frac{\sigma}{\sqrt{2}\tau_{-i}} + \frac{x-\mu}{\sqrt{2}\tau_{-i}}\right)}
+    \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{-i}} + \frac{x-\mu}{\sqrt{2}\sigma}\right)},\\h_\mathrm{+emg}(x; \mu, \sigma, \eta_+, \tau_+)
+= \sum_{i=1}^{N_+}{\frac{\eta_{+i}}{2\tau_{+i}}
+    \exp{\left(\frac{\sigma}{\sqrt{2}\tau_{+i}} - \frac{x-\mu}{\sqrt{2}\tau_{+i}}\right)}
+    \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{+i}} - \frac{x-\mu}{\sqrt{2}\sigma}\right)}.\end{aligned}\end{align} \]</div>
+<p><span class="math notranslate nohighlight">\(N_{-}\)</span> and <span class="math notranslate nohighlight">\(N_{+}\)</span> are referred to as the negative and positive tail
+order. <span class="math notranslate nohighlight">\(\mu=\mu_G\)</span> denotes the mean and <span class="math notranslate nohighlight">\(\sigma=\sigma_G\)</span> the
+standard deviation of the underlying Gaussian distribution. The decay constants
+of the left- and right-handed exponential tails are given by <span class="math notranslate nohighlight">\(\tau_-=(\tau_{-1},\tau_{-2},...,\tau_{-N_-})\)</span>
+&amp; <span class="math notranslate nohighlight">\(\tau_+=(\tau_{+1},\tau_{+2},...,\tau_{+N_+})\)</span>, respectively. The negative
+and positive tail weights are denoted by <span class="math notranslate nohighlight">\(\eta_-=(\eta_{-1},\eta_{-2},...,\eta_{-N_-})\)</span>
+&amp; <span class="math notranslate nohighlight">\(\eta_+=(\eta_{+1},\eta_{+2},...,\eta_{+N_+})\)</span>, respectively, and obey
+the following normalizations:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}\sum_{i=1}^{N_-}{\eta_\mathrm{-i}} = 1,\\\sum_{i=1}^{N_+}{\eta_\mathrm{+i}} = 1.\end{aligned}\end{align} \]</div>
+<p>For information on the numerical implementation of hyper-EMG distributions see
+<a class="reference internal" href="modules.html#module-emgfit.emg_funcs" title="emgfit.emg_funcs"><code class="xref py py-mod docutils literal notranslate"><span class="pre">emgfit.emg_funcs</span></code></a>.</p>
+</div>
+<div class="section" id="available-fit-models">
+<span id="fit-model-list"></span><h2>Available fit models<a class="headerlink" href="#available-fit-models" title="Permalink to this headline">¶</a></h2>
+<p>All supported (single peak) fit models or peak shapes are defined in the
+<a class="reference internal" href="modules.html#module-emgfit.fit_models" title="emgfit.fit_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">emgfit.fit_models</span></code></a> module. Currently, the following models are available:</p>
+<ul class="simple">
+<li><p>Gaussian:     <a class="reference internal" href="modules.html#emgfit.fit_models.Gaussian" title="emgfit.fit_models.Gaussian"><code class="xref py py-func docutils literal notranslate"><span class="pre">Gaussian()</span></code></a></p></li>
+<li><p>Hyper-EMG(0,1): <a class="reference internal" href="modules.html#emgfit.fit_models.emg01" title="emgfit.fit_models.emg01"><code class="xref py py-func docutils literal notranslate"><span class="pre">emg01()</span></code></a></p></li>
+<li><p>Hyper-EMG(1,0): <a class="reference internal" href="modules.html#emgfit.fit_models.emg10" title="emgfit.fit_models.emg10"><code class="xref py py-func docutils literal notranslate"><span class="pre">emg10()</span></code></a></p></li>
+<li><p>Hyper-EMG(1,1): <a class="reference internal" href="modules.html#emgfit.fit_models.emg11" title="emgfit.fit_models.emg11"><code class="xref py py-func docutils literal notranslate"><span class="pre">emg11()</span></code></a></p></li>
+<li><p>Hyper-EMG(1,2): <a class="reference internal" href="modules.html#emgfit.fit_models.emg12" title="emgfit.fit_models.emg12"><code class="xref py py-func docutils literal notranslate"><span class="pre">emg12()</span></code></a></p></li>
+<li><p>Hyper-EMG(2,1): <a class="reference internal" href="modules.html#emgfit.fit_models.emg21" title="emgfit.fit_models.emg21"><code class="xref py py-func docutils literal notranslate"><span class="pre">emg21()</span></code></a></p></li>
+<li><p>Hyper-EMG(2,2): <a class="reference internal" href="modules.html#emgfit.fit_models.emg22" title="emgfit.fit_models.emg22"><code class="xref py py-func docutils literal notranslate"><span class="pre">emg22()</span></code></a></p></li>
+<li><p>Hyper-EMG(2,3): <a class="reference internal" href="modules.html#emgfit.fit_models.emg23" title="emgfit.fit_models.emg23"><code class="xref py py-func docutils literal notranslate"><span class="pre">emg23()</span></code></a></p></li>
+<li><p>Hyper-EMG(3,3): <a class="reference internal" href="modules.html#emgfit.fit_models.emg33" title="emgfit.fit_models.emg33"><code class="xref py py-func docutils literal notranslate"><span class="pre">emg33()</span></code></a></p></li>
+</ul>
+<p>where the numbers in brackets indicate the negative and positive tail orders,
+i.e. the number of exponential tails added to the left and right side of the
+peak, respectively. All fit models in <cite>emgfit</cite> are expressed using <cite>lmfit’s</cite>
+<a class="reference external" href="https://lmfit.github.io/lmfit-py/model.html#lmfit.model.Model" title="(in lmfit v1.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> class. This interface is used to define appropriate
+parameter bounds and ensure the normalization of the negative and positive tail
+weights (<cite>eta_p</cite> and <cite>eta_m</cite> parameters) of Hyper-EMG models. For more details
+on the above fit models see the API docs of the <a class="reference internal" href="modules.html#module-emgfit.fit_models" title="emgfit.fit_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">emgfit.fit_models</span></code></a> module.</p>
+</div>
+<div class="section" id="multi-peak-fits">
+<h2>Multi-peak fits<a class="headerlink" href="#multi-peak-fits" title="Permalink to this headline">¶</a></h2>
+<p>If multiple peaks are to be fitted at once a suitable multi-peak model is
+automatically created within the <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum" title="emgfit.spectrum.spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">spectrum</span></code></a> class by
+adding a suitable number of single-peak models. In multi-peak fits, the values
+of the shape (or scale) parameters of all peaks are enforced to be identical,
+only the amplitude and position parameters are allowed to differ. In
+multi-reflection time-of-flight mass spectrometry the width of peaks acquired
+with a given instrumental resolution scales linearly with the peak’s centroid
+mass. Simultaneously fitting peaks with significantly different mass centroids
+therefore requires a mass-dependent rescaling of the shape parameters to the
+respective peak’s mass. So far analysis practice has shown that the required
+scaling corrections for isobaric peaks are significantly smaller than the
+typical relative errors of the corresponding shape parameters. Since <cite>emgfit</cite>
+(currently) only supports fits of isobaric species such a mass-rescaling has not
+been implemented in the package. Support for fitting non-isobaric mass peaks in
+the same spectrum might be added in the future.</p>
+</div>
+<div class="section" id="peak-fitting-approach">
+<h2>Peak fitting approach<a class="headerlink" href="#peak-fitting-approach" title="Permalink to this headline">¶</a></h2>
+<p>Peak fits with <cite>emgfit</cite> are executed by the internal
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.peakfit" title="emgfit.spectrum.spectrum.peakfit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">peakfit()</span></code></a> method which builds on <cite>lmfit’s</cite>
+<a class="reference external" href="https://lmfit.github.io/lmfit-py/model.html#lmfit.model.Model" title="(in lmfit v1.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> interface. However, usually the user only interacts
+with higher level methods (e.g. <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.determine_peak_shape" title="emgfit.spectrum.spectrum.determine_peak_shape"><code class="xref py py-meth docutils literal notranslate"><span class="pre">determine_peak_shape()</span></code></a>
+or <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.fit_peaks" title="emgfit.spectrum.spectrum.fit_peaks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit_peaks()</span></code></a>) that internally call
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.peakfit" title="emgfit.spectrum.spectrum.peakfit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">peakfit()</span></code></a>. Initial parameter values are defined
+as follows:</p>
+<ul class="simple">
+<li><p>The initial peak amplitude (<cite>amp</cite> parameter) is estimated using the number of
+counts in the bin closest to the peak’s marker position <code class="xref py py-attr docutils literal notranslate"><span class="pre">x_pos</span></code>. The
+number of counts is converted using a empirically determined conversion factor.
+The conversion factor is somewhat peak-shape dependent but has been found to
+work well for a variety of peak shapes.</p></li>
+<li><p>The peak position (<cite>mu</cite> parameter) is initialized at the marker position
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">x_pos</span></code>.</p></li>
+<li><p>If the shape parameters have not already been determined in a preceding
+peak-shape calibration there is two possibilities for their initialization.
+By default, a set of suitable initial values is then derived by re-scaling the
+shape parameters for a representative peak at mass unit 100 to the mass of the
+given spectrum. The default parameters at mass 100 u are defined in the
+<a class="reference internal" href="modules.html#emgfit.fit_models.create_default_init_pars" title="emgfit.fit_models.create_default_init_pars"><code class="xref py py-func docutils literal notranslate"><span class="pre">emgfit.fit_models.create_default_init_pars()</span></code></a> function. Alternatively,
+the shape parameter values can be user-defined by parsing a dictionary with
+the parameter names as keys to the <cite>init_pars</cite> option.</p></li>
+</ul>
+<p>Fits are performed by minimizing either of the following cost functions:</p>
+<ul>
+<li><p><cite>chi-square</cite>: This variance weighted cost function is commonly known as
+<cite>Pearson’s chi squared statistic</cite> and defined as:</p>
+<div class="math notranslate nohighlight">
+\[\chi^2_P = \sum_i \frac{(f(x_i) - y_i)^2}{f(x_i)+\epsilon},\]</div>
+<p>where <span class="math notranslate nohighlight">\(x_i\)</span> and <span class="math notranslate nohighlight">\(y_i\)</span> denote the center and contained counts of
+the i-th bin, respectively. On each iteration the variances of the residuals
+are estimated using the latest model predictions:
+<span class="math notranslate nohighlight">\(\sigma_i^2 \approx f(x_i)\)</span>. The inclusion of the small constant
+<span class="math notranslate nohighlight">\(\epsilon = 1e-10\)</span> ensures numerical robustness as <span class="math notranslate nohighlight">\(f(x_i)\)</span>
+approaches zero and only causes a negligibly small bias in the parameter
+estimates. The iteratively re-calculated weights result in improved behavior
+in low-count situations.</p>
+</li>
+<li><p><cite>MLE</cite>: With this cost function a binned maximum likelihood estimation is
+performed by minimizing the (doubled) negative log-likelihood ratio, also
+known as <cite>Cash-statistic</cite> <a class="footnote-reference brackets" href="#id19" id="id5">4</a>:</p>
+<div class="math notranslate nohighlight">
+\[L = 2\sum_i \left[ f(x_i) - y_i + y_i \ln{\left(\frac{y_i}{f(x_i)}\right)} \right].\]</div>
+<p>The assumption that the counts in each bin follow a Poisson (instead of a
+normal) distribution makes this method applicable to count data with very
+low statistics. When a non-scalar minimization algorithm is used (e.g.
+<cite>least_squares</cite>) the above optimization problem is rephrased into a
+least-squares problem by minimizing the square roots of the (positive
+semidefinite) summands in the above equation. See the notes section of the
+docs of <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.peakfit" title="emgfit.spectrum.spectrum.peakfit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">peakfit()</span></code></a> for details.</p>
+</li>
+</ul>
+<p>A number of different optimization algorithms are available to perform the
+minimization.In principle, any of the algorithms listed under <cite>lmfit’s</cite>
+<a class="reference external" href="https://lmfit.github.io/lmfit-py/fitting.html#choosing-different-fitting-methods">fitting methods</a> can be used by passing the respective method name to the
+<cite>method</cite> option if <cite>emgfit’s</cite> fitting routines. By default, the <cite>least_squares</cite>
+minimizer is used.</p>
+</div>
+<div class="section" id="peak-shape-calibration">
+<span id="id6"></span><h2>Peak-shape calibration<a class="headerlink" href="#peak-shape-calibration" title="Permalink to this headline">¶</a></h2>
+<p>The peak-shape calibration is performed with the
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.determine_peak_shape" title="emgfit.spectrum.spectrum.determine_peak_shape"><code class="xref py py-meth docutils literal notranslate"><span class="pre">determine_peak_shape()</span></code></a> method and offers a way
+to reduce the number of parameters varied in the peak-of-interest fit(s). This
+not only increases the robustness and computational speed of multi-peak fits but
+can also enhance the sensitivity for detecting unidentified overlapping peaks.</p>
+<p>In the peak-shape calibration an ideally well separated, high-statistics peak is
+fitted to obtain a suitable peak shape to describe the data. We refer to all
+parameters that determine the shape of a single peak in the absence of background
+as <em>shape parameters</em>. In the case of a Gaussian peak model the only shape
+parameter is given by the standard deviation <span class="math notranslate nohighlight">\(\sigma\)</span>. The <strong>shape
+parameters of a hyper-EMG model function</strong>
+are given by:</p>
+<ul class="simple">
+<li><p>the standard deviation <span class="math notranslate nohighlight">\(\sigma\)</span> of the underlying Gaussian,</p></li>
+<li><p>the left-right mixture weight <span class="math notranslate nohighlight">\(\Theta\)</span>,</p></li>
+<li><p>the weights for the positive and negative exponential tails, <span class="math notranslate nohighlight">\(\eta_{-i}\)</span> &amp; <span class="math notranslate nohighlight">\(\eta_{+i}\)</span> respectively,</p></li>
+<li><p>and their corresponding decay constants <span class="math notranslate nohighlight">\(\tau_{-i}\)</span> &amp; <span class="math notranslate nohighlight">\(\tau_{+i}\)</span> respectively,</p></li>
+</ul>
+<p>where i = 1, 2, 3, … indicates the tail order. <cite>emgfit</cite> assumes
+that all peaks in a spectrum have been acquired with a fixed instrumental
+resolution and exhibit the same theoretical peak shape. In multi-reflection
+time-of-flight mass spectrometry this assumption is not strictly satisfied since
+at a given resolving power the peak widths exhibit a linear scaling with mass.
+However, since <cite>emgfit</cite> is currently only intended for isobaric peaks the
+required scale corrections of shape parameters are usually only on the
+sub-percent level and hence negligible compared to the typical uncertainties in
+determining these parameters in the shape calibration fit. Therefore, an
+<strong>identical peak shape is enforced for all simultaneously fitted peaks</strong>. A
+mass-dependent re-scaling of the scale parameters might be added in the future.</p>
+<p>Before the peak-shape calibration the user must decide which of the
+<a class="reference internal" href="#fit-model-list"><span class="std std-ref">Available fit models</span></a> best describes the data. To aid in this process the
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.determine_peak_shape" title="emgfit.spectrum.spectrum.determine_peak_shape"><code class="xref py py-meth docutils literal notranslate"><span class="pre">determine_peak_shape()</span></code></a> method comes with an
+<strong>automatic model selection</strong> feature. Therein, <cite>chi-square</cite> fits with increasingly
+complicated model functions are performed on the shape calibration peak,
+starting from a regular Gaussian up to Hyper-EMG functions of successively
+increasing tail order. To avoid overfitting, models with any best-fit shape
+parameters agreeing with zero within 1:math:<cite>sigma</cite> confidence are excluded
+from selection. Amongst the remaining models, the one yielding the lowest
+chi-square per degree of freedom is selected. Alternatively, this feature can be
+skipped by setting the <cite>vary_tail_order</cite> option to <cite>False</cite> and a peak shape can
+be defined manually with the <cite>fit_model</cite> option of
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.determine_peak_shape" title="emgfit.spectrum.spectrum.determine_peak_shape"><code class="xref py py-meth docutils literal notranslate"><span class="pre">determine_peak_shape()</span></code></a>.</p>
+<p>Once a peak-shape calibration has been established, all subsequent fits will,
+by default, be performed with this fixed peak-shape, only varying the peak
+amplitudes, peak positions and (if applicable) the amplitude of the uniform
+background. If fits with a varying peak shape are desired the <cite>vary_shape</cite>
+option of the <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.peakfit" title="emgfit.spectrum.spectrum.peakfit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">peakfit()</span></code></a> method must be set to
+<cite>True</cite>. The imperfect knowledge of the exact peak shape can be associated with
+an additional uncertainty in the determination of the peak’s mass centroid and
+peak area. To include these contributions in the uncertainty budget, <cite>emgfit</cite>
+provides specialized methods to quantify the <a class="reference internal" href="#peak-shape-uncertainties">Peak-shape uncertainties</a>.</p>
+</div>
+<div class="section" id="mass-recalibration-and-calculation-of-final-mass-values">
+<span id="recalibration"></span><h2>Mass recalibration and calculation of final mass values<a class="headerlink" href="#mass-recalibration-and-calculation-of-final-mass-values" title="Permalink to this headline">¶</a></h2>
+<p>Before being imported into <cite>emgfit</cite> mass spectra must have undergone a
+preliminary mass calibration. This initial mass scale will persist
+throughout the entire analysis process and will be used as the x-axis for
+all plots of spectrum data. In multi-reflection time-of-flight mass spectrometry
+the initial mass scale is usually established using the following calibration
+equation <a class="footnote-reference brackets" href="#id20" id="id7">5</a>:</p>
+<div class="math notranslate nohighlight">
+\[\frac{m}{z} = c \frac{(t-t_0)^2}{(1+Nb)^2},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\frac{m}{z}\)</span> denotes the mass-to-charge ratio of the ion, t is
+the measured time of flight of the ion <span class="math notranslate nohighlight">\(t_0\)</span> marks a small time offset due
+to electronic delays and N is the number of revolutions the ion has undergone.
+Since N is easy to infer, the factors c and b and the time offset <span class="math notranslate nohighlight">\(t_0\)</span>
+remain as the calibration constants to be determined.</p>
+<p>There is a number of ways to determine the above calibration constants. To
+ensure high precision in the final mass values a second mass calibration - the
+so-called <cite>mass re-calibration</cite> - must be performed in <cite>emgfit</cite>. This removes
+any systematics that could arise when different procedures are used to determine
+the calibrant peak position in the initial calibration and the positions of
+peaks of interest in the final fitting <a class="footnote-reference brackets" href="#id20" id="id8">5</a>. Further, it renders the specific
+choice of the peak position parameter irrelevant as long as the same convention
+is followed for all peaks. In fact, instead of using the mean of the full
+hyper-EMG distribution (<span class="math notranslate nohighlight">\(\mu_\mathrm{emg}\)</span>) <cite>emgfit</cite> uses the mean of the
+underlying Gaussian (<span class="math notranslate nohighlight">\(\mu\)</span>) to establish peak positions.</p>
+<p>In the mass recalibration a calibrant peak with a well-known (ionic) literature
+mass <span class="math notranslate nohighlight">\(m_{cal, lit}\)</span> is fitted and the obtained peak position
+<span class="math notranslate nohighlight">\(m_{cal, fit}\)</span> is used to calculate the spectrum’s mass recalibration
+factor defined as:</p>
+<div class="math notranslate nohighlight">
+\[\gamma_\mathrm{recal} = \frac{m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}}.\]</div>
+<p>The calibrant peak can either be fitted individually upfront via the
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.fit_calibrant" title="emgfit.spectrum.spectrum.fit_calibrant"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit_calibrant()</span></code></a>  method or the calibrant fit can
+be performed simultaneous with the ion-of-interest fits using the
+<cite>index_mass_calib</cite> or <cite>species_mass_calib</cite> options of the
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.fit_peaks" title="emgfit.spectrum.spectrum.fit_peaks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit_peaks()</span></code></a> method.</p>
+<p>The uncertainty of the recalibraiton factor (“recalibration uncertainty”) is
+obtained from the literature mass uncertainty <span class="math notranslate nohighlight">\(\Delta m_\mathrm{cal, lit}\)</span>
+and the statistical uncertainty of the calibrant fit result
+<span class="math notranslate nohighlight">\(\Delta m_\mathrm{cal, fit}\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\Delta \gamma_\mathrm{recal} =
+    \sqrt{ \left(\frac{\Delta m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}} \right)^2
+         + \left(\frac{m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}^2}\Delta m_\mathrm{cal, fit} \right)^2}.\]</div>
+<p>With the mass recalibration factor the final ion masses <code class="xref py py-attr docutils literal notranslate"><span class="pre">m_ion</span></code> are
+calculated as:</p>
+<div class="math notranslate nohighlight">
+\[m_\mathrm{ion} = \frac{m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}} m_\mathrm{fit}
+               = \gamma_\mathrm{recal} m_\mathrm{fit}.\]</div>
+<p>The relative uncertainty of the final mass values is given by adding the
+statistical mass uncertainty, the recalibration uncertainty and the peak-shape
+mass uncertainty in quadrature:</p>
+<div class="math notranslate nohighlight">
+\[\frac{\Delta m_\mathrm{ion}}{m_\mathrm{ion}} =
+       \sqrt{ \left(\frac{\Delta m_\mathrm{stat}}{m_\mathrm{stat}} \right)^2
+       + \left(\frac{\Delta \gamma_\mathrm{recal}}{\gamma_\mathrm{recal}} \right)^2
+       + \left(\frac{\Delta m_\mathrm{PS}}{m_\mathrm{PS}} \right)^2 }.\]</div>
+<p><strong>Note that the above relations are only valid for singly charged ions.</strong></p>
+</div>
+<div class="section" id="fitting-peaks-of-interest">
+<h2>Fitting peaks of interest<a class="headerlink" href="#fitting-peaks-of-interest" title="Permalink to this headline">¶</a></h2>
+<p>Peaks of interest are fitted with the <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.fit_peaks" title="emgfit.spectrum.spectrum.fit_peaks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit_peaks()</span></code></a>
+method of the spectrum class. By default <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.fit_peaks" title="emgfit.spectrum.spectrum.fit_peaks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit_peaks()</span></code></a>
+fits all defined peaks in the spectrum. Alternatively, a specific mass range or
+specific neighboring peaks to fit can be selected. It is the user’s choice
+whether all peaks are treated at once or whether
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.fit_peaks" title="emgfit.spectrum.spectrum.fit_peaks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit_peaks()</span></code></a> is run multiple times on single
+peaks or subgroups of peaks.</p>
+</div>
+<div class="section" id="estimation-of-statistical-uncertainties">
+<h2>Estimation of statistical uncertainties<a class="headerlink" href="#estimation-of-statistical-uncertainties" title="Permalink to this headline">¶</a></h2>
+<p>With <cite>emgfit</cite> the statistical uncertainties of peak centroids can be estimated
+in two different ways:</p>
+<ol class="arabic">
+<li><p>The default approach exploits the scaling of the statistical uncertainty of
+the mean of a Gaussian or hyper-EMG distribution with the number of counts in
+the peak <span class="math notranslate nohighlight">\(N_\mathrm{counts}\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\sigma_\mathrm{stat} = A_\mathrm{stat} \frac{\mathrm{FWHM}}{\sqrt{N_\mathrm{counts}}}.\]</div>
+<p>In the case of a Gaussian <span class="math notranslate nohighlight">\(A_\mathrm{stat}\)</span> is simply given by
+<span class="math notranslate nohighlight">\(A_\mathrm{stat,G} = 1/(2\sqrt{2\ln{2}}) = 0.425\)</span>. For hyper-EMG
+distributions the respective constant of proportionality <span class="math notranslate nohighlight">\(A_\mathrm{stat,emg}\)</span>
+is typically larger and depends on the specific peak shape <a class="footnote-reference brackets" href="#id20" id="id9">5</a>. <cite>emgfit’s</cite>
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.determine_A_stat_emg" title="emgfit.spectrum.spectrum.determine_A_stat_emg"><code class="xref py py-meth docutils literal notranslate"><span class="pre">determine_A_stat_emg()</span></code></a> method can be used to
+estimate <span class="math notranslate nohighlight">\(A_\mathrm{stat,emg}\)</span> for a specific peak shape via
+non-parametric bootstrapping of a reference peak with decent statistics (see
+method docs for details). The updated <span class="math notranslate nohighlight">\(A_\mathrm{stat,emg}\)</span> factor will
+be used in subsequent fits to calculate the stat. mass errors with the above
+equation. If <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.determine_A_stat_emg" title="emgfit.spectrum.spectrum.determine_A_stat_emg"><code class="xref py py-meth docutils literal notranslate"><span class="pre">determine_A_stat_emg()</span></code></a> is not
+run a default value of <span class="math notranslate nohighlight">\(A_\mathrm{stat,emg} = 0.52\)</span> <a class="footnote-reference brackets" href="#id20" id="id10">5</a> is used.</p>
+</li>
+<li><p>Alternatively, the statistical uncertainty can be estimated after the peak
+fitting with the <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.get_errors_from_resampling" title="emgfit.spectrum.spectrum.get_errors_from_resampling"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_errors_from_resampling()</span></code></a>
+method. This routine follows the approach outlined in <a class="footnote-reference brackets" href="#id20" id="id11">5</a> and does not use a
+reference peak but determines the statistical mass uncertainty for each peak
+of interest individually. This is done by re-performing the fit on many
+synthetic spectra obtained by resampling from the best-fit model curve
+(<cite>parametric bootstrap</cite>). Assuming that the data is well-described by the
+chosen fit model  this method yields refined estimates of the statistical
+uncertainties that account for departures from the simple scaling law above
+(as possible e.g. for strongly overlapping peaks).</p></li>
+</ol>
+<p>Since the computational overhead of the second approach is usually rather
+small this method is oftentimes preferable. Note that the second method also
+yields estimates of the statistical uncertainty of the peak areas, whereas the
+first approach only yields stat. mass errors and requires the area errors to be
+independently estimated from the covariance matrix provided by lmfit (which can
+be problematic for <cite>MLE</cite> fits).</p>
+</div>
+<div class="section" id="peak-shape-uncertainties">
+<span id="id12"></span><h2>Peak-shape uncertainties<a class="headerlink" href="#peak-shape-uncertainties" title="Permalink to this headline">¶</a></h2>
+<p>Peak-shape uncertainties quantify the effect of shape parameter uncertainties
+obtained in a preceding peak-shape calibration on the final mass values and peak
+areas obtained in ion-of-interest fits.</p>
+<p>When ion-of-interest fits are performed with a fixed peak-shape, the
+uncertainties of shape parameters obtained in the peak-shape calibration can
+cause additional uncertainties in the final mass and peak area values.
+Consequently, these so-called <cite>peak-shape uncertainties</cite> must be carefully
+estimated and propagated into the final mass and area uncertainties. <cite>emgfit</cite>
+provides two ways to estimate the peak-shape uncertainties of the
+peak areas and the mass values <cite>m_ion</cite>:</p>
+<blockquote>
+<div><p>1. A quick peak-shape (PS) estimation is automatically performed in fits with
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.fit_peaks" title="emgfit.spectrum.spectrum.fit_peaks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit_peaks()</span></code></a> and
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.fit_calibrant" title="emgfit.spectrum.spectrum.fit_calibrant"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit_calibrant()</span></code></a> by calling the internal
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum._eval_peakshape_errors" title="emgfit.spectrum.spectrum._eval_peakshape_errors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">_eval_peakshape_errors()</span></code></a> method. This routine
+adapts the approach of <a class="footnote-reference brackets" href="#id20" id="id13">5</a> and re-performs a given fit a number of times,
+each time changing a different shape parameter by plus and minus its
+1:math:<cite>sigma</cite> confidence interval, respectively, while keeping all other
+shape parameters fixed. For each shape parameter, the larger of the two shifts
+in a peak’s mass and area is recorded and the peak-shape uncertainty is
+estimated for each peak by summing those values in quadrature. Mind that the
+considered mass shifts are corrected for the respective shifts of the
+calibrant peak position.</p>
+<p>2. The above approach implicitly assumes that the shape parameters follow
+normal posterior distributions and neglects any correlations between shape
+parameters. Since these assumptions are oftentimes violated, refined PS error
+estimates can be obtained with <cite>emgfit’s</cite>
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.get_MC_peakshape_errors" title="emgfit.spectrum.spectrum.get_MC_peakshape_errors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_MC_peakshape_errors()</span></code></a> method. This
+re-performs a given fit many times with a variety of different peak-shapes.
+For the used peak shapes to be representative of all line shapes supported by
+the data the full shape parameter posterior distributions are upfront
+estimated by Markov-Chain Monte Carlo (MCMC) sampling. Assuming a sufficiently
+large subset of these MCMC parameter sets is used to refit the data, the
+resulting PS errors account for complex parameter distributions (typically
+found when a parameter is near its bounds) and parameter correlations. Since
+this approach is computationally expensive it makes heavy use of parallel
+processing. If appropriate MCMC sampling has already been performed in the
+peak-shape calibration (with the <cite>map_par_covar</cite> option) those samples will be
+re-used in the Monte Carlo PS uncertainty estimation. If
+<a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.get_MC_peakshape_errors" title="emgfit.spectrum.spectrum.get_MC_peakshape_errors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_MC_peakshape_errors()</span></code></a> is run the peak
+properties table is updated with the refined uncertainties and the new
+values are marked in color to clearly indicate the way they were estimated.</p>
+</div></blockquote>
+</div>
+<div class="section" id="saving-fit-results">
+<h2>Saving fit results<a class="headerlink" href="#saving-fit-results" title="Permalink to this headline">¶</a></h2>
+<p>All critical results obtained in the analysis of a spectrum can be saved with
+the <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.save_results" title="emgfit.spectrum.spectrum.save_results"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_results()</span></code></a> spectrum method. This routine
+saves the analysis results to an XLSX-file with three worksheets containing:</p>
+<ol class="arabic simple">
+<li><p>General properties of the spectrum, such as the input filename, the fit model
+used in the peak-shape calibration and the obtained mass recalibration
+factor. For details on what the respective parameters refer to see the
+attribute list of the <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum" title="emgfit.spectrum.spectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">spectrum</span></code></a> class.</p></li>
+<li><p>The peak properties table with the attributes of all peaks as well as
+images of all best-fit curves. Check the attribute list of the
+<a class="reference internal" href="modules.html#emgfit.spectrum.peak" title="emgfit.spectrum.peak"><code class="xref py py-class docutils literal notranslate"><span class="pre">peak</span></code></a> class for short descriptions of what the
+different columns contain.</p></li>
+<li><p>The <code class="xref py py-attr docutils literal notranslate"><span class="pre">eff_mass_shifts</span></code> dictionary holding for each peak the larger of
+the two effective mass shifts obtained when varying each shape parameter by
++-1:math:<cite>sigma</cite> in the default peak-shape error estimation. These shifts
+are irrelevant for peaks whose peak-shape uncertainties have been estimated
+with the <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.get_MC_peakshape_errors" title="emgfit.spectrum.spectrum.get_MC_peakshape_errors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_MC_peakshape_errors()</span></code></a> routine.</p></li>
+</ol>
+<p>Additionally, the spectrum’s peak-shape calibration parameters and their
+uncertainties are saved to a separate TXT-file and plots with the obtained fit
+curves are saved to PNG-files (optional).</p>
+</div>
+<div class="section" id="notation-of-chemical-substances">
+<span id="notation"></span><h2>:-notation of chemical substances<a class="headerlink" href="#notation-of-chemical-substances" title="Permalink to this headline">¶</a></h2>
+<p><cite>emgfit</cite> follows the :-notation of chemical compounds. The chemical composition
+of an ion is denoted as a single string in which the constituting isotopes are
+separated by a colon (<code class="docutils literal notranslate"><span class="pre">:</span></code>). Each isotope is denoted as <code class="docutils literal notranslate"><span class="pre">'n(El)A'</span></code> where <cite>El</cite>
+is the corresponding element symbol, <cite>n</cite> denotes the number of atoms of the
+given isotope and <cite>A</cite> is the respective atomic mass number. In the case
+<cite>n = 1</cite>, the number indication <cite>n</cite> can be omitted. The charge state of the ion
+is indicated by subtracting the desired number of electrons from the atomic
+species (i.e. <code class="docutils literal notranslate"><span class="pre">':-1e'</span></code> for singly charged cations, <code class="docutils literal notranslate"><span class="pre">':-2e'</span></code> for doubly
+charged cations etc.). Once the ionic species of a peak is assigned <cite>emgfit</cite>
+automatically fetches the respective literature value from the <a class="reference external" href="http://amdc.in2p3.fr/web/masseval.html">AME2016</a> <a class="footnote-reference brackets" href="#id21" id="id14">6</a>
+mass database. The subtraction of the electron is important since otherwise the
+atomic instead of the ionic mass is used for subsequent calculations. Mind that
+<cite>emgfit</cite> currently only supports singly charged ions. The calculated literature
+mass values do not account for electron binding energies which can in most
+applications safely be neglected for singly charged ions.
+<cite>emgfit</cite> does currently not interface with an isomer database. However, isomers
+can be marked by appending an <code class="docutils literal notranslate"><span class="pre">'m'</span></code> or <code class="docutils literal notranslate"><span class="pre">'m0'</span></code> up to <code class="docutils literal notranslate"><span class="pre">'m9'</span></code> to the end of
+an isotope substring (see last example below). The literature mass (and mass
+error) of an isomer are automatically calculated from the respective
+ground-state AME mass when the excitation energy is passed to the <cite>Ex</cite>
+(and <cite>Ex_error</cite>) option of the relevant spectrum methods.</p>
+<p>Examples:</p>
+<ul class="simple">
+<li><p>The most abundant isotope of the hydronium cation <span class="math notranslate nohighlight">\(H_{3}O^{+}\)</span> can be
+denoted as <code class="docutils literal notranslate"><span class="pre">'3H1:1O16:-1e'</span></code> or <code class="docutils literal notranslate"><span class="pre">'3H1:O16:-e'</span></code> or <code class="docutils literal notranslate"><span class="pre">'1O16:3H1:-1e'</span></code> or …</p></li>
+<li><p>The most abundant isotope of the ammonium cation <span class="math notranslate nohighlight">\(N H_{4}^{+}\)</span> can be
+denoted as <code class="docutils literal notranslate"><span class="pre">'4H1:1N14:-1e'</span></code> or <code class="docutils literal notranslate"><span class="pre">'4H1:N14:-e'</span></code> or <code class="docutils literal notranslate"><span class="pre">'N14:4H1:-1e'</span></code> or …</p></li>
+<li><p>The proton is denoted as <code class="docutils literal notranslate"><span class="pre">'1H1:-1e'</span></code> or <code class="docutils literal notranslate"><span class="pre">'H1:-1e'</span></code> or <code class="docutils literal notranslate"><span class="pre">'H1:-e'</span></code>.</p></li>
+<li><p>A Indium-127 ion in the second isomeric state is denoted as <code class="docutils literal notranslate"><span class="pre">'1In127m1:-1e'</span></code></p></li>
+</ul>
+</div>
+<div class="section" id="creating-simulated-spectra">
+<h2>Creating simulated spectra<a class="headerlink" href="#creating-simulated-spectra" title="Permalink to this headline">¶</a></h2>
+<p>The functions in the <a class="reference internal" href="modules.html#module-emgfit.sample" title="emgfit.sample"><code class="xref py py-mod docutils literal notranslate"><span class="pre">emgfit.sample</span></code></a> module allow the fast creation of
+synthetic spectrum data by extending inverse transform sampling with <cite>Scipy’s</cite>
+<code class="xref py py-class docutils literal notranslate"><span class="pre">exponnorm</span></code> class to hyper-EMG
+distributions. This can serve as a valuable tool for Monte Carlo studies with
+count data.</p>
+</div>
+<div class="section" id="blind-analysis">
+<h2>Blind analysis<a class="headerlink" href="#blind-analysis" title="Permalink to this headline">¶</a></h2>
+<p>Premature comparison of fit results to literature values can lead to biased
+results. To avoid that user bias (consciously or unconsciously) enters the final
+mass values <cite>emgfit</cite> incorporates the option to blind the obtained mass values
+and peak positions during the analysis process. Blindfolding is activated with
+the <a class="reference internal" href="modules.html#emgfit.spectrum.spectrum.set_blinded_peaks" title="emgfit.spectrum.spectrum.set_blinded_peaks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_blinded_peaks()</span></code></a> method. The option to
+only blind specific peaks of interest leaves the possibility to use less
+interesting peaks with well-known literature masses as accuracy checks. The
+blinding is automatically lifted once the processing of the spectrum is
+finalized and the results are exported.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<dl class="footnote brackets">
+<dt class="label" id="id16"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id4">2</a>)</span></dt>
+<dd><p>Purushothaman, S., et al. “Hyper-EMG: A new probability distribution
+function composed of Exponentially Modified Gaussian distributions to analyze
+asymmetric peak shapes in high-resolution time-of-flight mass spectrometry.”
+International Journal of Mass Spectrometry 421 (2017): 245-254.</p>
+</dd>
+<dt class="label" id="id17"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p>Pommé, S., and B. Caro Marroyo. “Improved peak shape fitting in alpha
+spectra.” Applied Radiation and Isotopes 96 (2015): 148-153.</p>
+</dd>
+<dt class="label" id="id18"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd><p>Naish, Pamela J., and S. Hartwell. “Exponentially modified Gaussian
+functions — a good model for chromatographic peaks in isocratic HPLC?.”
+Chromatographia 26.1 (1988): 285-296.</p>
+</dd>
+<dt class="label" id="id19"><span class="brackets"><a class="fn-backref" href="#id5">4</a></span></dt>
+<dd><p>Cash, Webster. “Parameter estimation in astronomy through application of
+the likelihood ratio.” The Astrophysical Journal 228 (1979): 939-947.</p>
+</dd>
+<dt class="label" id="id20"><span class="brackets">5</span><span class="fn-backref">(<a href="#id7">1</a>,<a href="#id8">2</a>,<a href="#id9">3</a>,<a href="#id10">4</a>,<a href="#id11">5</a>,<a href="#id13">6</a>)</span></dt>
+<dd><p>San Andrés, Samuel Ayet, et al. “High-resolution, accurate
+multiple-reflection time-of-flight mass spectrometry for short-lived,
+exotic nuclei of a few events in their ground and low-lying isomeric
+states.” Physical Review C 99.6 (2019): 064313.</p>
+</dd>
+<dt class="label" id="id21"><span class="brackets"><a class="fn-backref" href="#id14">6</a></span></dt>
+<dd><p>Wang, M., et al. “The AME2016 atomic mass evaluation (II). Tables, graphs
+and references.” Chinese Physics C 41.3 (2017): 030003.</p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="modules.html" class="btn btn-neutral float-right" title="emgfit API docs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="emgfit_tutorial.html" class="btn btn-neutral float-left" title="Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Stefan Paul
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
