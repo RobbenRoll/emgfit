@@ -5119,7 +5119,7 @@ class spectrum:
             if self.peaks_with_errors_from_resampling not in ([],None):
                 green_font = workbook.add_format({'font_color': 'green'})
                 for idx in self.peaks_with_errors_from_resampling:
-                    prop_sheet.conditional_format(idx+1, 10, idx+1, 10,
+                    prop_sheet.conditional_format(idx+1, 11, idx+1, 11,
                                                   {'type':     'cell',
                                                    'criteria': '>=',
                                                    'value' : 0,
