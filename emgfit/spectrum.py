@@ -3300,6 +3300,11 @@ class spectrum:
             elif par == 'delta_p':
                 pars['eta_p2'] = pars[par] - self.shape_cal_pars['eta_p1']
                 pars['eta_p3'] = 1 - self.shape_cal_pars['eta_p1'] - pars['eta_p2']
+            elif par == 'theta' and pars[par] > 1:
+                pars[par] = 1
+                import warnings
+                msg = 'theta value + std. err. > 1, using theta = 1 instead.'
+                warnings.warn(msg)
             fit_result_p = self.peakfit(fit_model=fit_result.fit_model,
                                         cost_func=fit_result.cost_func,
                                         x_fit_cen=fit_result.x_fit_cen,
@@ -3318,6 +3323,12 @@ class spectrum:
             elif par == 'delta_p':
                 pars['eta_p2'] =  pars[par] - self.shape_cal_pars['eta_p1']
                 pars['eta_p3'] = 1 - self.shape_cal_pars['eta_p1'] - pars['eta_p2']
+            elif par in ('sigma','theta') and pars[par] < 0:
+                pars[par] = 0
+                import warnings
+                msg = '{} value - std. err. < 0, using {} = 0 instead.'.format(
+                      par,par)
+                warnings.warn(msg)
             fit_result_m = self.peakfit(fit_model=fit_result.fit_model,
                                         cost_func=fit_result.cost_func,
                                         x_fit_cen=fit_result.x_fit_cen,
