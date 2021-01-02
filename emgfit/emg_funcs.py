@@ -347,9 +347,9 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     elif theta == 0:
         h = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
     else:
-        neg_tail = h_m_emg(x, mu, sigma, li_eta_m, li_tau_m)
-        pos_tail = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
-        h = theta*neg_tail + (1-theta)*pos_tail
+        neg_tails = h_m_emg(x, mu, sigma, li_eta_m, li_tau_m)
+        pos_tails = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
+        h = theta*neg_tails + (1-theta)*pos_tails
     return h
 
 

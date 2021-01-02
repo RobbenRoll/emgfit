@@ -880,7 +880,8 @@ class spectrum:
             print("Added peak at",x_pos,"u")
 
 
-    def remove_peaks(self,peak_indeces=None,x_pos=None,species="?",verbose=True):
+    def remove_peaks(self, peak_indeces=None, x_pos=None, species="?",
+                     verbose=True):
         """Remove specified peak(s) from the spectrum's :attr:`peaks` list.
 
         Select the peak(s) to be removed by specifying either the respective
@@ -910,7 +911,7 @@ class spectrum:
         The current :attr:`peaks` list can be viewed by calling the
         :meth:`~spectrum.show_peak_properties` spectrum method.
 
-        Added in version 0.2.0 (as successor method to `remove_peak`).
+        Added in version 0.2.0 (as successor of :meth:`remove_peak`).
 
         """
         # Get indeces of peaks to remove
@@ -978,15 +979,16 @@ class spectrum:
 
         Note
         ----
-        *This method is deprecated in v0.1.1 and will likely be removed in
-        future versions, use :meth:`~spectrum.remove_peaks` instead!*
+        This method is deprecated in v0.1.1 and will likely be removed in
+        future versions, use :meth:`~spectrum.remove_peaks` instead!
 
         """
         import warnings
         with warnings.catch_warnings():
             warnings.simplefilter('once')
-            msg = str("remove_peak is deprecated in v0.1.1 and will likely be "
-                      "removed in future versions, use remove_peaks instead!")
+            msg = str("remove_peak() is deprecated in v0.1.1 and will likely "
+                      "be removed in future versions, use remove_peaks() "
+                      "instead!")
             warnings.warn(msg, PendingDeprecationWarning)
         self.remove_peaks(peak_indeces=peak_index,x_pos=x_pos,species=species)
 
@@ -3312,10 +3314,10 @@ class spectrum:
             pars[par] = self.shape_cal_pars[par] - self.shape_cal_errors[par]
             if par == 'delta_m':
                 pars['eta_m2'] =  pars[par] - self.shape_cal_pars['eta_m1']
-                pars['eta_m3'] = 1 - self.shape_cal_pars['eta_m1'] -  pars['eta_m2']
+                pars['eta_m3'] = 1 - self.shape_cal_pars['eta_m1'] - pars['eta_m2']
             elif par == 'delta_p':
                 pars['eta_p2'] =  pars[par] - self.shape_cal_pars['eta_p1']
-                pars['eta_m3'] = 1 - self.shape_cal_pars['eta_p1'] -  pars['eta_p2']
+                pars['eta_p3'] = 1 - self.shape_cal_pars['eta_p1'] - pars['eta_p2']
             fit_result_m = self.peakfit(fit_model=fit_result.fit_model,
                                         cost_func=fit_result.cost_func,
                                         x_fit_cen=fit_result.x_fit_cen,
@@ -4274,8 +4276,19 @@ class spectrum:
         # Calculate updated recalibration factors from absolute centroid shifts
         # of calibrant and as prep for subsequent peak-shape error determination
         # for ions of interest
-        self._eval_peakshape_errors(peak_indeces=[index_mass_calib],
+        try:
+            self._eval_peakshape_errors(peak_indeces=[index_mass_calib],
                                     fit_result=fit_result, verbose=False)
+        except KeyError:
+            import warnings
+            warnings.warn("Peak-shape error determination failed with "
+                          "KeyError. Likely the used fit_model is inconsistent "
+                          "with the shape calibration model.", UserWarning)
+        except Exception as err:
+            import warnings
+            msg = str("Peak-shape error determination failed with: "+repr(err))
+            warnings.warn(msg, UserWarning)
+
         # Save fit result, in case calibrant is not fitted again
         self.fit_results[self.index_mass_calib] = fit_result
 
@@ -4566,9 +4579,14 @@ class spectrum:
                                         show_shape_err_fits=show_shape_err_fits)
         except KeyError:
             import warnings
-            warnings.warn("Peak-shape error determination failed with KeyError. "
-                          "Likely the used fit_model is inconsistent with the "
-                          "shape calibration model.", UserWarning)
+            warnings.warn("Peak-shape error determination failed with "
+                          "KeyError. Likely the used fit_model is inconsistent "
+                          "with the shape calibration model.", UserWarning)
+        except Exception as err:
+            import warnings
+            msg = str("Peak-shape error determination failed with: "+repr(err))
+            warnings.warn(msg, UserWarning)
+
         self._update_peak_props(peaks_to_fit,fit_result)
         self.show_peak_properties()
         if show_fit_report:

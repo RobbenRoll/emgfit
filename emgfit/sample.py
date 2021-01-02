@@ -5,20 +5,44 @@
 
 import numpy as np
 import pandas as pd
-from scipy.stats import exponnorm, uniform, poisson
+from scipy.stats import exponnorm, uniform, norm
 
 ################################################################################
-##### Define Functions for drawing random variates from Hyper-EMG PDFs
-norm_precision = 1e-09
+##### Define functions for drawing random variates from Gaussian and hyper-EMG
+##### PDFs
+norm_precision = 1e-09 # required precision for normalization of eta parameters
 
-def _h_m_i_rvs(mu,sigma,tau_m,N_i):
+
+def Gaussian_rvs(mu, sigma , N_samples=1):
+    """Draw random samples from a Gaussian probability density function
+
+    Parameters
+    ----------
+    mu : float [u]
+        Nominal position of simulated peak (mean of Gaussian).
+    sigma : float [u]
+        Nominal standard deviation of the simulated Gaussian peak.
+    N_samples : int, optional, default: 1
+        Number of random events to sample.
+
+    Returns
+    -------
+    :class:`numpy.ndarray` of floats
+        Array with simulated events.
+
+    """
+    rvs = norm.rvs(loc=mu, scale=sigma, size=N_samples)
+    return rvs
+
+
+def _h_m_i_rvs(mu, sigma, tau_m, N_i):
     """Helper function for definition of h_m_emg_rvs """
     rvs = mu - exponnorm.rvs(loc=0,scale=sigma,K=tau_m/sigma,size=N_i)
     return rvs
 
 
-def h_m_emg_rvs(mu, sigma, *t_args,N_samples=None):
-    """Draw random samples from neg. skewed Hyper-EMG PDF
+def h_m_emg_rvs(mu, sigma, *t_args,N_samples=1):
+    """Draw random samples from negative skewed hyper-EMG probabaility density
 
     Parameters
     ----------
@@ -32,7 +56,7 @@ def h_m_emg_rvs(mu, sigma, *t_args,N_samples=None):
     t_args : list of lists of float
         List containing lists of the EMG tail parameters with the signature:
         [[eta_m1, eta_m2, ...], [tau_m1, tau_m2, ...]]
-    N_samples : int
+    N_samples : int, optional, default: 1
         Number of random events to sample.
 
     Returns
@@ -61,14 +85,14 @@ def h_m_emg_rvs(mu, sigma, *t_args,N_samples=None):
     return rvs
 
 
-def _h_p_i_rvs(mu,sigma,tau_p,N_i):
+def _h_p_i_rvs(mu, sigma, tau_p, N_i):
     """Helper function for definition of h_p_emg_rvs """
     rvs = exponnorm.rvs(loc=mu,scale=sigma,K=tau_p/sigma,size=N_i)
     return rvs
 
 
-def h_p_emg_rvs(mu, sigma, *t_args,N_samples=None):
-    """Draw random samples from pos. skewed Hyper-EMG PDF
+def h_p_emg_rvs(mu, sigma, *t_args, N_samples=1):
+    """Draw random samples from pos. skewed hyper-EMG probability density
 
     Parameters
     ----------
@@ -80,7 +104,7 @@ def h_p_emg_rvs(mu, sigma, *t_args,N_samples=None):
     t_args : list of lists of float
         List containing lists of the EMG tail parameters with the signature:
         [[eta_p1, eta_p2, ...], [tau_p1, tau_p2, ...]]
-    N_samples : int
+    N_samples : int, optional, default: 1
         Number of random events to sample.
 
     Returns
@@ -109,8 +133,8 @@ def h_p_emg_rvs(mu, sigma, *t_args,N_samples=None):
     return rvs
 
 
-def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
-    """Draw random samples from Hyper-EMG PDF
+def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=1):
+    """Draw random samples from a hyper-EMG probability density function
 
     Parameters
     ----------
@@ -123,9 +147,9 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
         Mixing weight of pos. & neg. skewed EMG distributions.
     t_args : list of lists of float
         List containing lists of the EMG tail parameters with the signature:
-        [[eta_m1, eta_m2, ...], [tau_m1, tau_m2, ...],
-        [eta_p1, eta_p2, ...], [tau_p1, tau_p2, ...]]
-    N_samples : int
+        [[eta_m1, eta_m2, ...], [tau_m1, tau_m2, ...], [eta_p1, eta_p2, ...],
+         [tau_p1, tau_p2, ...]]
+    N_samples : int, optional, default: 1
         Number of random events to sample.
 
     Returns
@@ -145,13 +169,16 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
     elif theta == 0:
         rvs = h_p_emg_rvs(mu, sigma, li_eta_p, li_tau_p, N_samples=N_samples)
     else:
-        neg = np.random.choice([1,0],size=N_samples,p = [theta,1-theta]) # randomly distribute ions between h_m_emg and h_p_emg according to weight theta
+        # randomly distribute ions between h_m_emg and h_p_emg according to
+        # left-right-weight theta:
+        neg = np.random.choice([1,0],size=N_samples,p = [theta,1-theta])
         N_m = int(np.sum(neg)) #int(np.round(theta*N_samples)) # np.rint(theta*N_samples,dtype=int)
         N_p = N_samples - N_m # np.rint((1-theta)*N_samples,dtype=int)
         rvs_m = h_m_emg_rvs(mu, sigma, li_eta_m, li_tau_m, N_samples=N_m)
         rvs_p = h_p_emg_rvs(mu, sigma, li_eta_p, li_tau_p, N_samples=N_p)
         rvs = np.append(rvs_m,rvs_p)
     return rvs
+
 
 ################################################################################
 ##### Define functions for creating simulated spectra
@@ -212,7 +239,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
 
     Notes
     -----
-    Random events are created via custom Hyper-EMG extensions of Scipy's
+    Random events are created via custom hyper-EMG extensions of Scipy's
     :meth:`scipy.stats.exponnorm.rvs` method.
 
     Currently, all simulated peaks have identical width and shape (no re-scaling
@@ -241,6 +268,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
 
     sample_range = x_max - x_min
 
+    # Get bin parameters
     if N_bins is not None and bin_cens is not None:
         msg =  "Either specify the `N_bins` OR the `bin_cens` argument."
         raise Exception(msg)
@@ -265,7 +293,6 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
 
     # Prepare shape parameters
     sigma = shape_pars['sigma']
-    theta = shape_pars['theta']
     li_eta_m = []
     li_tau_m = []
     li_eta_p = []
@@ -279,38 +306,49 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
             li_eta_p.append(val)
         if key.startswith('tau_p'):
             li_tau_p.append(val)
-    if len(li_eta_m) == 0 and len(li_tau_m) != 0:
+    if len(li_eta_m) == 0 and len(li_eta_p) == 0: # Gaussian
+        theta = -1 # flag for below
+    elif len(li_eta_m) == 0 and len(li_tau_m) == 1: # emg10
         li_eta_m = [1]
-    if len(li_eta_p) == 0 and len(li_tau_p) != 0:
+        theta = 1
+    elif len(li_eta_p) == 0 and len(li_tau_p) == 1: # emg01
         li_eta_p = [1]
+        theta = 0
+    else: # emg11 or higher tail order
+        theta = shape_pars['theta']
 
-    # Distribute counts over different peaks and background
+    # Distribute counts over different peaks and background (bkgd)
     # randomly distribute ions using amps and c_bkg as prob. weights
     N_peaks = len(amps)
-    counts = np.append(amps/bin_width,bkg_c*N_bins) # cts in each peak & background
+    counts = np.append(amps/bin_width,bkg_c*N_bins) # cts in each peak & bkgd
     weights = counts/np.sum(counts) # normalized probability weights
 
     peak_dist = np.random.choice(range(N_peaks+1),size=N_events,p = weights)
-    N_bkg = np.count_nonzero(peak_dist == N_peaks) # calc. number of background counts
+    N_bkg = np.count_nonzero(peak_dist == N_peaks) # calc. number of bkgd counts
 
     events = np.array([])
     # Loop over peaks and create random samples from each peak
     for i in range(N_peaks):
         N_i = np.count_nonzero(peak_dist == i) # get no. of ions in peak
         mu = mus[i]
-        events_i = h_emg_rvs(mu,sigma,theta,li_eta_m, li_tau_m, li_eta_p,li_tau_p, N_samples=N_i)
-        events = np.append(events,events_i)
+        if theta == -1: # Gaussian
+            events_i = Gaussian_rvs(mu, sigma, N_samples=N_i)
+        else: # hyper-EMG
+            events_i = h_emg_rvs(mu, sigma, theta, li_eta_m, li_tau_m,
+                                 li_eta_p, li_tau_p, N_samples=N_i)
+
+        events = np.append(events, events_i)
 
     # Create background events
-    bkg = uniform.rvs(size=N_bkg,loc=x_min,scale=sample_range)
-    events = np.append(events,bkg)
+    bkg = uniform.rvs(size=N_bkg, loc=x_min, scale=sample_range)
+    events = np.append(events, bkg)
 
     if out == 'list':  # return unbinned list of events
         return events
     elif out == 'hist':  # return histogram
-        y = np.histogram(events,bins=bin_edges)[0]
-        df = pd.DataFrame(data=y,index=bin_cens,columns = ['Counts'])
-        df.index.rename('Mass [u]',inplace=True)
+        y = np.histogram(events, bins=bin_edges)[0]
+        df = pd.DataFrame(data=y, index=bin_cens, columns = ['Counts'])
+        df.index.rename('Mass [u]', inplace=True)
         return df
 
 
@@ -318,7 +356,7 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
                       bkg_c=None, N_events=None, copy_spec=False):
     """Create a simulated spectrum using the attributes of a reference spectrum
 
-    The peak shape of the sampling probability distribution function (PDF)
+    The peak shape of the sampling probability density function (PDF)
     follows the shape calibration of the reference spectrum (`spec`). By
     default, all other parameters of the sampling PDF are identical to the
     best-fit parameters of the reference spectrum. If desired, the positions,
