@@ -1505,7 +1505,7 @@ class spectrum:
             self._add_peak_markers(yscale='log', ymax=y_max_log,
                                    peaks=peaks_to_plot)
         # add confidence band with specified number of sigmas
-        if sigmas_of_conf_band!=0 and fit_result.errorbars == True:
+        if sigmas_of_conf_band!=0 and fit_result.errorbars is True:
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
             label = str(sigmas_of_conf_band)+r'$\sigma$ confidence band'
             plt.fill_between(fit_result.x, fit_result.best_fit-dely,
@@ -1674,7 +1674,7 @@ class spectrum:
         """
         model = getattr(fit_models,model) # get single peak model from fit_models.py
         mod = fit.models.ConstantModel(prefix='bkg_') #(independent_vars='x',prefix='bkg_')
-        if vary_baseline == True:
+        if vary_baseline is True:
             mod.set_param_hint('bkg_c', value= 0.1, min=0,max=4, vary=True)
         else:
             mod.set_param_hint('bkg_c', value= 0.0, vary=False)
@@ -2242,7 +2242,7 @@ class spectrum:
             init_params = self.shape_cal_pars
 
 
-        if vary_shape == True:
+        if vary_shape is True:
             # Enforce shared shape parameters for all peaks
             index_first_peak = self.peaks.index(peaks_to_fit[0])
         else:
@@ -2953,7 +2953,7 @@ class spectrum:
         if x_fit_range is None:
             x_fit_range = self.default_fit_range
 
-        if vary_tail_order == True and fit_model != 'Gaussian':
+        if vary_tail_order is True and fit_model != 'Gaussian':
             print('\n##### Determine optimal tail order #####\n')
             # Fit peak with Hyper-EMG of increasingly higher tail orders and compile results
             # use fit model that produces the lowest chi-square without having eta's compatible with zero within errobar
