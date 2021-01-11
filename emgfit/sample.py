@@ -202,7 +202,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
         :class:`~emgfit.spectrum.spectrum` class.
     mus : float or list of float [u]
         Nominal peak positions of peaks in simulated spectrum.
-    amps : float or list of float [counts per u]
+    amps : float or list of float [(counts in peak)*(bin width in u)]
         Nominal amplitudes of peaks in simulated spectrum.
     bkg_c : float [counts per bin], optional, default: 0.0
         Nominal amplitude of uniform background in simulated spectrum.
@@ -246,15 +246,16 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     of mass-dependent shape parameters to a peak's mass centroid).
 
     Routine requires tail arguments in shape_cal_pars dict to be ordered
-    (eta_m1,eta_m2,...) etc..
+    (eta_m1, eta_m2, ...) etc..
 
-    **Mind the different units for peak amplitudes `amps` (counts per u) and the
-    background level `bkg_c` (counts per bin)**. When spectrum data is
-    simulated counts are randomly distributed between the different peaks and
-    the background with probability weights `amps` * <bin width in> and
-    `bkg_c` * <number of bins>, respectively. As a consequence, simply changing
-    `N_events` (while keeping all other arguments constant), will cause `amps`
-    and `bkg_c` to deviate from their nominal units.
+    **Mind the different units for peak amplitudes `amps`
+    (<counts in peak> * <bin width in u>) and the background level `bkg_c`
+    (counts per bin).** When spectrum data is simulated counts are distributed
+    between the different peaks and the background with probability weights
+    `amps` / <bin width in u> and `bkg_c` * <number of bins>, respectively. As a
+    consequence, simply changing `N_events` (while keeping all other arguments
+    constant), will cause `amps` and `bkg_c` to deviate from their nominal
+    units.
 
     """
     # TODO: Implement rescaling of peak-shape parameters with mass
@@ -323,7 +324,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     counts = np.append(amps/bin_width,bkg_c*N_bins) # cts in each peak & bkgd
     weights = counts/np.sum(counts) # normalized probability weights
 
-    peak_dist = np.random.choice(range(N_peaks+1),size=N_events,p = weights)
+    peak_dist = np.random.choice(range(N_peaks+1), size=N_events, p=weights)
     N_bkg = np.count_nonzero(peak_dist == N_peaks) # calc. number of bkgd counts
 
     events = np.array([])
@@ -371,7 +372,7 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
     mus : float or list of float [u], optional
         Nominal peak centres of peaks in simulated spectrum. Defaults to the
         mus of the reference spectrum fit.
-    amps : float or list of float [counts per u], optional
+    amps : float or list of float [(counts in peak)*(bin width in u)], optional
         Nominal amplitudes of peaks in simulated spectrum. Defaults to the
         amplitudes of the reference spectrum fit.
     bkg_c : float [counts per bin], optional
@@ -410,13 +411,14 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
 
     The returned spectrum follows the binning of the reference spectrum.
 
-    Mind the different units for peak amplitudes `amps` (counts per u) and the
-    background level `bkg_c` (counts per bin). When spectrum data is
-    simulated counts are distributed between the different peaks and the
-    background with probability weights `amps` * <bin width in> and
-    `bkg_c` * <number of bins>, respectively. As a consequence, simply changing
-    `N_events` (while keeping all other arguments constant), will render `amps`
-    and `bkg_c` away from their nominal units.
+    Mind the different units for peak amplitudes `amps`
+    (<counts in peak> * <bin width in u>) and the background level `bkg_c`
+    (counts per bin). When spectrum data is simulated counts are distributed
+    between the different peaks and the background with probability weights
+    `amps` / <bin width in u> and `bkg_c` * <number of bins>, respectively. As a
+    consequence, simply changing `N_events` (while keeping all other arguments
+    constant), will cause `amps` and `bkg_c` to deviate from their nominal
+    units.
 
     """
     if spec.fit_results is [] or None:
@@ -456,8 +458,8 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
 
     # Create histogram with Monte Carlo events
     x = spec.data[x_min:x_max].index.values
-    df = simulate_events(spec.shape_cal_pars,mus,amps,bkg_c,N_events,x_min,
-                         x_max,out='hist',N_bins=None,bin_cens=x)
+    df = simulate_events(spec.shape_cal_pars, mus, amps, bkg_c, N_events, x_min,
+                         x_max, out='hist', N_bins=None, bin_cens=x)
 
     # Copy original spectrum and overwrite data
     # This copies all results such as peak assignments, PS calibration,
