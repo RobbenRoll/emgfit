@@ -18,9 +18,9 @@ def Gaussian_rvs(mu, sigma , N_samples=1):
 
     Parameters
     ----------
-    mu : float [u]
+    mu : float
         Nominal position of simulated peak (mean of Gaussian).
-    sigma : float [u]
+    sigma : float
         Nominal standard deviation of the simulated Gaussian peak.
     N_samples : int, optional, default: 1
         Number of random events to sample.
@@ -46,9 +46,9 @@ def h_m_emg_rvs(mu, sigma, *t_args,N_samples=1):
 
     Parameters
     ----------
-    mu : float [u]
+    mu : float
         Nominal position of simulated peak (mean of underlying Gaussian).
-    sigma : float [u]
+    sigma : float
         Nominal standard deviation (of the underlying Gaussian) of the simulated
         hyper-EMG peak.
     theta : float
@@ -96,9 +96,9 @@ def h_p_emg_rvs(mu, sigma, *t_args, N_samples=1):
 
     Parameters
     ----------
-    mu : float [u]
+    mu : float
         Nominal position of simulated peak (mean of underlying Gaussian).
-    sigma : float [u]
+    sigma : float
         Nominal standard deviation (of the underlying Gaussian) of the simulated
         hyper-EMG peak.
     t_args : list of lists of float
@@ -138,9 +138,9 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=1):
 
     Parameters
     ----------
-    mu : float [u]
+    mu : float
         Nominal position of simulated peak (mean of underlying Gaussian).
-    sigma : float [u]
+    sigma : float
         Nominal standard deviation (of the underlying Gaussian) of the simulated
         hyper-EMG peak.
     theta : float
@@ -148,7 +148,7 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=1):
     t_args : list of lists of float
         List containing lists of the EMG tail parameters with the signature:
         [[eta_m1, eta_m2, ...], [tau_m1, tau_m2, ...], [eta_p1, eta_p2, ...],
-         [tau_p1, tau_p2, ...]]
+        [tau_p1, tau_p2, ...]]
     N_samples : int, optional, default: 1
         Number of random events to sample.
 
@@ -185,7 +185,7 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=1):
 
 def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
                     x_max, out='hist', N_bins=None, bin_cens=None):
-    """Create simulated ion events drawn from a user-defined probability
+    """Create simulated detector events drawn from a user-defined probability
     distribution function (PDF)
 
     Events can either be output as a list of single events (mass stamps) or as a
@@ -200,16 +200,16 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
         Peak-shape parameters to use for sampling. The dictionary must follow
         the structure of the :attr:`~spectrum.shape_cal_pars` attribute of the
         :class:`~emgfit.spectrum.spectrum` class.
-    mus : float or list of float [u]
+    mus : float or list of float
         Nominal peak positions of peaks in simulated spectrum.
     amps : float or list of float [(counts in peak)*(bin width in u)]
         Nominal amplitudes of peaks in simulated spectrum.
     bkg_c : float [counts per bin], optional, default: 0.0
         Nominal amplitude of uniform background in simulated spectrum.
-    x_min : float [u]
-        Beginning of sampling mass range.
-    x_max : float [u]
-        End of sampling mass range.
+    x_min : float
+        Beginning of sampling x-range.
+    x_max : float
+        End of sampling x-range.
     N_events : int, optional, default: 1000
         Total number of events to simulate (signal and background events).
     out : str, optional
@@ -224,8 +224,8 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
         edges of the first and last bin are fixed to the start and end of the
         sampling range respectively (i.e. `x_min` and `x_max`). In between, bins
         are distributed with a fixed spacing of (`x_max`-`x_min`)/`N_bins`.
-    bin_cens : :class:`numpy.ndarray` [u]
-        Centres of mass bins to use in ``'hist'`` output mode. This argument
+    bin_cens : :class:`numpy.ndarray`
+        Centres of bins to use in ``'hist'`` output mode. This argument
         allows the realization of non-uniform binning. Bin edges are centred
         between neighboring bins. Note: Bins outside the sampling range defined
         with `x_min` and `x_max` will be empty.
@@ -234,8 +234,8 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     -------
     :class:`numpy.ndarray` or :class:`pandas.Dataframe`
        If out='hist' a dataframe with a histogram of the format
-       [bin centre [u], counts in bin] is returned. If out='list' an unbinned
-       array with mass values [u] of single ion or background events is returned.
+       [bin centre, counts in bin] is returned. If out='list' an unbinned
+       array with the x-values of single ion or background events is returned.
 
     Notes
     -----
@@ -249,16 +249,15 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     (eta_m1, eta_m2, ...) etc..
 
     **Mind the different units for peak amplitudes `amps`
-    (<counts in peak> * <bin width in u>) and the background level `bkg_c`
-    (counts per bin).** When spectrum data is simulated counts are distributed
-    between the different peaks and the background with probability weights
-    `amps` / <bin width in u> and `bkg_c` * <number of bins>, respectively. As a
-    consequence, simply changing `N_events` (while keeping all other arguments
-    constant), will cause `amps` and `bkg_c` to deviate from their nominal
-    units.
+    (<counts in peak> * <bin width in x-axis units>) and the background level
+    `bkg_c` (counts per bin).** When spectrum data is simulated counts are
+    distributed between the different peaks and the background with probability
+    weights `amps` / <bin width in u> and `bkg_c` * <number of bins>,
+    respectively. As a consequence, simply changing `N_events` (while keeping
+    all other arguments constant), will cause `amps` and `bkg_c` to deviate from
+    their nominal units.
 
     """
-    # TODO: Implement rescaling of peak-shape parameters with mass
     mus = np.atleast_1d(mus)
     amps = np.atleast_1d(amps)
     assert len(mus) == len(amps), "Lengths of `mus` and `amps` arrays must match."
@@ -349,7 +348,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     elif out == 'hist':  # return histogram
         y = np.histogram(events, bins=bin_edges)[0]
         df = pd.DataFrame(data=y, index=bin_cens, columns = ['Counts'])
-        df.index.rename('Mass [u]', inplace=True)
+        df.index.rename('m/z [u]', inplace=True)
         return df
 
 
@@ -369,7 +368,7 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
     spec : :class:`~emgfit.spectrum.spectrum`
         Reference spectrum object whose best-fit parameters will be used to
         sample from.
-    mus : float or list of float [u], optional
+    mus : float or list of float, optional
         Nominal peak centres of peaks in simulated spectrum. Defaults to the
         mus of the reference spectrum fit.
     amps : float or list of float [(counts in peak)*(bin width in u)], optional
@@ -379,10 +378,10 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         Nominal amplitude of uniform background in simulated spectrum. Defaults
         to the c_bkg obtained in the fit of the first peak in the reference
         spectrum.
-    x_cen : float [u], optional
-        Mass center of simulated spectrum. Defaults to `x_cen` of `spec`.
-    x_range : float [u], optional
-        Covered mass range of simulated spectrum. Defaults to `x_range` of
+    x_cen : float, optional
+        Center of simulated x-range. Defaults to `x_cen` of `spec`.
+    x_range : float, optional
+        Covered x-range of simulated spectrum. Defaults to `x_range` of
         `spectrum`.
     N_events : int, optional
         Number of ion events to simulate (including background events). Defaults
@@ -412,13 +411,13 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
     The returned spectrum follows the binning of the reference spectrum.
 
     Mind the different units for peak amplitudes `amps`
-    (<counts in peak> * <bin width in u>) and the background level `bkg_c`
-    (counts per bin). When spectrum data is simulated counts are distributed
-    between the different peaks and the background with probability weights
-    `amps` / <bin width in u> and `bkg_c` * <number of bins>, respectively. As a
-    consequence, simply changing `N_events` (while keeping all other arguments
-    constant), will cause `amps` and `bkg_c` to deviate from their nominal
-    units.
+    (<counts in peak> * <bin width in x-axis units>) and the background level
+    `bkg_c` (counts per bin). When spectrum data is simulated counts are
+    distributed between the different peaks and the background with probability
+    weights `amps` / <bin width in x-axis units> and `bkg_c` * <number of bins>,
+    respectively. As a consequence, simply changing `N_events` (while keeping
+    all other arguments constant), will cause `amps` and `bkg_c` to deviate from
+    their nominal units.
 
     """
     if spec.fit_results is [] or None:
