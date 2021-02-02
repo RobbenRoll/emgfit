@@ -3890,8 +3890,8 @@ class spectrum:
         larger ensemble of parameter sets obtained from Markov-Chain Monte Carlo
         (MCMC) sampling on the peak-shape calibrant. The peak-shape uncertainty
         of the mass values and peak areas are estimated by the obtained RMS
-        deviations from the best-fit values. Finally, the peak properties table
-        is updated with the refined uncertainties.
+        deviations from the best-fit mass values. Finally, the peak properties
+        table is updated with the refined uncertainties.
 
         This method only takes effective mass shifts relative to the calibrant
         peak into account. For each peak shape the calibrant peak is re-fitted
@@ -3986,9 +3986,9 @@ class spectrum:
         if self.index_mass_calib not in peak_indeces:
             raise Exception("Mass calibrant must be in `peak_indeces`.")
 
-        # Collect fit_results for peaks in `peak_indeces`
+        # Collect fit_results and asociated peak indeces for peaks of interest
         results = []
-        POI = [] # 2D-list with indeces of interest for each fit_result
+        POI = [] # 2D-list with fitted peak indeces for each fit_result
         peak_indeces.sort()
         for idx in peak_indeces:
             res = self.fit_results[idx]
@@ -3998,10 +3998,9 @@ class spectrum:
                 results.append(res)
                 POI.append([idx])
             else:
-                i_res = results.index(res)
-                POI[i_res].append(idx)
+                POI[-1].append(idx)
             if idx == self.index_mass_calib:
-                i_cal_res = i_res
+                i_cal_res = len(results) - 1
         # Move calibrant result and corresponding peaks to the front of the
         # results and POI lists to ensure that the calibrant centroid shifts are
         # determined before other results are treated below
@@ -4683,12 +4682,6 @@ class spectrum:
         individually by taking the sample standard deviations of the obtained
         peak centroids and areas.
 
-        *All peaks for which refined errors are to be evaluated must belong to
-        the same lmfit ModelResult `fit_result`. Even if refined stat. errors
-        are only to be extracted for a subset of the peaks contained in
-        `fit_result` (as specified with `peak_indeces`), fits will be
-        re-performed over the same x-range as `fit_result`.*
-
         Parameters
         ----------
         fit_result : :class:`lmfit.model.ModelResult`
@@ -4718,6 +4711,14 @@ class spectrum:
             `peak_indeces` (in ascending order). If `peak_indeces` has not been
             specified it defaults to the indeces of all peaks contained in
             `fit_result`.
+
+        Note
+        ----
+        All peaks for which refined errors are to be evaluated must belong to
+        the same lmfit ModelResult `fit_result`. Even if refined stat. errors
+        are only to be extracted for a subset of the peaks contained in
+        `fit_result` (as specified with `peak_indeces`), fits will be
+        re-performed over the same x-range as `fit_result`.
 
         See also
         --------

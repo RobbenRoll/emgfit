@@ -356,17 +356,17 @@ The calibrant peak can either be fitted individually upfront via the
 :meth:`~emgfit.spectrum.spectrum.fit_calibrant`  method or the calibrant fit can
 be performed simultaneous with the ion-of-interest fits using the
 `index_mass_calib` or `species_mass_calib` options of the
-:meth:`~emgfit.spectrum.spectrum.fit_peaks` method. The uncertainty of the
-recalibration factor ("recalibration uncertainty") is
-obtained from the literature mass uncertainty :math:`\Delta m_\mathrm{cal, lit}`
-and the statistical uncertainty of the calibrant fit result
+:meth:`~emgfit.spectrum.spectrum.fit_peaks` method. The relative uncertainty of
+the recalibration factor ("recalibration uncertainty") is given by the
+literature mass uncertainty :math:`\Delta m_\mathrm{cal, lit}` and the
+statistical uncertainty of the calibrant fit result
 :math:`\Delta m_\mathrm{cal, fit}`:
 
 .. math::
 
-   \Delta \gamma_\mathrm{recal} =
-       \sqrt{ \left(\frac{\Delta m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}} \right)^2
-            + \left(\frac{\Delta m_\mathrm{cal, fit}}{m_\mathrm{cal, fit}^2} \right)^2}.
+   \frac{\Delta \gamma_\mathrm{recal}}{\gamma_\mathrm{recal}} =
+     \sqrt{ \left(\frac{\Delta m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}} \right)^2
+          + \left(\frac{\Delta m_\mathrm{cal, fit}}{m_\mathrm{cal, fit}} \right)^2}.
 
 The final ionic masses :attr:`m_ion` are calculated as:
 
@@ -383,9 +383,9 @@ mass uncertainty in quadrature:
 .. math::
 
    \frac{\Delta m_\mathrm{ion}}{m_\mathrm{ion}} =
-          \sqrt{ \left((\frac{\Delta m}{m})_\mathrm{stat} \right)^2
+          \sqrt{ \left(\left(\frac{\Delta m}{m}\right)_\mathrm{stat} \right)^2
           + \left(\frac{\Delta \gamma_\mathrm{recal}}{\gamma_\mathrm{recal}} \right)^2
-          + \left( (\frac{\Delta m}{m})_\mathrm{PS} \right)^2 }.
+          + \left( \left(\frac{\Delta m}{m}\right)_\mathrm{PS} \right)^2 }.
 
 Note that in the above, :math:`m` refers to ionic rather than atomic masses.
 The atomic mass excess (:attr:`atomic_ME_keV` peak attribute) and its
@@ -408,12 +408,11 @@ charged ions, these contributions lie well below 1 keV.
 Fitting peaks of interest
 -------------------------
 Peaks of interest are fitted with the :meth:`~emgfit.spectrum.spectrum.fit_peaks`
-method of the spectrum class. By default :meth:`~emgfit.spectrum.spectrum.fit_peaks`
-fits all defined peaks in the spectrum. Alternatively, a specific mass range or
-specific neighboring peaks to fit can be selected. It is the user's choice
-whether all peaks are treated at once or whether
-:meth:`~emgfit.spectrum.spectrum.fit_peaks` is run multiple times on single
-peaks or subgroups of peaks.
+method of the spectrum class. By default, this method fits all defined peaks in
+the spectrum. Alternatively, a specific mass range or specific neighboring peaks
+to fit can be selected. It is the user's choice whether all peaks are treated at
+once or whether :meth:`~emgfit.spectrum.spectrum.fit_peaks` is run multiple
+times on single peaks or subgroups of peaks.
 
 
 Estimation of statistical uncertainties
