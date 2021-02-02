@@ -103,20 +103,26 @@ are defined as:
 
   h_\mathrm{-emg}(x; \mu, \sigma, \eta_-, \tau_-)
   = \sum_{i=1}^{N_-}{\frac{\eta_{-i}}{2\tau_{-i}}
-      \exp{\left(\frac{\sigma}{\sqrt{2}\tau_{-i}} + \frac{x-\mu}{\sqrt{2}\tau_{-i}}\right)}
-      \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{-i}} + \frac{x-\mu}{\sqrt{2}\sigma}\right)},
+      \exp{\left(\frac{\sigma}{\sqrt{2}\tau_{-i}} +
+           \frac{x-\mu}{\sqrt{2}\tau_{-i}}\right)}
+      \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{-i}} +
+                         \frac{x-\mu}{\sqrt{2}\sigma}\right)},
 
   h_\mathrm{+emg}(x; \mu, \sigma, \eta_+, \tau_+)
   = \sum_{i=1}^{N_+}{\frac{\eta_{+i}}{2\tau_{+i}}
-      \exp{\left(\frac{\sigma}{\sqrt{2}\tau_{+i}} - \frac{x-\mu}{\sqrt{2}\tau_{+i}}\right)}
-      \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{+i}} - \frac{x-\mu}{\sqrt{2}\sigma}\right)}.
+      \exp{\left(\frac{\sigma}{\sqrt{2}\tau_{+i}} -
+                 \frac{x-\mu}{\sqrt{2}\tau_{+i}}\right)}
+      \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{+i}} -
+                         \frac{x-\mu}{\sqrt{2}\sigma}\right)}.
 
 :math:`N_{-}` and :math:`N_{+}` are referred to as the negative and positive tail
 order. :math:`\mu=\mu_G` denotes the mean and :math:`\sigma=\sigma_G` the
 standard deviation of the underlying Gaussian distribution. The decay constants
-of the left- and right-handed exponential tails are given by :math:`\tau_-=(\tau_{-1},\tau_{-2},...,\tau_{-N_-})`
+of the left- and right-handed exponential tails are given by
+:math:`\tau_-=(\tau_{-1},\tau_{-2},...,\tau_{-N_-})`
 & :math:`\tau_+=(\tau_{+1},\tau_{+2},...,\tau_{+N_+})`, respectively. The negative
-and positive tail weights are denoted by :math:`\eta_-=(\eta_{-1},\eta_{-2},...,\eta_{-N_-})`
+and positive tail weights are denoted by
+:math:`\eta_-=(\eta_{-1},\eta_{-2},...,\eta_{-N_-})`
 & :math:`\eta_+=(\eta_{+1},\eta_{+2},...,\eta_{+N_+})`, respectively, and obey
 the following normalizations:
 
@@ -262,8 +268,10 @@ are given by:
 
 * the standard deviation :math:`\sigma` of the underlying Gaussian,
 * the left-right mixture weight :math:`\Theta`,
-* the weights for the positive and negative exponential tails, :math:`\eta_{-i}` & :math:`\eta_{+i}` respectively,
-* and their corresponding decay constants :math:`\tau_{-i}` & :math:`\tau_{+i}` respectively,
+* the weights for the positive and negative exponential tails, :math:`\eta_{-i}`
+  & :math:`\eta_{+i}`, respectively,
+* and their corresponding decay constants :math:`\tau_{-i}` & :math:`\tau_{+i}`,
+  respectively,
 
 where i = 1, 2, 3, ... indicates the tail order. `emgfit` assumes
 that all peaks in a spectrum have been acquired with a fixed instrumental
@@ -336,37 +344,37 @@ underlying Gaussian (:math:`\mu`) to establish peak positions.
 
 In the mass recalibration a calibrant peak with a well-known (ionic) literature
 mass :math:`m_{cal, lit}` is fitted and the obtained peak position
-:math:`m_{cal, fit}` is used to calculate the spectrum's mass recalibration
+:math:`(m/z)_{cal, fit}` is used to calculate the spectrum's mass recalibration
 factor defined as:
 
 .. math::
 
-   \gamma_\mathrm{recal} = \frac{m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}}.
+   \gamma_\mathrm{recal} = \frac{(m/z)_\mathrm{cal,lit}}{(m/z)_\mathrm{cal,fit}}
+                         = \frac{m_\mathrm{cal,lit}}{m_\mathrm{cal,fit}},
 
 The calibrant peak can either be fitted individually upfront via the
 :meth:`~emgfit.spectrum.spectrum.fit_calibrant`  method or the calibrant fit can
 be performed simultaneous with the ion-of-interest fits using the
 `index_mass_calib` or `species_mass_calib` options of the
-:meth:`~emgfit.spectrum.spectrum.fit_peaks` method.
-
-The uncertainty of the recalibraiton factor ("recalibration uncertainty") is
-obtained from the literature mass uncertainty :math:`\Delta m_\mathrm{cal, lit}`
-and the statistical uncertainty of the calibrant fit result
+:meth:`~emgfit.spectrum.spectrum.fit_peaks` method. The relative uncertainty of
+the recalibration factor ("recalibration uncertainty") is given by the
+literature mass uncertainty :math:`\Delta m_\mathrm{cal, lit}` and the
+statistical uncertainty of the calibrant fit result
 :math:`\Delta m_\mathrm{cal, fit}`:
 
 .. math::
 
-   \Delta \gamma_\mathrm{recal} =
-       \sqrt{ \left(\frac{\Delta m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}} \right)^2
-            + \left(\frac{m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}^2}\Delta m_\mathrm{cal, fit} \right)^2}.
+   \frac{\Delta \gamma_\mathrm{recal}}{\gamma_\mathrm{recal}} =
+     \sqrt{ \left(\frac{\Delta m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}} \right)^2
+          + \left(\frac{\Delta m_\mathrm{cal, fit}}{m_\mathrm{cal, fit}} \right)^2}.
 
-With the mass recalibration factor the final ion masses :attr:`m_ion` are
-calculated as:
+The final ionic masses :attr:`m_ion` are calculated as:
 
 .. math::
 
-   m_\mathrm{ion} = \frac{m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}} m_\mathrm{fit}
-                  = \gamma_\mathrm{recal} m_\mathrm{fit}.
+   m_\mathrm{ion} = \frac{(m/z)_\mathrm{cal, lit}}{(m/z)_\mathrm{cal, fit}}
+                    \cdot (m/z)_\mathrm{fit} \cdot z
+                  = \gamma_\mathrm{recal} \cdot (m/z)_\mathrm{fit} \cdot z.
 
 The relative uncertainty of the final mass values is given by adding the
 statistical mass uncertainty, the recalibration uncertainty and the peak-shape
@@ -375,22 +383,36 @@ mass uncertainty in quadrature:
 .. math::
 
    \frac{\Delta m_\mathrm{ion}}{m_\mathrm{ion}} =
-          \sqrt{ \left(\frac{\Delta m_\mathrm{stat}}{m_\mathrm{stat}} \right)^2
+          \sqrt{ \left(\left(\frac{\Delta m}{m}\right)_\mathrm{stat} \right)^2
           + \left(\frac{\Delta \gamma_\mathrm{recal}}{\gamma_\mathrm{recal}} \right)^2
-          + \left(\frac{\Delta m_\mathrm{PS}}{m_\mathrm{PS}} \right)^2 }.
+          + \left( \left(\frac{\Delta m}{m}\right)_\mathrm{PS} \right)^2 }.
 
-**Note that the above relations are only valid for singly charged ions.**
+Note that in the above, :math:`m` refers to ionic rather than atomic masses.
+The atomic mass excess (:attr:`atomic_ME_keV` peak attribute) and its
+uncertainty are calculated from :math:`m_\mathrm{ion}` from the following
+relations:
+
+.. math::
+
+  \mathrm{ME}= m_\mathrm{ion} + z\cdot m_e  - A \cdot u
+
+  \Delta\mathrm{ME} = \mathrm{ME} \cdot
+                      \frac{\Delta m_\mathrm{ion}}{m_\mathrm{ion}},
+
+where A denotes the atomic mass number. Note that the above neglects the atomic
+binding energy of the stripped electrons, as well as the uncertainties of the
+electron mass and the atomic mass unit :math:`u`. Assuming singly or doubly
+charged ions, these contributions lie well below 1 keV.
 
 
 Fitting peaks of interest
 -------------------------
 Peaks of interest are fitted with the :meth:`~emgfit.spectrum.spectrum.fit_peaks`
-method of the spectrum class. By default :meth:`~emgfit.spectrum.spectrum.fit_peaks`
-fits all defined peaks in the spectrum. Alternatively, a specific mass range or
-specific neighboring peaks to fit can be selected. It is the user's choice
-whether all peaks are treated at once or whether
-:meth:`~emgfit.spectrum.spectrum.fit_peaks` is run multiple times on single
-peaks or subgroups of peaks.
+method of the spectrum class. By default, this method fits all defined peaks in
+the spectrum. Alternatively, a specific mass range or specific neighboring peaks
+to fit can be selected. It is the user's choice whether all peaks are treated at
+once or whether :meth:`~emgfit.spectrum.spectrum.fit_peaks` is run multiple
+times on single peaks or subgroups of peaks.
 
 
 Estimation of statistical uncertainties
@@ -527,14 +549,13 @@ species (i.e. ``':-1e'`` for singly charged cations, ``':-2e'`` for doubly
 charged cations etc.). Once the ionic species of a peak is assigned `emgfit`
 automatically fetches the respective literature value from the AME2016_ [6]_
 mass database. The subtraction of the electron is important since otherwise the
-atomic instead of the ionic mass is used for subsequent calculations. Mind that
-`emgfit` currently only supports singly charged ions. The calculated literature
-mass values do not account for electron binding energies which can in most
-applications safely be neglected for singly charged ions.
-`emgfit` does currently not interface with an isomer database. However, isomers
-can be marked by appending an ``'m'`` or ``'m0'`` up to ``'m9'`` to the end of
-an isotope substring (see last example below). The literature mass (and mass
-error) of an isomer are automatically calculated from the respective
+atomic instead of the ionic mass is used for subsequent calculations. The
+calculated literature mass values do not account for electron binding energies
+which can in most applications safely be neglected for singly and doubly charged
+ions. `emgfit` does currently not interface with an isomer database. However,
+isomers can be marked by appending an ``'m'`` or ``'m0'`` up to ``'m9'`` to the
+end of an isotope substring (see last example below). The literature mass (and
+mass error) of an isomer are automatically calculated from the respective
 ground-state AME mass when the excitation energy is passed to the `Ex`
 (and `Ex_error`) option of the relevant spectrum methods.
 

@@ -124,6 +124,40 @@ def splitparticle(s):
     return n, El, A
 
 
+def get_charge_state(species):
+    """ Return charge state of given species
+
+    Parameters
+    ----------
+    species : str
+        String with name of species.
+
+    Notes
+    -----
+    `species` strings follow the :ref:`:-notation`.
+
+    The ionic charge state is defined by subtracting the desired number of
+    electrons from the atomic species (i.e. ``':-1e'`` for singly charged
+    cations, ``':-2e'`` for doubly charged cations etc.).
+
+
+    """
+    if species == '?':
+        return None
+    z = 0
+    for ptype in splitspecies(species): # loop over particle/atom types
+        # Remove trailing '?' (flag for tentative species IDs)
+        if ptype == '?':
+            continue
+        else:
+            ptype = ptype.rstrip('m? ')
+            n, El, A = splitparticle(ptype)
+            if El == 'e': # electron
+                z = -n  # set charge state
+
+    return z
+
+
 def get_AME_values(species, Ex=0.0, Ex_error=0.0):
     """Calculates the AME mass, AME mass error, the extrapolation flag and the
     mass number A of the given atomic or molecular species.
@@ -149,6 +183,10 @@ def get_AME_values(species, Ex=0.0, Ex_error=0.0):
     energy is user-specified with the `Ex` argument. In this case, `Ex` is
     added to the AME value for the ground state mass and `Ex_error` is added in
     quadrature to the respective AME uncertainty.
+
+    Both the atomic binding energy of stripped-off electrons as well as the
+    uncertainty of the electron mass are neglected in the calculation of the
+    ionic AME mass.
 
     Returns
     -------
