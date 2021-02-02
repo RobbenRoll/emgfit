@@ -7,6 +7,29 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+v0.3.7 (2021-02-02)
+-------------------
+
+Added
+^^^^^
+* Add support for multiply charged ions.
+* Expand unit tests with fitting accuracy check and validation of literature
+  value fetching for molecular and doubly charged species.
+
+Changed
+^^^^^^^
+* Rearrange columns in peak properties table.
+* Update documentation to reflect support of multiply charged ions and fix some
+  minor bugs.
+
+Fixed
+^^^^^
+* Handle :meth:`~emgfit.spectrum.spectrum._eval_peakshapes_errors` failing with
+  non-finite residuals in initial point or parameters running out of bounds.
+* Fix bug causing :meth:`~emgfit.spectrum.spectrum._eval_MC_peakshape_errors`
+  to fail when first peak is mass calibrant.
+
+
 v0.3.6 (2020-12-17)
 -------------------
 
