@@ -82,7 +82,7 @@ target/
 .ipynb_checkpoints
 
 # Data files
-*.sav # saved lmfit models
+*.sav 
 emgfit/examples/tutorial/outputs/**
 !emgfit/examples/tutorial/outputs/readme.txt
 docs/source/outputs/**
