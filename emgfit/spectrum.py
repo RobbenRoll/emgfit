@@ -4127,7 +4127,7 @@ class spectrum:
             FWHM_emg = self.calc_FWHM_emg(index_mass_calib,fit_result=fit_result)
             std_dev = self.A_stat_emg*FWHM_emg*peak.abs_z
         stat_error = std_dev/np.sqrt(peak.area)
-        peak.rel_stat_error = stat_error /peak.m_ion
+        peak.rel_stat_error = stat_error/peak.m_ion
         peak.rel_peakshape_error = None # reset to None
         peak.red_chi = np.round(fit_result.redchi, 2)
         try: # remove resampling error flag
@@ -4156,7 +4156,7 @@ class spectrum:
         # Set mass calibrant flag to prevent overwriting of calibration results
         self.index_mass_calib = index_mass_calib
         # Update peak properties with new calibrant centroid
-        peak.m_ion = self.recal_fac*peak.m_ion*peak.abs_z
+        peak.m_ion = self.recal_fac*peak.m_ion
         if peak.A and peak.z:
             # atomic Mass excess (includes electron mass) [keV]
             peak.atomic_ME_keV = np.round( (peak.m_ion + peak.z*m_e - peak.A)*
