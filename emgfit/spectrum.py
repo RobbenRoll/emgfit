@@ -1694,8 +1694,8 @@ class spectrum:
             parameters (`sigma`, `theta`,`etas` and `taus`) will also be varied.
         vary_baseline : bool, optional
             If `True` a varying uniform baseline will be added to the fit
-            model as varying model parameter `c_bkg`. If `False`, the baseline
-            parameter `c_bkg` will be kept fixed at 0.
+            model as varying model parameter `bkg_c`. If `False`, the baseline
+            parameter `bkg_c` will be kept fixed at 0.
         index_first_peak : int, optional
             Index of first (lowest mass) peak in fit range, used for enforcing
             common shape for all peaks.
