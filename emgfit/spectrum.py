@@ -1710,7 +1710,7 @@ class spectrum:
         model = getattr(fit_models,model) # get single peak model from fit_models.py
         mod = fit.models.ConstantModel(prefix='bkg_') #(independent_vars='x',prefix='bkg_')
         if vary_baseline is True:
-            mod.set_param_hint('bkg_c', value= 0.1, min=0,max=4, vary=True)
+            mod.set_param_hint('bkg_c', value= 0.1, min=0, max=4, vary=True)
         else:
             mod.set_param_hint('bkg_c', value= 0.0, vary=False)
         df = self.data
