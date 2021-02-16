@@ -17,6 +17,7 @@ import emgfit.emg_funcs as emg_funcs
 import emgfit.fit_models as fit_models
 import lmfit as fit
 import os
+import warnings
 import dill
 # Remove dill types from pickle registry to avoid pickle errors in parallelized
 # fits:
@@ -1010,7 +1011,6 @@ class spectrum:
         future versions, use :meth:`~spectrum.remove_peaks` instead!
 
         """
-        import warnings
         with warnings.catch_warnings():
             warnings.simplefilter('once')
             msg = str("remove_peak() is deprecated in v0.1.1 and will likely "
@@ -1336,7 +1336,6 @@ class spectrum:
                 peak.comment = comment
             elif overwrite:
                 if any(s in peak.comment for s in protected_flags):
-                    import warnings
                     wmsg = str("The protected flags 'shape calibrant', "
                                "'mass calibrant' or 'shape & mass calibrant' "
                                "cannot be overwritten.")
@@ -1891,23 +1890,33 @@ class spectrum:
         r0 = np.array(varied_par_errs) # sigma of initial Gaussian PDFs
         p0 = [varied_par_vals + r0*np.random.randn(ndim) for i in range(nwalkers)]
 
-        from multiprocessing import cpu_count, Pool
-        if n_cores == -1:
-            n_cores = int(cpu_count())
-        pool = Pool(n_cores)
-        print("Number of CPU cores to use:       n_cores =",n_cores)
+        # Use multiprocess to enable pickling of nested functions
+        from multiprocess import cpu_count, Pool
+        tot_cores = int(cpu_count())
+        if n_cores in [-1, tot_cores]:
+            n_cores = tot_cores
+            workers = Pool
+        elif n_cores == 1:
+            workers = 1
+        else:
+            n_cores = 1
+            workers = 1
+            msg  = str("Parallelized MCMC sampling currently only supports "
+                       "running on all CPU cores - defaulting to serial MCMC "
+                       "sampling.")
+            warnings.warn(msg)
+        print("Number of CPU cores used:         n_cores =",n_cores)
         # Set emcee options
         # It is advisable to thin by about half the autocorrelation time
         emcee_kws = dict(steps=steps, burn=burn, thin=thin, nwalkers=nwalkers,
                          float_behavior='chi2', is_weighted=True, pos=p0,
-                         progress='notebook', seed=MCMC_seed, workers=pool)
+                         progress='notebook', seed=MCMC_seed, workers=Pool)
 
         mod = fit_result.model
         x = fit_result.x
         y = fit_result.y
         weights = fit_result.weights
         # Perform emcee MCMC sampling
-        import warnings
         with warnings.catch_warnings(): # suppress DeprecationWarning from emcee
             warnings.filterwarnings("ignore", message=
                                  "This function will be removed in tqdm==5.0.0")
@@ -1955,7 +1964,6 @@ class spectrum:
         # Plot autocorrelation times of Parameters
         result_emcee.acor = result_emcee.sampler.get_autocorr_time(quiet=True)
         if any(thin < result_emcee.acor):
-            import warnings
             warnings.warn("Thinning interval `thin` is less than the "
                           "integrated autocorrelation time for at least one "
                           "parameter. Consider increasing `thin` MCMC keyword "
@@ -2413,7 +2421,6 @@ class spectrum:
                 area_err = fit_result.params[pref+'amp'].stderr/bin_width
                 area_err = np.round(area_err,decimals)
             except TypeError as err:
-                    import warnings
                     msg = 'Area error determination failed with Type error: '
                     msg += str(getattr(err, 'message', repr(err)))
                     warnings.warn(msg)
@@ -3291,7 +3298,6 @@ class spectrum:
 
         """
         if self.shape_cal_pars is None:
-            import warnings
             msg = str('Could not calculate peak-shape errors - no peak-shape '
                       'calibration yet!')
             warnings.warn(msg)
@@ -3340,7 +3346,6 @@ class spectrum:
                 pars['eta_p3'] = 1 - self.shape_cal_pars['eta_p1'] - pars['eta_p2']
             elif par == 'theta' and pars[par] > 1:
                 pars[par] = 1
-                import warnings
                 msg = 'theta value + std. err. > 1, using theta = 1 instead.'
                 warnings.warn(msg)
             fit_result_p = self.peakfit(fit_model=fit_result.fit_model,
@@ -3363,7 +3368,6 @@ class spectrum:
                 pars['eta_p3'] = 1 - self.shape_cal_pars['eta_p1'] - pars['eta_p2']
             elif par in ('sigma','theta') and pars[par] < 0:
                 pars[par] = 0
-                import warnings
                 msg = '{} value - std. err. < 0, using {} = 0 instead.'.format(
                       par,par)
                 warnings.warn(msg)
@@ -4026,7 +4030,6 @@ class spectrum:
             # and set `MC_PS_errs` flag
             for i_p, peak_idx in enumerate(POI[i_res]):
                 if PS_area_errs[i_p]==np.nan  or PS_mass_errs[i_p]==np.nan:
-                    import warnings
                     msg = str("Properties of peak {} not updated since "
                               "MC estimates of mass or area peak-shape error "
                               "are NaN.").format(peak_idx)
@@ -4056,7 +4059,6 @@ class spectrum:
                         p.mass_error_keV = np.round(
                                             p.rel_mass_error*p.m_ion*u_to_keV,3)
                     except TypeError:
-                        import warnings
                         with warnings.catch_warnings():
                             warnings.simplefilter("once")
                             msg = str("Could not update total mass error of "
@@ -4147,7 +4149,6 @@ class spectrum:
         print("\nRecalibration factor:    {:1.9f} = 1 {:=+5.1e}".format(
               self.recal_fac,self.recal_fac-1))
         if np.abs(self.recal_fac - 1) > 1e-03:
-            import warnings
             msg = str("Recalibration factor `recal_fac` deviates from unity by "
                       "more than a permille. Potentially, mass errors should "
                       "also be re-scaled with `recal_fac` (currently not "
@@ -4337,12 +4338,10 @@ class spectrum:
             self._eval_peakshape_errors(peak_indeces=[index_mass_calib],
                                     fit_result=fit_result, verbose=False)
         except KeyError:
-            import warnings
             warnings.warn("Peak-shape error determination failed with "
                           "KeyError. Likely the used fit_model is inconsistent "
                           "with the shape calibration model.", UserWarning)
         except Exception as err:
-            import warnings
             msg = str("Peak-shape error determination failed with: "+repr(err))
             warnings.warn(msg, UserWarning)
 
@@ -4410,7 +4409,6 @@ class spectrum:
                 if self.rel_recal_error:
                     p.rel_recal_error = self.rel_recal_error
                 else:
-                    import warnings
                     with warnings.catch_warnings():
                         warnings.simplefilter('once')
                         msg  = str('Could not set mass recalibration errors - '
@@ -4427,7 +4425,6 @@ class spectrum:
                     p.mass_error_keV = np.round(
                                            p.rel_mass_error*p.m_ion*u_to_keV, 3)
                 except TypeError:
-                    import warnings
                     with warnings.catch_warnings():
                         warnings.simplefilter('once')
                         msg = str('Could not calculate total mass error due to '
@@ -4639,12 +4636,10 @@ class spectrum:
                                         fit_result=fit_result, verbose=True,
                                         show_shape_err_fits=show_shape_err_fits)
         except KeyError:
-            import warnings
             warnings.warn("Peak-shape error determination failed with "
                           "KeyError. Likely the used fit_model is inconsistent "
                           "with the shape calibration model.", UserWarning)
         except Exception as err:
-            import warnings
             msg = str("Peak-shape error determination failed with: "+repr(err))
             warnings.warn(msg, UserWarning)
 
@@ -4834,7 +4829,6 @@ class spectrum:
                 return np.array([new_mus, new_amps])
 
             except ValueError:
-                import warnings
                 with warnings.catch_warnings():
                     warnings.simplefilter('always')
                     msg = str("Fit failed with ValueError (likely NaNs in "
@@ -5024,7 +5018,6 @@ class spectrum:
                     # update only peaks with new stat. error
                     updated_indeces.append(peak_idx)
             except TypeError:
-                import warnings
                 with warnings.catch_warnings():
                     warnings.simplefilter("once")
                     msg = str("Could not update total mass error of peak "
