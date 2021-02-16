@@ -1230,7 +1230,7 @@ class spectrum:
 
 
     def set_lit_values(self, peak_idx, m_AME, m_AME_error, extrapolated=False,
-                       verbose=True):
+                       A=None, z=None, verbose=True):
         """Manually define the (ionic) literature mass and its error for a peak
 
         Existing values are overwritten.
@@ -1245,10 +1245,12 @@ class spectrum:
             New liteature mass uncertainty.
         extrapolated : bool, optional, default: False
             Flag indicating whether this literature value has been extrapolated.
-        A : int, optional
-            Atomic mass number of species - overwrites existing.
+        A : int, optional, default: None
+            Atomic mass number of species - overwrites existing. If None and
+            the peak's attribute `A` is undefined, the peak's mass number
+            defaults to the closest integer of the provided `m_AME`.
         z : int, optional
-            Charge state of species - overwrites existing.
+            Charge state of species - overwrites existing (if not None).
         verbose : bool, optional, default: True
             Whether to print a status update after completion.
 
@@ -1263,6 +1265,8 @@ class spectrum:
         peak.extrapolated = extrapolated
         if A is not None:
             peak.A = A
+        elif peak.A is None:
+            peak.A = int(np.round(m_AME, decimals=0))
         if z is not None:
             peak.z = z
         if verbose is True:
