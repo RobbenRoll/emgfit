@@ -9,7 +9,6 @@ import lmfit as fit
 from numpy import exp
 from math import sqrt
 import scipy.special.cython_special
-from scipy.special import erfc, erfcx
 from numba.extending import get_cython_function_address
 from numba import vectorize, njit
 import ctypes
