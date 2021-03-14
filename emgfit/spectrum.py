@@ -565,7 +565,7 @@ class spectrum:
 
 
     def plot(self, peaks=None, title="", fig=None, yscale='log', vmarkers=None,
-             thres=None, ymin=None, xmin=None, xmax=None):
+             thres=None, ymin=0.1, xmin=None, xmax=None):
         """Plot mass spectrum (without fit curve).
 
         Vertical markers are added for all peaks specified with `peaks`.
@@ -610,33 +610,19 @@ class spectrum:
         plt.ylabel('Counts per bin')
         plt.title(title)
         try:
-            plt.vlines(x=vmarkers, ymin=0, ymax=data.max(), color='black')
+            plt.axvline(x=vmarkers, ymin=0, ymax=0.92, color='black',
+                        clip_on=True)
         except TypeError:
             pass
+        self._add_peak_markers(peaks=peaks,vline_max=0.92)
         if yscale == 'log':
-            for p in peaks:
-                plt.vlines(x=p.x_pos, ymin=0, ymax=1.05*ymax,
-                           linestyles='dashed', color='black')
-                plt.text(p.x_pos, 1.21*ymax, peaks.index(p),
-                         horizontalalignment='center', fontsize=labelsize)
-            if ymin:
-                plt.ylim(ymin,2.45*ymax)
-            else:
-                plt.ylim(0.1,2.45*ymax)
+            plt.ylim(ymin, 3.15*ymax)
         else:
-            for p in peaks:
-                plt.vlines(x=p.x_pos, ymin=0, ymax=1.03*ymax,
-                           linestyles='dashed', color='black')
-                plt.text(p.x_pos, 1.05*ymax, peaks.index(p),
-                         horizontalalignment='center', fontsize=labelsize)
-            if ymin:
-                plt.ylim(ymin,1.12*ymax)
-            else:
-                plt.ylim(0,1.12*ymax)
+            plt.ylim(ymin, 1.15*ymax)
 
         if thres:
-            ax.axhline(y=thres, color='black')
-        plt.xlim(xmin,xmax)
+            plt.axhline(y=thres, color='black', clip_on=True)
+        plt.xlim(xmin, xmax)
         ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
         plt.show()
 
@@ -777,7 +763,7 @@ class spectrum:
             data_smooth.plot(ax=ax)
             plt.title("Smoothed spectrum")
             ax.legend(["Raw","Smoothed"])
-            plt.ylim(0.1,)
+            plt.ylim(0.1, 1.03*max(self.data.values))
             plt.yscale('log')
             plt.xlabel('m/z [u]')
             plt.ylabel('Counts per bin')
@@ -1424,41 +1410,31 @@ class spectrum:
         result.params = orig_pars
 
 
-    def _add_peak_markers(self,yscale='log',ymax=None,peaks=None):
+    def _add_peak_markers(self, peaks=None, vline_max=0.93):
         """Internal function for adding peak markers to current figure object.
 
         Place this function inside spectrum methods between ``plt.figure()`` and
-        ``plt.show()``. Only for use on already fitted spectra!
+        ``plt.show()``.
 
         Parameters
         ----------
-        yscale : str, optional
-            Scale of y-axis, either 'linear' or 'log'.
-        ymax : float
-            Maximal y-value of spectrum data to plot. Used to set marker length.
         peaks : list of :class:`peak`
             List of peaks to add peak markers for.
+        vline_max : float
+            Maximal y-value of marker line - in coordinate axes units.
 
         """
         if peaks is None:
             peaks = self.peaks
         data = self.data
-        if yscale == 'log':
-            for p in peaks:
-                x_idx = np.argmin(np.abs(data.index.values - p.x_pos))
-                ymin = data.iloc[x_idx]
-                plt.vlines(x=p.x_pos, ymin=ymin, ymax=1.3*ymax,
-                           linestyles='dashed', color='black')
-                plt.text(p.x_pos, 1.44*ymax, self.peaks.index(p),
-                         horizontalalignment='center', fontsize=labelsize)
-        else:
-            for p in peaks:
-                x_idx = np.argmin(np.abs(data.index.values - p.x_pos))
-                ymin = data.iloc[x_idx]
-                plt.vlines(x=p.x_pos, ymin=ymin, ymax=1.11*ymax,
-                           linestyles='dashed', color='black')
-                plt.text(p.x_pos, 1.13*ymax, self.peaks.index(p),
-                         horizontalalignment='center', fontsize=labelsize)
+        ax = plt.gca()
+        for p in peaks:
+            plt.axvline(x=p.x_pos, ymin=0, ymax=vline_max, color='black',
+                        linestyle='--', clip_on=True)
+            plt.text(p.x_pos, vline_max+0.0028*labelsize, peaks.index(p),
+                     fontsize=labelsize, horizontalalignment='center',
+                     verticalalignment='center', clip_on=True,
+                     transform=ax.get_xaxis_transform())
 
 
     def plot_fit(self, fit_result=None, plot_title=None,
@@ -1526,7 +1502,7 @@ class spectrum:
                          max(fit_result.init_fit[i_min:i_max]),
                          max(fit_result.best_fit[i_min:i_max]) )
 
-        # Plot fit result with logarithmic y-scale
+        ### Plot fit result with logarithmic y-scale
         f1 = plt.figure(figsize=(figwidth,figwidth*8.5/18), dpi=dpi)
         ax = f1.gca()
         plt.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
@@ -1540,10 +1516,9 @@ class spectrum:
             pref = 'p{0}_'.format(peak_index)
             plt.plot(fit_result.x, comps[pref],'--', linewidth=lwidth, zorder=5)
         if show_peak_markers:
-            self._add_peak_markers(yscale='log', ymax=y_max_log,
-                                   peaks=peaks_to_plot)
+            self._add_peak_markers(peaks=peaks_to_plot)
         # add confidence band with specified number of sigmas
-        if sigmas_of_conf_band!=0 and fit_result.errorbars is True:
+        if sigmas_of_conf_band != 0 and fit_result.errorbars is True:
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
             label = str(sigmas_of_conf_band)+r'$\sigma$ confidence band'
             plt.fill_between(fit_result.x, fit_result.best_fit-dely,
@@ -1553,7 +1528,7 @@ class spectrum:
         plt.xlabel('m/z [u]')
         plt.ylabel('Counts per bin')
         plt.yscale('log')
-        plt.ylim(0.1, 2.3*y_max_log)
+        plt.ylim(0.1, 3.1*y_max_log)
         plt.xlim(x_min,x_max)
         ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
         if plot_filename is not None:
@@ -1564,7 +1539,7 @@ class spectrum:
                 raise
         plt.show()
 
-        # Plot residuals and fit result with linear y-scale
+        ### Plot residuals and fit result with linear y-scale
         std_residual = (fit_result.best_fit - fit_result.y)/fit_result.y_err
         y_max_res = np.max(np.abs(std_residual))
         x_fine = np.arange(x_min,x_max,0.2*(fit_result.x[1]-fit_result.x[0]))
@@ -1597,8 +1572,7 @@ class spectrum:
             ax.set_xlim(x_min,x_max)
             ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
         if show_peak_markers:
-            self._add_peak_markers(yscale='lin', ymax=y_max_lin,
-                                   peaks=peaks_to_plot)
+            self._add_peak_markers(peaks=peaks_to_plot)
         plt.xlabel('m/z [u]')
         if plot_filename is not None:
             try:
