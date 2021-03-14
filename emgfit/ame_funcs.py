@@ -211,7 +211,7 @@ def get_AME_values(species, Ex=0.0, Ex_error=0.0):
         # Remove trailing '?' (flag for tentative species IDs)
         ptype = ptype.rstrip('? ')
 
-        # Handle isomers (flagged by 'm' or 'm0' to 'm9' at the end)
+        # Check for isomer (flagged by 'm' or 'm0' to 'm9' at the end)
         if ptype.endswith(isomer_flags):
             if Ex == 0.0: # abort if no `Ex` is given
                 from warnings import warn
@@ -225,16 +225,19 @@ def get_AME_values(species, Ex=0.0, Ex_error=0.0):
                 msg = str("Uncertainty of isomer excitation energy `Ex_error` "
                           "unspecified for {}.").format(ptype)
                 warn(msg)
+            isomer_yn = True
             isomer_count += 1
             ptype = ptype.rstrip('0123456789')
             ptype = ptype.rstrip('m')
+        else:
+            isomer_yn = False
 
         # Update lit. values
         n, El, A = splitparticle(ptype)
         if El == 'e' and m is not None: # electron
             m += n*m_e
             # neglect uncertainty of m_e
-        elif isomer_count == 1:
+        elif isomer_yn: # isomeric species
             m += n*(mdata_AME(El,A)[3] + Ex/u_to_keV)
             m_error_sq += (n*mdata_AME(El,A)[4])**2 + (n*Ex_error/u_to_keV)**2
             m_error = np.sqrt(m_error_sq)
