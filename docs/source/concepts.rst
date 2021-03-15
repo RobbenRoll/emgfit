@@ -57,8 +57,8 @@ initial analysis stage, i.e. before the shape calibration or any other fits have
 been performed.**
 
 
-Assigning species to peaks and fetching AME values
---------------------------------------------------
+Assigning species to peaks and fetching literature mass values
+--------------------------------------------------------------
 The following attributes can be used to select a peak:
 
 * Peak index (i.e. index in the :attr:`~emgfit.spectrum.spectrum.peaks` list)
@@ -71,9 +71,21 @@ spectrum. The optional `species` attribute can either be set in
 :meth:`~emgfit.spectrum.spectrum.assign_species`. The `species` labels must
 follow the :ref:`:-notation`. As soon as a `species` is assigned to a peak the
 corresponding literature mass and its uncertainty are automatically fetched
-from the AME2016_ mass database. When a AME mass value is not purely based on
-experimental data the peak's `extrapolated` attribute is set to `True`.
+from the atomic mass evaluation (AME) mass database. When an AME mass value is
+not purely based on experimental data the peak's `extrapolated` attribute is set
+to `True`.
+By default, literature values are grabbed from AME2020_. Optionally, you can
+switch to values from AME2016_. To revert to AME2016 for all peaks, set
+`default_lit_src='AME2016'` when instantiating the spectrum object. To only use
+AME2016 values for certain peaks, use the `lit_src` option when defining the
+peak species with the :meth:`~emgfit.spectrum.spectrum.add_peak` or
+:meth:`~emgfit.spectrum.spectrum.assign_species`. Whenever literature values are
+fetched from AME2016 this is automatically indicated by adding
+`'lit_src: AME2016'` to the respective peak `comment`. User-defined literature
+values can be specified with the :meth:`~emgfit.spectrum.spectrum.add_peak` and
+:meth:`~emgfit.spectrum.spectrum.set_lit_values` methods.
 
+.. _AME2020: https://www-nds.iaea.org/amdc/
 .. _AME2016: http://amdc.in2p3.fr/web/masseval.html
 
 
@@ -547,17 +559,21 @@ given isotope and `A` is the respective atomic mass number. In the case
 is indicated by subtracting the desired number of electrons from the atomic
 species (i.e. ``':-1e'`` for singly charged cations, ``':-2e'`` for doubly
 charged cations etc.). Once the ionic species of a peak is assigned `emgfit`
-automatically fetches the respective literature value from the AME2016_ [6]_
-mass database. The subtraction of the electron is important since otherwise the
-atomic instead of the ionic mass is used for subsequent calculations. The
-calculated literature mass values do not account for electron binding energies
-which can in most applications safely be neglected for singly and doubly charged
-ions. `emgfit` does currently not interface with an isomer database. However,
-isomers can be marked by appending an ``'m'`` or ``'m0'`` up to ``'m9'`` to the
-end of an isotope substring (see last example below). The literature mass (and
-mass error) of an isomer are automatically calculated from the respective
-ground-state AME mass when the excitation energy is passed to the `Ex`
-(and `Ex_error`) option of the relevant spectrum methods.
+automatically fetches the respective literature value from the AME2020_ [6]_ (or
+the AME2016_ [7]_) mass database. The subtraction of the electron is important
+since otherwise the atomic instead of the ionic mass is used for subsequent
+calculations. The calculated literature mass values do not account for electron
+binding energies which can in most applications safely be neglected for singly
+and doubly charged ions. `emgfit` does currently not interface with an isomer
+database. However, isomers can be marked by appending an ``'m'`` or ``'m0'`` up
+to ``'m9'`` to the end of an isotope substring (see last example below). The
+literature mass (and mass error) of an isomer are automatically calculated from
+the respective ground-state AME mass when the excitation energy is passed to the
+`Ex` (and `Ex_error`) option of the relevant spectrum methods (e.g.
+:meth:`~emgfit.spectrum.spectrum.add_peak` &
+:meth:`~emgfit.spectrum.spectrum.assign_species`). Further, literature values
+can be fully user-defined with the 
+:meth:`~emgfit.spectrum.spectrum.set_lit_values` & method.
 
 Examples:
 
@@ -615,5 +631,8 @@ References
   exotic nuclei of a few events in their ground and low-lying isomeric
   states." Physical Review C 99.6 (2019): 064313.
 
-.. [6] Wang, M., et al. "The AME2016 atomic mass evaluation (II). Tables, graphs
+.. [6] Wang, M., et al. "The AME2020 atomic mass evaluation (II). Tables, graphs
+   and references." Chinese Physics C 45 (2021): 030003.
+
+.. [7] Wang, M., et al. "The AME2016 atomic mass evaluation (II). Tables, graphs
    and references." Chinese Physics C 41.3 (2017): 030003.

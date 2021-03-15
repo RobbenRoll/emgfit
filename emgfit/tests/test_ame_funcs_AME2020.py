@@ -11,8 +11,9 @@ class Test_get_AME_values:
     decimals = 8 # number of decimals up to which absolute agreement is demanded
     atol = 10**(-decimals)
     rtol = 0 # relative tolerance up to which agreement is demanded
-    m_e_ref = 0.00054857990907
+    m_e_ref = 0.000548579909065 # CODATA value from physics.nist.gov
     u_to_keV_ref = 931494.10242  # CODATA value from physics.nist.gov
+    lit_src = 'AME2020'
 
     def _isclose(self, a ,b, atol=None, rtol=None):
         """Custom version of np.isclose. """
@@ -27,7 +28,8 @@ class Test_get_AME_values:
         from emgfit.ame_funcs import get_AME_values, get_charge_state
         m_AME, m_AME_error, extrapol, A  = get_AME_values(species,
                                                           Ex=Ex,
-                                                          Ex_error=Ex_error)
+                                                          Ex_error=Ex_error,
+                                                          src=self.lit_src)
         z = get_charge_state(species)
 
         msg0 = "`m_AME` of {} deviates from reference".format(species)
@@ -49,14 +51,29 @@ class Test_get_AME_values:
         assert self._isclose(emg.u_to_keV, self.u_to_keV_ref, atol=5), msg
 
 
+    def test_extrapol_AME_value(self):
+        """Check calculation of ionic mass of extrapolated superheavy species
+        """
+        species = '1Bh264:-1e'
+        # atomic masses and m_e from AME2020 [u]:
+        m_ref = 264.124486 - self.m_e_ref
+        m_ref_error =  190e-06
+        extrapol_ref = True
+        A_ref = 264
+        z_ref = 1
+
+        self._check_lit_values(species, m_ref, m_ref_error, extrapol_ref, A_ref,
+                               z_ref=z_ref, Ex=0.0, Ex_error=0.0)
+
+
     def test_molecular_AME_values(self):
         """Check calculation of ionic mass of H2O (incl. tentative ID flag)"""
         species = '2H1:1O16?:-1e'
-        # atomic masses and m_e from AME2016 [u]:
-        m_H1_ref = 1.00782503224
-        m_H1_ref_error = 0.00009e-06
-        m_O16_ref = 15.99491461960
-        m_O16_ref_error = 0.00017e-06
+        # atomic masses and m_e from AME2020 [u]:
+        m_H1_ref = 1.007825031898
+        m_H1_ref_error = 0.000014e-06
+        m_O16_ref = 15.99491461926
+        m_O16_ref_error = 0.00032e-06
         m_ref = 2*m_H1_ref + m_O16_ref - self.m_e_ref
         m_ref_error = np.sqrt((2*m_H1_ref_error)**2 + m_O16_ref_error**2)
         extrapol_ref = False
@@ -70,11 +87,11 @@ class Test_get_AME_values:
     def test_isomer_AME_values(self):
         """Check calculation of ionic mass of second isomer of In-127 """
         species = '1In127m1:-1e'
-        # g.s. mass and m_e from AME2016 [u], Ex from ENSDF [keV]:
+        # g.s. mass and m_e from AME2020 [u], Ex from ENSDF [keV]:
         Ex = 1863
         Ex_error = 58
-        m_In127_ref = 126.917448546
-        m_In127_ref_error = 22.713e-06
+        m_In127_ref = 126.917466040
+        m_In127_ref_error = 10.736e-06
         m_ref =  m_In127_ref + Ex/self.u_to_keV_ref - self.m_e_ref
         m_ref_error = np.sqrt(m_In127_ref_error**2 +
                               (Ex_error/self.u_to_keV_ref)**2)
@@ -86,34 +103,34 @@ class Test_get_AME_values:
                                z_ref=z_ref, Ex=Ex, Ex_error=Ex_error)
 
 
-    # def test_molecular_isomer_AME_values(self):
-    #     """Check calculation of ionic mass of second isomer of Sr85m:F19:-1e """
-    #     species = 'Sr85m:F19:-1e'
-    #     # g.s. mass and m_e from AME2020 [u], Ex from ENSDF [keV]:
-    #     Ex = 238.79
-    #     Ex_error = 0.05
-    #     m_Sr85_ref = 84.912932
-    #     m_Sr85_ref_error = 3e-06
-    #     m_F19_ref = 18.9984031621
-    #     m_F19_ref_error = 0.009e-06
-    #     m_ref = m_Sr85_ref + Ex/self.u_to_keV_ref + m_F19_ref - self.m_e_ref
-    #     m_ref_error = np.sqrt(m_Sr85_ref_error**2 +
-    #                           (Ex_error/self.u_to_keV_ref)**2 +
-    #                           m_F19_ref_error**2)
-    #     extrapol_ref = False
-    #     A_ref = 104
-    #     z_ref = 1
-    #
-    #     self._check_lit_values(species, m_ref, m_ref_error, extrapol_ref, A_ref,
-    #                            z_ref=z_ref, Ex=Ex, Ex_error=Ex_error)
+    def test_molecular_isomer_AME_values(self):
+        """Check calculation of ionic mass of second isomer of Sr85m:F19:-1e """
+        species = 'Sr85m:F19:-1e'
+        # g.s. mass and m_e from AME2020 [u], Ex from ENSDF [keV]:
+        Ex = 238.79
+        Ex_error = 0.05
+        m_Sr85_ref = 84.912932041
+        m_Sr85_ref_error = 3.020e-06
+        m_F19_ref = 18.99840316207
+        m_F19_ref_error = 0.00088e-06
+        m_ref = m_Sr85_ref + Ex/self.u_to_keV_ref + m_F19_ref - self.m_e_ref
+        m_ref_error = np.sqrt(m_Sr85_ref_error**2 +
+                              (Ex_error/self.u_to_keV_ref)**2 +
+                              m_F19_ref_error**2)
+        extrapol_ref = False
+        A_ref = 104
+        z_ref = 1
+
+        self._check_lit_values(species, m_ref, m_ref_error, extrapol_ref, A_ref,
+                               z_ref=z_ref, Ex=Ex, Ex_error=Ex_error)
 
 
     def test_doubly_charged_AME_values(self):
         """Check calculation of ionic mass of doubly charged Sn-116 """
         species = 'Sn116:-2e'
-        # atomic mass and m_e from AME2016 [u]:
-        m_ref = 115.901742824 - 2*self.m_e_ref
-        m_ref_error = 1.03e-07
+        # atomic mass and m_e from AME2020 [u]:
+        m_ref = 115.901742825 - 2*self.m_e_ref
+        m_ref_error = 0.103e-06
         extrapol_ref = False
         A_ref = 116
         z_ref = 2
@@ -122,33 +139,32 @@ class Test_get_AME_values:
                                z_ref=z_ref)
 
 
-    # def test_doubly_charged_molecular_isomer_AME_values(self):
-    #     """Check calculation of ionic mass of first isomer of 2Y89m:O16:-2e """
-    #     species = '2Y89m:1O16:-2e'
-    #     # g.s. mass and m_e from AME2020 [u], Ex from ENSDF [keV]:
-    #     Ex = 908.97
-    #     Ex_error = 0.03
-    #     m_Y89_ref = 88.9058382
-    #     m_Y89_ref_error = 0.4e-06
-    #     m_O16_ref = 15.9949146193
-    #     m_O16_ref_error = 0.0003e-6
-    #     m_ref = 2*(m_Y89_ref + Ex/self.u_to_keV_ref) + m_O16_ref -
-    #             2*self.m_e_ref
-    #     m_ref_error = np.sqrt((2*m_Y89_ref_error)**2 +
-    #                           (2*Ex_error/self.u_to_keV_ref)**2 +
-    #                           (m_O16_ref_error)**2)
-    #     extrapol_ref = False
-    #     A_ref = 194
-    #     z_ref = 2
-    #
-    #     self._check_lit_values(species, m_ref, m_ref_error, extrapol_ref, A_ref,
-    #                            z_ref=z_ref, Ex=Ex, Ex_error=Ex_error)
+    def test_doubly_charged_molecular_isomer_AME_values(self):
+        """Check calculation of ionic mass of first isomer of 2Y89m:O16:-2e """
+        species = '2Y89m:1O16:-2e'
+        # g.s. mass and m_e from AME2020 [u], Ex from ENSDF [keV]:
+        Ex = 908.97
+        Ex_error = 0.03
+        m_Y89_ref = 88.905838156
+        m_Y89_ref_error = 0.363e-06
+        m_O16_ref = 15.99491461926
+        m_O16_ref_error = 0.00032e-06
+        m_ref = 2*(m_Y89_ref + Ex/self.u_to_keV_ref) + m_O16_ref -2*self.m_e_ref
+        m_ref_error = np.sqrt((2*m_Y89_ref_error)**2 +
+                              (2*Ex_error/self.u_to_keV_ref)**2 +
+                              (m_O16_ref_error)**2)
+        extrapol_ref = False
+        A_ref = 194
+        z_ref = 2
+
+        self._check_lit_values(species, m_ref, m_ref_error, extrapol_ref, A_ref,
+                               z_ref=z_ref, Ex=Ex, Ex_error=Ex_error)
 
 
     def test_get_El_from_Z(self):
         """Check grabbing of element symbol from proton number """
         proton_numbers = [0,1,6,67,118]
-        El_ref = ['n','H','C','Ho','Ei']
+        El_ref = ['n','H','C','Ho','Og']
         from emgfit.ame_funcs import get_El_from_Z
         for i, Z in enumerate(proton_numbers):
             El = get_El_from_Z(Z)

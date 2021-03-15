@@ -53,9 +53,9 @@ class peak:
     z : int, optional
         Charge state of the species.
     m_AME : float [u], optional
-        Ionic literature mass value, from AME2016 or user-defined.
+        Ionic literature mass value, from AME or user-defined.
     m_AME_error : float [u], optional
-        Literature mass uncertainty, from AME2016 or user-defined.
+        Literature mass uncertainty, from AME or user-defined.
     extrapolated : bool
         Boolean flag for extrapolated AME mass values (equivalent to '#' in AME).
     fit_model : str
@@ -89,12 +89,12 @@ class peak:
 
     """
     def __init__(self, x_pos, species, m_AME=None, m_AME_error=None, Ex=0.0,
-                 Ex_error=0.0):
+                 Ex_error=0.0, lit_src='AME2020'):
         """Instantiate a new :class:`peak` object.
 
         If a valid ion species is assigned with the `species` parameter the
         corresponding literature values will automatically be fetched from the
-        AME2016 database. The syntax for species assignment follows that of MAc
+        AME database. The syntax for species assignment follows that of MAc
         (for more details see documentation for `species` parameter below).
 
         If different literature values are to be used, the literature mass or
@@ -120,10 +120,10 @@ class peak:
             (e.g.: ``'Sn100:-1e?'``, ``'?'``, ...).
         m_AME : float [u], optional
             User-defined literature mass value. Overwrites value fetched from
-            AME2016. Useful for isomers or to use more up-to-date values.
+            AME. Useful for isomers or to use more up-to-date values.
         m_AME_error : float [u], optional
             User-defined literature mass uncertainty. Overwrites value fetched
-            from AME2016.
+            from AME.
         Ex : float [keV], optional, default : 0.0
             Isomer excitation energy (in keV) to add to ground-state literature
             mass. Irrelevant if the `m_AME` argument is used or if the peak is
@@ -133,13 +133,21 @@ class peak:
             quadrature to ground-state literature mass uncertainty. Irrelevant
             if the `m_AME_error` argument is used or if the peak is not labelled
             as isomer.
+        lit_src : str, optional, default: 'AME2020'
+            Source of literature mass data (either 'AME2016' or 'AME2020'). If
+            AME2016 is used, :literal:`'lit_src: AME2016'` is added to the peak
+            :attr:`comment`.
+
 
         """
         m, m_error, extrapol, A_tot = get_AME_values(species, Ex=Ex,
-                                                     Ex_error=Ex_error)
+                                                     Ex_error=Ex_error,
+                                                     src=lit_src)
         self.x_pos = x_pos
         self.species = species # e.g. '1Cs133:-1e or 'Cs133:-e' or '4H1:1C12:-1e'
         self.comment = '-'
+        if lit_src == 'AME2016':
+            self.comment = 'lit_src: AME2016'
         self.A = A_tot
         self.z = get_charge_state(species)
         self.m_AME = m_AME #
@@ -176,11 +184,11 @@ class peak:
         return abs(self.z or 1)
 
 
-    def update_lit_values(self, Ex=0.0, Ex_error=0.0):
-        """Updates peak attributes with AME2016 values for specified species.
+    def update_lit_values(self, Ex=0.0, Ex_error=0.0, lit_src='AME2020'):
+        """Updates peak attributes with AME values for specified species.
 
         Updates the :attr:`m_AME`, :attr:`m_AME_error`, :attr:`extrapolated`,
-        :attr:`A`, :attr:`z` and :attr:`m_dev_keV` peak attributes with AME2016
+        :attr:`A`, :attr:`z` and :attr:`m_dev_keV` peak attributes with AME
         values.
 
         Parameters
@@ -191,15 +199,25 @@ class peak:
         Ex_error : float [keV], optional, default : 0.0
             Uncertainty of isomer excitation energy (in keV) to add in
             quadrature to ground-state literature mass uncertainty.
+        lit_src : str, optional, default : 'AME2020'
+            Source of literature mass data (either 'AME2016' or 'AME2020'). If
+            AME2016 is used, :literal:`'lit_src: AME2016'` is added to the peak
+            :attr:`comment`.
 
         """
         m, m_error, extrapol, A_tot = get_AME_values(self.species, Ex=Ex,
-                                                     Ex_error=Ex_error)
+                                                     Ex_error=Ex_error,
+                                                     src=lit_src)
         self.A = A_tot
         self.z = get_charge_state(self.species)
         self.m_AME = m
         self.m_AME_error = m_error
         self.extrapolated = extrapol
+        if lit_src == 'AME2016':
+            if self.comment == '-':
+                self.comment = 'lit_src: AME2016'
+            elif 'lit_src: AME2016' not in self.comment:
+                self.comment += ', lit_src: AME2016'
         try:
             self.m_dev_keV = np.round( (self.m_ion - self.m_AME)*u_to_keV, 3)
         except TypeError:
@@ -326,6 +344,10 @@ class spectrum:
         Atomic mass number associated with central bin of spectrum.
     default_fit_range : float [u/z]
         Default x-range for fits, scaled to :attr:`mass_number` of spectrum.
+    default_lit_src : str, optional
+        Source of literature mass data - either 'AME2020' (default) or
+        'AME2016'. If AME2016 is used, :literal:`'lit_src: AME2016'` is added
+        as flag to the respective peak comments.
 
     Notes
     -----
@@ -345,7 +367,7 @@ class spectrum:
 
     """
     def __init__(self, filename=None, m_start=None, m_stop=None, skiprows = 18,
-                 show_plot=True, df=None):
+                 show_plot=True, df=None, default_lit_src='AME2020'):
         """Create a :class:`spectrum` object by importing histogrammed mass data
         from .txt or .csv file.
 
@@ -380,6 +402,10 @@ class spectrum:
             DataFrame with spectrum data to use, this enables the creation of a
             spectrum object from a DataFrame instead of from an external file.
             **Primarily intended for internal use.**
+        default_lit_src : str, optional
+            Source of literature mass data - either 'AME2020' (default) or
+            'AME2016'. If AME2016 is used, :literal:`'lit_src: AME2016'` is
+            added as flag to the respective peak comments.
 
         Notes
         -----
@@ -437,6 +463,8 @@ class spectrum:
         self.mass_number = int(np.round(self.data.index.values[
                                                         int(len(self.data)/2)]))
         self.default_fit_range = 0.01*(self.mass_number/100)
+        self.default_lit_src = default_lit_src
+
         if show_plot:
             fig  = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
             plt.title(plot_title)
@@ -453,7 +481,7 @@ class spectrum:
             plt.show()
 
 
-    def add_spectrum_comment(self,comment,overwrite=False):
+    def add_spectrum_comment(self, comment, overwrite=False):
         """Add a general comment to the spectrum.
 
         By default the `comment` argument will be appended to the end of the
@@ -496,7 +524,7 @@ class spectrum:
 
 
     @staticmethod
-    def _smooth(x,window_len=11,window='hanning'):
+    def _smooth(x, window_len=11, window='hanning'):
         """Smooth the data for the peak detection.
 
         ** Intended for internal use only.**
@@ -694,7 +722,7 @@ class spectrum:
         plt.show()
 
 
-    def detect_peaks(self,thres=0.003,window_len=23,window='blackman',
+    def detect_peaks(self, thres=0.003, window_len=23, window='blackman',
                      width=2e-05, plot_smoothed_spec=True,
                      plot_2nd_deriv=True, plot_detection_result=True):
         """Perform automatic peak detection.
@@ -819,7 +847,7 @@ class spectrum:
 
 
     def add_peak(self, x_pos, species="?", m_AME=None, m_AME_error=None, Ex=0.0,
-                 Ex_error=0.0, A=None, z=None, verbose=True):
+                 Ex_error=0.0, lit_src='default', A=None, z=None, verbose=True):
         """Manually add a peak to the spectrum's :attr:`peaks` list.
 
         The position of the peak must be specified with the `x_pos` argument.
@@ -853,6 +881,12 @@ class spectrum:
             When the peak is labelled as isomer its literature mass uncertainty
             :attr:`peak.m_AME_error` is calculated by adding `Ex_error` and the
             AME uncertainty of the ground-state mass in quadrature.
+        lit_src : str, optional
+            Source of literature mass data (either of 'default', 'AME2016' or
+            'AME2020'). If 'default', the literature source defined globally
+            with the :attr:`default_lit_src` spectrum attribute is used. If
+            AME2016 is used, :literal:`'lit_src: AME2016'` is added to the
+            respective peak :attr:`comment`.
         A : int, optional
             Atomic mass number of species (only relevant when `species` is
             undefined).
@@ -877,9 +911,11 @@ class spectrum:
         if np.round(x_pos,6) in [np.round(p.x_pos,6) for p in self.peaks]:
             raise Exception("There is already a peak with the specified "
                             "`x_pos`.")
+        if lit_src == 'default':
+            lit_src = self.default_lit_src
         # Instantiate new peak:
         p = peak(x_pos, species, m_AME=m_AME, m_AME_error=m_AME_error, Ex=Ex,
-                 Ex_error=Ex_error)
+                 Ex_error=Ex_error, lit_src=lit_src)
         if species is None:
             p.A = A
             p.z = z
@@ -973,7 +1009,7 @@ class spectrum:
                 print("Removed peak at x_pos = {0:.6f} u".format(x_pos))
 
 
-    def remove_peak(self,peak_index=None,x_pos=None,species="?"):
+    def remove_peak(self, peak_index=None, x_pos=None, species="?"):
         """Remove specified peak from the spectrum's :attr:`peaks` list.
 
         Select the peak to be removed by specifying either the respective
@@ -1008,6 +1044,9 @@ class spectrum:
 
     def show_peak_properties(self):
         """Print properties of all peaks in :attr:`peaks` list.
+
+        For a description of the different columns, see
+        class:`~emgfit.spectrum.peak`.
 
         """
         #def None_to_nan(dict): # convert None values to NaN
@@ -1077,7 +1116,7 @@ class spectrum:
 
 
     def assign_species(self, species, peak_index=None, x_pos=None, Ex=0.0,
-                       Ex_error=0.0):
+                       Ex_error=0.0, lit_src='default'):
         """Assign species label(s) to a single peak (or all peaks at once).
 
         If no single peak is selected with `peak_index` or `x_pos`, a list with
@@ -1108,6 +1147,16 @@ class spectrum:
             When the peak is labelled as isomer its literature mass uncertainty
             :attr:`peak.m_AME_error` is calculated by adding `Ex_error` and the
             AME uncertainty of the ground-state mass in quadrature.
+        lit_src : str, optional
+            Source of literature mass data - either of 'default', 'AME2016' or
+            'AME2020'. If 'default', the literature source defined globally
+            with the :attr:`default_lit_src` spectrum attribute is used. If
+            'AME2016' is used, :literal:`'lit_src: AME2016'` is added to the
+            respective peak comment(s).
+
+        See also
+        --------
+        :meth:`set_lit_values` : For setting user-defined literature values.
 
         Notes
         -----
@@ -1180,20 +1229,22 @@ class spectrum:
         respective ground-state AME values and the provided `Ex` and `Ex_error`.
 
         """
+        if lit_src == 'default':
+            lit_src = self.default_lit_src
         try:
             if peak_index is not None:
                 msg = "Use either the `peak_index` OR the `species` argument."
                 assert x_pos is None, msg
                 p = self.peaks[peak_index]
                 p.species = species
-                p.update_lit_values(Ex=Ex, Ex_error=Ex_error)
+                p.update_lit_values(Ex=Ex, Ex_error=Ex_error, lit_src=lit_src)
                 print("Species of peak",peak_index,"assigned as",p.species)
             elif x_pos is not None:
                 # Select peak at position 'x_pos'
                 i = [i for i in range(len(self.peaks)) if abs(x_pos - self.peaks[i].x_pos) < 1e-06][0]
                 p = self.peaks[i]
                 p.species = species
-                p.update_lit_values(Ex=Ex, Ex_error=Ex_error)
+                p.update_lit_values(Ex=Ex, Ex_error=Ex_error, lit_src=lit_src)
                 print("Species of peak",i,"assigned as",p.species)
             elif len(species) == len(self.peaks):
                 for i in range(len(species)): # loop over multiple species
@@ -1201,7 +1252,8 @@ class spectrum:
                     if species_i: # skip peak if 'None' given as argument
                         p = self.peaks[i]
                         p.species = species_i
-                        p.update_lit_values(Ex=Ex, Ex_error=Ex_error)
+                        p.update_lit_values(Ex=Ex, Ex_error=Ex_error,
+                                            lit_src=lit_src)
                         print("Species of peak",i,"assigned as",p.species)
             else:
                 msg = str("Peak selection in assign_species() failed. Check "
@@ -1244,20 +1296,33 @@ class spectrum:
         -----
         Added in version 0.3.6.
 
+        Manually defined literature values are indicated by adding
+        :literal:`'lit_src: user'` to the peak's :attr:`comment`.
+
         """
-        peak = self.peaks[peak_idx]
-        peak.m_AME = m_AME
-        peak.m_AME_error = m_AME_error
-        peak.extrapolated = extrapolated
+        p = self.peaks[peak_idx]
+        p.m_AME = m_AME
+        p.m_AME_error = m_AME_error
+        p.extrapolated = extrapolated
+        if p.comment == '-':
+            p.comment = 'lit_src: user'
+        elif 'lit_src: AME2016' in p.comment:
+            p.comment = p.comment.replace('lit_src: AME2016', 'lit_src: user')
+        elif 'lit_src: AME2020' in p.comment:
+            p.comment = p.comment.replace('lit_src: AME2020', 'lit_src: user')
+        elif 'lit_src: user' not in p.comment:
+            p.comment += ', lit_src: user'
         if A is not None:
-            peak.A = A
-        elif peak.A is None:
-            peak.A = int(np.round(m_AME, decimals=0))
+            p.A = A
+        elif p.A is None:
+            p.A = int(np.round(m_AME, decimals=0))
         if z is not None:
-            peak.z = z
+            p.z = z
+        if p.m_ion: # Update m_dev_keV
+            np.round( (p.m_ion - p.m_AME)*u_to_keV, 3)
         if verbose is True:
             msg = str("Set literature mass of peak {} to m_AME = ({} +- {}) u"
-                               ).format(peak_idx, peak.m_AME, peak.m_AME_error)
+                               ).format(peak_idx, p.m_AME, p.m_AME_error)
             print(msg)
 
 
@@ -1645,8 +1710,8 @@ class spectrum:
                       plot_filename=plot_filename)
 
 
-    def comp_model(self,peaks_to_fit,model='emg22',init_pars=None,
-                   vary_shape=False,vary_baseline=True,index_first_peak=None):
+    def comp_model(self, peaks_to_fit, model='emg22', init_pars=None,
+                   vary_shape=False, vary_baseline=True, index_first_peak=None):
         """Create a multi-peak composite model with the specified peak shape.
 
         **Primarily intended for internal usage.**

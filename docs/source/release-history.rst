@@ -12,10 +12,12 @@ v0.3.8 (2021-XX-YY)
 
 Added
 ^^^^^
-
+* Added the newly published AME2020 mass database.
 
 Changed
 ^^^^^^^
+* By default literature mass values are now taken from AME2020 instead of
+  AME2016.
 * Cleaned up definition of peak marker heights.
 
 Fixed

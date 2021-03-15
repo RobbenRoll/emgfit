@@ -18,20 +18,22 @@ spectroscopic data from a variety of other fields.
 Amongst other features, the `emgfit` toolbox includes:
 
 * Automatic and sensitive peak detection
-* Automatic import of relevant literature values from the AME2016_ [3]_ database
+* Automatic import of literature values from the AME2020_ [3]_ (or
+  AME2016_ [4]_) mass database
 * Automatic selection of the best suited peak-shape model
 * Fitting of low-statistics peaks with a binned maximum likelihood method
-* Simultaneous fitting of an entire spectrum with a large number of peaks
+* Simultaneous fitting of an entire spectrum with various peaks
 * Export of all relevant fit results including fit statistics and plots to an
   EXCEL output file for convenient post-processing
 
 `emgfit` is designed to be used within Jupyter Notebooks which have become a
 standard tool in the data science community. The usage and capabilities of
-`emgfit` are best explored by looking at the tutorial.
+`emgfit` are best explored by looking at the :doc:`tutorial. <emgfit_tutorial>`
 
-.. _`lmfit`: https://lmfit.github.io/lmfit-py/
-.. _AME2016: http://amdc.in2p3.fr/web/masseval.html
 .. _Hyper-EMG: https://www.sciencedirect.com/science/article/abs/pii/S1387380616302913
+.. _`lmfit`: https://lmfit.github.io/lmfit-py/
+.. _AME2020: https://www-nds.iaea.org/amdc/
+.. _AME2016: http://amdc.in2p3.fr/web/masseval.html
 
 References
 ----------
@@ -42,5 +44,7 @@ References
 .. [2] Newville, M., et al. "LMFIT: Non-linear least-square minimization and
    curve-fitting for Python." Astrophysics Source Code Library (2016):
    ascl-1606.
-.. [3] Wang, M., et al. "The AME2016 atomic mass evaluation (II). Tables, graphs
+.. [3] Wang, M., et al. "The AME2020 atomic mass evaluation (II). Tables, graphs
+   and references." Chinese Physics C 45 (2021): 030003.
+.. [4] Wang, M., et al. "The AME2016 atomic mass evaluation (II). Tables, graphs
    and references." Chinese Physics C 41.3 (2017): 030003.

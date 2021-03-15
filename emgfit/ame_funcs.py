@@ -7,16 +7,20 @@ from .config import *
 from pathlib import Path
 import pandas as pd
 import numpy as np
+from copy import deepcopy
 
-##### Import AME data into pandas dataframe
+##### Import AME2016 & AME2020 data into pandas dataframes
 directory = Path(__file__).parent  # get directory containing this file
-filename = str(directory)+"/AME2016/AME2016_formatted.csv"
-df_AME = pd.read_csv(filename, encoding = 'unicode_escape')
-df_AME.set_index(['A','Element'],inplace=True)
+filename_AME2016 = str(directory)+"/AME2016/AME2016-mass-formatted.csv"
+df_AME2016 = pd.read_csv(filename_AME2016, encoding='UTF-8', delimiter=';')
+df_AME2016.set_index(['A','Element'], inplace=True)
+filename_AME2020 = str(directory)+"/AME2020/AME2020-mass-formatted.csv"
+df_AME2020 = pd.read_csv(filename_AME2020, encoding='UTF-8', delimiter=';')
+df_AME2020.set_index(['A','Element'], inplace=True)
 
 ##### Define functions
-def mdata_AME(El,A):
-    """Grabs atomic mass data from AME2016 [u].
+def mdata_AME(El, A, src='AME2020'):
+    """Grabs atomic mass data from the atomic mass evaluation (AME).
 
     Parameters
     ----------
@@ -24,21 +28,28 @@ def mdata_AME(El,A):
         String with element symbol.
     A : int
         Mass number of isotope of interest.
+    src : str, optional, default: AME2020
+        Source of literature mass data (either 'AME2016' or 'AME2020').
 
     Returns
     -------
     list (str,int,float,float,bool)
-        [Element, Z, A, atomic AME mass, atomic AME mass error, boolean flag for
-        extrapolated AME mass]
+        [Element, Z, A, atomic AME mass [u], atomic AME mass error [u], boolean
+        flag for extrapolated AME mass]
 
     """
+    if src == 'AME2020':
+        df_AME = deepcopy(df_AME2020)
+    elif src == 'AME2016':
+        df_AME = deepcopy(df_AME2016)
+
     try:
         Z = df_AME['Z'].loc[(A,El)]
         m_AME = df_AME['ATOMIC MASS [µu]'].loc[(A,El)]*1e-06
         m_AME_error = df_AME['Error ATOMIC MASS [µu]'].loc[(A,El)]*1e-06
         extrapolated_yn = df_AME['Extrapolated?'].loc[(A,El)]
     except KeyError:
-        msg = "No AME2016 values found for {0}-{1}.".format(El,A)
+        msg = "No AME values found for {0}-{1}.".format(El,A)
         raise Exception(msg) from None
 
     return [El, Z, A, m_AME, m_AME_error, extrapolated_yn]
@@ -58,10 +69,12 @@ def get_El_from_Z(Z):
         Symbol of element with specified proton number.
     """
     if isinstance(Z, (list, tuple, np.ndarray)):
-        li = [df_AME.index[df_AME['Z'] == Z_i].get_level_values('Element')[0] for Z_i in Z]
+        mask = (df_AME2020['Z'] == Z_i)
+        li = [df_AME2020.index[mask].get_level_values('Element')[0] for Z_i in Z]
         El = np.array(li)
     else:
-        El = df_AME.index[df_AME['Z'] == Z].get_level_values('Element')[0]
+        mask = (df_AME2020['Z'] == Z)
+        El = df_AME2020.index[mask].get_level_values('Element')[0]
     return El
 
 
@@ -158,7 +171,7 @@ def get_charge_state(species):
     return z
 
 
-def get_AME_values(species, Ex=0.0, Ex_error=0.0):
+def get_AME_values(species, Ex=0.0, Ex_error=0.0, src='AME2020'):
     """Calculates the AME mass, AME mass error, the extrapolation flag and the
     mass number A of the given atomic or molecular species.
 
@@ -172,6 +185,8 @@ def get_AME_values(species, Ex=0.0, Ex_error=0.0):
     Ex_error : float [keV], optional, default: 0.0
         Uncertainty of isomer excitation energy in keV to add in quadrature
         to ground-state literature mass uncertainty.
+    src : str, optional, default: AME2020
+        Source of literature data ('AME2016' or 'AME2020').
 
     Notes
     -----
@@ -192,7 +207,8 @@ def get_AME_values(species, Ex=0.0, Ex_error=0.0):
     -------
     tuple of (float,float,bool,int)
         List containing relevant AME data for `species`:
-        (AME mass, AME mass uncertainty, ``True`` if extrapolated species, atomic mass number)
+        (AME mass [u], AME mass uncertainty [u],
+        boolean flag for extrapolated species, atomic mass number)
 
     """
     m = 0.0
@@ -238,19 +254,21 @@ def get_AME_values(species, Ex=0.0, Ex_error=0.0):
             m += n*m_e
             # neglect uncertainty of m_e
         elif isomer_yn: # isomeric species
-            m += n*(mdata_AME(El,A)[3] + Ex/u_to_keV)
-            m_error_sq += (n*mdata_AME(El,A)[4])**2 + (n*Ex_error/u_to_keV)**2
+            mdata = mdata_AME(El, A, src=src)
+            m += n*(mdata[3] + Ex/u_to_keV)
+            m_error_sq += (n*mdata[4])**2 + (n*Ex_error/u_to_keV)**2
             m_error = np.sqrt(m_error_sq)
             A_tot += n*A
-            if mdata_AME(El,A)[5]:
-                extrapol = True # boolean flag for any extrapolated masses contained in species
+            if mdata[5]:
+                extrapol = True # flag for any extrapolated masses in species
         else: # regular atom
-            m += n*(mdata_AME(El,A)[3])
-            m_error_sq += (n*mdata_AME(El,A)[4])**2
+            mdata = mdata_AME(El, A, src=src)
+            m += n*(mdata[3])
+            m_error_sq += (n*mdata[4])**2
             m_error = np.sqrt(m_error_sq)
             A_tot += n*A
-            if mdata_AME(El,A)[5]:
-                extrapol = True # boolean flag for any extrapolated masses contained in species
+            if mdata[5]:
+                extrapol = True # flag for any extrapolated masses in species
 
     # Issue warnings for isomers if needed
     if Ex != 0.0 and isomer_count == 0: # no isomer flag but Ex given

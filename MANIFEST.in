@@ -13,6 +13,7 @@ recursive-exclude * *.py[co]
 
 #recursive-include docs *.rst conf.py Makefile make.bat
 recursive-include emgfit/AME2016 *.txt *.csv *.ipynb
+recursive-include emgfit/AME2020 *.txt *.csv *.ipynb
 
 include versioneer.py
 
