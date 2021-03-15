@@ -20,6 +20,7 @@ Changed
 ^^^^^^^
 * By default literature mass values are now taken from AME2020 but AME2016 can
   still optionally be accessed.
+* Removed the upper bound for the uniform background parameter.
 * Cleaned up definition of peak marker heights.
 
 Fixed
@@ -31,6 +32,7 @@ Fixed
   :meth:`~emgfit.spectrum.spectrum._get_MCMC_par_samples` due to PicklingError.
   Parallelized sampling can (for now) only be run using all CPU cores.
 * Fix arguments of :meth:`~emgfit.spectrum.spectrum.set_lit_values`.
+
 
 v0.3.7 (2021-02-02)
 -------------------
