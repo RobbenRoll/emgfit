@@ -4,7 +4,7 @@ emgfit API docs
 emgfit.ame\_funcs module
 ------------------------
 Module for importing and handling of literature mass values from the Atomic Mass
-Evaluation 2016 (AME2016).
+Evaluation (AME2020 or AME2016).
 
 .. automodule:: emgfit.ame_funcs
    :members:

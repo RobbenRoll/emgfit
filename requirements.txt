@@ -20,6 +20,8 @@ tqdm
 h5py
 xlsxwriter >= 1.2.8
 xlrd >= 1.0.0
+openpyxl 
 termcolor
 joblib
 dill
+multiprocess

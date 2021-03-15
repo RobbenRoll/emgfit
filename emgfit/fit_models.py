@@ -52,7 +52,11 @@ def create_default_init_pars(mass_number=100): #TODO: COnsider moving to config 
     tau_p1 = 50e-06*scl_factor # [u]
     tau_p2 = 600e-06*scl_factor # [u]
     tau_p3 = 1000e-06*scl_factor # [u]
-    pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta, 'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3, 'tau_m1': tau_m1, 'tau_m2': tau_m2, 'tau_m3': tau_m3, 'eta_p1': eta_p1, 'eta_p2': eta_p2, 'eta_p3': eta_p3, 'tau_p1': tau_p1, 'tau_p2': tau_p2, 'tau_p3': tau_p3}
+    pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta,
+                 'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3,
+                 'tau_m1': tau_m1, 'tau_m2': tau_m2, 'tau_m3': tau_m3,
+                 'eta_p1': eta_p1, 'eta_p2': eta_p2, 'eta_p3': eta_p3,
+                 'tau_p1': tau_p1, 'tau_p2': tau_p2, 'tau_p3': tau_p3}
     return pars_dict
 
 

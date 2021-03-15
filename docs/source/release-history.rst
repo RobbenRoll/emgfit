@@ -7,6 +7,31 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+v0.4.0 (2021-03-09)
+-------------------
+
+Added
+^^^^^
+* Added the newly published AME2020 mass database.
+* Added warning for failed convergence whenever best-fit centroids agree with
+  initial values within 1e-09 u.
+
+Changed
+^^^^^^^
+* By default literature mass values are now taken from AME2020 but AME2016 can
+  still optionally be accessed.
+* Cleaned up definition of peak marker heights.
+
+Fixed
+^^^^^
+* Correct bug in calculation of literature mass values for molecular isomers.
+* Fix bug in calculation of literature values for doubly-charged mass
+  calibrants.
+* Avoid fails of parallelized MCMC sampling with
+  :meth:`~emgfit.spectrum.spectrum._get_MCMC_par_samples` due to PicklingError.
+  Parallelized sampling can (for now) only be run using all CPU cores.
+* Fix arguments of :meth:`~emgfit.spectrum.spectrum.set_lit_values`.
+
 v0.3.7 (2021-02-02)
 -------------------
 

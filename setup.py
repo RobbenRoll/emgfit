@@ -54,9 +54,12 @@ setup(
         'emgfit': [
             # When adding files here, remember to update MANIFEST.in as well,
             # or else they will not be included in the distribution on PyPI!
-            'AME2016/AME 2016 dataframe.ipynb',
-            'AME2016/ame16.txt',
-            'AME2016/AME2016_formatted.csv',
+            'AME2016/AME2016 mass data to csv.ipynb',
+            'AME2016/mass16.txt',
+            'AME2016/AME2016-mass-formatted.csv',
+            'AME2020/AME2020 mass data to csv.ipynb',
+            'AME2020/mass20.txt',
+            'AME2020/AME2020-mass-formatted.csv',
             'examples/tutorial/*.txt',
             'examples/tutorial/*.ipynb',
             'examples/tutorial/outputs/readme.txt',
