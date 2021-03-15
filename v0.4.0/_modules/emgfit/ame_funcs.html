@@ -1,0 +1,505 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>emgfit.ame_funcs &mdash; emgfit 0.4.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/thebelab.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+        <script src="../../_static/thebelab-helper.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> emgfit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Getting started with emgfit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../emgfit_tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Central concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">emgfit API docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">emgfit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>emgfit.ame_funcs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for emgfit.ame_funcs</h1><div class="highlight"><pre>
+<span></span><span class="c1">###################################################################################################</span>
+<span class="c1">##### Module for importing and handling of data from the Atomic Mass Evaluation</span>
+<span class="c1">##### (AME) for emgfit package</span>
+<span class="c1">##### Author: Stefan Paul</span>
+
+<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="c1">##### Import AME2016 &amp; AME2020 data into pandas dataframes</span>
+<span class="n">directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>  <span class="c1"># get directory containing this file</span>
+<span class="n">filename_AME2016</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;/AME2016/AME2016-mass-formatted.csv&quot;</span>
+<span class="n">df_AME2016</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename_AME2016</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;UTF-8&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+<span class="n">df_AME2016</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;Element&#39;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">filename_AME2020</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;/AME2020/AME2020-mass-formatted.csv&quot;</span>
+<span class="n">df_AME2020</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename_AME2020</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;UTF-8&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+<span class="n">df_AME2020</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;Element&#39;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1">##### Define functions</span>
+<div class="viewcode-block" id="mdata_AME"><a class="viewcode-back" href="../../modules.html#emgfit.ame_funcs.mdata_AME">[docs]</a><span class="k">def</span> <span class="nf">mdata_AME</span><span class="p">(</span><span class="n">El</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s1">&#39;AME2020&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Grabs atomic mass data from the atomic mass evaluation (AME).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    El : str</span>
+<span class="sd">        String with element symbol.</span>
+<span class="sd">    A : int</span>
+<span class="sd">        Mass number of isotope of interest.</span>
+<span class="sd">    src : str, optional, default: AME2020</span>
+<span class="sd">        Source of literature mass data (either &#39;AME2016&#39; or &#39;AME2020&#39;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list (str,int,float,float,bool)</span>
+<span class="sd">        [Element, Z, A, atomic AME mass [u], atomic AME mass error [u], boolean</span>
+<span class="sd">        flag for extrapolated AME mass]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">src</span> <span class="o">==</span> <span class="s1">&#39;AME2020&#39;</span><span class="p">:</span>
+        <span class="n">df_AME</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">df_AME2020</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">src</span> <span class="o">==</span> <span class="s1">&#39;AME2016&#39;</span><span class="p">:</span>
+        <span class="n">df_AME</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">df_AME2016</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">df_AME</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">A</span><span class="p">,</span><span class="n">El</span><span class="p">)]</span>
+        <span class="n">m_AME</span> <span class="o">=</span> <span class="n">df_AME</span><span class="p">[</span><span class="s1">&#39;ATOMIC MASS [µu]&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">A</span><span class="p">,</span><span class="n">El</span><span class="p">)]</span><span class="o">*</span><span class="mf">1e-06</span>
+        <span class="n">m_AME_error</span> <span class="o">=</span> <span class="n">df_AME</span><span class="p">[</span><span class="s1">&#39;Error ATOMIC MASS [µu]&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">A</span><span class="p">,</span><span class="n">El</span><span class="p">)]</span><span class="o">*</span><span class="mf">1e-06</span>
+        <span class="n">extrapolated_yn</span> <span class="o">=</span> <span class="n">df_AME</span><span class="p">[</span><span class="s1">&#39;Extrapolated?&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">A</span><span class="p">,</span><span class="n">El</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No AME values found for </span><span class="si">{0}</span><span class="s2">-</span><span class="si">{1}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">El</span><span class="p">,</span><span class="n">A</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="bp">None</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">El</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">m_AME</span><span class="p">,</span> <span class="n">m_AME_error</span><span class="p">,</span> <span class="n">extrapolated_yn</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="get_El_from_Z"><a class="viewcode-back" href="../../modules.html#emgfit.ame_funcs.get_El_from_Z">[docs]</a><span class="k">def</span> <span class="nf">get_El_from_Z</span><span class="p">(</span><span class="n">Z</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convenience function to grab element symbol from given proton number.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Z : int or array-like of int</span>
+<span class="sd">        Proton number.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Symbol of element with specified proton number.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">df_AME2020</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">Z_i</span><span class="p">)</span>
+        <span class="n">li</span> <span class="o">=</span> <span class="p">[</span><span class="n">df_AME2020</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;Element&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">Z_i</span> <span class="ow">in</span> <span class="n">Z</span><span class="p">]</span>
+        <span class="n">El</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">li</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">df_AME2020</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">Z</span><span class="p">)</span>
+        <span class="n">El</span> <span class="o">=</span> <span class="n">df_AME2020</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;Element&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">El</span></div>
+
+
+<div class="viewcode-block" id="splitspecies"><a class="viewcode-back" href="../../modules.html#emgfit.ame_funcs.splitspecies">[docs]</a><span class="k">def</span> <span class="nf">splitspecies</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Splits ion species string into list of constituent atom strings.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : str</span>
+<span class="sd">        Input species string.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of str</span>
+<span class="sd">        List of constituent atom strings contained in `s`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; splitspecies(&#39;4H1:1C12&#39;)  # returns ``[&#39;4H1&#39;,&#39;1C12&#39;]``</span>
+<span class="sd">    &gt;&gt;&gt; splitspecies(&#39;H1:O16&#39;)    # returns ``[&#39;H1&#39;,&#39;O16&#39;]``</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="splitparticle"><a class="viewcode-back" href="../../modules.html#emgfit.ame_funcs.splitparticle">[docs]</a><span class="k">def</span> <span class="nf">splitparticle</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts number, particle/element type and mass number of particle string</span>
+<span class="sd">    (e.g. 1Cs133, Cs133, 1e).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : str</span>
+<span class="sd">        Input particle string.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (int, str, int)</span>
+<span class="sd">        Tuple of signature (number of particles, element symbol, atomic mass number)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; splitspecies(&#39;1Cs133&#39;) # returns (1,&#39;Cs&#39;,133)</span>
+<span class="sd">    &gt;&gt;&gt; splitspecies(&#39;-e&#39;)     # returns (-1,&#39;e&#39;,0)</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;+-0123456789&#39;</span><span class="p">)</span>
+    <span class="n">head</span> <span class="o">=</span> <span class="n">s</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">tail</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">head</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span> <span class="ow">or</span> <span class="n">head</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span> <span class="c1"># handle omitted 1 or plus sign</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">head</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span> <span class="c1"># handle omitted 1</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">head</span><span class="p">)</span> <span class="c1"># leading number including sign (if present)</span>
+    <span class="n">El</span> <span class="o">=</span> <span class="n">tail</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;0123456789&#39;</span><span class="p">)</span> <span class="c1"># get central letters</span>
+    <span class="k">if</span> <span class="n">El</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">El</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">tail</span><span class="p">):</span> <span class="c1"># handle electron strings, e.g. &#39;:-1e&#39;</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># handle hadrons</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tail</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">El</span><span class="p">):])</span> <span class="c1"># trailing number</span>
+    <span class="k">return</span> <span class="n">n</span><span class="p">,</span> <span class="n">El</span><span class="p">,</span> <span class="n">A</span></div>
+
+
+<div class="viewcode-block" id="get_charge_state"><a class="viewcode-back" href="../../modules.html#emgfit.ame_funcs.get_charge_state">[docs]</a><span class="k">def</span> <span class="nf">get_charge_state</span><span class="p">(</span><span class="n">species</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return charge state of given species</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    species : str</span>
+<span class="sd">        String with name of species.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    `species` strings follow the :ref:`:-notation`.</span>
+
+<span class="sd">    The ionic charge state is defined by subtracting the desired number of</span>
+<span class="sd">    electrons from the atomic species (i.e. ``&#39;:-1e&#39;`` for singly charged</span>
+<span class="sd">    cations, ``&#39;:-2e&#39;`` for doubly charged cations etc.).</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">species</span> <span class="o">==</span> <span class="s1">&#39;?&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">ptype</span> <span class="ow">in</span> <span class="n">splitspecies</span><span class="p">(</span><span class="n">species</span><span class="p">):</span> <span class="c1"># loop over particle/atom types</span>
+        <span class="c1"># Remove trailing &#39;?&#39; (flag for tentative species IDs)</span>
+        <span class="k">if</span> <span class="n">ptype</span> <span class="o">==</span> <span class="s1">&#39;?&#39;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ptype</span> <span class="o">=</span> <span class="n">ptype</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;m? &#39;</span><span class="p">)</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">El</span><span class="p">,</span> <span class="n">A</span> <span class="o">=</span> <span class="n">splitparticle</span><span class="p">(</span><span class="n">ptype</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">El</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span><span class="p">:</span> <span class="c1"># electron</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="n">n</span>  <span class="c1"># set charge state</span>
+
+    <span class="k">return</span> <span class="n">z</span></div>
+
+
+<div class="viewcode-block" id="get_AME_values"><a class="viewcode-back" href="../../modules.html#emgfit.ame_funcs.get_AME_values">[docs]</a><span class="k">def</span> <span class="nf">get_AME_values</span><span class="p">(</span><span class="n">species</span><span class="p">,</span> <span class="n">Ex</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">Ex_error</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s1">&#39;AME2020&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates the AME mass, AME mass error, the extrapolation flag and the</span>
+<span class="sd">    mass number A of the given atomic or molecular species.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    species : str</span>
+<span class="sd">        String with name of species to grab AME values for.</span>
+<span class="sd">    Ex : float [keV], optional, default: 0.0</span>
+<span class="sd">        Isomer excitation energy in keV to add to ground-state literature</span>
+<span class="sd">        mass.</span>
+<span class="sd">    Ex_error : float [keV], optional, default: 0.0</span>
+<span class="sd">        Uncertainty of isomer excitation energy in keV to add in quadrature</span>
+<span class="sd">        to ground-state literature mass uncertainty.</span>
+<span class="sd">    src : str, optional, default: AME2020</span>
+<span class="sd">        Source of literature data (&#39;AME2016&#39; or &#39;AME2020&#39;).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    `species` strings follow the :ref:`:-notation`.</span>
+
+<span class="sd">    Atoms with the nucleus in an isomeric state are flagged by appending an &#39;m&#39;</span>
+<span class="sd">    or any of &#39;m0&#39;, &#39;m1&#39;, ..., &#39;m9&#39; to the atom&#39;s substring. For species with</span>
+<span class="sd">    isomers the literature mass values are only returned if the excitation</span>
+<span class="sd">    energy is user-specified with the `Ex` argument. In this case, `Ex` is</span>
+<span class="sd">    added to the AME value for the ground state mass and `Ex_error` is added in</span>
+<span class="sd">    quadrature to the respective AME uncertainty.</span>
+
+<span class="sd">    Both the atomic binding energy of stripped-off electrons as well as the</span>
+<span class="sd">    uncertainty of the electron mass are neglected in the calculation of the</span>
+<span class="sd">    ionic AME mass.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (float,float,bool,int)</span>
+<span class="sd">        List containing relevant AME data for `species`:</span>
+<span class="sd">        (AME mass [u], AME mass uncertainty [u],</span>
+<span class="sd">        boolean flag for extrapolated species, atomic mass number)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">m_error_sq</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">A_tot</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">extrapol</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># initialize boolean flag as False</span>
+    <span class="n">isomer_flags</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span><span class="s1">&#39;m0&#39;</span><span class="p">,</span><span class="s1">&#39;m1&#39;</span><span class="p">,</span><span class="s1">&#39;m2&#39;</span><span class="p">,</span><span class="s1">&#39;m3&#39;</span><span class="p">,</span><span class="s1">&#39;m4&#39;</span><span class="p">,</span><span class="s1">&#39;m5&#39;</span><span class="p">,</span><span class="s1">&#39;m6&#39;</span><span class="p">,</span><span class="s1">&#39;m7&#39;</span><span class="p">,</span><span class="s1">&#39;m8&#39;</span><span class="p">,</span><span class="s1">&#39;m9&#39;</span><span class="p">)</span>
+    <span class="n">isomer_count</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># number of isomeric particle types found</span>
+    <span class="k">for</span> <span class="n">ptype</span> <span class="ow">in</span> <span class="n">splitspecies</span><span class="p">(</span><span class="n">species</span><span class="p">):</span> <span class="c1"># loop over particle/atom types</span>
+
+        <span class="c1"># Abort when encountering unidentified species</span>
+        <span class="k">if</span> <span class="n">ptype</span> <span class="o">==</span> <span class="s1">&#39;?&#39;</span><span class="p">:</span>
+            <span class="n">m</span><span class="p">,</span> <span class="n">m_error</span><span class="p">,</span> <span class="n">extrapol</span><span class="p">,</span> <span class="n">A_tot</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="k">break</span> <span class="c1"># still check warnings below</span>
+
+        <span class="c1"># Remove trailing &#39;?&#39; (flag for tentative species IDs)</span>
+        <span class="n">ptype</span> <span class="o">=</span> <span class="n">ptype</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;? &#39;</span><span class="p">)</span>
+
+        <span class="c1"># Check for isomer (flagged by &#39;m&#39; or &#39;m0&#39; to &#39;m9&#39; at the end)</span>
+        <span class="k">if</span> <span class="n">ptype</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">isomer_flags</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">Ex</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span> <span class="c1"># abort if no `Ex` is given</span>
+                <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is labelled as isomer but no excitation energy &quot;</span>
+                          <span class="s2">&quot;was specified with the `Ex` argument.&quot;</span>
+                          <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">species</span><span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">Ex_error</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Uncertainty of isomer excitation energy `Ex_error` &quot;</span>
+                          <span class="s2">&quot;unspecified for </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ptype</span><span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">isomer_yn</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">isomer_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">ptype</span> <span class="o">=</span> <span class="n">ptype</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;0123456789&#39;</span><span class="p">)</span>
+            <span class="n">ptype</span> <span class="o">=</span> <span class="n">ptype</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">isomer_yn</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Update lit. values</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">El</span><span class="p">,</span> <span class="n">A</span> <span class="o">=</span> <span class="n">splitparticle</span><span class="p">(</span><span class="n">ptype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">El</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span> <span class="ow">and</span> <span class="n">m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># electron</span>
+            <span class="n">m</span> <span class="o">+=</span> <span class="n">n</span><span class="o">*</span><span class="n">m_e</span>
+            <span class="c1"># neglect uncertainty of m_e</span>
+        <span class="k">elif</span> <span class="n">isomer_yn</span><span class="p">:</span> <span class="c1"># isomeric species</span>
+            <span class="n">mdata</span> <span class="o">=</span> <span class="n">mdata_AME</span><span class="p">(</span><span class="n">El</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">+=</span> <span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">mdata</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">Ex</span><span class="o">/</span><span class="n">u_to_keV</span><span class="p">)</span>
+            <span class="n">m_error_sq</span> <span class="o">+=</span> <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">mdata</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">Ex_error</span><span class="o">/</span><span class="n">u_to_keV</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">m_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">m_error_sq</span><span class="p">)</span>
+            <span class="n">A_tot</span> <span class="o">+=</span> <span class="n">n</span><span class="o">*</span><span class="n">A</span>
+            <span class="k">if</span> <span class="n">mdata</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span>
+                <span class="n">extrapol</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1"># flag for any extrapolated masses in species</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># regular atom</span>
+            <span class="n">mdata</span> <span class="o">=</span> <span class="n">mdata_AME</span><span class="p">(</span><span class="n">El</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">+=</span> <span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">mdata</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="n">m_error_sq</span> <span class="o">+=</span> <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">mdata</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">m_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">m_error_sq</span><span class="p">)</span>
+            <span class="n">A_tot</span> <span class="o">+=</span> <span class="n">n</span><span class="o">*</span><span class="n">A</span>
+            <span class="k">if</span> <span class="n">mdata</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span>
+                <span class="n">extrapol</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1"># flag for any extrapolated masses in species</span>
+
+    <span class="c1"># Issue warnings for isomers if needed</span>
+    <span class="k">if</span> <span class="n">Ex</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">isomer_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># no isomer flag but Ex given</span>
+        <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;The specified isomer excitation energy `Ex` and its &quot;</span>
+                  <span class="s2">&quot;error `Ex_error` are ignored since the species label &quot;</span>
+                  <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; does not contain any isomer markers.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">species</span><span class="p">)</span>
+        <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">isomer_count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> contains multiple isomeric constituents. This method &quot;</span>
+                  <span class="s2">&quot;only supports ions with a single isotopic species in an &quot;</span>
+                  <span class="s2">&quot;isomeric state.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">species</span><span class="p">)</span>
+        <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">m</span><span class="p">,</span> <span class="n">m_error</span><span class="p">,</span> <span class="n">extrapol</span><span class="p">,</span> <span class="n">A_tot</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, Stefan Paul.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
