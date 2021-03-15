@@ -48,7 +48,7 @@ class Test_get_AME_values:
         """Check the u_to_keV factor from Scipy against value from
         """
         msg = "u_to_keV factor deviates from CODATA reference value"
-        assert self._isclose(emg.u_to_keV, self.u_to_keV_ref, atol=5), msg
+        assert self._isclose(emg.u_to_keV, self.u_to_keV_ref,atol=5,rtol=0), msg
 
 
     def test_extrapol_AME_value(self):
