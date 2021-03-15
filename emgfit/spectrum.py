@@ -2403,6 +2403,20 @@ class spectrum:
         out.vary_baseline = vary_baseline
         out.vary_shape = vary_shape
 
+        # Check if any best-fit mus agree with initial value, warn if any
+        # agreement within tolerance `atol` is found
+        atol = 1e-09
+        for p in peaks_to_fit:
+            p_idx = self.peaks.index(p)
+            par_name = 'p'+str(p_idx)+'_mu'
+            mu_f = out.params[par_name].value
+            mu_i = out.params[par_name].init_value
+            if np.isclose(mu_f, mu_i, atol=atol, rtol=0):
+                msg = str("Best-fit value for {} agrees with initial value "
+                          "within +/-{} - danger of failed convergence!"
+                          ).format(par_name, atol)
+                warnings.warn(msg)
+
         if map_par_covar:
             self._get_MCMC_par_samples(out, **MCMC_kwargs)
 

@@ -7,17 +7,19 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
-v0.3.8 (2021-XX-YY)
+v0.4.0 (2021-03-09)
 -------------------
 
 Added
 ^^^^^
 * Added the newly published AME2020 mass database.
+* Added warning for failed convergence whenever best-fit centroids agree with
+  initial values within 1e-09 u.
 
 Changed
 ^^^^^^^
-* By default literature mass values are now taken from AME2020 instead of
-  AME2016.
+* By default literature mass values are now taken from AME2020 but AME2016 can
+  still optionally be accessed.
 * Cleaned up definition of peak marker heights.
 
 Fixed
