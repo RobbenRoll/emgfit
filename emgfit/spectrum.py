@@ -138,7 +138,6 @@ class peak:
             AME2016 is used, :literal:`'lit_src: AME2016'` is added to the peak
             :attr:`comment`.
 
-
         """
         m, m_error, extrapol, A_tot = get_AME_values(species, Ex=Ex,
                                                      Ex_error=Ex_error,
@@ -589,7 +588,7 @@ class spectrum:
             w=eval('np.'+window+'(window_len)')
 
         y=np.convolve(w/w.sum(),s,mode='valid')
-        return y[int(window_len/2+1):-int(window_len/2-1)]
+        return y[int(window_len/2):-int(window_len/2)]
 
 
     def plot(self, peaks=None, title="", fig=None, yscale='log', vmarkers=None,
@@ -627,7 +626,7 @@ class spectrum:
         """
         if peaks is None:
             peaks = self.peaks
-        data = self.data # get spectrum data stored in dataframe 'self.data'
+        data = self.data[xmin:xmax] # cut data to range of interest
         ymax = data.max()[0]
         if fig is None:
             fig = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
@@ -727,11 +726,11 @@ class spectrum:
                      plot_2nd_deriv=True, plot_detection_result=True):
         """Perform automatic peak detection.
 
-        The peak detection routine uses a scaled second derivative of the
-        spectrum :attr:`data` after first applying some smoothing. This enables
-        very sensitive yet robust peak detection. The parameters `thres`,
-        `window_len` & `width` can be used to tune the smoothing and peak
-        detection for maximal sensitivity.
+        This routine finds peaks from minima in a scaled second derivative of
+        the spectrum :attr:`data` after first applying some smoothing. This
+        approach enables very sensitive yet robust detection, even for partially
+        overlapping peaks. The `thres`, `window_len` & `width` parameters can be
+        used to tune the algorithm to the specific data for maximum sensitivity.
 
         Parameters
         ----------
@@ -1710,7 +1709,7 @@ class spectrum:
                       plot_filename=plot_filename)
 
 
-    def comp_model(self, peaks_to_fit, model='emg22', init_pars=None,
+    def comp_model(self, peaks_to_fit, fit_model='emg22', init_pars=None,
                    vary_shape=False, vary_baseline=True, index_first_peak=None):
         """Create a multi-peak composite model with the specified peak shape.
 
@@ -1749,31 +1748,36 @@ class spectrum:
         an empirically determined constant and the spectrum's :attr:`mass_number`.
 
         """
-        model = getattr(fit_models,model) # get single peak model from fit_models.py
+        model = getattr(fit_models, fit_model)
         mod = fit.models.ConstantModel(prefix='bkg_') #(independent_vars='x',prefix='bkg_')
+        df = self.data
+
         if vary_baseline is True:
-            mod.set_param_hint('bkg_c', value= 0.1, min=0, vary=True)
+            y_min = np.amin(df.values.flatten())
+            mod.set_param_hint('bkg_c', value= y_min+0.1, min=0, vary=True)
         else:
             mod.set_param_hint('bkg_c', value= 0.0, vary=False)
-        df = self.data
+
         for peak in peaks_to_fit:
             peak_index = self.peaks.index(peak)
-            # Get x_pos of closest bin
-            x_pos = df.index[np.argmin(np.abs(df.index.values - peak.x_pos))]
-            # Estimate initial amplitude from counts in closest bin, the
-            # conversion factor 1/2500 is empirically determined and somewhat
-            # shape-dependent:
-            amp = max(df['Counts'].loc[x_pos]/2500*(self.mass_number/100),1e-04)
+            # Estimate initial amplitude from counts in closest bin to x_pos,
+            # the conversion factor 1/2500 is empirically determined and
+            # somewhat shape-dependent:
+            i_pos = np.argmin(np.abs(df.index.values - peak.x_pos))
+            y_max = df.values.flatten()[i_pos]
+            amp0 = max(y_max, 1)/2500*(self.mass_number/100)
+            mu0 = fit_models.get_mu0(peak.x_pos, init_pars, fit_model)
             if init_pars:
-                this_mod = model(peak_index, peak.x_pos, amp,
+                this_mod = model(peak_index, mu0, amp0,
                                  init_pars=init_pars,
                                  vary_shape_pars=vary_shape,
                                  index_first_peak=index_first_peak)
             else:
-                this_mod = model(peak_index, peak.x_pos, amp,
+                this_mod = model(peak_index, mu0, amp0,
                                  vary_shape_pars=vary_shape,
                                  index_first_peak=index_first_peak)
             mod = mod + this_mod
+
         return mod
 
 
@@ -2157,9 +2161,9 @@ class spectrum:
         init_pars : dict, optional
             Dictionary with initial shape parameter values for fit (optional).
 
-            - If ``None`` (default) the parameters from the shape calibration
-              are used (if no shape calibration has been performed yet the
-              default parameters defined for mass 100 in the
+            - If ``None`` (default) the parameters from the peak-shape
+              calibration are used (if no shape calibration has been performed
+              yet the default parameters defined for mass 100 in the
               :mod:`emgfit.fit_models` module will be used after re-scaling to
               the spectrum's :attr:`mass_number`).
             - If ``'default'``, the default parameters defined for mass 100 in
@@ -2168,14 +2172,13 @@ class spectrum:
             - To define custom initial values a parameter dictionary containing
               all model parameters and their values in the format
               ``{'<param name>':<param_value>,...}`` should be passed to
-              `init_pars`. Mind that only the initial values to shape parameters
-              (`sigma`, `theta`,`etas` and `taus`) can be user-defined. The
-              `mu` parameter will be initialized at the peak's :attr:`x_cen`
-              attribute and the initial peak amplitude `amp` is automatically
-              estimated from the counts at the bin closest to `x_cen`. If a
-              varying baseline is used in the fit, the baseline parameter
-              `bgd_c` is always initialized at a value of 0.1.
+              `init_pars`.
 
+            Mind that only the initial values to shape parameters (`sigma`,
+            `theta`,`etas` and `taus`) can be user-defined. The initial values for
+            `mu`, `amp` and the optional baseline parameter `bkg_c` are
+            automatically derived as described in the :ref:`peak-fitting approach`
+            article.
         vary_shape : bool, optional, default: `False`
             If `False` peak-shape parameters (`sigma`, `theta`,`etas` and
             `taus`) are kept fixed at their initial values. If `True` the
@@ -2183,7 +2186,7 @@ class spectrum:
             parameters for all peaks).
         vary_baseline : bool, optional, default: `True`
             If `True`, the constant background will be fitted with a varying
-            uniform baseline parameter `bkg_c` (initial value: 0.1).
+            uniform baseline parameter `bkg_c`.
             If `False`, the baseline parameter `bkg_c` will be fixed to 0.
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
@@ -2307,8 +2310,8 @@ class spectrum:
             peaks_to_fit = self.peaks
         if len(peaks_to_fit) == 0:
             raise Exception("Fit failed. No peaks in specified mass range.")
-        x = df_fit.index.values
-        y = df_fit['Counts'].values
+        x = df_fit.index.values.flatten()
+        y = df_fit.values.flatten()
         y_err = np.maximum(1,np.sqrt(y)) # assume Poisson (counting) statistics
         # Weights for residuals: residual = (fit_model - y) * weights
         weights = 1./y_err
@@ -2330,7 +2333,6 @@ class spectrum:
                                 "argument.")
             init_params = self.shape_cal_pars
 
-
         if vary_shape is True:
             # Enforce shared shape parameters for all peaks
             index_first_peak = self.peaks.index(peaks_to_fit[0])
@@ -2339,7 +2341,7 @@ class spectrum:
 
         model_name = str(fit_model)+' + const. background (bkg_c)'
         # Create multi-peak fit model
-        mod = self.comp_model(peaks_to_fit=peaks_to_fit, model=fit_model,
+        mod = self.comp_model(peaks_to_fit=peaks_to_fit, fit_model=fit_model,
                               init_pars=init_params, vary_shape=vary_shape,
                               vary_baseline=vary_baseline,
                               index_first_peak=index_first_peak)
@@ -2363,8 +2365,8 @@ class spectrum:
             out = mod_Pearson.fit(y, params=pars, x=x, weights=weights,
                                   method=method, fit_kws=fit_kws,
                                   scale_covar=False, nan_policy='propagate')
-            y_m = out.best_fit
             # Calculate final weights for plotting
+            y_m = out.best_fit
             Pearson_weights = 1./np.sqrt(y_m + eps)
             out.y_err = 1./Pearson_weights
         elif cost_func == 'MLE':
@@ -2373,12 +2375,13 @@ class spectrum:
             # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
             # summands:
             tiny = np.finfo(float).tiny # get smallest pos. float in numpy
+            from numpy import log, sqrt
             def sqrt_NLLR(pars,y_data,weights,x=x):
                 y_m = mod_MLE.eval(pars,x=x)
                 # Add tiniest pos. float representable by numpy to arguments of
                 # np.log to smoothly handle divergences for log(arg -> 0)
-                NLLR = 2*(y_m-y_data) + 2*y_data*(np.log(y_data+tiny)-np.log(y_m+tiny))
-                ret = np.sqrt(NLLR)
+                NLLR = 2*(y_m-y_data) + 2*y_data*(log(y_data+tiny)-log(y_m+tiny))
+                ret = sqrt(NLLR)
                 return ret
 
             # Overwrite lmfit's standard least square residuals with the
@@ -2719,7 +2722,7 @@ class spectrum:
             :meth:`lmfit.model.Model.fit` method.
         vary_baseline : bool, optional, default: `True`
             If `True`, the constant background will be fitted with a varying
-            uniform baseline parameter `bkg_c` (initial value: 0.1).
+            uniform baseline parameter `bkg_c`.
             If `False`, the baseline parameter `bkg_c` will be fixed to 0.
         plot_filename : str, optional, default: None
             If not ``None``, the plots will be saved to two separate files named
@@ -2731,7 +2734,7 @@ class spectrum:
         As noted in [#]_, statistical errors of Hyper-EMG peak centroids obey
         the following scaling with the number of counts in the peak `N_counts`:
 
-        .. math::  \\sigma_{stat} = A_{stat,emg} \\frac{FWHM}{\\sqrt{N_{counts}}},
+        .. math:: \\Delta \\left(m/z\\right)_\\mathrm{stat} = A_{stat,emg}\\frac{FWHM}{\\sqrt{N_{counts}}},
 
         where the constant of proportionality `A_stat_emg` depends on the
         specific peak shape. This routine uses the following method to determine
@@ -2945,7 +2948,8 @@ class spectrum:
 
                   L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]
 
-            For details see `Notes` section of :meth:`peakfit` method documentation.
+            For details see `Notes` section of :meth:`peakfit` method
+            documentation.
         init_pars : dict, optional
             Dictionary with initial shape parameter values for fit (optional).
 
@@ -2957,14 +2961,11 @@ class spectrum:
               ``{'<param name>':<param_value>,...}`` should be passed to
               `init_pars`.
 
-          Mind that only the initial values to shape parameters
-          (`sigma`, `theta`,`etas` and `taus`) can be user-defined. The
-          `mu` parameter will be initialized at the peak's :attr:`x_cen`
-          attribute and the initial peak amplitude `amp` is automatically
-          estimated from the counts at the bin closest to `x_cen`. If a
-          varying baseline is used in the fit, the baseline parameter
-          `bgd_c` is always initialized at a value of 0.1.
-
+          Mind that only the initial values to shape parameters (`sigma`,
+          `theta`,`etas` and `taus`) can be user-defined. The initial values for
+          `mu`, `amp` and the optional baseline parameter `bkg_c` are
+          automatically derived as described in the :ref:`peak-fitting approach`
+          article.
         x_fit_cen : float [u/z], optional
             Center of fit range. If ``None`` (default), the :attr:`x_pos`
             attribute of the shape-calibrant peak is used as `x_fit_cen`.
@@ -2973,8 +2974,8 @@ class spectrum:
             :attr:`default_fit_range` spectrum attribute.
         vary_baseline : bool, optional, default: `True`
             If `True`, the background will be fitted with a varying uniform
-            baseline parameter `bkg_c` (initial value: 0.1). If `False`, the
-            baseline parameter `bkg_c` will be fixed to 0.
+            baseline parameter `bkg_c`. If `False`, the baseline parameter
+            `bkg_c` will be fixed to 0.
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
@@ -4280,7 +4281,7 @@ class spectrum:
             width of mass range to fit; if None, defaults to 'default_fit_range' spectrum attribute
         vary_baseline : bool, optional, default: `True`
             If `True`, the constant background will be fitted with a varying
-            uniform baseline parameter `bkg_c` (initial value: 0.1).
+            uniform baseline parameter `bkg_c`.
             If `False`, the baseline parameter `bkg_c` will be fixed to 0.
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
@@ -4563,8 +4564,8 @@ class spectrum:
         init_pars : dict, optional
             Dictionary with initial shape parameter values for fit (optional).
 
-            - If ``None`` (default) the parameters from the shape calibration
-              (:attr:`peak_shape_pars` spectrum attribute) are used.
+            - If ``None`` (default) the parameters from the peak-shape
+              calibration (:attr:`peak_shape_pars` spectrum attribute) are used.
             - If ``'default'``, the default parameters defined for mass 100 in
               the :mod:`emgfit.fit_models` module will be used after re-scaling
               to the spectrum's :attr:`mass_number`.
@@ -4573,13 +4574,11 @@ class spectrum:
               ``{'<param name>':<param_value>,...}`` should be passed to
               `init_pars`.
 
-          Mind that only the initial values to shape parameters
-          (`sigma`, `theta`,`etas` and `taus`) can be user-defined. The
-          `mu` parameter will be initialized at the peak's :attr:`x_cen`
-          attribute and the initial peak amplitude `amp` is automatically
-          estimated from the counts at the bin closest to `x_cen`. If a
-          varying baseline is used in the fit, the baseline parameter
-          `bgd_c` is always initialized at a value of 0.1.
+          Mind that only the initial values to shape parameters (`sigma`,
+          `theta`,`etas` and `taus`) can be user-defined. The initial values for
+          `mu`, `amp` and the optional baseline parameter `bkg_c` are
+          automatically derived as described in the :ref:`peak-fitting approach`
+          article.
         vary_shape : bool, optional, default: `False`
             If `False` peak-shape parameters (`sigma`, `theta`,`etas` and
             `taus`) are kept fixed at their initial values. If `True` the
@@ -4587,7 +4586,7 @@ class spectrum:
             parameters for all peaks).
         vary_baseline : bool, optional, default: `True`
             If `True`, the constant background will be fitted with a varying
-            uniform baseline parameter `bkg_c` (initial value: 0.1).
+            uniform baseline parameter `bkg_c`.
             If `False`, the baseline parameter `bkg_c` will be fixed to 0.
         show_plots : bool, optional
             If `True` (default) linear and logarithmic plots of the spectrum

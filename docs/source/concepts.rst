@@ -92,7 +92,7 @@ values can be specified with the :meth:`~emgfit.spectrum.spectrum.add_peak` and
 Hyper-EMG distributions
 -----------------------
 A core feature of `emgfit` is its numerically robust implementation of
-hyper-exponentially-modified Gaussian (hyper-EMG) distribution functions.
+hyper-exponentially-modified Gaussian (hyper-EMG) probability density functions.
 Exponentially-modified Gaussian distributions have been demonstrated to be a
 powerful tool for fitting spectroscopic data from various fields including mass
 spectrometry [1]_, alpha-particle spectrometry [2]_ and chromatography [3]_.
@@ -108,7 +108,7 @@ of left-hand and right-hand exponential tails, respectively:
 
 where :math:`0 \leq \Theta \leq 1` is the mixing weight that determines the
 relative contribution of the negative and positive skewed EMG distributions,
-:math:`h_\mathrm{-emg}`` and :math:`h_\mathrm{+emg}`, respectively. The latter
+:math:`h_\mathrm{-emg}` and :math:`h_\mathrm{+emg}`, respectively. The latter
 are defined as:
 
 .. math::
@@ -146,6 +146,15 @@ the following normalizations:
 
 For information on the numerical implementation of hyper-EMG distributions see
 :mod:`emgfit.emg_funcs`.
+
+For fits of actual count data, the normalized :math:`h_\mathrm{emg}(x)`
+distribution is multiplied by an amplitude parameter (:math:`A` or `amp`) and
+optionally a uniform baseline parameter (:math:`c_\mathrm{bkg} or `bkg_c`) is
+added:
+
+.. math::
+
+   H_\mathrm{emg} = A \cdot h_\mathrm{emg}(x) + c_\mathrm{bkg}
 
 
 .. _fit_model_list:
@@ -191,6 +200,8 @@ typical relative errors of the corresponding shape parameters. Since `emgfit`
 been implemented in the package. Support for fitting non-isobaric mass peaks in
 the same spectrum might be added in the future.
 
+.. _`peak-fitting approach`:
+
 Peak fitting approach
 ---------------------
 Peak fits with `emgfit` are executed by the internal
@@ -198,24 +209,46 @@ Peak fits with `emgfit` are executed by the internal
 :class:`~lmfit.model.Model` interface. However, usually the user only interacts
 with higher level methods (e.g. :meth:`~emgfit.spectrum.spectrum.determine_peak_shape`
 or :meth:`~emgfit.spectrum.spectrum.fit_peaks`) that internally call
-:meth:`~emgfit.spectrum.spectrum.peakfit`. Initial parameter values are defined
-as follows:
+:meth:`~emgfit.spectrum.spectrum.peakfit`. Initial parameter values are
+determined as follows:
 
-* The initial peak amplitude (`amp` parameter) is estimated using the number of
-  counts in the bin closest to the peak's marker position :attr:`x_pos`. The
-  number of counts is converted using a empirically determined conversion factor.
-  The conversion factor is somewhat peak-shape dependent but has been found to
-  work well for a variety of peak shapes.
-* The peak position (`mu` parameter) is initialized at the marker position
-  :attr:`x_pos`.
+* The initial value of the peak amplitude (`amp` parameter) is estimated using
+  the number of counts in the bin closest to the peak's marker position
+  :attr:`x_pos`. The number of counts is converted using an empirical conversion
+  factor. The conversion factor is somewhat peak-shape dependent but has been
+  found to work well for a large variety of peak shapes.
+* In the case of a Gaussian, the peak centroid is initialized at the peak marker
+  position :attr:`x_pos`. For a hyper-EMG fit, the initial centroid of the
+  underlying Gaussian (denoted `mu` or :math:`\mu`) is calculated by rearranging
+  the equation for the mode (i.e. the x-position with maximum probability):
+
+  .. math::
+
+      \\mu = x_{m}
+             - \\theta\\sum_{i=1}^{N_-}\\eta_{-i}\\left(\\sqrt{2}\\sigma
+               \\cdot\\mathrm{erfcxinv}\\left( \\frac{\\tau_{-i}}{\\sigma}
+               \\sqrt{\\frac{2}{\\pi}}\\right) - \\frac{\\sigma^2}{\\tau_{-i}}
+               \\right) \\\\
+             + (1-\\theta)\\sum_{i=1}^{N_-}\\eta_{+i}\\left(\\sqrt{2}\\sigma
+               \\cdot\\mathrm{erfcxinv}\\left( \\frac{\\tau_{+i}}{\\sigma}
+               \\sqrt{\\frac{2}{\\pi}}\\right) - \\frac{\\sigma^2}{\\tau_{-i}}
+               \\right),
+
+  where the mode :math:`x_{m}` is estimated by the peak marker position
+  :attr:`x_pos` and :math:`{N_-}` and :math:`{N_+}` denote the order of negative
+  and positive exponential tails, respectively.
 * If the shape parameters have not already been determined in a preceding
   peak-shape calibration there is two possibilities for their initialization.
   By default, a set of suitable initial values is then derived by re-scaling the
   shape parameters for a representative peak at mass unit 100 to the mass of the
   given spectrum. The default parameters at mass 100 u are defined in the
   :func:`emgfit.fit_models.create_default_init_pars` function. Alternatively,
-  the shape parameter values can be user-defined by parsing a dictionary with
-  the parameter names as keys to the `init_pars` option.
+  the shape parameter values can be user-defined with the `init_pars` argument.
+* If fitting of a uniform background has been activated with the `vary_baseline`
+  argument, the baseline amplitude parameter :attr:`bkg_c` is initialized at the
+  minimal number of counts found in any bin + 0.1 counts. The slight offset of
+  0.1 counts circumvents possible convergence problems due to the parameter
+  starting right on its lower bound of zero counts.
 
 Fits are performed by minimizing either of the following cost functions:
 
@@ -249,10 +282,10 @@ Fits are performed by minimizing either of the following cost functions:
   `least_squares`) the above optimization problem is rephrased into a
   least-squares problem by minimizing the square roots of the (positive
   semidefinite) summands in the above equation. See the notes section of the
-  docs of :meth:`~emgfit.spectrum.spectrum.peakfit` for details.
+  docs of :meth:`~emgfit.spectrum.spectrum.peakfit` for more details.
 
 A number of different optimization algorithms are available to perform the
-minimization.In principle, any of the algorithms listed under `lmfit's`
+minimization. In principle, any of the algorithms listed under `lmfit's`
 `fitting methods`_ can be used by passing the respective method name to the
 `method` option if `emgfit's` fitting routines. By default, the `least_squares`
 minimizer is used.
@@ -300,9 +333,9 @@ mass-dependent re-scaling of the scale parameters might be added in the future.
 Before the peak-shape calibration the user must decide which of the
 :ref:`fit_model_list` best describes the data. To aid in this process the
 :meth:`~emgfit.spectrum.spectrum.determine_peak_shape` method comes with an
-**automatic model selection** feature. Therein, `chi-square` fits with increasingly
-complicated model functions are performed on the shape calibration peak,
-starting from a regular Gaussian up to Hyper-EMG functions of successively
+**automatic model selection** feature. Therein, `chi-square` fits with
+increasingly complicated model functions are performed on the shape calibration
+peak, starting from a regular Gaussian up to Hyper-EMG functions of successively
 increasing tail order. To avoid overfitting, models with any best-fit shape
 parameters agreeing with zero within 1:math:`\sigma` confidence are excluded
 from selection. Amongst the remaining models, the one yielding the lowest
@@ -350,9 +383,9 @@ any systematics that could arise when different procedures are used to determine
 the calibrant peak position in the initial calibration and the positions of
 peaks of interest in the final fitting [5]_. Further, it renders the specific
 choice of the peak position parameter irrelevant as long as the same convention
-is followed for all peaks. In fact, instead of using the mean of the full
-hyper-EMG distribution (:math:`\mu_\mathrm{emg}`) `emgfit` uses the mean of the
-underlying Gaussian (:math:`\mu`) to establish peak positions.
+is followed for all peaks. In fact, instead of using the mean or mode of the
+full hyper-EMG distribution (:math:`\mu_\mathrm{emg}`) `emgfit` uses the mean of
+the underlying Gaussian (:math:`\mu`) to establish peak positions.
 
 In the mass recalibration a calibrant peak with a well-known (ionic) literature
 mass :math:`m_{cal, lit}` is fitted and the obtained peak position
@@ -365,7 +398,7 @@ factor defined as:
                          = \frac{m_\mathrm{cal,lit}}{m_\mathrm{cal,fit}},
 
 The calibrant peak can either be fitted individually upfront via the
-:meth:`~emgfit.spectrum.spectrum.fit_calibrant`  method or the calibrant fit can
+:meth:`~emgfit.spectrum.spectrum.fit_calibrant` method or the calibrant fit can
 be performed simultaneous with the ion-of-interest fits using the
 `index_mass_calib` or `species_mass_calib` options of the
 :meth:`~emgfit.spectrum.spectrum.fit_peaks` method. The relative uncertainty of
@@ -438,7 +471,7 @@ in two different ways:
 
    .. math::
 
-      \sigma_\mathrm{stat} = A_\mathrm{stat} \frac{\mathrm{FWHM}}{\sqrt{N_\mathrm{counts}}}.
+      \Delta \left(m/z\right)_\mathrm{stat} = A_\mathrm{stat} \frac{\mathrm{FWHM}}{\sqrt{N_\mathrm{counts}}}.
 
    In the case of a Gaussian :math:`A_\mathrm{stat}` is simply given by
    :math:`A_\mathrm{stat,G} = 1/(2\sqrt{2\ln{2}}) = 0.425`. For hyper-EMG
@@ -572,7 +605,7 @@ the respective ground-state AME mass when the excitation energy is passed to the
 `Ex` (and `Ex_error`) option of the relevant spectrum methods (e.g.
 :meth:`~emgfit.spectrum.spectrum.add_peak` &
 :meth:`~emgfit.spectrum.spectrum.assign_species`). Further, literature values
-can be fully user-defined with the 
+can be fully user-defined with the
 :meth:`~emgfit.spectrum.spectrum.set_lit_values` & method.
 
 Examples:
