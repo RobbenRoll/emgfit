@@ -3829,13 +3829,14 @@ class spectrum:
         from tqdm.auto import tqdm
         print("Fitting peaks with "+str(N_samples)+" different MCMC-shape-"
               "parameter sets to determine refined peak-shape errors.")
-        #res = np.array([refit(pars) for pars in tqdm(shape_par_samples)]) # serial version
-        res = np.array(Parallel(n_jobs=n_cores)(delayed(refit)(pars)
-                                for pars in tqdm(shape_par_samples)))
-        # Force workers to shut down
-        from joblib.externals.loky import get_reusable_executor
-        get_reusable_executor().shutdown(wait=True)
-        os.remove(modelfname) # clean up
+        try:
+            res = np.array(Parallel(n_jobs=n_cores)(delayed(refit)(pars)
+                                    for pars in tqdm(shape_par_samples)))
+        finally:
+            # Force workers to shut down and clean up temp SAV file
+            from joblib.externals.loky import get_reusable_executor
+            get_reusable_executor().shutdown(wait=True)
+            os.remove(modelfname)
 
         # Format results
         trp_mus, trp_amps = res[:,0], res[:,1]
@@ -4879,13 +4880,14 @@ class spectrum:
                 return np.array([[np.NaN]*N_POI, [np.NaN]*N_POI])
 
         from tqdm.auto import tqdm # add progress bar with tqdm
-        #results = np.array([refit() for i in tqdm(range(N_spectra))]) # serial
-        results = np.array(Parallel(n_jobs=n_cores)
+        try:
+            results = np.array(Parallel(n_jobs=n_cores)
                              (delayed(refit)() for i in tqdm(range(N_spectra))))
-        # Force workers to shut down
-        from joblib.externals.loky import get_reusable_executor
-        get_reusable_executor().shutdown(wait=True)
-        os.remove(modelfname) # clean up
+        finally:
+            # Force workers to shut down and clean up temp SAV file
+            from joblib.externals.loky import get_reusable_executor
+            get_reusable_executor().shutdown(wait=True)
+            os.remove(modelfname)
 
         # Format results
         arr_mus, arr_amps = results[:,0], results[:,1]
