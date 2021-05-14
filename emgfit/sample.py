@@ -13,7 +13,7 @@ from scipy.stats import exponnorm, uniform, norm
 norm_precision = 1e-09 # required precision for normalization of eta parameters
 
 
-def Gaussian_rvs(mu, sigma , N_samples=1):
+def Gaussian_rvs(mu, sigma , N_samples=None):
     """Draw random samples from a Gaussian probability density function
 
     Parameters
@@ -41,8 +41,8 @@ def _h_m_i_rvs(mu, sigma, tau_m, N_i):
     return rvs
 
 
-def h_m_emg_rvs(mu, sigma, *t_args,N_samples=1):
-    """Draw random samples from negative skewed hyper-EMG probabaility density
+def h_m_emg_rvs(mu, sigma, *t_args,N_samples=None):
+    """Draw random samples from negative skewed hyper-EMG probability density
 
     Parameters
     ----------
@@ -91,7 +91,7 @@ def _h_p_i_rvs(mu, sigma, tau_p, N_i):
     return rvs
 
 
-def h_p_emg_rvs(mu, sigma, *t_args, N_samples=1):
+def h_p_emg_rvs(mu, sigma, *t_args, N_samples=None):
     """Draw random samples from pos. skewed hyper-EMG probability density
 
     Parameters
@@ -133,7 +133,7 @@ def h_p_emg_rvs(mu, sigma, *t_args, N_samples=1):
     return rvs
 
 
-def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=1):
+def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
     """Draw random samples from a hyper-EMG probability density function
 
     Parameters
@@ -186,7 +186,7 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=1):
 def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
                     x_max, out='hist', N_bins=None, bin_cens=None):
     """Create simulated detector events drawn from a user-defined probability
-    distribution function (PDF)
+    density function (PDF)
 
     Events can either be output as a list of single events (mass stamps) or as a
     histogram. In histogram output mode, uniform binning is easily realized by
@@ -261,6 +261,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     mus = np.atleast_1d(mus)
     amps = np.atleast_1d(amps)
     assert len(mus) == len(amps), "Lengths of `mus` and `amps` arrays must match."
+    assert type(N_events) == int, "`N_events` must be of type int."
     if (mus < x_min).any() or (mus > x_max).any():
         import warnings
         msg = str("At least one peak centroid in `mus` is outside the sampling range.")
@@ -306,13 +307,15 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
             li_eta_p.append(val)
         if key.startswith('tau_p'):
             li_tau_p.append(val)
-    if len(li_eta_m) == 0 and len(li_eta_p) == 0: # Gaussian
-        theta = -1 # flag for below
-    elif len(li_eta_m) == 0 and len(li_tau_m) == 1: # emg10
+    if len(li_eta_m) == 0 and len(li_tau_m) == 1: # no eta_p given for emg1X
         li_eta_m = [1]
-        theta = 1
-    elif len(li_eta_p) == 0 and len(li_tau_p) == 1: # emg01
+    if len(li_eta_p) == 0 and len(li_tau_p) == 1: # no eta_p given for emgX1
         li_eta_p = [1]
+    if len(li_tau_m) == 0 and len(li_tau_p) == 0: # Gaussian
+        theta = -1 # flag for below
+    elif len(li_tau_m) == 1 and len(li_tau_p) == 0: # emg10
+        theta = 1
+    elif len(li_tau_p) == 1 and len(li_tau_m) == 0: # emg01
         theta = 0
     else: # emg11 or higher tail order
         theta = shape_pars['theta']
@@ -423,8 +426,11 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
     if spec.fit_results is [] or None:
         raise Exception("No fit results found in reference spectrum `spec`.")
     if x_cen is None and x_range is None:
-        x_min = spec.data.index.values[0]
-        x_max = spec.data.index.values[-1]
+        x = spec.data.index.values
+        bin_width_start = x[1] - x[0]
+        bin_width_end = x[-1] - x[-2]
+        x_min = x[0] - bin_width_start/2
+        x_max = x[-1] + bin_width_end/2
         indeces = range(len(spec.peaks)) # get peak indeces in sampling range
     else:
         x_min = x_cen - x_range
@@ -468,7 +474,7 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         new_spec = deepcopy(spec)
         new_spec.data = df
     else: # Define a fresh spectrum with sampled data
-        from emgfit import spectrum
-        new_spec = spectrum.spectrum(df=df)
+        from emgfit.spectrum import spectrum
+        new_spec = spectrum(df=df, show_plot=False)
 
     return new_spec
