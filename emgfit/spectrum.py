@@ -465,19 +465,14 @@ class spectrum:
         self.default_lit_src = default_lit_src
 
         if show_plot:
-            fig  = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
-            plt.title(plot_title)
-            data_uncut.plot(ax=fig.gca(), legend=False)
+            fig  = plt.figure(figsize=(figwidth,figwidth*4.5/18), dpi=dpi)
             if m_start is not None:
                 plt.vlines(m_start, 0, 1.2*np.max(self.data['Counts']),
                            color='black')
             if m_stop is not None:
                 plt.vlines(m_stop, 0, 1.2*np.max(self.data['Counts']),
                            color='black')
-            plt.yscale('log')
-            plt.xlabel('m/z [u]')
-            plt.ylabel('Counts per bin')
-            plt.show()
+            self._plot_df(data_uncut, fig=fig, title=plot_title)
 
 
     def add_spectrum_comment(self, comment, overwrite=False):
@@ -591,80 +586,13 @@ class spectrum:
         return y[int(window_len/2):-int(window_len/2)]
 
 
-    def plot(self, peaks=None, title="", fig=None, yscale='log', vmarkers=None,
-             thres=None, ymin=0.1, xmin=None, xmax=None):
-        """Plot mass spectrum (without fit curve).
-
-        Vertical markers are added for all peaks specified with `peaks`.
-
-        Parameters
-        ----------
-        peaks : list of :class:`peaks`, optional
-            List of :class:`peaks` to show peak markers for. Defaults to
-            :attr:`peaks`.
-        title : str, optional
-            Optional plot title.
-        fig : :class:`matplotlib.pyplot.figure`, optional
-            Figure object to plot onto.
-        yscale : str, optional
-            Scale of y-axis (`'linear'` or `'log'`), defaults to `'log'`.
-        vmarkers : list of float [u/z], optional
-            List with x positions [u/z] to add vertical markers at.
-        thres : float, optional
-            y-level to add horizontal marker at (e.g. for indicating set
-            threshold in peak detection).
-        ymin : float, optional
-            Lower bound of y-range to plot.
-        xmin, xmax : float [u/z], optional
-            Lower/upper bound of x-range to plot.
-
-        See also
-        --------
-        :meth:`plot_fit`
-        :meth:`plot_fit_zoom`
-
-        """
-        if peaks is None:
-            peaks = self.peaks
-        data = self.data[xmin:xmax] # cut data to range of interest
-        ymax = data.max()[0]
-        if fig is None:
-            fig = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
-        ax = fig.gca()
-        data.plot(ax=ax, legend=False)
-        plt.yscale(yscale)
-        plt.xlabel('m/z [u]')
-        plt.ylabel('Counts per bin')
-        plt.title(title)
-        try:
-            plt.axvline(x=vmarkers, ymin=0, ymax=0.92, color='black',
-                        clip_on=True)
-        except TypeError:
-            pass
-        self._add_peak_markers(peaks=peaks,vline_max=0.92)
-        if yscale == 'log':
-            plt.ylim(ymin, 3.15*ymax)
-        else:
-            plt.ylim(ymin, 1.15*ymax)
-
-        if thres:
-            plt.axhline(y=thres, color='black', clip_on=True)
-        plt.xlim(xmin, xmax)
-        ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
-        plt.show()
-
-
     @staticmethod
-    def _plot_df(df, title='', fig=None, yscale='log', peaks=None,
-                 vmarkers=None, thres=None, ymin=None, ylabel='Counts per bin',
-                 xmin=None, xmax=None):
+    def _plot_df(df, fig=None, title='', yscale='log', vmarkers=None,
+                 thres=None, xmin=None, xmax=None, ymin=None, ymax=None,
+                 xlabel='m/z [u]', ylabel='Counts per bin', legend=[], dpi=dpi):
         """Plots spectrum data stored in :class:`pandas.DataFrame` `df`.
 
         **Intended for internal use.**
-
-        Optionally with peak markers if:
-        1. single or multiple x_pos are passed to `vmarkers`, OR
-        2. list of peak objects is passed to `peaks`.
 
         Parameters
         ----------
@@ -672,21 +600,28 @@ class spectrum:
             Spectrum data to plot.
         fig : :class:`matplotlib.pyplot.figure`, optional
             Figure object to plot onto.
+        title : str, optional
+            Optional plot title.
         yscale : str, optional
             Scale of y-axis (`'linear'` or `'log'`), defaults to `'log'`.
-        peaks : list of :class:`peaks`, optional
-            List of :class:`peaks` to show peak markers for.
         vmarkers : list of float [u/z], optional
             List with x positions [u/z] to add vertical markers at.
         thres : float, optional
             y-level to add horizontal marker at (e.g. for indicating set
             threshold in peak detection).
-        ymin : float, optional
-            Lower bound of y-range to plot.
-        ylabel : str, optional
-            Custom label for y-axis.
         xmin, xmax : float [u/z], optional
             Lower/upper bound of x-range to plot.
+        ymin, ymax : float, optional
+            Lower/upper bound of y-range to plot.
+        xlabel : str, optional
+            Label for x-axis.
+        ylabel : str, optional
+            Label for y-axis.
+        legend : list of string, optional
+            List of plot legend entries.
+        dpi : int, optional
+            Dots per inch for plot. Defaults to `dpi` value set in
+            :mod:`config.py`.
 
         See also
         --------
@@ -695,30 +630,97 @@ class spectrum:
         :meth:`plot_fit_zoom`
 
         """
+        df = df[xmin:xmax] # cut data to range of interest
+        xmin = xmin or np.min(df.index)
+        xmax = xmax or np.max(df.index)
+        if ymin is None and yscale == 'log':
+            min_cts = np.min(df.values)
+            ymin = 10**np.log10(max(min_cts*0.85,0.5))
+        if ymax is None:
+            max_cts = np.max(df.values)
+            if yscale == 'log':
+                ymax = 2.5*max_cts
+            else:
+                ymax = 1.15*max_cts
         if fig is None:
             fig = plt.figure(figsize=(figwidth,figwidth*4.5/18), dpi=dpi)
         ax = fig.gca()
         df.plot(ax=ax, legend=False)
         plt.yscale(yscale)
-        plt.xlabel('m/z [u]')
+        plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.title(title)
         try:
-            plt.vlines(x=vmarkers, ymin=0, ymax=1.05*df.max(), color='black')
-        except TypeError:
-            pass
-        try:
-            li_x_pos = [p.x_pos for p in peaks]
-            plt.vlines(x=li_x_pos, ymin=0, ymax=1.05*df.max(), color='black')
+            for xm in vmarkers:
+                plt.axvline(x=xm, ymax=0.92, color='black', clip_on=True)
         except TypeError:
             pass
         if thres:
-            ax.axhline(y=thres, color='black')
-        if ymin:
-            plt.ylim(ymin,)
-        plt.xlim(xmin,xmax)
+            plt.axhline(y=thres, color='black', clip_on=True)
+        ax.set_xlim([xmin, xmax]) #plt.xlim(xmin, xmax)
+        plt.ylim(ymin, ymax)
         ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
+        if legend not in (None, []):
+            plt.legend(legend)
         plt.show()
+
+
+    def _add_peak_markers(self, peaks=None, vline_max=0.93):
+        """Internal function for adding peak markers to current figure object.
+
+        Place this function inside spectrum methods between ``plt.figure()`` and
+        ``plt.show()``.
+
+        Parameters
+        ----------
+        peaks : list of :class:`peak`
+            List of peaks to add peak markers for.
+        vline_max : float
+            Maximal y-value of marker line - in coordinate axes units.
+
+        """
+        if peaks is None:
+            peaks = self.peaks
+        data = self.data
+        ax = plt.gca()
+        for p in peaks:
+            plt.axvline(x=p.x_pos, ymin=0, ymax=vline_max, color='black',
+                        linestyle='--', clip_on=True)
+            plt.text(p.x_pos, vline_max+0.0028*labelsize, self.peaks.index(p),
+                     fontsize=labelsize, horizontalalignment='center',
+                     verticalalignment='center', clip_on=True,
+                     transform=ax.get_xaxis_transform())
+
+
+    def plot(self, peaks=None, fig=None, dpi=dpi, **plot_kwargs):
+        """Plot mass spectrum (without fit curve).
+
+        Vertical markers are added for all peaks specified with the `peaks`
+        argument.
+
+        Parameters
+        ----------
+        peaks : list of :class:`peaks`, optional
+            List of :class:`peaks` to show peak markers for. Defaults to
+            :attr:`peaks`. Use `peaks=[]` to turn markers off.
+        fig : :class:`matplotlib.pyplot.figure`, optional
+            Figure object to plot onto.
+        dpi : int, optional
+            Dots per inch for plot. Defaults to `dpi` value defined in
+            :mod:`config.py` module.
+        **plot_kwargs
+            Plot options to pass to :meth:`_plot_df`.
+
+        See also
+        --------
+        :meth:`plot_fit`
+        :meth:`plot_fit_zoom`
+
+        """
+        if fig is None:
+            fig = plt.figure(figsize=(figwidth,figwidth*4.5/18), dpi=dpi)
+        self._add_peak_markers(peaks=peaks, vline_max=0.92)
+        self._plot_df(self.data, fig=fig, dpi=dpi, **plot_kwargs)
 
 
     def detect_peaks(self, thres=0.003, window_len=23, window='blackman',
@@ -784,17 +786,14 @@ class spectrum:
                                                  window_len=window_len)
         if plot_smoothed_spec:
             # Plot smoothed and original spectrum
-            f = plt.figure(figsize=(figwidth,figwidth*4.5/18),dpi=dpi)
+            ymin = max(np.min(self.data.values)*0.95, 0.1)
+            ymax = 1.5*np.max(self.data.values)
+            f = plt.figure(figsize=(figwidth,figwidth*4.5/18), dpi=dpi)
+            title = "Smoothed spectrum"
             ax = f.gca()
             self.data.plot(ax=ax)
-            data_smooth.plot(ax=ax)
-            plt.title("Smoothed spectrum")
-            ax.legend(["Raw","Smoothed"])
-            plt.ylim(0.1, 1.03*max(self.data.values))
-            plt.yscale('log')
-            plt.xlabel('m/z [u]')
-            plt.ylabel('Counts per bin')
-            plt.show()
+            self._plot_df(data_smooth, fig=f, title=title, ymin=ymin, ymax=ymax,
+                          legend=["Raw","Smoothed"])
 
         # Calculate second derivative using 2nd order central finite differences
         scale = 1/(data_smooth.values[1:-1] + 10) # scale to decrease y range
@@ -1474,36 +1473,9 @@ class spectrum:
         result.params = orig_pars
 
 
-    def _add_peak_markers(self, peaks=None, vline_max=0.93):
-        """Internal function for adding peak markers to current figure object.
-
-        Place this function inside spectrum methods between ``plt.figure()`` and
-        ``plt.show()``.
-
-        Parameters
-        ----------
-        peaks : list of :class:`peak`
-            List of peaks to add peak markers for.
-        vline_max : float
-            Maximal y-value of marker line - in coordinate axes units.
-
-        """
-        if peaks is None:
-            peaks = self.peaks
-        data = self.data
-        ax = plt.gca()
-        for p in peaks:
-            plt.axvline(x=p.x_pos, ymin=0, ymax=vline_max, color='black',
-                        linestyle='--', clip_on=True)
-            plt.text(p.x_pos, vline_max+0.0028*labelsize, peaks.index(p),
-                     fontsize=labelsize, horizontalalignment='center',
-                     verticalalignment='center', clip_on=True,
-                     transform=ax.get_xaxis_transform())
-
-
     def plot_fit(self, fit_result=None, plot_title=None,
-                 show_peak_markers=True, sigmas_of_conf_band=0, error_every=1,
-                 x_min=None, x_max=None, plot_filename=None):
+                 show_peak_markers=True, show_comps=True, sigmas_of_conf_band=0,
+                 error_every=1, x_min=None, x_max=None, plot_filename=None):
         """Plot data and fit result in logarithmic and linear y-scale.
 
         Only a single fit result can be plotted with this method. If neither
@@ -1523,6 +1495,9 @@ class spectrum:
             indication of how the fit was obtained.
         show_peak_markers : bool, optional, default: `True`
             If `True`, peak markers are added to the plots.
+        show_comps : bool, optional
+            If True, the single-peak components of the best-fit curve will be
+            indicated with colored dashed lines.
         sigmas_of_conf_band : int, optional, default: 0
             Coverage probability of confidence band in sigma (only shown in
             log-plot). If ``0``, no confidence band is shown (default).
@@ -1555,45 +1530,57 @@ class spectrum:
                raise Exception("Multiple fit results in specified mass range - "
                                "chose range to only include peaks contained in "
                                "a single fit result. ")
-
         if plot_title is None:
            plot_title = fit_result.fit_model+' '+fit_result.cost_func+' fit'
-        i_min = np.argmin(np.abs(fit_result.x - x_min))
-        i_max = np.argmin(np.abs(fit_result.x - x_max))
-        y_max_log = max( max(self.data.values[i_min:i_max]),
-                         max(fit_result.best_fit[i_min:i_max]) )
-        y_max_lin = max( max(self.data.values[i_min:i_max]),
-                         max(fit_result.init_fit[i_min:i_max]),
-                         max(fit_result.best_fit[i_min:i_max]) )
+
+         # Get all data to plot
+        i_xmin = np.argmin(np.abs(fit_result.x - x_min))
+        i_xmax = np.argmin(np.abs(fit_result.x - x_max))
+        x = fit_result.x[i_xmin:i_xmax]
+        y = fit_result.y[i_xmin:i_xmax]
+        y_init_fit = fit_result.init_fit[i_xmin:i_xmax]
+        y_best_fit = fit_result.best_fit[i_xmin:i_xmax]
+        y_err = fit_result.y_err[i_xmin:i_xmax]
+        y_resid = (y_best_fit - y)/y_err # standardized residual
+        x_fine = np.arange(x_min, x_max, 0.2*(x[1]-x[0]))
+        y_comps_fine = fit_result.eval_components(x=x_fine)
+        y_best_fit_fine = fit_result.eval(x=x_fine)
+        y_init_fit_fine = fit_result.eval(params=fit_result.init_params,
+                                          x=x_fine)
+
+        # Define plot limits
+        y_max_log = 3*max( np.max(y), np.max(y_best_fit))
+        y_min_log = 10**(np.log10(max(0.75*np.min(y),0.1)))
+        y_max_lin = 1.2*max( np.max(y), np.max(y_init_fit), np.max(y_best_fit) )
+        y_min_lin = np.min(y) - 0.05*y_max_lin
+        y_max_resid = 1.2*np.max(np.abs(y_resid))
 
         ### Plot fit result with logarithmic y-scale
         f1 = plt.figure(figsize=(figwidth,figwidth*8.5/18), dpi=dpi)
         ax = f1.gca()
-        plt.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
+        plt.errorbar(x, y, yerr=y_err, fmt='.',
                      color='royalblue', linewidth=0.5, markersize=msize,
                      errorevery=error_every, label='data', zorder=1)
-        plt.plot(fit_result.x, fit_result.best_fit, '-', color='red',
-                 linewidth=lwidth, label='best-fit', zorder=10)
-        comps = fit_result.eval_components(x=fit_result.x)
+        plt.plot(x_fine, y_best_fit_fine, '-', color='red', linewidth=lwidth,
+                 label='best-fit', zorder=10)
         for peak in peaks_to_plot: # loop over peaks to plot
             peak_index = self.peaks.index(peak)
             pref = 'p{0}_'.format(peak_index)
-            plt.plot(fit_result.x, comps[pref],'--', linewidth=lwidth, zorder=5)
+            plt.plot(x_fine, y_comps_fine[pref], '--', linewidth=lwidth, zorder=5)
         if show_peak_markers:
             self._add_peak_markers(peaks=peaks_to_plot)
         # add confidence band with specified number of sigmas
         if sigmas_of_conf_band != 0 and fit_result.errorbars is True:
             dely = fit_result.eval_uncertainty(sigma=sigmas_of_conf_band)
             label = str(sigmas_of_conf_band)+r'$\sigma$ confidence band'
-            plt.fill_between(fit_result.x, fit_result.best_fit-dely,
-                             fit_result.best_fit+dely, color='tomato',
-                             alpha=0.5, label=label)
+            plt.fill_between(x, y_best_fit-dely, y_best_fit+dely,
+                             color='tomato', alpha=0.5, label=label)
         plt.title(plot_title)
         plt.xlabel('m/z [u]')
         plt.ylabel('Counts per bin')
         plt.yscale('log')
-        plt.ylim(0.1, 3.1*y_max_log)
-        plt.xlim(x_min,x_max)
+        plt.ylim(y_min_log, y_max_log)
+        plt.xlim(x_min, x_max)
         ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
         if plot_filename is not None:
             try:
@@ -1604,37 +1591,32 @@ class spectrum:
         plt.show()
 
         ### Plot residuals and fit result with linear y-scale
-        std_residual = (fit_result.best_fit - fit_result.y)/fit_result.y_err
-        y_max_res = np.max(np.abs(std_residual))
-        x_fine = np.arange(x_min,x_max,0.2*(fit_result.x[1]-fit_result.x[0]))
-        y_fine = fit_result.eval(x=x_fine)
         f2, axs = plt.subplots(2,1,figsize=(figwidth,figwidth*8.5/18),dpi=dpi,
                                gridspec_kw={'height_ratios': [1, 2.5]})
         ax0 = axs[0]
         ax0.set_title(plot_title)
-        ax0.plot(fit_result.x, std_residual,'.',color='royalblue',
-                 markersize=msize)
+        ax0.plot(x, y_resid,'.',color='royalblue', markersize=msize)
         #ax0.hlines(1,x_min,x_max,linestyle='dashed', color='black')
         ax0.hlines(0,x_min,x_max, color='black', zorder=10)
         #ax0.hlines(-1,x_min,x_max,linestyle='dashed', color='black')
-        ax0.set_ylim(-1.05*y_max_res, 1.05*y_max_res)
+        ax0.set_ylim(-y_max_resid, y_max_resid)
         ax0.set_ylabel(r'Residual / $\sigma$')
         #ax0.tick_params(axis='x', labelsize=0) # hide tick labels
         ax1 = axs[1]
-        ax1.errorbar(fit_result.x, fit_result.y, yerr=fit_result.y_err, fmt='.',
+        ax1.errorbar(x, y, yerr=y_err, fmt='.',
                  color='royalblue', linewidth=1, markersize=msize, label='data',
                  errorevery=error_every, zorder=1)
-        ax1.plot(x_fine, fit_result.eval(params=fit_result.init_params,x=x_fine),
-                 linestyle='dashdot', color='green', label='init-fit', zorder=5)
+        ax1.plot(x_fine, y_init_fit_fine, linestyle='dashdot', color='green',
+                 label='init-fit', zorder=5)
         ax1.plot(x_fine, fit_result.eval(x=x_fine), '-', color='red',
                  linewidth=lwidth, label='best-fit', zorder=10)
         ax1.set_title('')
-        ax1.set_ylim(-0.05*y_max_lin, 1.2*y_max_lin)
+        ax1.set_ylim(y_min_lin, y_max_lin)
         ax1.set_ylabel('Counts per bin')
         ax1.legend()
         for ax in axs:
-            ax.set_xlim(x_min,x_max)
-            ax.get_xaxis().get_major_formatter().set_useOffset(False) # no offset
+            ax.set_xlim(x_min, x_max)
+            ax.get_xaxis().get_major_formatter().set_useOffset(False) #no offset
         if show_peak_markers:
             self._add_peak_markers(peaks=peaks_to_plot)
         plt.xlabel('m/z [u]')
@@ -1914,12 +1896,15 @@ class spectrum:
         ## `<https://lmfit.github.io/lmfit-py/examples/example_emcee_Model_interface.html>`_.
         print("\n### Evaluating posterior PDFs using MCMC sampling ###\n")
         ndim = fit_result.nvarys # dimension of parameter space to explore
-        print("Number of varied parameters:         ndim =",fit_result.nvarys)
+        print("Number of varied parameters:                 ndim =", ndim)
         nwalkers = 20*fit_result.nvarys # total number of MCMC walkers
+        N_samples = int(nwalkers*(steps - burn)/thin)
         emcee_params = fit_result.params.copy()
-        print("Number of MCMC steps:               steps =",steps)
-        print("Number of initial steps to discard:  burn =",burn)
-        print("Length of thinning interval:         thin =",thin)
+        print("Number of MCMC walkers:                  nwalkers =", nwalkers)
+        print("Number of MCMC steps:                       steps =", steps)
+        print("Number of initial steps to discard:          burn =", burn)
+        print("Length of thinning interval:                 thin =", thin)
+        print("Final number of parameter samples:  N_samples_tot =", N_samples)
 
         # Get names, best-fit values and errors of parameters to vary
         varied_pars = emcee_params.copy()
@@ -1935,7 +1920,7 @@ class spectrum:
         # Initialize the walkers with normal dist. around best-fit values
         np.random.seed(MCMC_seed) # make MCMC chains reproducible
         r0 = np.array(varied_par_errs) # sigma of initial Gaussian PDFs
-        p0 = [varied_par_vals + r0*np.random.randn(ndim) for i in range(nwalkers)]
+        p0 = [varied_par_vals+r0*np.random.randn(ndim) for i in range(nwalkers)]
 
         # Use multiprocess to enable pickling of nested functions
         from multiprocess import cpu_count, Pool
@@ -1952,7 +1937,7 @@ class spectrum:
                        "running on all CPU cores - defaulting to serial MCMC "
                        "sampling.")
             warnings.warn(msg)
-        print("Number of CPU cores used:         n_cores =",n_cores)
+        print("Number of CPU cores used:                 n_cores =",n_cores)
         # Set emcee options
         # It is advisable to thin by about half the autocorrelation time
         emcee_kws = dict(steps=steps, burn=burn, thin=thin, nwalkers=nwalkers,
@@ -2103,11 +2088,11 @@ class spectrum:
             #ax.yaxis.set_offset_position('left')
             ax.xaxis.label.set_size(15)
             ax.yaxis.label.set_size(15)
-            labelpad = 0.41
-            ax.xaxis.set_label_coords(0.5, -0.3 - labelpad)
-            ax.yaxis.set_label_coords(-0.3 - labelpad, 0.5)
+            labelpad = 0.25*(ndim/7)**2
+            ax.xaxis.set_label_coords(0.5, -0.1 - labelpad)
+            ax.yaxis.set_label_coords(-0.1 - labelpad, 0.5)
         if covar_map_fname is not None:
-            plt.savefig(covar_map_fname+"_covar_map.png", dpi=600,
+            plt.savefig(covar_map_fname+"_covar_map.png", dpi=500,
                         pad_inches=0.3, bbox_inches='tight')
         plt.show()
         ##set_matplotlib_formats(plot_fmt) # reset image format
