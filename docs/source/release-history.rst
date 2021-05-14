@@ -7,6 +7,28 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+v0.5.0 (2021-05-XY)
+-------------------
+
+Added
+^^^^^
+*
+
+Changed
+^^^^^^^
+* Define bounds of mass-dependent parameters as multiples of the standard
+  deviation of the (underlying) Gaussian.
+* Improve initialization of peak positions by calculating the initial Gaussian
+  centroid from the mode of the distribution.
+* Make initialization of peak amplitudes for very-low statistics peaks more
+  robust.
+* Adapt initialization of uniform-baseline parameter to support larger
+  backgrounds.
+
+Fixed
+^^^^
+
+
 v0.4.0 (2021-03-09)
 -------------------
 
