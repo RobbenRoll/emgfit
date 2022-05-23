@@ -245,9 +245,6 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     Currently, all simulated peaks have identical width and shape (no re-scaling
     of mass-dependent shape parameters to a peak's mass centroid).
 
-    Routine requires tail arguments in shape_cal_pars dict to be ordered
-    (eta_m1, eta_m2, ...) etc..
-
     **Mind the different units for peak amplitudes `amps`
     (<counts in peak> * <bin width in x-axis units>) and the background level
     `bkg_c` (counts per bin).** When spectrum data is simulated counts are
@@ -330,7 +327,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     N_bkg = np.count_nonzero(peak_dist == N_peaks) # calc. number of bkgd counts
 
     events = np.array([])
-    # Loop over peaks and create random samples from each peak
+    # Create & add random samples from each individual peak
     for i in range(N_peaks):
         N_i = np.count_nonzero(peak_dist == i) # get no. of ions in peak
         mu = mus[i]
@@ -339,16 +336,27 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
         else: # hyper-EMG
             events_i = h_emg_rvs(mu, sigma, theta, li_eta_m, li_tau_m,
                                  li_eta_p, li_tau_p, N_samples=N_i)
-
         events = np.append(events, events_i)
 
-    # Create background events
+    # Create & add background events
     bkg = uniform.rvs(size=N_bkg, loc=x_min, scale=sample_range)
     events = np.append(events, bkg)
 
-    if out == 'list':  # return unbinned list of events
+    # Discard events outside of specified sampling range
+    events = events[np.logical_and(events >= x_min, events <= x_max)]
+    N_discarded = N_events - events.size
+    if N_discarded > 0:
+        import warnings
+        msg = str("{:.0f} simulated events fell outside the specified sampling "
+                  "range and were discarded. Peak areas and area ratios might "
+                  "deviate from expectation.").format(N_discarded)
+        warnings.warn(msg, UserWarning)
+
+    # Return unbinned array of events or dataframe with histogram
+    if out == 'list':
+        np.random.shuffle(events) # randomize event ordering
         return events
-    elif out == 'hist':  # return histogram
+    elif out == 'hist':
         y = np.histogram(events, bins=bin_edges)[0]
         df = pd.DataFrame(data=y, index=bin_cens, columns = ['Counts'])
         df.index.rename('m/z [u]', inplace=True)
