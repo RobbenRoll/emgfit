@@ -7,7 +7,7 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
-v0.5.0 (2021-05-XY)
+v0.4.1 (2022-05-XY)
 -------------------
 
 Added
@@ -27,6 +27,8 @@ Changed
 
 Fixed
 ^^^^
+* Fix bug in recognition of tail order for sampling events with
+  :func:`~emgfit.sample.simulate_events`.
 
 
 v0.4.0 (2021-03-09)

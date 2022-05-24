@@ -304,18 +304,22 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
             li_eta_p.append(val)
         if key.startswith('tau_p'):
             li_tau_p.append(val)
-    if len(li_eta_m) == 0 and len(li_tau_m) == 1: # no eta_p given for emg1X
-        li_eta_m = [1]
-    if len(li_eta_p) == 0 and len(li_tau_p) == 1: # no eta_p given for emgX1
-        li_eta_p = [1]
-    if len(li_tau_m) == 0 and len(li_tau_p) == 0: # Gaussian
+    if len(li_eta_m) == 0 and len(li_eta_p) == 0: # Gaussian
         theta = -1 # flag for below
-    elif len(li_tau_m) == 1 and len(li_tau_p) == 0: # emg10
-        theta = 1
-    elif len(li_tau_p) == 1 and len(li_tau_m) == 0: # emg01
-        theta = 0
-    else: # emg11 or higher tail order
+    else:
         theta = shape_pars['theta']
+        if len(li_eta_m) == 0 and len(li_tau_m) == 1: # emg1X
+            li_eta_m = [1]
+        if len(li_eta_p) == 0 and len(li_tau_p) == 1: # emgX1
+            li_eta_p = [1]
+    if len(li_eta_m) > 0:
+        msg = "Sum of elements in li_eta_m is not normalized to within {}.".format(norm_precision)
+        assert abs(sum(li_eta_m) - 1) < norm_precision, msg
+        assert len(li_eta_m) == len(li_tau_m)
+    if len(li_eta_p) > 0:
+        msg = "Sum of elements in li_eta_p is not normalized to within {}.".format(norm_precision)
+        assert abs(sum(li_eta_p) - 1) < norm_precision, msg
+        assert len(li_eta_p) == len(li_tau_p)
 
     # Distribute counts over different peaks and background (bkgd)
     # randomly distribute ions using amps and c_bkg as prob. weights
@@ -467,7 +471,8 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         result = spec.fit_results[indeces[0]]
         bkg_c = result.best_values['bkg_c']
     if N_events is None:
-        N_events = int(np.sum(spec.data['Counts'])) # total number of counts in spectrum
+        # Get total number of counts in simulated region of original spectrum:
+        N_events = int(spec.data[x_min:x_max]["Counts"].sum())
 
     # Create histogram with Monte Carlo events
     x = spec.data[x_min:x_max].index.values
