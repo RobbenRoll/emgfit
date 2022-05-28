@@ -10,7 +10,7 @@ from scipy.stats import exponnorm, uniform, norm
 ################################################################################
 ##### Define functions for drawing random variates from Gaussian and hyper-EMG
 ##### PDFs
-norm_precision = 1e-09 # required precision for normalization of eta parameters
+norm_precision = 1e-06 # required precision for normalization of eta parameters
 
 
 def Gaussian_rvs(mu, sigma , N_samples=None):
@@ -183,8 +183,8 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
 ################################################################################
 ##### Define functions for creating simulated spectra
 
-def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
-                    x_max, out='hist', N_bins=None, bin_cens=None):
+def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
+                    out='hist', scl_facs=None, N_bins=None, bin_cens=None):
     """Create simulated detector events drawn from a user-defined probability
     density function (PDF)
 
@@ -210,6 +210,10 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
         Beginning of sampling x-range.
     x_max : float
         End of sampling x-range.
+    scl_facs : float or list of float, optional
+        Scale factors to use for scaling the scale-dependent shape parameters in
+        `shape_pars` to a given peak before sampling events. If `None`, no
+        shape-parameter scaling is applied.
     N_events : int, optional, default: 1000
         Total number of events to simulate (signal and background events).
     out : str, optional
@@ -263,6 +267,12 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
         import warnings
         msg = str("At least one peak centroid in `mus` is outside the sampling range.")
         warnings.warn(msg, UserWarning)
+    if scl_facs is None:
+        scl_facs = np.ones_like(mus)
+    else:
+        scl_facs = np.atleast_1d(scl_facs)
+        msg =  "Lengths of `mus` and `scl_facs` must match."
+        assert len(mus) == len(scl_facs), msg
 
     sample_range = x_max - x_min
 
@@ -304,22 +314,29 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
             li_eta_p.append(val)
         if key.startswith('tau_p'):
             li_tau_p.append(val)
-    if len(li_eta_m) == 0 and len(li_eta_p) == 0: # Gaussian
+    if len(li_tau_m) == 0 and len(li_tau_p) == 0: # Gaussian
         theta = -1 # flag for below
     else:
-        theta = shape_pars['theta']
+        try:
+            theta = shape_pars['theta']
+        except KeyError:
+            pass
         if len(li_eta_m) == 0 and len(li_tau_m) == 1: # emg1X
             li_eta_m = [1]
+        elif len(li_eta_m) == 0 and len(li_tau_m) == 0: # emg0X
+            theta = 0
         if len(li_eta_p) == 0 and len(li_tau_p) == 1: # emgX1
             li_eta_p = [1]
+        elif len(li_eta_p) == 0 and len(li_tau_p) == 0: # emgX0
+            theta = 1
     if len(li_eta_m) > 0:
         msg = "Sum of elements in li_eta_m is not normalized to within {}.".format(norm_precision)
         assert abs(sum(li_eta_m) - 1) < norm_precision, msg
-        assert len(li_eta_m) == len(li_tau_m)
+    assert len(li_eta_m) == len(li_tau_m)
     if len(li_eta_p) > 0:
         msg = "Sum of elements in li_eta_p is not normalized to within {}.".format(norm_precision)
         assert abs(sum(li_eta_p) - 1) < norm_precision, msg
-        assert len(li_eta_p) == len(li_tau_p)
+    assert len(li_eta_p) == len(li_tau_p)
 
     # Distribute counts over different peaks and background (bkgd)
     # randomly distribute ions using amps and c_bkg as prob. weights
@@ -334,12 +351,12 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
     # Create & add random samples from each individual peak
     for i in range(N_peaks):
         N_i = np.count_nonzero(peak_dist == i) # get no. of ions in peak
-        mu = mus[i]
         if theta == -1: # Gaussian
-            events_i = Gaussian_rvs(mu, sigma, N_samples=N_i)
+            events_i = Gaussian_rvs(mus[i], sigma*scl_facs[i], N_samples=N_i)
         else: # hyper-EMG
-            events_i = h_emg_rvs(mu, sigma, theta, li_eta_m, li_tau_m,
-                                 li_eta_p, li_tau_p, N_samples=N_i)
+            events_i = h_emg_rvs(mus[i], sigma*scl_facs[i], theta, li_eta_m,
+                                 np.array(li_tau_m)*scl_facs[i], li_eta_p,
+                                 np.array(li_tau_p)*scl_facs[i], N_samples=N_i)
         events = np.append(events, events_i)
 
     # Create & add background events
@@ -368,7 +385,8 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
 
 
 def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
-                      bkg_c=None, N_events=None, copy_spec=False):
+                      scl_facs=None, bkg_c=None, N_events=None,
+                      copy_spec=False):
     """Create a simulated spectrum using the attributes of a reference spectrum
 
     The peak shape of the sampling probability density function (PDF)
@@ -389,6 +407,11 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
     amps : float or list of float [(counts in peak)*(bin width in u)], optional
         Nominal amplitudes of peaks in simulated spectrum. Defaults to the
         amplitudes of the reference spectrum fit.
+    scl_facs : float or list of float, optional
+        Scale factors to use for scaling the scale-dependent shape parameters in
+        `shape_pars` to a given peak before sampling events. Defaults to the
+        scale factors asociated with the fit results stored in the reference
+        spectrum's :attr:`spectrum.fit_results` attribute.
     bkg_c : float [counts per bin], optional
         Nominal amplitude of uniform background in simulated spectrum. Defaults
         to the c_bkg obtained in the fit of the first peak in the reference
@@ -466,6 +489,17 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
             result = spec.fit_results[i]
             pref = 'p{0}_'.format(i)
             amps.append(result.best_values[pref+'amp'])
+    if scl_facs is None:
+        scl_facs = []
+        for i in indeces:
+            result = spec.fit_results[i]
+            pref = 'p{0}_'.format(i)
+            try:
+                scl_facs.append(result.params[pref+'scl_fac'])
+            except KeyError:
+                scl_facs.append(1.0)
+    msg = "`mus`, `amps` and `scl_facs` argments must have the same length!"
+    assert len(mus)==len(amps)==len(scl_facs), msg
     if bkg_c is None:
         assert len(indeces) != 0, "Zero background and no peaks in sampling range."
         result = spec.fit_results[indeces[0]]
@@ -476,8 +510,9 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
 
     # Create histogram with Monte Carlo events
     x = spec.data[x_min:x_max].index.values
-    df = simulate_events(spec.shape_cal_pars, mus, amps, bkg_c, N_events, x_min,
-                         x_max, out='hist', N_bins=None, bin_cens=x)
+    df = simulate_events(spec.shape_cal_pars, mus, amps, bkg_c, N_events,
+                         x_min, x_max, out='hist', scl_facs=scl_facs,
+                         N_bins=None, bin_cens=x)
 
     # Copy original spectrum and overwrite data
     # This copies all results such as peak assignments, PS calibration,

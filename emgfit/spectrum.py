@@ -52,6 +52,9 @@ class peak:
         Atomic mass number of the species.
     z : int, optional
         Charge state of the species.
+    scl_coeff : float, optional
+        Scale coefficient used to scale the scale-dependent reference shape
+        parameters when fitting this peak. Defaults to 1.
     m_AME : float [u], optional
         Ionic literature mass value, from AME or user-defined.
     m_AME_error : float [u], optional
@@ -149,6 +152,7 @@ class peak:
             self.comment = 'lit_src: AME2016'
         self.A = A_tot
         self.z = get_charge_state(species)
+        self.scl_coeff = 1.0
         self.m_AME = m_AME #
         self.m_AME_error = m_AME_error
         # If `m_AME` has not been user-defined, set it to AME value
@@ -269,6 +273,15 @@ class spectrum:
         Model parameter values obtained in peak-shape calibration.
     shape_cal_errors : dict
         Model parameter uncertainties obtained in peak-shape calibration.
+    share_shape_pars : bool, default: True
+        Whether to enforce a shared peak shape for all fitted peaks. The shared
+        shape parameters are pre-determined with :meth:`determine_peak_shape`.
+    scale_shape_pars : bool, default: False
+        Whether to scale the scale-dependent parameters obtained in the
+        peak-shape calibration with the given peak's :attr:`peak.scl_coeff`.
+    scale_shape_to_peak_cen : bool, default: False
+        Whether to scale the scale-dependent parameters obtained in the
+        peak-shape calibration to the centroid of the given peak.
     index_mass_calib : int
         Peak index of mass calibrant peak.
     determined_A_stat_emg : bool
@@ -436,6 +449,9 @@ class spectrum:
         self.shape_cal_result = None
         self.shape_cal_pars = None
         self.shape_cal_errors = None
+        self.share_shape_pars = True
+        self.scale_shape_pars = False
+        self.scale_shape_to_peak_cen = False
         self.index_mass_calib = None
         self.determined_A_stat_emg = False
         self.A_stat_emg = A_stat_emg_default # initialize at default
@@ -1076,6 +1092,8 @@ class spectrum:
                        "A" : fmt_int,
                        "z" : fmt_int }
         df_prop = pd.DataFrame(peak_dicts)
+        if self.scale_shape_pars is False:
+            df_prop.drop(columns="scl_coeff", inplace=True)
 
         # Hide peaks of interest if blindfolded mode is on
         defined = [True if p.m_ion != None else False for p in self.peaks]
@@ -1692,7 +1710,8 @@ class spectrum:
 
 
     def comp_model(self, peaks_to_fit, fit_model='emg22', init_pars=None,
-                   vary_shape=False, vary_baseline=True, index_first_peak=None):
+                   vary_shape=False, vary_baseline=True, share_shape_pars=True,
+                   scale_shape_pars=False, scale_shape_to_peak_cen=False):
         """Create a multi-peak composite model with the specified peak shape.
 
         **Primarily intended for internal usage.**
@@ -1719,15 +1738,50 @@ class spectrum:
             If `True` a varying uniform baseline will be added to the fit
             model as varying model parameter `bkg_c`. If `False`, the baseline
             parameter `bkg_c` will be kept fixed at 0.
-        index_first_peak : int, optional
-            Index of first (lowest mass) peak in fit range, used for enforcing
-            common shape for all peaks.
+        share_shape_pars : bool, optional, default: True
+            Whether to enforce a shared peak shape for all peaks.
+        scale_shape_pars : bool, optional, default: False
+            Whether to scale the scale-dependent shape parameters of the
+            shape-reference peak with the :attr:`peaks.scl_coeff`. See Notes for
+            details.
+        scale_shape_to_peak_cen : bool, optional, default: False
+            Whether to scale the scale-dependent shape parameters to the
+            centroid `mu` of the underlying Gaussian of a given peak. Requires
+            `scale_shape_pars` to be `True`. See Notes for details.
 
         Notes
         -----
         The initial amplitude for each peak is estimated by taking the counts in
         the bin closest to the peak's :attr:`x_pos` and scaling this number with
         an empirically determined constant and the spectrum's :attr:`mass_number`.
+
+        If ``share_shape_pars=True``, a shape-reference peak is used to impose a
+        common peak shape on all fitted peaks (except for optional scaling of
+        the scale-dependent shape parameters). If no shape calibration has been
+        performed on the :class:`spectrum` object yet, the first peak in
+        `peaks_to_fit` is used as the shape-reference peak. Once a peak-shape
+        calibration has been performed, the shape-calibrant peak is used as the
+        shape-reference peak in all subsequent fits. If the shape calibrant does
+        not fall into the fit range, the shape parameters obtained in the
+        peak-shape calibration (stored in :attr:`spectrum.shape_cal_pars`) are
+        added as fixed parameters to the returned model.
+
+        There is two options to scale the shape parameters of the
+        shape-reference peak to a given peak:
+        1. If ``scale_shape_pars=True`` and ``scale_shape_to_peak_cen=False``:
+           The scale-dependent shape-reference parameters ('sigma' and 'tau's)
+           are multiplied with a fixed scale factor ``scl_fac=scl_coeff``, where
+           ``scl_coeff`` is the :attr:`peak.scl_coeff` attribute of the given
+           peak.
+        2. If `scale_shape_pars=True` and `scale_shape_to_peak_cen=True`:
+           The scale-dependent shape-reference parameters ('sigma' and 'tau's)
+           are multiplied with a varying scale factor
+           ``scl_fac=scl_coeff * (mu/mu_ref)``, where ``mu`` and ``mu_ref`` are
+           the Gaussian centroids of the given peak and the shape-reference
+           peak, respectively. Once a peak-shape calibration has been performed,
+           ``mu_ref`` is taken as the shape-calibrant centroid obtained in the
+           peak-shape calibration. Otherwise, ``mu_ref`` is defined by the
+           varying (Gaussian) centroid of the shape-reference peak.
 
         """
         model = getattr(fit_models, fit_model)
@@ -1740,6 +1794,39 @@ class spectrum:
         else:
             mod.set_param_hint('bkg_c', value= 0.0, vary=False)
 
+        if share_shape_pars:
+            # Determine reference peak and `mu_ref`
+            if self.index_shape_calib is None: # no shape calibration yet
+                # Use first fitted peak as ref. to enforce a common peak shape
+                index_ref_peak = self.peaks.index(peaks_to_fit[0])
+                shape_calib_in_range = False
+                if scale_shape_to_peak_cen:
+                    mu_ref = "varying"
+            elif self.peaks[self.index_shape_calib] not in peaks_to_fit:
+                index_ref_peak = self.index_shape_calib
+                shape_calib_in_range = False
+                if scale_shape_to_peak_cen:
+                    mu_ref = self.shape_cal_pars["mu"]
+            else:
+                index_ref_peak = self.index_shape_calib
+                shape_calib_in_range = True
+                if scale_shape_to_peak_cen:
+                    mu_ref = self.shape_cal_pars["mu"]
+            if scale_shape_to_peak_cen is False:
+                mu_ref = None
+            else:
+                msg = str("`scale_shape_to_peak_cen=True` only takes effect if"
+                          "`scale_shape_pars=True`")
+                assert scale_shape_pars, msg
+        else:
+            index_ref_peak = None
+            shape_calib_in_range = True # flag for below
+            msg = "Scaling of shape parameters requires `share_shape_pars=True`"
+            assert scale_shape_pars is False, msg
+            assert scale_shape_to_peak_cen is False, msg
+            mu_ref = None
+
+        from .fit_models import _enforce_shared_shape_pars
         for peak in peaks_to_fit:
             peak_index = self.peaks.index(peak)
             # Estimate initial amplitude from counts in closest bin to x_pos,
@@ -1749,16 +1836,36 @@ class spectrum:
             y_max = df.values.flatten()[i_pos]
             amp0 = max(y_max, 1)/2500*(self.mass_number/100)
             mu0 = fit_models.get_mu0(peak.x_pos, init_pars, fit_model)
-            if init_pars:
-                this_mod = model(peak_index, mu0, amp0,
-                                 init_pars=init_pars,
-                                 vary_shape_pars=vary_shape,
-                                 index_first_peak=index_first_peak)
+            if init_pars is not None:
+                this_mod = model(peak_index, mu0, amp0, init_pars=init_pars,
+                                 vary_shape_pars=vary_shape)
             else:
                 this_mod = model(peak_index, mu0, amp0,
-                                 vary_shape_pars=vary_shape,
-                                 index_first_peak=index_first_peak)
+                                 vary_shape_pars=vary_shape)
+
+            if index_ref_peak is not None and (peak_index != index_ref_peak):
+                this_mod = _enforce_shared_shape_pars(this_mod, peak_index,
+                                                      index_ref_peak,
+                                                      scale_shape_pars,
+                                                      peak.scl_coeff, mu_ref)
             mod = mod + this_mod
+
+        # Ensure shape-reference parameters are contained in composite model:
+        if self.index_shape_calib is not None and shape_calib_in_range is False:
+            ref_pref = "p{0}_".format(self.index_shape_calib)
+            for pname, pval in self.shape_cal_pars.items():
+                if pname.startswith(("sigma","theta","eta","tau","delta")):
+                    mod.param_names.append(ref_pref+pname)
+                    # Adapt parameter bounds and expr. from shape_cal_result
+                    par = self.shape_cal_result.params[ref_pref+pname]
+                    mod.set_param_hint(ref_pref+pname, value=pval, min=par.min,
+                                       max=par.max, expr=par.expr,
+                                       vary=vary_shape)
+                elif pname.startswith("mu"):
+                    mod.param_names.append(ref_pref+pname)
+                    par = self.shape_cal_result.params[ref_pref+pname]
+                    mod.set_param_hint(ref_pref+pname, value=pval,
+                                       expr=par.expr, vary=False)
 
         return mod
 
@@ -1768,6 +1875,8 @@ class spectrum:
                               n_cores=-1, MCMC_seed=1364):
         """Map out parameter covariances and posterior distributions using
         Markov-chain Monte Carlo (MCMC) sampling
+
+        MCMC results saved in `result_emcee` attribute of fit_result.
 
         **This method is intended for internal usage and for single peaks
         only.**
@@ -1803,10 +1912,6 @@ class spectrum:
             (default) all available cores will be used.
         MCMC_seed : int, optional
             Random state for reproducible sampling.
-
-        Yields
-        ------
-        MCMC results saved in `result_emcee` attribute of fit_result.
 
         Notes
         -----
@@ -2100,7 +2205,9 @@ class spectrum:
 
     def peakfit(self,fit_model='emg22', cost_func='chi-square', x_fit_cen=None,
                 x_fit_range=None, init_pars=None, vary_shape=False,
-                vary_baseline=True, method='least_squares', fit_kws=None,
+                vary_baseline=True, share_shape_pars=True,
+                scale_shape_pars=False, scale_shape_to_peak_cen=False,
+                method='least_squares', fit_kws=None, par_hint_args={},
                 show_plots=True, show_peak_markers=True, sigmas_of_conf_band=0,
                 error_every=1, plot_filename=None, map_par_covar=False,
                 **MCMC_kwargs):
@@ -2173,12 +2280,29 @@ class spectrum:
             If `True`, the constant background will be fitted with a varying
             uniform baseline parameter `bkg_c`.
             If `False`, the baseline parameter `bkg_c` will be fixed to 0.
+        share_shape_pars : bool, optional, default: True
+            Whether to enforce a shared peak shape for all peaks.
+        scale_shape_pars : bool, optional, default: False
+            Whether to scale the scale-dependent shape parameters of the
+            shape-reference peak with the :attr:`peaks.scl_coeff`. See Notes of
+            :meth:`comp_model` for details.
+        scale_shape_to_peak_cen : bool, optional, default: False
+            Whether to scale the scale-dependent shape parameters to the
+            centroid `mu` of the underlying Gaussian of a given peak. Requires
+            `scale_shape_pars` to be `True`. See Notes of
+            :meth:`comp_model` for details.
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
         fit_kws : dict, optional, default: None
             Options to pass to lmfit minimizer used in
             :meth:`lmfit.model.Model.fit` method.
+        par_hint_args : dict of dicts, optional
+            Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
+            modify or add model parameters. The keys of the `par_hint_args`
+            dictionary specify parameter names; the values must likewise be
+            dictionaries that hold the respective keyword arguments to pass to
+            :meth:`~lmfit.model.Model.set_param_hint`.
         show_plots : bool, optional
             If `True` (default) linear and logarithmic plots of the spectrum
             with the best fit curve are displayed. For details see
@@ -2318,18 +2442,16 @@ class spectrum:
                                 "argument.")
             init_params = self.shape_cal_pars
 
-        if vary_shape is True:
-            # Enforce shared shape parameters for all peaks
-            index_first_peak = self.peaks.index(peaks_to_fit[0])
-        else:
-            index_first_peak = None
-
         model_name = str(fit_model)+' + const. background (bkg_c)'
         # Create multi-peak fit model
         mod = self.comp_model(peaks_to_fit=peaks_to_fit, fit_model=fit_model,
                               init_pars=init_params, vary_shape=vary_shape,
                               vary_baseline=vary_baseline,
-                              index_first_peak=index_first_peak)
+                              share_shape_pars=share_shape_pars,
+                              scale_shape_pars=scale_shape_pars,
+                              scale_shape_to_peak_cen=scale_shape_to_peak_cen)
+        for pname, kws in par_hint_args.items():
+            mod.set_param_hint(pname, **kws) # modify or add parameter hints
         pars = mod.make_params() # create parameters object for model
 
         # Perform fit & store results
@@ -2386,6 +2508,7 @@ class spectrum:
         out.cost_func = cost_func
         out.method = method
         out.fit_kws = fit_kws
+        out.par_hint_args = par_hint_args
         out.x_fit_cen = x_fit_cen
         out.x_fit_range = x_fit_range
         out.vary_baseline = vary_baseline
@@ -2635,7 +2758,7 @@ class spectrum:
     def determine_A_stat_emg(self, peak_index=None, species="?", x_pos=None,
                              x_range=None, N_spectra=1000, fit_model=None,
                              cost_func='MLE', method='least_squares',
-                             fit_kws=None, vary_baseline=True,
+                             fit_kws=None, par_hint_args={}, vary_baseline=True,
                              plot_filename=None):
         """Determine the constant of proprotionality `A_stat_emg` for
         calculation of the statistical uncertainties of Hyper-EMG fits.
@@ -2705,6 +2828,12 @@ class spectrum:
         fit_kws : dict, optional, default: None
             Options to pass to lmfit minimizer used in
             :meth:`lmfit.model.Model.fit` method.
+        par_hint_args : dict of dicts, optional
+            Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
+            modify or add model parameters. The keys of the `par_hint_args`
+            dictionary specify parameter names; the values must likewise be
+            dictionaries that hold the respective keyword arguments to pass to
+            :meth:`~lmfit.model.Model.set_param_hint`.
         vary_baseline : bool, optional, default: `True`
             If `True`, the constant background will be fitted with a varying
             uniform baseline parameter `bkg_c`.
@@ -2801,7 +2930,11 @@ class spectrum:
                                                    cost_func=cost_func,
                                                    method=method,
                                                    fit_kws=fit_kws,
+                                                   par_hint_args=par_hint_args,
                                                    vary_baseline=vary_baseline,
+                                                   share_shape_pars=self.share_shape_pars,
+                                                   scale_shape_pars=self.scale_shape_pars,
+                                                   scale_shape_to_peak_cen=self.scale_shape_to_peak_cen,
                                                    init_pars=self.shape_cal_pars,
                                                    show_plots=False)
                     # Record centroid and area of peak 0
@@ -2878,8 +3011,10 @@ class spectrum:
                              species_shape_calib=None, fit_model='emg22',
                              cost_func='chi-square', init_pars = 'default',
                              x_fit_cen=None, x_fit_range=None,
-                             vary_baseline=True, method='least_squares',
-                             fit_kws=None, vary_tail_order=True,
+                             vary_baseline=True,
+                             vary_tail_order=True,
+                             method='least_squares',
+                             fit_kws=None, par_hint_args={},
                              show_fit_reports=False, show_plots=True,
                              show_peak_markers=True, sigmas_of_conf_band=0,
                              error_every=1, plot_filename=None,
@@ -2961,18 +3096,24 @@ class spectrum:
             If `True`, the background will be fitted with a varying uniform
             baseline parameter `bkg_c`. If `False`, the baseline parameter
             `bkg_c` will be fixed to 0.
-        method : str, optional, default: `'least_squares'`
-            Name of minimization algorithm to use. For full list of options
-            check arguments of :func:`lmfit.minimizer.minimize`.
-        fit_kws : dict, optional, default: None
-            Options to pass to lmfit minimizer used in
-            :meth:`lmfit.model.Model.fit` method.
         vary_tail_order : bool, optional
             If `True` (default), before the calibration of the peak-shape
             parameters an automatized fit model selection is performed. For
             details on the automatic model selection, see `Notes` section below.
             If `False`, the specified `fit_model` argument is used as model
             for the peak-shape determination.
+        method : str, optional, default: `'least_squares'`
+            Name of minimization algorithm to use. For full list of options
+            check arguments of :func:`lmfit.minimizer.minimize`.
+        fit_kws : dict, optional, default: None
+            Options to pass to lmfit minimizer used in
+            :meth:`lmfit.model.Model.fit` method.
+        par_hint_args : dict of dicts, optional
+            Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
+            modify or add model parameters. The keys of the `par_hint_args`
+            dictionary specify parameter names; the values must likewise be
+            dictionaries that hold the respective keyword arguments to pass to
+            :meth:`~lmfit.model.Model.set_param_hint`.
         show_fit_reports : bool, optional, default: True
             Whether to print fit reports for the fits in the automatic model
             selection.
@@ -3018,6 +3159,14 @@ class spectrum:
         uncertainty fails are likewise excluded from selection.
 
         """
+        # Reset shape calibration attributes
+        self.index_shape_calib = None
+        self.red_chi_shape_cal = None
+        self.shape_cal_result = None
+        self.shape_cal_pars = None
+        self.shape_cal_errors = None
+        self.fit_range_shape_cal = None
+
         if index_shape_calib is not None and (species_shape_calib is None):
             peak = self.peaks[index_shape_calib]
         elif species_shape_calib:
@@ -3058,8 +3207,12 @@ class spectrum:
                     out = spectrum.peakfit(self, fit_model=model, cost_func=cost_func,
                                            x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
                                            init_pars=init_pars, vary_shape=True,
-                                           vary_baseline=vary_baseline, method=method,
-                                           fit_kws=fit_kws,
+                                           vary_baseline=vary_baseline,
+                                           share_shape_pars=self.share_shape_pars,
+                                           scale_shape_pars=self.scale_shape_pars,
+                                           scale_shape_to_peak_cen=self.scale_shape_to_peak_cen,
+                                           method=method, fit_kws=fit_kws,
+                                           par_hint_args=par_hint_args,
                                            show_plots=show_plots,
                                            show_peak_markers=show_peak_markers,
                                            sigmas_of_conf_band=sigmas_of_conf_band,
@@ -3137,8 +3290,13 @@ class spectrum:
         out = spectrum.peakfit(self, fit_model=self.fit_model, cost_func=cost_func,
                                x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
                                init_pars=init_pars, vary_shape=True,
-                               vary_baseline=vary_baseline, method=method,
-                               fit_kws=fit_kws, show_plots=show_plots,
+                               vary_baseline=vary_baseline,
+                               share_shape_pars=self.share_shape_pars,
+                               scale_shape_pars=self.scale_shape_pars,
+                               scale_shape_to_peak_cen=self.scale_shape_to_peak_cen,
+                               method=method, fit_kws=fit_kws,
+                               par_hint_args=par_hint_args,
+                               show_plots=show_plots,
                                show_peak_markers=show_peak_markers,
                                sigmas_of_conf_band=sigmas_of_conf_band,
                                error_every=error_every,
@@ -3238,7 +3396,7 @@ class spectrum:
         peaks with each shape parameter individually varied by plus and minus 1
         sigma and recording the respective shift of the peak centroids w.r.t the
         original fit. From the shifted IOI centroids and the corresponding
-        shifts of the calibrant centroid effective mass shifts are determined.
+        shifts of the calibrant centroid, effective mass shifts are determined.
         For each varied parameter, the larger of the two eff. mass shifts are
         then added in quadrature to obtain the total peak-shape uncertainty.
         See `Notes` section below for a detailed explanation of the peak-shape
@@ -3342,7 +3500,7 @@ class spectrum:
         """
         if self.shape_cal_pars is None:
             msg = str('Could not calculate peak-shape errors - no peak-shape '
-                      'calibration yet!')
+                      'calibration has been performed yet!')
             warnings.warn(msg)
             return
 
@@ -3350,7 +3508,7 @@ class spectrum:
             print('\n##### Peak-shape uncertainty evaluation #####\n')
         if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
-        pref = 'p{0}_'.format(peak_indeces[0])
+        pref = 'p{0}_'.format(self.index_shape_calib) # 'p{0}_'.format(peak_indeces[0]) TODO: remove comment
         # grab shape parameters to be varied by +/- sigma:
         shape_pars = [key for key in self.shape_cal_pars
                       if (key.startswith(('sigma','theta','eta','tau','delta'))
@@ -3397,8 +3555,12 @@ class spectrum:
                                         x_fit_range=fit_result.x_fit_range,
                                         init_pars=pars, vary_shape=False,
                                         vary_baseline=fit_result.vary_baseline,
+                                        share_shape_pars=self.share_shape_pars,
+                                        scale_shape_pars=self.scale_shape_pars,
+                                        scale_shape_to_peak_cen=self.scale_shape_to_peak_cen,
                                         method=fit_result.method,
                                         fit_kws=fit_result.fit_kws,
+                                        par_hint_args=fit_result.par_hint_args,
                                         show_plots=False)
             #display(fit_result_p) # show fit result
 
@@ -3420,8 +3582,12 @@ class spectrum:
                                         x_fit_range=fit_result.x_fit_range,
                                         init_pars=pars, vary_shape=False,
                                         vary_baseline=fit_result.vary_baseline,
+                                        share_shape_pars=self.share_shape_pars,
+                                        scale_shape_pars=self.scale_shape_pars,
+                                        scale_shape_to_peak_cen=self.scale_shape_to_peak_cen,
                                         method=fit_result.method,
                                         fit_kws=fit_result.fit_kws,
+                                        par_hint_args=fit_result.par_hint_args,
                                         show_plots=False)
             #display(fit_result_m) # show fit result
 
@@ -3466,7 +3632,7 @@ class spectrum:
                 cal_peak = self.peaks[cal_idx]
                 pref = 'p{0}_'.format(cal_idx)
                 cen = fit_result.best_values[pref+'mu']
-                new_cen_p =  fit_result_p.best_values[pref+'mu']
+                new_cen_p = fit_result_p.best_values[pref+'mu']
                 new_cen_m = fit_result_m.best_values[pref+'mu']
                 # recalibration factors obtained with shifted calib. centroids:
                 recal_fac_p = cal_peak.m_AME/(new_cen_p*cal_peak.abs_z)
@@ -4220,9 +4386,10 @@ class spectrum:
     def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None,
                       fit_model=None, cost_func='MLE', x_fit_cen=None,
                       x_fit_range=None, vary_baseline=True,
-                      method='least_squares', fit_kws=None, show_plots=True,
-                      show_peak_markers=True, sigmas_of_conf_band=0,
-                      error_every=1, show_fit_report=True, plot_filename=None):
+                      method='least_squares', fit_kws=None, par_hint_args={},
+                      show_plots=True, show_peak_markers=True,
+                      sigmas_of_conf_band=0, error_every=1,
+                      show_fit_report=True, plot_filename=None):
         """Determine mass re-calibration factor by fitting the selected
         calibrant peak.
 
@@ -4275,6 +4442,12 @@ class spectrum:
         fit_kws : dict, optional, default: None
             Options to pass to lmfit minimizer used in
             :meth:`lmfit.model.Model.fit` method.
+        par_hint_args : dict of dicts, optional
+            Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
+            modify or add model parameters. The keys of the `par_hint_args`
+            dictionary specify parameter names; the values must likewise be
+            dictionaries that hold the respective keyword arguments to pass to
+            :meth:`~lmfit.model.Model.set_param_hint`.
         show_plots : bool, optional
             If `True` (default) linear and logarithmic plots of the spectrum
             with the best fit curve are displayed. For details see
@@ -4363,8 +4536,12 @@ class spectrum:
                                       x_fit_range=x_fit_range,
                                       vary_shape=False,
                                       vary_baseline=vary_baseline,
+                                      share_shape_pars=self.share_shape_pars,
+                                      scale_shape_pars=self.scale_shape_pars,
+                                      scale_shape_to_peak_cen=self.scale_shape_to_peak_cen,
                                       method=method,
                                       fit_kws=fit_kws,
+                                      par_hint_args=par_hint_args,
                                       show_plots=show_plots,
                                       show_peak_markers=show_peak_markers,
                                       sigmas_of_conf_band=sigmas_of_conf_band,
@@ -4380,11 +4557,11 @@ class spectrum:
         # for ions of interest
         try:
             self._eval_peakshape_errors(peak_indeces=[index_mass_calib],
-                                    fit_result=fit_result, verbose=False)
+                                        fit_result=fit_result, verbose=False)
         except KeyError:
             warnings.warn("Peak-shape error determination failed with "
-                          "KeyError. Likely the used fit_model is inconsistent "
-                          "with the shape calibration model.", UserWarning)
+                         "KeyError. Likely the used fit_model is inconsistent "
+                         "with the shape calibration model.", UserWarning)
         except Exception as err:
             msg = str("Peak-shape error determination failed with: "+repr(err))
             warnings.warn(msg, UserWarning)
@@ -4486,10 +4663,11 @@ class spectrum:
     def fit_peaks(self, peak_indeces=[], index_mass_calib=None,
                   species_mass_calib=None, x_fit_cen=None, x_fit_range=None,
                   fit_model=None, cost_func='MLE', method ='least_squares',
-                  fit_kws=None, init_pars=None, vary_shape=False,
-                  vary_baseline=True, show_plots=True, show_peak_markers=True,
-                  sigmas_of_conf_band=0, error_every=1, plot_filename=None,
-                  show_fit_report=True, show_shape_err_fits=False):
+                  fit_kws=None, par_hint_args={}, init_pars=None,
+                  vary_shape=False, vary_baseline=True, show_plots=True,
+                  show_peak_markers=True, sigmas_of_conf_band=0, error_every=1,
+                  plot_filename=None, show_fit_report=True,
+                  show_shape_err_fits=False):
         """Fit peaks, update peaks properties and show results.
 
         By default, the full mass range and all peaks in the spectrum are
@@ -4547,6 +4725,12 @@ class spectrum:
         fit_kws : dict, optional, default: None
             Options to pass to lmfit minimizer used in
             :meth:`lmfit.model.Model.fit` method.
+        par_hint_args : dict of dicts, optional
+            Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
+            modify or add model parameters. The keys of the `par_hint_args`
+            dictionary specify parameter names; the values must likewise be
+            dictionaries that hold the respective keyword arguments to pass to
+            :meth:`~lmfit.model.Model.set_param_hint`.
         init_pars : dict, optional
             Dictionary with initial shape parameter values for fit (optional).
 
@@ -4652,7 +4836,9 @@ class spectrum:
             raise Exception("If a mass calibrant is specified its index "
                             "must be contained in `peak_indeces`.")
 
-        # FIT ALL PEAKS
+        # FIT ALL PEAKS WITHIN FIT RANGE
+        if show_plots or show_fit_report:
+            print('##### Fit peaks of interest #####')
         fit_result = spectrum.peakfit(self, fit_model=fit_model,
                                       cost_func=cost_func,
                                       x_fit_cen=x_fit_cen,
@@ -4660,8 +4846,12 @@ class spectrum:
                                       init_pars=init_pars,
                                       vary_shape=vary_shape,
                                       vary_baseline=vary_baseline,
+                                      share_shape_pars=self.share_shape_pars,
+                                      scale_shape_pars=self.scale_shape_pars,
+                                      scale_shape_to_peak_cen=self.scale_shape_to_peak_cen,
                                       method=method,
                                       fit_kws=fit_kws,
+                                      par_hint_args=par_hint_args,
                                       show_plots=show_plots,
                                       show_peak_markers=show_peak_markers,
                                       sigmas_of_conf_band=sigmas_of_conf_band,

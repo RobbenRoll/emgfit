@@ -12,12 +12,16 @@ v0.4.1 (2022-05-XY)
 
 Added
 ^^^^^
-*
+* Allow for a simple scaling of the scale-dependent shape parameters from the
+  shape-calibrant peak to peaks of interest.
+* Enable flexible adding and modification of a fit model's parameter constraints
+  via the new `par_hint_args` option of :meth:`~emgfit.spectrum.peakfit` and
+  related spectrum methods.
 
 Changed
 ^^^^^^^
-* Define bounds of mass-dependent parameters as multiples of the standard
-  deviation of the (underlying) Gaussian.
+* Define bounds of scale-dependent parameters as multiples of the standard
+  deviation of the underlying Gaussian.
 * Improve initialization of peak positions by calculating the initial Gaussian
   centroid from the mode of the distribution.
 * Make initialization of peak amplitudes for very-low statistics peaks more

@@ -6,7 +6,8 @@ import numpy as np
 def test_sampling():
     """Helper function to check result of simulate_events() against target PDF
     """
-    def test_sampling_func(modname, mu, shape_pars, bkg_c=0, N_events=10000000):
+    def test_sampling_func(modname, mu, shape_pars, bkg_c=0, scl_fac=1.0,
+                           N_events=10000000):
         x_min = mu - 10*shape_pars["sigma"]
         x_max = mu + 10*shape_pars["sigma"]
 
@@ -18,7 +19,8 @@ def test_sampling():
 
         np.random.seed(0)
         data = simulate_events(shape_pars, mu, amp, bkg_c, N_events, x_min,
-                               x_max, out='hist', N_bins=N_bins)
+                               x_max, scl_facs=scl_fac, out='hist',
+                               N_bins=N_bins)
 
         # Check simulated events against generating PDF
         x = data.index.values
@@ -26,16 +28,17 @@ def test_sampling():
 
         import emgfit.fit_models as fit_models
         modfunc = getattr(fit_models, modname)
-        mod = modfunc(0, mu, amp, init_pars=shape_pars,
-                      vary_shape_pars=True, index_first_peak=0)
+        scaled_pars = fit_models.scl_init_pars(shape_pars, scl_coeff=scl_fac)
+        mod = modfunc(0, mu, amp, init_pars=scaled_pars, vary_shape_pars=True)
         pars = mod.make_params()
         y_PDF = mod.eval(pars,x=x) # target distribution
 
         allclose = np.allclose(y_sim, y_PDF, atol=15, rtol=15e-01)
-        mean_residual = np.mean(y_PDF - y_sim)
         msg0 = "y_sim & y_PDF differ by >15% and >15counts in some bins."
-        msg1 = "The mean of y_sim - y_PDF differs from 0 by more than 1."
         assert allclose, msg0
+
+        mean_residual = np.mean(y_PDF - y_sim)
+        msg1 = "The mean of y_sim - y_PDF differs from 0 by more than 1."
         assert abs(mean_residual) <= 1, msg1
 
     return test_sampling_func
@@ -60,7 +63,7 @@ class Test_sampling(object):
         test_sampling(modname, mu, shape_pars)
 
     def test_emg21_sampling(self, test_sampling):
-        """Test simulate_events() for sampling from emg21 PDF"""
+        """Test simulate_events() for sampling from emg21 PDF with scaling"""
         modname = "emg21"
         mu = 10.1
         sigma = 0.0005
@@ -77,7 +80,8 @@ class Test_sampling(object):
                       'tau_m1': tau_m1,
                       'tau_m2': tau_m2,
                       'tau_p1': tau_p1}
-        test_sampling(modname, mu, shape_pars)
+        scl_fac = 0.4
+        test_sampling(modname, mu, shape_pars, scl_fac=0.4)
 
 
     def test_emg33_sampling(self, test_sampling):
