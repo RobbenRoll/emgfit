@@ -95,10 +95,9 @@ class peak:
                  Ex_error=0.0, lit_src='AME2020'):
         """Instantiate a new :class:`peak` object.
 
-        If a valid ion species is assigned with the `species` parameter the
+        If a valid ion species is assigned with the `species` argument the
         corresponding literature values will automatically be fetched from the
-        AME database. The syntax for species assignment follows that of MAc
-        (for more details see documentation for `species` parameter below).
+        AME database.
 
         If different literature values are to be used, the literature mass or
         mass uncertainty can be user-defined with :attr:`m_AME` and
@@ -383,10 +382,9 @@ class spectrum:
         """Create a :class:`spectrum` object by importing histogrammed mass data
         from .txt or .csv file.
 
-        Input file format: two-column .csv- or .txt-file with tab-separated
-                           values (column 1: mass bin, column 2: counts in bin).
-                           This is the default format of MAc export files when
-                           histogram mode is used.
+        Input file format:
+        two-column .csv- or .txt-file with tab-separated values
+        (column 1: mass bin, column 2: counts in bin).
 
         Optionally the spectrum can be cut to a specified fit range using the
         `m_start` and `m_stop` parameters. Mass data outside this range will be
@@ -399,10 +397,10 @@ class spectrum:
         Parameters
         ----------
         filename : str, optional
-            Filename of mass spectrum to analyze (as exported with MAc's
-            histogram mode). If the input file is not located in the working
-            directory the directory path has to be included in `filename`, too.
-            If no `filename` is given, data must be provided via `df` argument.
+            Filename of mass spectrum to analyze. If the input file is not
+            located in the working directory the directory path has to be
+            included in `filename`, too. If no `filename` is given, data must be
+            provided via `df` argument.
 	    m_start : float [u/z], optional
             Start of fit range, data at lower m/z will be discarded.
 	    m_stop : float [u/z], optional
@@ -556,13 +554,14 @@ class spectrum:
 
     	Returns
         -------
-        numpy.array
+        :class:`numpy.ndarray`
     	    The smoothed spectrum data.
 
     	See also
         --------
-    	    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman,
-            numpy.convolve, scipy.signal.lfilter
+    	    :func:`numpy.hanning`, :func:`numpy.hamming`,
+            :func:`numpy.bartlett`, :func:`numpy.blackman`,
+            :func:`numpy.convolve`, :func:`scipy.signal.lfilter`
 
     	Notes
         -----
@@ -1529,6 +1528,11 @@ class spectrum:
             '<`plot_filename`>_log_plot.png' & '<`plot_filename`>_lin_plot.png'.
             **Caution: Existing files with identical name are overwritten.**
 
+        See also
+        --------
+        :meth:`plot_fit_zoom`
+        :meth:`save_fit_trace`
+
         """
         if fit_result is None and x_min is None and x_max is None: # full spec
             x_min = min(self.data.index)
@@ -1688,6 +1692,11 @@ class spectrum:
             '<`plot_filename`>_log_plot.png' & '<`plot_filename`>_lin_plot.png'.
             **Caution: Existing files with identical name are overwritten.**
 
+        See also
+        --------
+        :meth:`plot_fit`
+        :meth:`save_fit_trace`
+
         """
         if isinstance(peak_indeces,list):
             x_min = self.peaks[peak_indeces[0]].x_pos - 0.5*x_range
@@ -1707,6 +1716,64 @@ class spectrum:
                       error_every=error_every,
                       sigmas_of_conf_band=sigmas_of_conf_band,
                       plot_filename=plot_filename)
+
+
+    def save_fit_trace(self, filename, peak_index=0, fit_result=None,
+                       x_res=None, fmt=('%.9e','%.1i','%.3e','%.6e'),
+                       comment=''):
+        """Write count data and best-fit curve to TXT file
+
+        By default, the fit curve data is taken from the first fit result stored
+        in the spectrum's :attr:`fit_results` list; data from other fit results
+        can accessed through the `peak_index` or `fit_result` arguments.
+
+        Parameters
+        ----------
+        filename : str, optional
+            Prefix of the output filename; the suffix "_fit_trace.txt" is
+            automatically appended.
+        peak_index : int, optional, default: 0
+            Peak index specifying from which result in
+            :attr:`spectrum.fit_results` the fit data will be written.
+        fit_result : :class:`lmfit.model.ModelResult`, optional
+            Fit result to obtain fit curve from. Only needed to write grab data
+            from a fit result not stored in the spectrum's :attr:`fit_results`
+            attribute.
+        fmt : sequence of str
+            Formats of written column values. For details see
+            :func:`numpy.savetxt`.
+        x_res : float, optional [u]
+            Custom spacing of abscissa values at which the best-fit model will
+            be evaluated. If `x_res` is specified, the measured count data and
+            its error will not be written to the output file.
+        comment : str, optional
+            Comments to add to output file.
+
+        """
+        if os.path.isfile(str(filename)+"_fit_trace.txt"):
+            raise Exception("File "+str(filename)+".txt already exists. No "
+                            "files saved! Choose a different filename or "
+                            "delete the original file and re-try.")
+        if fit_result is None:
+            fit_result = self.fit_results[peak_index]
+
+        x = fit_result.x
+        y_data = fit_result.y
+        y_err = fit_result.y_err
+        if x_res is None:
+            y_fit = fit_result.best_fit
+            plot_data = np.transpose([x, y_data, y_err, y_fit])
+            header =  "m/z [u], Measured counts, Error of measured counts, "
+            header += "Best-fit counts"
+        else: # save only fit curve with increased x-resolution
+            x_fine = np.arange(min(x), max(x)+x_res, x_res)
+            y_fit_fine = fit_result.eval(x=x_fine)
+            plot_data = np.transpose([x_fine, y_fit_fine])
+            header =  "m/z [u], Best-fit counts"
+            fmt = fmt[0::3]
+
+        np.savetxt(filename+"_fit_trace.txt", plot_data, header=header, fmt=fmt,
+                   comments=comment, delimiter=", ")
 
 
     def comp_model(self, peaks_to_fit, fit_model='emg22', init_pars=None,
@@ -1768,7 +1835,8 @@ class spectrum:
 
         There is two options to scale the shape parameters of the
         shape-reference peak to a given peak:
-        1. If ``scale_shape_pars=True`` and ``scale_shape_to_peak_cen=False``:
+
+        1. If `scale_shape_pars=True` and `scale_shape_to_peak_cen=False`:
            The scale-dependent shape-reference parameters ('sigma' and 'tau's)
            are multiplied with a fixed scale factor ``scl_fac=scl_coeff``, where
            ``scl_coeff`` is the :attr:`peak.scl_coeff` attribute of the given
@@ -4481,7 +4549,7 @@ class spectrum:
         method is automatically called to save the absolute calibrant centroid
         shifts as preparation for subsequent peak-shape error determinations.
 
-        Since the spectrum has already been coarsely calibrated via the time-
+        Assuming the spectrum has already been coarsely calibrated via the time-
         resolved calibration in the MR-TOF-MS's data acquisition software MAc,
         the recalibration (or precision calibration) factor is usually very
         close to unity. An error will be raised by the
@@ -4947,9 +5015,13 @@ class spectrum:
         `fit_result` (as specified with `peak_indeces`), fits will be
         re-performed over the same x-range as `fit_result`.
 
+        The resampling is performed with the
+        :func:`emgfit.sample.simulate_events` function.
+
         See also
         --------
         :meth:`~spectrum.get_errors_from_resampling`
+        :func:`emgfit.sample.simulate_events`
 
         """
         bkg_c = fit_result.best_values['bkg_c']
@@ -5289,10 +5361,14 @@ class spectrum:
             Prefix of the files to be saved to (any provided file extensions are
             automatically removed and the necessary .xlsx & .txt extensions are
             appended).
-        save_plots : bool, optional
-            Whether to save images of all obtained fit curves to separate PNG
-            files (default: `True`).
+        save_plots : bool, optional, default: True
+            Whether to save separate PNG files with plots of all obtained fit
+            curves. If `False`, plots will still be included in the XLSX file. 
 
+        See also
+        --------
+        :meth:`save_fit_trace`
+        :meth:`save_peak_shape_cal`
 
         """
         # Ensure no files are overwritten
@@ -5440,12 +5516,12 @@ class spectrum:
             self.save_peak_shape_cal(filename+"_peakshape_calib")
         except:
             raise
-
-        if not save_plots: # Clean up temporary image files
-            for i in range(n_res): # loop over fit results
-                fname = filename+"_fit{}".format(i)
-                os.remove(fname+'_log_plot.png')
-                os.remove(fname+'_lin_plot.png')
+        finally:
+            if not save_plots: # Clean up temporary image files
+                for i in range(n_res): # loop over fit results
+                    fname = filename+"_fit{}".format(i)
+                    os.remove(fname+'_log_plot.png')
+                    os.remove(fname+'_lin_plot.png')
 
 
 

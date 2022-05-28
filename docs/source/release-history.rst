@@ -14,6 +14,8 @@ Added
 ^^^^^
 * Allow for a simple scaling of the scale-dependent shape parameters from the
   shape-calibrant peak to peaks of interest.
+* Added the convenience method :meth:`~emgfit.spectrum.save_fit_trace` for
+  exporting the trace data of a fit to a TXT file.  
 * Enable flexible adding and modification of a fit model's parameter constraints
   via the new `par_hint_args` option of :meth:`~emgfit.spectrum.peakfit` and
   related spectrum methods.
@@ -30,7 +32,7 @@ Changed
   backgrounds.
 
 Fixed
-^^^^
+^^^^^
 * Fix bug in recognition of tail order for sampling events with
   :func:`~emgfit.sample.simulate_events`.
 

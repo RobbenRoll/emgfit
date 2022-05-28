@@ -410,7 +410,7 @@ statistical uncertainty of the calibrant fit result
 .. math::
 
    \frac{\Delta \gamma_\mathrm{recal}}{\gamma_\mathrm{recal}} =
-     \sqrt{ \left(\frac{\Delta m_\mathrm{cal, lit}}{m_\mathrm{cal, fit}} \right)^2
+     \sqrt{ \left(\frac{\Delta m_\mathrm{cal, lit}}{m_\mathrm{cal, lit}} \right)^2
           + \left(\frac{\Delta m_\mathrm{cal, fit}}{m_\mathrm{cal, fit}} \right)^2}.
 
 The final ionic masses :attr:`m_ion` are calculated as:
@@ -553,6 +553,11 @@ peak areas and the mass values `m_ion`:
   properties table is updated with the refined uncertainties and the new
   values are marked in color to clearly indicate the way they were estimated.
 
+Saving fit traces
+-----------------
+Obtained fit curves and the underlying count data can be exported to a TXT file
+using the :meth:`~emgfit.spectrum.spectrum.save_fit_trace` method of the
+:class:`spectrum` class.
 
 Saving fit results
 ------------------
