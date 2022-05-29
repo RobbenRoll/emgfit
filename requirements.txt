@@ -2,7 +2,7 @@
 lmfit >= 1.0.0
 numpy >= 1.18.1
 scipy >= 1.3.2
-pandas >= 1.4
+pandas >= 1.3.7
 matplotlib
 docutils >= 0.3
 # Use older version to avoid "`should_run_async` will not call `transform_cell` automatically in the future" deprecation warning:
