@@ -14,11 +14,13 @@ Added
 ^^^^^
 * Allow for a simple scaling of the scale-dependent shape parameters from the
   shape-calibrant peak to peaks of interest.
-* Added the convenience method :meth:`~emgfit.spectrum.save_fit_trace` for
-  exporting the trace data of a fit to a TXT file.  
+* Add the convenience method :meth:`~emgfit.spectrum.spectrum.save_fit_trace`
+  for exporting the trace data of a fit to a TXT file.
+* Add `method` :class:`peak` attribute to store the optimization algorithm
+  used for a fit. 
 * Enable flexible adding and modification of a fit model's parameter constraints
-  via the new `par_hint_args` option of :meth:`~emgfit.spectrum.peakfit` and
-  related spectrum methods.
+  via the new `par_hint_args` option of :meth:`~emgfit.spectrum.spectrum.peakfit`
+  and related spectrum methods.
 
 Changed
 ^^^^^^^
