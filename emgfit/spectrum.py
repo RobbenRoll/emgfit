@@ -2448,23 +2448,28 @@ class spectrum:
         iteration the weights are updated with the new values of the model
         function.
 
-        When performing ``MLE`` fits including bins with low statistics the
+        When performing ``MLE`` fits including bins with low statistics, the
         value for chi-squared as well as the parameter standard errors and
         correlations in the lmfit fit report should be taken with caution.
-        This is because strictly speaking emgfit's ``MLE`` cost function only
+        This is because, strictly speaking, emgfit's ``MLE`` cost function only
         approximates a chi-squared distribution in the limit of a large number
         of counts in every bin ("Wick's theorem"). For a detailed derivation of
         this statement see pp. 94-95 of these `lecture slides by Mark Thompson`_.
-        In practice and if needed, one can simply test the validity of the
-        reported fit statistic as well as parameter standard errors &
-        correlations by re-performing the same fit with `cost_func='chi-square'`
-        and comparing the results. In all tested cases decent agreement was
-        found even if the fit range contained low-statistics bins. Even if a
-        deviation occurs this is irrelevant in most pratical cases since the
-        mass errors reported in emgfit's peak properties table are independent
-        of the lmfit parameter standard errors given as additional information
-        below. Only the peak area errors are by default calculated using the
-        standard errors of the `amp` parameters reported by lmfit.
+        However, for spectra with many (>1000) bins, it has been demonstrated
+        that as few as 10-30 counts in an entire spectrum can be sufficient for
+        the doubled, negative Poisson log-likelihood ratio (emgfit's ``MLE``
+        cost function) to yield reliable confidence intervals and act as a
+        decent goodness-of-fit measure [#Kaastra]_. In practice and if in doubt,
+        one can simply test the validity of the reported fit statistic as well
+        as parameter standard errors & correlations by re-performing the same
+        fit with `cost_func='chi-square'` and comparing the results. In all
+        tested cases decent agreement was found even if the fit range contained
+        low-statistics bins. Even if a deviation occurs, this is irrelevant in
+        most pratical cases since the mass errors reported in emgfit's peak
+        properties table are independent of the lmfit parameter standard errors
+        given as additional information below. Only the peak area errors are by
+        default calculated using the standard errors of the `amp` parameters
+        reported by lmfit.
 
         .. _`lecture slides by Mark Thompson`: https://www.hep.phy.cam.ac.uk/~thomson/lectures/statistics/Fitting_Handout.pdf
 
@@ -2473,7 +2478,7 @@ class spectrum:
         summands in the log-likelihood ratio are positive semi-definite:
         :math:`L_i = f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right) \\geq 0`.
         Exploiting this property, the minimization of the log-likelihood ratio
-        can be re-formulated into a least-squares problem (see also [#]_):
+        can be re-formulated into a least-squares problem (see also [#Ross]_):
 
         .. math::
 
@@ -2496,7 +2501,10 @@ class spectrum:
 
         References
         ----------
-        .. [#] Ross, G. J. S. "Least squares optimisation of general
+        .. [#Kaastra] Kaastra, J. S. "On the use of C-stat in testing models for X-ray
+           spectra" Astronomy & Astrophysics 605, A51 (2017), DOI:
+           https://doi.org/10.1051/0004-6361/201629319
+        .. [#Ross] Ross, G. J. S. "Least squares optimisation of general
            log-likelihood functions and estimation of separable linear
            parameters." COMPSTAT 1982 5th Symposium held at Toulouse 1982.
            Physica, Heidelberg, 1982.
@@ -2560,11 +2568,12 @@ class spectrum:
             ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x_i))
             mod_Pearson = mod
             eps = 1e-10 # small number to bound Pearson weights
+            from numpy import sqrt
             def resid_Pearson_chi_square(pars,y_data,weights,x=x):
                 y_m = mod_Pearson.eval(pars,x=x)
                 # Calculate weights for current iteration, add tiny number `eps`
                 # in denominator for numerical stability
-                weights = 1/np.sqrt(y_m + eps)
+                weights = 1./sqrt(y_m + eps)
                 return (y_m - y_data)*weights
 
             # Overwrite lmfit's standard least square residuals with iterative
@@ -2575,7 +2584,7 @@ class spectrum:
                                   scale_covar=False, nan_policy='propagate')
             # Calculate final weights for plotting
             y_m = out.best_fit
-            Pearson_weights = 1./np.sqrt(y_m + eps)
+            Pearson_weights = 1./sqrt(y_m + eps)
             out.y_err = 1./Pearson_weights
         elif cost_func == 'MLE':
             ## Binned max. likelihood fit using negative log-likelihood ratio
@@ -2602,7 +2611,7 @@ class spectrum:
                               calc_covar=False, nan_policy='propagate')
             out.y_err = 1./out.weights
         else:
-            raise Exception("Error: Definition of `cost_func` failed!")
+            raise Exception(" Definition of `cost_func` failed!")
         out.x = x
         out.y = y
         out.fit_model = fit_model
@@ -4052,7 +4061,7 @@ class spectrum:
                     y_m = model.eval(pars,x=x)
                     # Calculate weights for current iteration, add tiny number `eps`
                     # in denominator for numerical stability
-                    weights = 1/np.sqrt(y_m + eps)
+                    weights = 1./sqrt(y_m + eps)
                     return (y_m - y_data)*weights
                 # Overwrite lmfit's standard least square residuals with iterative
                 # residuals for Pearson chi-square fit
@@ -5135,7 +5144,7 @@ class spectrum:
                     y_m = model.eval(pars,x=x)
                     # Calculate weights for current iteration, add tiny number
                     # `eps` in denominator for numerical stability
-                    weights = 1/sqrt(y_m + eps)
+                    weights = 1./sqrt(y_m + eps)
                     return (y_m - y_data)*weights
                 # Overwrite lmfit's standard least square residuals
                 model._residual = resid_Pearson_chi_square
@@ -5442,7 +5451,7 @@ class spectrum:
         spec_data.append(["pandas version",pd.__version__])
         attributes = ['input_filename','mass_number','spectrum_comment',
                       'share_shape_pars', 'scale_shape_pars',
-                      'scale_shape_to_peak_cen'
+                      'scale_shape_to_peak_cen',
                       'fit_model','red_chi_shape_cal','fit_range_shape_cal',
                       'determined_A_stat_emg','A_stat_emg','A_stat_emg_error',
                       'peaks_with_errors_from_resampling','recal_fac',

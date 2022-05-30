@@ -543,7 +543,7 @@ peak areas and the mass values `m_ion`:
   the data the full shape parameter posterior distributions are upfront
   estimated by Markov-Chain Monte Carlo (MCMC) sampling. Assuming a sufficiently
   large subset of these MCMC parameter sets is used to refit the data, the
-  resulting PS errors account for complex parameter distributions (typically
+  resulting PS errors account for non-normal parameter distributions (typically
   found when a parameter is near its bounds) and parameter correlations. Since
   this approach is computationally expensive it makes heavy use of parallel
   processing. If appropriate MCMC sampling has already been performed in the
@@ -626,10 +626,10 @@ Examples:
 Creating simulated spectra
 --------------------------
 The functions in the :mod:`emgfit.sample` module allow the fast creation of
-synthetic spectrum data by extending inverse transform sampling with `Scipy's`
+synthetic spectrum data by extending random variate sampling with `Scipy's`
 :class:`~scipy.stats._continuous_distns.exponnorm` class to hyper-EMG
-distributions. This can serve as a valuable tool for Monte Carlo studies with
-count data.
+distributions. The functions in this module can serve as a valuable tool for
+Monte Carlo studies with count data.
 
 
 Blind analysis
