@@ -78,11 +78,13 @@ def scl_init_pars(init_pars, mu0=None, mu_ref=None, scl_coeff=1.0, decimals=9):
     If `scl_coeff` is None the original `init_pars` dictionary is returned.
 
     """
-    for pname, pval in init_pars.items():
+    from copy import deepcopy
+    scaled_pars = deepcopy(init_pars)
+    for pname, pval in scaled_pars.items():
         if pname.startswith(('sigma','tau')):
             mu_ratio = mu0/mu_ref if mu0 and mu_ref else 1
-            init_pars[pname] *= scl_coeff*np.round(mu_ratio, decimals)
-    return init_pars
+            scaled_pars[pname] *= scl_coeff*np.round(mu_ratio, decimals)
+    return scaled_pars
 
 
 def _enforce_shared_shape_pars(model, peak_index, index_ref_peak,
@@ -145,6 +147,53 @@ def _enforce_shared_shape_pars(model, peak_index, index_ref_peak,
                 model.set_param_hint(pref+pname, expr=ref_pref+pname)
 
     return model
+
+
+def _calc_mu_emg(fit_model, pars, pref=""):
+    """Calculate the mean of a Hyper-EMG peak from the best-fit parameters.
+
+    Parameters
+    ----------
+    fit_model :
+        Name of fit model used to obtain `pars`.
+    pars : :class:`lmfit.parameter.Parameters`, optional
+        Parameters object to obtain shape parameters for calculation from.
+        This argument can be used when no fit result is available.
+    pref : str, optional
+        Prefix of peak parameters of interest.
+
+    Returns
+    -------
+    float [u/z]
+        Mean of Hyper-EMG fit of peak of interest.
+
+    """
+    if fit_model.startswith("emg"):
+        no_left_tails = int(fit_model[3])
+        no_right_tails = int(fit_model[4])
+        li_eta_m, li_tau_m, li_eta_p, li_tau_p = [],[],[],[]
+        for i in np.arange(1,no_left_tails+1):
+            if no_left_tails == 1:
+                li_eta_m = [1]
+            else:
+                li_eta_m.append(pars[pref+'eta_m'+str(i)].value)
+            li_tau_m.append(pars[pref+'tau_m'+str(i)].value)
+        for i in np.arange(1,no_right_tails+1):
+            if no_right_tails == 1:
+                li_eta_p = [1]
+            else:
+                li_eta_p.append(pars[pref+'eta_p'+str(i)].value)
+            li_tau_p.append(pars[pref+'tau_p'+str(i)].value)
+        mu_EMG = mu_emg(pars[pref+'mu'].value,
+                        pars[pref+'theta'].value,
+                        tuple(li_eta_m),tuple(li_tau_m),
+                        tuple(li_eta_p),tuple(li_tau_p) )
+    elif fit_model == "Gaussian":
+        mu_EMG = pars[pref+'mu'].value
+    else:
+        raise Exception("`fit_result` is not from a Hyper-EMG fit.")
+
+    return mu_EMG
 
 
 def erfcxinv(y):

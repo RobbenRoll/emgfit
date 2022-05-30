@@ -22,7 +22,6 @@ import dill
 # Remove dill types from pickle registry to avoid pickle errors in parallelized
 # fits:
 dill.extend(False)
-
 ################################################################################
 ##### Define peak class
 class peak:
@@ -2759,7 +2758,39 @@ class spectrum:
         return FWHM
 
 
-    def calc_sigma_emg(self,peak_index,fit_result=None):
+    def calc_mu_emg(self, peak_index, fit_result=None):
+        """Calculate the mean of a Hyper-EMG peak.
+
+        The peak of interest must have previously been fitted with a Hyper-EMG
+        model.
+
+        Parameters
+        ----------
+        peak_index : int
+            Index of peak of interest.
+        fit_result : :class:`lmfit.model.ModelResult`, optional
+            Fit result containing peak of interest. If ``None`` (default) the
+            corresponding fit result from the spectrum's :attr:`fit_results`
+            list will be used.
+
+        Returns
+        -------
+        float [u/z]
+            Mean of Hyper-EMG fit of peak of interest.
+
+        """
+        if fit_result is None and self.fit_results[peak_index] is not None:
+            fit_result = self.fit_results[peak_index]
+        elif fit_result is None:
+            raise Exception("No matching fit result found in `fit_results` "
+                            "list. Ensure the peak has been fitted.")
+        pref = "p{0}_".format(peak_index)
+
+        return fit_models._calc_mu_emg(fit_result.fit_model,
+                                       fit_result.params, pref=pref)
+
+
+    def calc_sigma_emg(self, peak_index, fit_result=None):
         """Calculate the standard deviation of a Hyper-EMG peak fit.
 
         The peak of interest must have previously been fitted with a Hyper-EMG
@@ -2772,7 +2803,7 @@ class spectrum:
         fit_result : :class:`lmfit.model.ModelResult`, optional
             Fit result containing peak of interest. If ``None`` (default) the
             corresponding fit result from the spectrum's :attr:`fit_results`
-            list will be fetched.
+            list will be used.
 
         Returns
         -------
@@ -2787,8 +2818,11 @@ class spectrum:
                             "list. Ensure the peak has been fitted.")
 
         pref = 'p{0}_'.format(peak_index)
-        no_left_tails = int(fit_result.fit_model[3])
-        no_right_tails = int(fit_result.fit_model[4])
+        if fit_result.fit_model.startswith("emg"):
+            no_left_tails = int(fit_result.fit_model[3])
+            no_right_tails = int(fit_result.fit_model[4])
+        else:
+            raise Exception("`fit_result` is not from a Hyper-EMG fit.")
         li_eta_m, li_tau_m, li_eta_p, li_tau_p = [],[],[],[]
         for i in np.arange(1,no_left_tails+1):
             if no_left_tails == 1:
@@ -4740,7 +4774,7 @@ class spectrum:
                     FWHM_emg = self.calc_FWHM_emg(peak_idx,
                                                   fit_result=fit_result)
                     std_dev = self.A_stat_emg*FWHM_emg
-                stat_error = std_dev/np.sqrt(p.area)*abs_z
+                stat_error = std_dev/np.sqrt(p.area)*p.abs_z
                 p.rel_stat_error = stat_error/p.m_ion
                 try: # remove resampling error flag
                     self.peaks_with_errors_from_resampling.remove(peak_idx)
@@ -5101,10 +5135,15 @@ class spectrum:
         # Collect ALL peaks, peak centroids and amplitudes of fit_result
         mus = []
         amps = []
+        scl_facs = []
         for idx in fitted_peaks:
             pref = 'p{0}_'.format(idx)
             mus.append(fit_result.best_values[pref+'mu'])
             amps.append(fit_result.best_values[pref+'amp'])
+            try:
+                scl_facs.append(fit_result.params[pref+'scl_fac'])
+            except KeyError:
+                scl_facs.append(1)
 
         from emgfit.sample import simulate_events
         from numpy import maximum, sqrt, array, log
@@ -5128,8 +5167,9 @@ class spectrum:
               "determine statistical mass and peak area errors.")
         def refit():
             # create simulated spectrum data by sampling from fit-result PDF
-            df =  simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
-                                  x_max, out='hist', bin_cens=x)
+            df =  simulate_events(shape_pars, mus, amps, bkg_c,
+                                  N_events, x_min, x_max,
+                                  out='hist', scl_facs=scl_facs, bin_cens=x)
             new_x = df.index.values
             new_y = df['Counts'].values
             new_y_err = np.maximum(1,np.sqrt(new_y)) # Poisson (counting) stats
