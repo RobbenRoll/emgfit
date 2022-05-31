@@ -169,23 +169,29 @@ def _calc_mu_emg(fit_model, pars, pref=""):
 
     """
     if fit_model.startswith("emg"):
-        no_left_tails = int(fit_model[3])
-        no_right_tails = int(fit_model[4])
+        N_left_tails = int(fit_model[3])
+        N_right_tails = int(fit_model[4])
         li_eta_m, li_tau_m, li_eta_p, li_tau_p = [],[],[],[]
-        for i in np.arange(1,no_left_tails+1):
-            if no_left_tails == 1:
+        for i in np.arange(1,N_left_tails+1):
+            if N_left_tails == 1:
                 li_eta_m = [1]
             else:
                 li_eta_m.append(pars[pref+'eta_m'+str(i)].value)
             li_tau_m.append(pars[pref+'tau_m'+str(i)].value)
-        for i in np.arange(1,no_right_tails+1):
-            if no_right_tails == 1:
+        for i in np.arange(1,N_right_tails+1):
+            if N_right_tails == 1:
                 li_eta_p = [1]
             else:
                 li_eta_p.append(pars[pref+'eta_p'+str(i)].value)
             li_tau_p.append(pars[pref+'tau_p'+str(i)].value)
+        if N_left_tails == 0:
+            theta = 0
+        elif N_right_tails == 0:
+            theta = 1
+        else:
+            theta = pars[pref+'theta'].value
         mu_EMG = mu_emg(pars[pref+'mu'].value,
-                        pars[pref+'theta'].value,
+                        theta,
                         tuple(li_eta_m),tuple(li_tau_m),
                         tuple(li_eta_p),tuple(li_tau_p) )
     elif fit_model == "Gaussian":
@@ -251,7 +257,8 @@ def get_mu0(x_m, init_pars, fit_model):
                \\right),
 
     where the mode :math:`x_{m}` can be estimated by the peak marker position
-    `x_pos`.
+    `x_pos` and :func:`emgfit.fit_models.erfcxinv` is the inverse of the scaled
+    complementary error function.
 
     """
     if fit_model == 'Gaussian':
