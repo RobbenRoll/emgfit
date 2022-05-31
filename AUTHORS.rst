@@ -10,4 +10,7 @@ Maintainer
 Contributors
 ------------
 
-None yet. Why not be the first? See: CONTRIBUTING.rst
+Suggestions, patches or bug reports have been provided by Coulter Walls,
+William Porter, Pascal Reiter, Tobias Murboeck and Zack Hockenbery.
+
+Want to add to the project? See: CONTRIBUTING.rst

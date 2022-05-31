@@ -7,6 +7,37 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+v0.4.1 (2022-05-31)
+-------------------
+
+Added
+^^^^^
+* Allow for a simple scaling of shape parameters from the shape-calibrant peak
+  to peaks of interest through the new `scale_shape_pars`
+  :class:`~emgfit.spectrum.spectrum` attribute and `scl_coeff`
+  :class:`~emgfit.spectrum.peak` attribute.
+* Add the convenience method :meth:`~emgfit.spectrum.spectrum.save_fit_trace`
+  for exporting the trace data of a fit to a TXT file.
+* Add `method` :class:`peak` attribute to store which optimization algorithm was
+  used for a fit.
+* Enable flexible adding and modification of a fit model's parameter constraints
+  via the new `par_hint_args` option of :meth:`~emgfit.spectrum.spectrum.peakfit`
+  and related spectrum methods.
+
+Changed
+^^^^^^^
+* Define bounds of scale-dependent parameters as multiples of the standard
+  deviation of the underlying Gaussian.
+* Improve initialization of peak centroids and amplitudes.
+* Adapt initialization of uniform-baseline parameter to support larger
+  backgrounds.
+
+Fixed
+^^^^^
+* Fix bug in recognition of tail order for sampling events with
+  :func:`~emgfit.sample.simulate_events`.
+
+
 v0.4.0 (2021-03-09)
 -------------------
 

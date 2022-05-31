@@ -119,7 +119,7 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
         h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
         = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(u)} \mathrm{erfc}(v),
 
-    where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\tau_{-i}}`
+    where :math:`u = \\left(\\frac{\\sigma}{\\sqrt{2}\\tau_{-i}}\\right)^2 + \\frac{x-\mu}{\\sqrt{2}\\tau_{-i}}`
     and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
     In double float precision, the `exp(u)`_ routine overflows if u > 709.78. The
     complementary error function `erfc(v)`_ underflows to 0.0 if v > 26.54. The
@@ -230,7 +230,7 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
         h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
         = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(u)} \mathrm{erfc}(v),
 
-    where :math:`u = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\tau_{+i}}`
+    where :math:`u = \\left(\\frac{\\sigma}{\\sqrt{2}\\tau_{+i}}\\right)^2 - \\frac{x-\mu}{\\sqrt{2}\\tau_{+i}}`
     and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
     In double precision, the `exp(u)`_ routine overflows if u > 709.78. The
     complementary error function `erfc(v)`_ underflows to 0.0 if v > 26.54. The
@@ -401,14 +401,13 @@ def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
        245-254.
 
     """
-    if abs(sum(li_eta_m) - 1) > norm_precision:  # check normalization of eta_m's
+    if len(li_eta_m) > 0 and abs(sum(li_eta_m) - 1) > norm_precision:
         raise Exception("eta_m's don't add up to 1.")
     t_order_m = len(li_eta_m)
     sum_M_mh = 0
     for i in range(t_order_m):
         sum_M_mh += li_eta_m[i]*li_tau_m[i]
-
-    if abs(sum(li_eta_p) - 1) > norm_precision:  # check normalization of eta_p's
+    if len(li_eta_p) > 0 and abs(sum(li_eta_p) - 1) > norm_precision:
         raise Exception("eta_p's don't add up to 1.")
     t_order_p = len(li_eta_p)
     sum_M_ph = 0
@@ -467,7 +466,7 @@ def sigma_emg(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
        245-254.
 
     """
-    if abs(sum(li_eta_m) - 1) > norm_precision:  # check normalization of eta_m's
+    if len(li_eta_m) > 0 and abs(sum(li_eta_m) - 1) > norm_precision:
         raise Exception("eta_m's don't add up to 1.")
     t_order_m = len(li_eta_m)
 
@@ -477,7 +476,7 @@ def sigma_emg(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
         sum_M_mh += li_eta_m[i]* li_tau_m[i]
         sum_S_mh += (li_eta_m[i] + li_eta_m[i]*(1.-li_eta_m[i])**2)*li_tau_m[i]**2
 
-    if abs(sum(li_eta_p) - 1) > norm_precision:  # check normalization of eta_p's
+    if len(li_eta_p) > 0 and abs(sum(li_eta_p) - 1) > norm_precision:  
         raise Exception("eta_p's don't add up to 1.")
     t_order_p = len(li_eta_p)
     sum_M_ph = 0

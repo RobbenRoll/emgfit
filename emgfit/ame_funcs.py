@@ -68,9 +68,11 @@ def get_El_from_Z(Z):
     str
         Symbol of element with specified proton number.
     """
+    # Use only AME2020 since AME2016 contains some misassignments for superheavy
+    # element symbols
     if isinstance(Z, (list, tuple, np.ndarray)):
-        mask = (df_AME2020['Z'] == Z_i)
-        li = [df_AME2020.index[mask].get_level_values('Element')[0] for Z_i in Z]
+        li = [df_AME2020.index[(df_AME2020['Z']==Z_i)].get_level_values(
+                                                     'Element')[0] for Z_i in Z]
         El = np.array(li)
     else:
         mask = (df_AME2020['Z'] == Z)

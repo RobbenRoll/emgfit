@@ -35,7 +35,7 @@ lwidth = 1.5 # linewidth of fit curves
 labelsize = 10 # size of peak labels
 
 ##### Appearance of DataFrames
-pd.set_option("precision",2) # global displayed float precision
+pd.set_option("display.precision",2) # global displayed float precision
 u_decimals = 6 # displayed decimals for mass values in atomic mass units u
 
 ################################################################################
