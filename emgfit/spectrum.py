@@ -366,10 +366,6 @@ class spectrum:
 
     Notes
     -----
-    The :attr:`fit_model` spectrum attribute seems somewhat redundant with
-    the :attr:`peak.fit_model` peak attribute but ensures that no relevant
-    information is lost.
-
     The :attr:`mass_number` is used for re-scaling of the default model
     parameters to the mass of interest. It is calculated upon data import by
     taking the median of all mass bin centers (after initial cutting of the
@@ -487,8 +483,8 @@ class spectrum:
             plot_title = 'Spectrum (fit full range)'
         # Set `mass_number` using median of mass bins after cutting spectrum and
         # round to closest integer:
-        self.mass_number = int(np.round(self.data.index.values[
-                                                        int(len(self.data)/2)]))
+        x_val_cen = int(np.round(self.data.index.values[int(len(self.data)/2)]))
+        self.mass_number = x_val_cen if x_val_cen > 0 else 1
         self.default_fit_range = 0.01*(self.mass_number/100)
         self.default_lit_src = default_lit_src
 
@@ -996,25 +992,29 @@ class spectrum:
         err_msg1 = str("Use EITHER the `peak_indeces`, `x_pos` OR `species` "
                        "argument.")
         if peak_indeces is not None:
-            assert x_pos is None and species == "?", err_msg1
+            if x_pos is not None or species != "?":
+                raise Exception(err_msg1)
             indeces = np.atleast_1d(peak_indeces)
         elif species != "?":
-            assert x_pos is None, err_msg1
+            if x_pos is not None:
+                raise Exception(err_msg1)
             species = np.atleast_1d(species)
             peaks = self.peaks
             indeces = [i for i in range(len(peaks))
                        if peaks[i].species in species]
-            err_msg2 = str("Selection of one or multiple peaks from specified "
-                           "`species` failed.")
-            assert len(indeces) == len(species), err_msg2
+            if len(indeces) != len(species):
+                err_msg2 = str("Selection of one or multiple peaks from "
+                               "specified `species` failed.")
+                raise Exception(err_msg2)
         elif x_pos:
             x_pos = np.atleast_1d(x_pos)
             peaks = self.peaks
             indeces = [i for i in range(len(peaks))
                        if np.round(peaks[i].x_pos,6) in np.round(x_pos,6)]
-            err_msg3 = str("Selection of one or multiple peaks from specified "
-                           "`x_pos` failed.")
-            assert len(indeces) == len(x_pos), err_msg3
+            if len(indeces) != len(x_pos):
+                err_msg3 = str("Selection of one or multiple peaks from "
+                               "specified `x_pos` failed.")
+                raise Exception(err_msg3)
         # Make safety copies for case of error in peak removals
         orig_peaks = copy.deepcopy(self.peaks)
         orig_results = copy.deepcopy(self.fit_results)
@@ -1267,8 +1267,9 @@ class spectrum:
             lit_src = self.default_lit_src
         try:
             if peak_index is not None:
-                msg = "Use either the `peak_index` OR the `species` argument."
-                assert x_pos is None, msg
+                if x_pos is not None:
+                    msg = "Use either the `peak_index` OR the `species` argument."
+                    raise Exception(msg)
                 p = self.peaks[peak_index]
                 p.species = species
                 p.update_lit_values(Ex=Ex, Ex_error=Ex_error, lit_src=lit_src)
@@ -1850,9 +1851,19 @@ class spectrum:
 
         Notes
         -----
-        The initial amplitude for each peak is estimated by taking the counts in
-        the bin closest to the peak's :attr:`x_pos` and scaling this number with
-        an empirically determined constant and the spectrum's :attr:`mass_number`.
+        The initial amplitude for each peak is estimated from the product of the
+        number of counts in the bin at the peak's :attr:`x_pos` and the initial
+        value for the sigma of the underlying Gaussian. The result is multiplied
+        by an empirically determined proportionality factor of 3. Although this
+        number is somewhat shape dependent, this approach yields decent initial
+        amplitudes for peaks that are reasonably close to a Gaussian. If user
+        intervention becomes necessary, the `init_par_hints` option of the
+        :meth:`peakfit` method can be used to overwrite the initial value of the
+        peak amplitude.
+
+        The initial value for the centroid of the underlying Gaussian (`mu`) is
+        estimated using the equation for the mode of the hyper-EMG distribution
+        see :func:`emgfit.fit_models.get_mu0` for details.
 
         If ``share_shape_pars=True``, a shape-reference peak is used to impose a
         common peak shape on all fitted peaks (except for optional scaling of
@@ -1887,6 +1898,8 @@ class spectrum:
         model = getattr(fit_models, fit_model)
         mod = fit.models.ConstantModel(prefix='bkg_') #(independent_vars='x',prefix='bkg_')
         df = self.data
+        if init_pars is None:
+            init_pars = fit_models.create_default_init_pars(self.mass_number)
 
         if vary_baseline is True:
             y_min = np.amin(df.values.flatten())
@@ -1914,34 +1927,29 @@ class spectrum:
                     mu_ref = self.shape_cal_pars["mu"]
             if scale_shape_to_peak_cen is False:
                 mu_ref = None
-            else:
-                msg = str("`scale_shape_to_peak_cen=True` only takes effect if"
-                          "`scale_shape_pars=True`")
-                assert scale_shape_pars, msg
+            elif not scale_shape_pars:
+                raise Exception("`scale_shape_to_peak_cen=True` only takes "
+                                "effect if `scale_shape_pars=True`")
         else:
             index_ref_peak = None
             shape_calib_in_range = True # flag for below
-            msg = "Scaling of shape parameters requires `share_shape_pars=True`"
-            assert scale_shape_pars is False, msg
-            assert scale_shape_to_peak_cen is False, msg
+            if scale_shape_pars or scale_shape_to_peak_cen:
+                raise Exception("Scaling of shape parameters requires "
+                                "`share_shape_pars=True`")
             mu_ref = None
 
         from .fit_models import _enforce_shared_shape_pars
         for peak in peaks_to_fit:
             peak_index = self.peaks.index(peak)
-            # Estimate initial amplitude from counts in closest bin to x_pos,
-            # the conversion factor 1/2500 is empirically determined and
-            # somewhat shape-dependent:
+            # Estimate initial amplitude from counts in closest bin to x_pos
+            # and the initial value of sigma, the conversion factor 3 is
+            # empirically determined and somewhat shape-dependent:
             i_pos = np.argmin(np.abs(df.index.values - peak.x_pos))
             y_max = df.values.flatten()[i_pos]
-            amp0 = max(y_max, 1)/2500*(self.mass_number/100)
+            amp0 = 3*max(y_max, 1)*init_pars["sigma"]
             mu0 = fit_models.get_mu0(peak.x_pos, init_pars, fit_model)
-            if init_pars is not None:
-                this_mod = model(peak_index, mu0, amp0, init_pars=init_pars,
-                                 vary_shape_pars=vary_shape)
-            else:
-                this_mod = model(peak_index, mu0, amp0,
-                                 vary_shape_pars=vary_shape)
+            this_mod = model(peak_index, mu0, amp0, init_pars=init_pars,
+                             vary_shape_pars=vary_shape)
 
             if index_ref_peak is not None and (peak_index != index_ref_peak):
                 this_mod = _enforce_shared_shape_pars(this_mod, peak_index,
@@ -2354,10 +2362,7 @@ class spectrum:
             Dictionary with initial shape parameter values for fit (optional).
 
             - If ``None`` (default) the parameters from the peak-shape
-              calibration are used (if no shape calibration has been performed
-              yet the default parameters defined for mass 100 in the
-              :mod:`emgfit.fit_models` module will be used after re-scaling to
-              the spectrum's :attr:`mass_number`).
+              calibration are used.
             - If ``'default'``, the default parameters defined for mass 100 in
               the :mod:`emgfit.fit_models` module will be used after re-scaling
               to the spectrum's :attr:`mass_number`.
@@ -2367,8 +2372,8 @@ class spectrum:
               `init_pars`.
 
             Mind that only the initial values to shape parameters (`sigma`,
-            `theta`,`etas` and `taus`) can be user-defined. The initial values for
-            `mu`, `amp` and the optional baseline parameter `bkg_c` are
+            `theta`,`etas` and `taus`) can be user-defined. The initial values
+            for `mu`, `amp` and the optional baseline parameter `bkg_c` are
             automatically derived as described in the :ref:`peak-fitting approach`
             article.
         vary_shape : bool, optional, default: `False`
@@ -2402,7 +2407,8 @@ class spectrum:
             modify or add model parameters. The keys of the `par_hint_args`
             dictionary specify parameter names; the values must likewise be
             dictionaries that hold the respective keyword arguments to pass to
-            :meth:`~lmfit.model.Model.set_param_hint`.
+            :meth:`~lmfit.model.Model.set_param_hint`. For example:
+            `par_hint_args={"p0_amp" : {"value":10}, "p1_sigma" : {"max":0.4}}`
         show_plots : bool, optional
             If `True` (default) linear and logarithmic plots of the spectrum
             with the best fit curve are displayed. For details see
@@ -2536,24 +2542,22 @@ class spectrum:
         if init_pars == 'default':
             # Take default params defined in create_default_init_pars() in
             # fit_models.py and re-scale to spectrum's 'mass_number' attribute
-            init_params = fit_models.create_default_init_pars(mass_number=self.mass_number)
-        elif init_pars is not None:
-            init_params = init_pars
-        else:
+            init_pars = fit_models.create_default_init_pars(mass_number=self.mass_number)
+        elif init_pars is None:
             # Use shape parameters asociated with spectrum unless other
             # parameters have been specified
             if self.shape_cal_pars is None:
                 raise Exception("No shape calibration parameters found. Either "
                                 "perform a shape calibration upfront with "
                                 "determine_peak_shape() or provide initial "
-                                "shape parameter values with the `init_params` "
+                                "shape parameter values with the `init_pars` "
                                 "argument.")
-            init_params = self.shape_cal_pars
+            init_pars = self.shape_cal_pars
 
         model_name = str(fit_model)+' + const. background (bkg_c)'
         # Create multi-peak fit model
         mod = self.comp_model(peaks_to_fit=peaks_to_fit, fit_model=fit_model,
-                              init_pars=init_params, vary_shape=vary_shape,
+                              init_pars=init_pars, vary_shape=vary_shape,
                               vary_baseline=vary_baseline,
                               share_shape_pars=share_shape_pars,
                               scale_shape_pars=scale_shape_pars,
@@ -3592,7 +3596,7 @@ class spectrum:
         uncertainties in the determination of the peak-shape parameters and due
         to deviations between the shape-calibrant and IOI peak shapes.
         Simply put, the peak-shape uncertainties are estimated by evaluating how
-        much a given peak centroid is shifted when the shape parameters are
+        much a given peak's ionic mass is shifted when the shape parameters are
         varied by plus or minus their 1-sigma uncertainty. A peculiarity of
         emgfit's peak-shape error estimation routine is that only the centroid
         shifts **relative to the calibrant** are taken into account (hence
@@ -3771,23 +3775,23 @@ class spectrum:
                     ax.set_ylim(0.1,)
                 plt.show()
 
-            # If mass calibrant is in fit range, determine its ABSOLUTE centroid
+            # If mass calibrant is in fit range, determine its ABSOLUTE mass
             # shifts first and use them to calculate 'shifted' mass
             # recalibration factors. The shifted recalibration factors are then
-            # used to correct IOI centroid shifts for the corresponding shifts
+            # used to correct IOI mass shifts for the corresponding shifts
             # of the mass calibrant
-            # if calibrant is not in fit range, its centroid shifts must have
+            # if calibrant is not in fit range, its mass shifts must have
             # been determined in a foregoing mass re-calibration
             cal_idx = self.index_mass_calib
             if mass_calib_in_range:
                 cal_peak = self.peaks[cal_idx]
-                pref = 'p{0}_'.format(cal_idx)
-                cen = fit_result.best_values[pref+'mu']
-                new_cen_p = fit_result_p.best_values[pref+'mu']
-                new_cen_m = fit_result_m.best_values[pref+'mu']
-                # recalibration factors obtained with shifted calib. centroids:
-                recal_fac_p = cal_peak.m_AME/(new_cen_p*cal_peak.abs_z)
-                recal_fac_m = cal_peak.m_AME/(new_cen_m*cal_peak.abs_z)
+                m_ion_p = self._calc_m_ion(cal_idx, fit_result_p.fit_model,
+                                           fit_result_p.params, recal_fac=1)
+                m_ion_m = self._calc_m_ion(cal_idx, fit_result_m.fit_model,
+                                           fit_result_m.params, recal_fac=1)
+                # recalibration factors obtained with shifted calib. masses:
+                recal_fac_p = cal_peak.m_AME/m_ion_p
+                recal_fac_m = cal_peak.m_AME/m_ion_m
                 self.recal_facs_pm[par+' recal facs pm'] = [recal_fac_p,recal_fac_m]
             else: # check if shifted recal. factors pre-exist, print error otherwise
                 try:
@@ -3804,29 +3808,32 @@ class spectrum:
 
             # Determine effective mass shifts
             # If calibrant is in fit range, the newly determined calibrant
-            # centroid shifts are used to calculate the shifted recalibration
+            # centroids are used to calculate the shifted recalibration
             # factors. Otherwise, the shifted re-calibration factors from a
             # foregoing mass calibration are used
             for peak_idx in peak_indeces: # IOIs only, mass calibrant excluded
                 p = self.peaks[peak_idx]
-                pref = 'p{0}_'.format(peak_idx)
-                cen = fit_result.best_values[pref+'mu']
-                bin_width = fit_result.x[1] - fit_result.x[0] # assume approx. uniform binning
+                m_ion = self._calc_m_ion(peak_idx, fit_result.fit_model,
+                                         fit_result.params)
                 area = self.calc_peak_area(peak_idx,fit_result=fit_result)[0]
 
-                new_area_p = self.calc_peak_area(peak_idx,fit_result=fit_result_p)[0]
-                new_cen_p =  fit_result_p.best_values[pref+'mu']
+                area_p = self.calc_peak_area(peak_idx,fit_result=fit_result_p)[0]
                 recal_fac_p = self.recal_facs_pm[par+' recal facs pm'][0]
+                m_ion_p = self._calc_m_ion(peak_idx, fit_result_p.fit_model,
+                                           fit_result_p.params,
+                                           recal_fac=recal_fac_p)
                 # effective mass & area shift for +1 sigma parameter variation:
-                dm_p = (recal_fac_p*new_cen_p - self.recal_fac*cen)*p.abs_z
-                dA_p = new_area_p - area
+                dm_p = m_ion_p - m_ion
+                dA_p = area_p - area
 
-                new_area_m = self.calc_peak_area(peak_idx,fit_result=fit_result_m)[0]
-                new_cen_m = fit_result_m.best_values[pref+'mu']
+                area_m = self.calc_peak_area(peak_idx,fit_result=fit_result_m)[0]
                 recal_fac_m = self.recal_facs_pm[par+' recal facs pm'][1]
+                m_ion_m = self._calc_m_ion(peak_idx, fit_result_m.fit_model,
+                                           fit_result_m.params,
+                                           recal_fac=recal_fac_m)
                 # effective mass & area shift for -1 sigma parameter variation:
-                dm_m = (recal_fac_m*new_cen_m - self.recal_fac*cen)*p.abs_z
-                dA_m = new_area_m - area
+                dm_m = m_ion_m - m_ion
+                dA_m = area_m - area
                 if verbose:
                     print(u'Re-fitting with {0:6} = {1: .2e} +/-{2: .2e} shifts peak {3:2d} by {4:6.2f}  / {5:6.2f} \u03BCu/z  & its area by {6: 5.1f} / {7: 5.1f} counts.'.format(
                           par, self.shape_cal_pars[par], self.shape_cal_errors[par], peak_idx, dm_p*1e06/p.abs_z, dm_m*1e06/p.abs_z, dA_p, dA_m))
@@ -3847,7 +3854,8 @@ class spectrum:
             # Add area shifts in quadrature to get total PS area error:
             area_shift_vals = list(self.area_shifts[peak_idx].values())
             PS_area_error = np.sqrt(np.sum(np.square(area_shift_vals)))
-            m_ion = fit_result.best_values[pref+'mu']*self.recal_fac*p.abs_z
+            m_ion = self._calc_m_ion(peak_idx, fit_result.fit_model,
+                                     fit_result.params)
             p.rel_peakshape_error = PS_mass_error/m_ion
             p.area_error = np.round(np.sqrt(self.calc_peak_area(peak_idx,
                                             fit_result=fit_result)[1]**2
@@ -4440,6 +4448,30 @@ class spectrum:
             self.show_peak_properties()
 
 
+    def _calc_m_ion(self, peak_index, fit_model, pars, recal_fac=None):
+        """Calculate the ionic mass of a given peak.
+
+        Parameters
+        ----------
+        peak_index : int
+            Index of peak to calculate m_ion for.
+        fit_model : str
+            Name of fit model used to obtain `pars`.
+        pars : :class:`lmfit.parameter.Parameters`
+            Parameters to use for calculation.
+        recal_fac : float, optional
+            Mass recalibration factor to use. Defaults to :attr:`recal_fac`
+            attribute of the spectrum.
+
+        """
+        if recal_fac is None:
+            recal_fac = self.recal_fac
+        p = self.peaks[peak_index]
+        pref = "p{0}_".format(peak_index)
+        m_ion = pars[pref+'mu']*recal_fac*p.abs_z
+        return m_ion
+
+
     def _update_calibrant_props(self, index_mass_calib, fit_result):
         """Determine recalibration factor and update mass calibrant peak
         properties.
@@ -4482,7 +4514,8 @@ class spectrum:
         peak.area, peak.area_error = self.calc_peak_area(index_mass_calib,
                                                          fit_result=fit_result)
         pref = 'p{0}_'.format(index_mass_calib)
-        peak.m_ion = fit_result.best_values[pref+'mu']*peak.abs_z
+        peak.m_ion =  self._calc_m_ion(index_mass_calib, fit_result.fit_model,
+                                       fit_result.params, recal_fac=1.0)
         # A_stat* FWHM/sqrt(area), w/ with A_stat_G = 0.42... and A_stat_emg
         # from `determine_A_stat_emg` method or default value from config.py
         if peak.fit_model == 'Gaussian':
@@ -4764,7 +4797,8 @@ class spectrum:
                     p.area_error = self.calc_peak_area(peak_idx,fit_result=
                                                        fit_result)[1]
                 abs_z = p.abs_z
-                p.m_ion = self.recal_fac*fit_result.best_values[pref+'mu']*abs_z
+                p.m_ion = self._calc_m_ion(peak_idx, fit_result.fit_model,
+                                           fit_result.params)
                 # stat_error = A_stat * FWHM / sqrt(peak_area), w/ with
                 # A_stat_G = 0.42... and  A_stat_emg from `determine_A_stat_emg`
                 # method or default value from config.py

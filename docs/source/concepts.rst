@@ -113,19 +113,19 @@ are defined as:
 
 .. math::
 
-  h_\mathrm{-emg}(x; \mu, \sigma, \eta_-, \tau_-)
-  = \sum_{i=1}^{N_-}{\frac{\eta_{-i}}{2\tau_{-i}}
-      \exp{\left(\frac{\sigma}{\sqrt{2}\tau_{-i}} +
-           \frac{x-\mu}{\sqrt{2}\tau_{-i}}\right)}
-      \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{-i}} +
-                         \frac{x-\mu}{\sqrt{2}\sigma}\right)},
+   h_\mathrm{-emg}(x; \mu, \sigma, \eta_-, \tau_-)
+   = \sum_{i=1}^{N_-}{\frac{\eta_{-i}}{2\tau_{-i}}
+     \exp{\left( \left(\frac{\sigma}{\sqrt{2}\tau_{-i}}\right)^2 +
+     \frac{x-\mu}{\sqrt{2}\tau_{-i}}\right)}
+     \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{-i}} +
+     \frac{x-\mu}{\sqrt{2}\sigma}\right)},
 
-  h_\mathrm{+emg}(x; \mu, \sigma, \eta_+, \tau_+)
-  = \sum_{i=1}^{N_+}{\frac{\eta_{+i}}{2\tau_{+i}}
-      \exp{\left(\frac{\sigma}{\sqrt{2}\tau_{+i}} -
-                 \frac{x-\mu}{\sqrt{2}\tau_{+i}}\right)}
-      \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{+i}} -
-                         \frac{x-\mu}{\sqrt{2}\sigma}\right)}.
+   h_\mathrm{+emg}(x; \mu, \sigma, \eta_+, \tau_+)
+   = \sum_{i=1}^{N_+}{\frac{\eta_{+i}}{2\tau_{+i}}
+     \exp{\left(\left(\frac{\sigma}{\sqrt{2}\tau_{+i}}\right)^2 -
+     \frac{x-\mu}{\sqrt{2}\tau_{+i}}\right)}
+     \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{+i}} -
+     \frac{x-\mu}{\sqrt{2}\sigma}\right)}.
 
 :math:`N_{-}` and :math:`N_{+}` are referred to as the negative and positive tail
 order. :math:`\mu=\mu_G` denotes the mean and :math:`\sigma=\sigma_G` the
@@ -212,11 +212,14 @@ or :meth:`~emgfit.spectrum.spectrum.fit_peaks`) that internally call
 :meth:`~emgfit.spectrum.spectrum.peakfit`. Initial parameter values are
 determined as follows:
 
-* The initial value of the peak amplitude (`amp` parameter) is estimated using
-  the number of counts in the bin closest to the peak's marker position
-  :attr:`x_pos`. The number of counts is converted using an empirical conversion
-  factor. The conversion factor is somewhat peak-shape dependent but has been
-  found to work well for a large variety of peak shapes.
+* The initial value of the peak amplitude (`amp` parameter) is estimated from
+  the product of the number of counts in the bin at the peak's marker position
+  :attr:`x_pos` and the initial value of the standard deviation of the
+  Gaussian peak component (`sigma`). This product is multiplied by an empirical
+  proportionality factor. The factor is somewhat peak-shape dependent but has
+  been found to work well for a variety of hyper-EMG peaks. If user intervention
+  still becomes necessary, the `par_hint_args` option of the :meth:`peakfit`
+  method can be used to overwrite the initial value of the peak amplitude.
 * In the case of a Gaussian, the peak centroid is initialized at the peak marker
   position :attr:`x_pos`. For a hyper-EMG fit, the initial centroid of the
   underlying Gaussian (denoted `mu` or :math:`\mu`) is calculated by rearranging
@@ -224,15 +227,15 @@ determined as follows:
 
   .. math::
 
-      \\mu = x_{m}
-             - \\theta\\sum_{i=1}^{N_-}\\eta_{-i}\\left(\\sqrt{2}\\sigma
-               \\cdot\\mathrm{erfcxinv}\\left( \\frac{\\tau_{-i}}{\\sigma}
-               \\sqrt{\\frac{2}{\\pi}}\\right) - \\frac{\\sigma^2}{\\tau_{-i}}
-               \\right) \\\\
-             + (1-\\theta)\\sum_{i=1}^{N_-}\\eta_{+i}\\left(\\sqrt{2}\\sigma
-               \\cdot\\mathrm{erfcxinv}\\left( \\frac{\\tau_{+i}}{\\sigma}
-               \\sqrt{\\frac{2}{\\pi}}\\right) - \\frac{\\sigma^2}{\\tau_{-i}}
-               \\right),
+     \mu = x_{m}
+             - \theta\sum_{i=1}^{N_-}\eta_{-i}\left(\sqrt{2}\sigma
+               \cdot\mathrm{erfcxinv}\left( \frac{\tau_{-i}}{\sigma}
+               \sqrt{\frac{2}{\pi}}\right) - \frac{\sigma^2}{\tau_{-i}}
+               \right) \\
+             + (1-\theta)\sum_{i=1}^{N_-}\eta_{+i}\left(\sqrt{2}\sigma
+               \cdot\mathrm{erfcxinv}\left( \frac{\tau_{+i}}{\sigma}
+               \sqrt{\frac{2}{\pi}}\right) - \frac{\sigma^2}{\tau_{-i}}
+               \right),
 
   where the mode :math:`x_{m}` is estimated by the peak marker position
   :attr:`x_pos` and :math:`{N_-}` and :math:`{N_+}` denote the order of negative
