@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>emgfit.fit_models &mdash; emgfit 0.4.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/jupyter-sphinx.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/thebelab.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+        <script src="../../_static/thebelab-helper.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.1/dist/embed-amd.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> emgfit
+          </a>
+              <div class="version">
+                0.4.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Getting started with emgfit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../emgfit_tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Central concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">emgfit API docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">emgfit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>emgfit.fit_models</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for emgfit.fit_models</h1><div class="highlight"><pre>
+<span></span><span class="c1">################################################################################</span>
+<span class="c1">##### Module with lmfit models for Gaussian and Hyper-EMG distributions</span>
+<span class="c1">##### Author: Stefan Paul</span>
+
+<span class="c1">##### Import dependencies</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">lmfit</span> <span class="k">as</span> <span class="nn">fit</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.emg_funcs</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">erfcx</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">pi</span>
+
+<span class="c1">###### Define parameter bounds</span>
+<span class="c1"># Variables ending with _nsigma define bounds in multiples of the initial value</span>
+<span class="c1"># for the sigma parameter of the underlying Gaussian (&#39;&lt;initial_sigma&gt;&#39;)</span>
+<span class="n">mu_var_nsigma</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># bound mus to &lt;mu0&gt; +- mu_var_sigma*&lt;initial_sigma&gt;</span>
+<span class="n">sigma_min</span> <span class="o">=</span> <span class="mf">1e-15</span> <span class="c1"># lower bound of sigmas</span>
+<span class="n">sigma_max_nsigma</span> <span class="o">=</span> <span class="mi">10</span> <span class="c1"># upper bound of sigmas = sigma_max_nsigma*&lt;initial_sigma&gt;</span>
+<span class="n">tau_min</span> <span class="o">=</span> <span class="mf">1e-15</span> <span class="c1"># lower bound of taus</span>
+<span class="n">tau_max_nsigma</span> <span class="o">=</span> <span class="mi">500</span> <span class="c1"># upper bound of taus = tau_max_nsigma*&lt;initial_sigma&gt;</span>
+
+<div class="viewcode-block" id="create_default_init_pars"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.create_default_init_pars">[docs]</a><span class="k">def</span> <span class="nf">create_default_init_pars</span><span class="p">(</span><span class="n">mass_number</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span> <span class="c1">#TODO: Consider moving to config for user control</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scale default parameters to mass of interest and return parameter dictionary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mass_number : int, optional</span>
+<span class="sd">        Atomic mass number of peaks of interest, defaults to 100.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary with default initial parameters (scaled to `mass_number`).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    **The default parameters were defined for mass 100**, to obtain suitable</span>
+<span class="sd">    parameters at other masses all mass-dependent parameters (i.e. shape</span>
+<span class="sd">    parameters &amp; `amp`) are multiplied by the scaling factor `mass_number`/100.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Default initial parameters for peaks around mass 100 (with</span>
+    <span class="c1"># mass scaling factor):</span>
+    <span class="n">scl_factor</span> <span class="o">=</span> <span class="n">mass_number</span><span class="o">/</span><span class="mi">100</span>
+    <span class="n">amp</span> <span class="o">=</span> <span class="mf">0.45</span><span class="o">*</span><span class="n">scl_factor</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># flag for below that this is a generic shape parameter set</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.00014</span><span class="o">*</span><span class="n">scl_factor</span> <span class="c1"># [u]</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">eta_m1</span> <span class="o">=</span> <span class="mf">0.85</span>
+    <span class="n">eta_m2</span> <span class="o">=</span> <span class="mf">0.10</span>
+    <span class="n">eta_m3</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">tau_m1</span> <span class="o">=</span> <span class="mf">50e-06</span><span class="o">*</span><span class="n">scl_factor</span> <span class="c1"># [u]</span>
+    <span class="n">tau_m2</span> <span class="o">=</span> <span class="mf">500e-06</span><span class="o">*</span><span class="n">scl_factor</span> <span class="c1"># [u]</span>
+    <span class="n">tau_m3</span> <span class="o">=</span> <span class="mf">1000e-06</span><span class="o">*</span><span class="n">scl_factor</span> <span class="c1"># [u]</span>
+    <span class="n">eta_p1</span> <span class="o">=</span> <span class="mf">0.85</span>
+    <span class="n">eta_p2</span> <span class="o">=</span> <span class="mf">0.10</span>
+    <span class="n">eta_p3</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">tau_p1</span> <span class="o">=</span> <span class="mf">50e-06</span><span class="o">*</span><span class="n">scl_factor</span> <span class="c1"># [u]</span>
+    <span class="n">tau_p2</span> <span class="o">=</span> <span class="mf">500e-06</span><span class="o">*</span><span class="n">scl_factor</span> <span class="c1"># [u]</span>
+    <span class="n">tau_p3</span> <span class="o">=</span> <span class="mf">1000e-06</span><span class="o">*</span><span class="n">scl_factor</span> <span class="c1"># [u]</span>
+    <span class="n">pars_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;amp&#39;</span><span class="p">:</span> <span class="n">amp</span><span class="p">,</span> <span class="s1">&#39;mu&#39;</span><span class="p">:</span> <span class="n">mu</span><span class="p">,</span> <span class="s1">&#39;sigma&#39;</span><span class="p">:</span> <span class="n">sigma</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span><span class="p">:</span> <span class="n">theta</span><span class="p">,</span>
+                 <span class="s1">&#39;eta_m1&#39;</span><span class="p">:</span> <span class="n">eta_m1</span><span class="p">,</span> <span class="s1">&#39;eta_m2&#39;</span><span class="p">:</span> <span class="n">eta_m2</span><span class="p">,</span> <span class="s1">&#39;eta_m3&#39;</span><span class="p">:</span> <span class="n">eta_m3</span><span class="p">,</span>
+                 <span class="s1">&#39;tau_m1&#39;</span><span class="p">:</span> <span class="n">tau_m1</span><span class="p">,</span> <span class="s1">&#39;tau_m2&#39;</span><span class="p">:</span> <span class="n">tau_m2</span><span class="p">,</span> <span class="s1">&#39;tau_m3&#39;</span><span class="p">:</span> <span class="n">tau_m3</span><span class="p">,</span>
+                 <span class="s1">&#39;eta_p1&#39;</span><span class="p">:</span> <span class="n">eta_p1</span><span class="p">,</span> <span class="s1">&#39;eta_p2&#39;</span><span class="p">:</span> <span class="n">eta_p2</span><span class="p">,</span> <span class="s1">&#39;eta_p3&#39;</span><span class="p">:</span> <span class="n">eta_p3</span><span class="p">,</span>
+                 <span class="s1">&#39;tau_p1&#39;</span><span class="p">:</span> <span class="n">tau_p1</span><span class="p">,</span> <span class="s1">&#39;tau_p2&#39;</span><span class="p">:</span> <span class="n">tau_p2</span><span class="p">,</span> <span class="s1">&#39;tau_p3&#39;</span><span class="p">:</span> <span class="n">tau_p3</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">pars_dict</span></div>
+
+<span class="n">pars_dict</span> <span class="o">=</span> <span class="n">create_default_init_pars</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="scl_init_pars"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.scl_init_pars">[docs]</a><span class="k">def</span> <span class="nf">scl_init_pars</span><span class="p">(</span><span class="n">init_pars</span><span class="p">,</span> <span class="n">mu0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mu_ref</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scl_coeff</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">9</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Scale initial shape parameters of reference peak to peak at `mu0`.</span>
+
+<span class="sd">    If `scl_coeff` is None the original `init_pars` dictionary is returned.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+    <span class="n">scaled_pars</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">init_pars</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pname</span><span class="p">,</span> <span class="n">pval</span> <span class="ow">in</span> <span class="n">scaled_pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">pname</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span><span class="s1">&#39;tau&#39;</span><span class="p">)):</span>
+            <span class="n">mu_ratio</span> <span class="o">=</span> <span class="n">mu0</span><span class="o">/</span><span class="n">mu_ref</span> <span class="k">if</span> <span class="n">mu0</span> <span class="ow">and</span> <span class="n">mu_ref</span> <span class="k">else</span> <span class="mi">1</span>
+            <span class="n">scaled_pars</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scl_coeff</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">mu_ratio</span><span class="p">,</span> <span class="n">decimals</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">scaled_pars</span></div>
+
+
+<div class="viewcode-block" id="_enforce_shared_shape_pars"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models._enforce_shared_shape_pars">[docs]</a><span class="k">def</span> <span class="nf">_enforce_shared_shape_pars</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">peak_index</span><span class="p">,</span> <span class="n">index_ref_peak</span><span class="p">,</span>
+                               <span class="n">scale_shape_pars</span><span class="p">,</span> <span class="n">scl_coeff</span><span class="p">,</span> <span class="n">mu_ref</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enfore shared peak-shapes and optionally scale the shape parameters</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : :class:`lmfit.model.Model`</span>
+<span class="sd">        Fit model to impose parameter constraints on.</span>
+<span class="sd">    peak_index : int</span>
+<span class="sd">        Index of the :class:`~emgfit.spectrum.peak` corresponding to `model`.</span>
+<span class="sd">    index_ref_peak : int</span>
+<span class="sd">        Index of the :class:`~emgfit.spectrum.peak` to be used as</span>
+<span class="sd">        shape-reference peak.</span>
+<span class="sd">    scale_shape_pars : bool</span>
+<span class="sd">        Whether to scale the scale-dependent shape parameters adopted from the</span>
+<span class="sd">        shape-reference peak.</span>
+<span class="sd">    scl_coeff : float, optional</span>
+<span class="sd">        Constant coefficient used to scale the scale-dependent shape parameters.</span>
+<span class="sd">    mu_ref : float or str, optional</span>
+<span class="sd">        Centroid of the underlying Gaussian of the shape-reference peak. This</span>
+<span class="sd">        argument is only relevant when ``scale_shape_pars=True``. If `mu_ref` is</span>
+<span class="sd">        set to a float, this number is used as the fixed (Gaussian) reference</span>
+<span class="sd">        centroid for calculating the scale factor. If `mu_ref=&quot;varying&quot;`,</span>
+<span class="sd">        `mu_ref` is set to the varying (Gaussian) centroid shape-reference peak.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If `scale_shape_pars` is True, the model&#39;s scale-dependent shape parameters</span>
+<span class="sd">    are multiplied with the scale factor ``scl_fac = scl_coeff``. If further</span>
+<span class="sd">    `mu_ref` is not None, the scale-dependent shape parameters are multiplied</span>
+<span class="sd">    with the scale factor ``scl_fac = mu/mu_ref * scl_coeff``, where `mu` is the</span>
+<span class="sd">    centroid of the Gaussian underlying the specified `model`.  When the</span>
+<span class="sd">    reference peak is among the peaks to be fitted, ``scl_fac`` will then be</span>
+<span class="sd">    dynamically re-calculated from the `mu` and `mu_ref` values of a given</span>
+<span class="sd">    iteration in a fit.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span>
+    <span class="n">ref_pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_ref_peak</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scale_shape_pars</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mu_ref</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;scl_fac&#39;</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">scl_coeff</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;scl_fac&#39;</span><span class="p">,</span>
+                                 <span class="n">expr</span><span class="o">=</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu/&#39;</span><span class="o">+</span><span class="n">ref_pref</span><span class="o">+</span><span class="s1">&#39;mu * &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">scl_coeff</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">ppname</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">param_names</span><span class="p">:</span> <span class="c1"># Set parameter constraints</span>
+            <span class="n">pname</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_strip_prefix</span><span class="p">(</span><span class="n">ppname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pname</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span><span class="s1">&#39;eta&#39;</span><span class="p">,</span><span class="s1">&#39;delta&#39;</span><span class="p">)):</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="n">pname</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="n">ref_pref</span><span class="o">+</span><span class="n">pname</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">pname</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span><span class="s1">&#39;tau&#39;</span><span class="p">)):</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="n">pname</span><span class="p">,</span>
+                                     <span class="n">expr</span><span class="o">=</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;scl_fac * &#39;</span><span class="o">+</span><span class="n">ref_pref</span><span class="o">+</span><span class="n">pname</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">ppname</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">param_names</span><span class="p">:</span> <span class="c1"># Set parameter constraints</span>
+            <span class="n">pname</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_strip_prefix</span><span class="p">(</span><span class="n">ppname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pname</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span><span class="s1">&#39;eta&#39;</span><span class="p">,</span><span class="s1">&#39;tau&#39;</span><span class="p">,</span><span class="s1">&#39;delta&#39;</span><span class="p">)):</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="n">pname</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="n">ref_pref</span><span class="o">+</span><span class="n">pname</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="_calc_mu_emg"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models._calc_mu_emg">[docs]</a><span class="k">def</span> <span class="nf">_calc_mu_emg</span><span class="p">(</span><span class="n">fit_model</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">pref</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate the mean of a Hyper-EMG peak from the best-fit parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fit_model :</span>
+<span class="sd">        Name of fit model used to obtain `pars`.</span>
+<span class="sd">    pars : :class:`lmfit.parameter.Parameters`, optional</span>
+<span class="sd">        Parameters object to obtain shape parameters for calculation from.</span>
+<span class="sd">        This argument can be used when no fit result is available.</span>
+<span class="sd">    pref : str, optional</span>
+<span class="sd">        Prefix of peak parameters of interest.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float [u/z]</span>
+<span class="sd">        Mean of Hyper-EMG fit of peak of interest.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fit_model</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;emg&quot;</span><span class="p">):</span>
+        <span class="n">N_left_tails</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fit_model</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">N_right_tails</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fit_model</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+        <span class="n">li_eta_m</span><span class="p">,</span> <span class="n">li_tau_m</span><span class="p">,</span> <span class="n">li_eta_p</span><span class="p">,</span> <span class="n">li_tau_p</span> <span class="o">=</span> <span class="p">[],[],[],[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">N_left_tails</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">N_left_tails</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">li_eta_m</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">li_eta_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">li_tau_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">N_right_tails</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">N_right_tails</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">li_eta_p</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">li_eta_p</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">li_tau_p</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">N_left_tails</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">N_right_tails</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">mu_EMG</span> <span class="o">=</span> <span class="n">mu_emg</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                        <span class="n">theta</span><span class="p">,</span>
+                        <span class="nb">tuple</span><span class="p">(</span><span class="n">li_eta_m</span><span class="p">),</span><span class="nb">tuple</span><span class="p">(</span><span class="n">li_tau_m</span><span class="p">),</span>
+                        <span class="nb">tuple</span><span class="p">(</span><span class="n">li_eta_p</span><span class="p">),</span><span class="nb">tuple</span><span class="p">(</span><span class="n">li_tau_p</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">fit_model</span> <span class="o">==</span> <span class="s2">&quot;Gaussian&quot;</span><span class="p">:</span>
+        <span class="n">mu_EMG</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;`fit_result` is not from a Hyper-EMG fit.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mu_EMG</span></div>
+
+
+<div class="viewcode-block" id="erfcxinv"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.erfcxinv">[docs]</a><span class="k">def</span> <span class="nf">erfcxinv</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Approximate inverse of the scaled complementary error function</span>
+
+<span class="sd">    This approximation is adapted from code by John D&#39;Errico posted at</span>
+<span class="sd">    https://www.mathworks.com/matlabcentral/answers/302915-inverse-of-erfcx-scaled-complementary-error-function</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># erfcx inverse, for y no larger than 1.</span>
+    <span class="c1"># for y &lt;= 1, use the large x approximation for a starting value.</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">ret</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">))</span>
+    <span class="c1"># for y &gt; 1, use exp(x^2) as a very rough approximation</span>
+    <span class="c1"># to erfcx</span>
+    <span class="n">ret</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]))</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">+=</span> <span class="o">-</span> <span class="p">(</span><span class="n">erfcx</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ret</span><span class="o">*</span><span class="n">erfcx</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="get_mu0"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.get_mu0">[docs]</a><span class="k">def</span> <span class="nf">get_mu0</span><span class="p">(</span><span class="n">x_m</span><span class="p">,</span> <span class="n">init_pars</span><span class="p">,</span> <span class="n">fit_model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Estimate initial value of Gaussian centroid `mu` from the peak&#39;s mode</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x_m : float</span>
+<span class="sd">        Mode (i.e. x-position of the maximum) of the distribution.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Dictionary with initial values of the shape parameters.</span>
+<span class="sd">    fit_model : str</span>
+<span class="sd">        Name of used fit model (e.g. &#39;emg01&#39;, &#39;emg10&#39;, &#39;emg12&#39;...).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For a Gaussian, the mean `mu` is simply equal to the `x_m` argument.</span>
+
+<span class="sd">    For highly asymmetric hyper-EMG distributions the centroid of the underlying</span>
+<span class="sd">    Gaussian `mu` can strongly deviate from the mode :math:`x_{m}` (i.e. the</span>
+<span class="sd">    x-position of the peak maximum). Hence, the initial Gaussian centroid `mu`</span>
+<span class="sd">    (:math:`\mu`) is calculated by rearranging the equation for the mode of the</span>
+<span class="sd">    hyper-EMG distribution:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">      \\mu = x_{m}</span>
+<span class="sd">             - \\theta\\sum_{i=1}^{N_-}\\eta_{-i}\\left(\\sqrt{2}\\sigma</span>
+<span class="sd">               \\cdot\\mathrm{erfcxinv}\\left( \\frac{\\tau_{-i}}{\\sigma}</span>
+<span class="sd">               \\sqrt{\\frac{2}{\\pi}}\\right) - \\frac{\\sigma^2}{\\tau_{-i}}</span>
+<span class="sd">               \\right) \\\\</span>
+<span class="sd">             + (1-\\theta)\\sum_{i=1}^{N_-}\\eta_{+i}\\left(\\sqrt{2}\\sigma</span>
+<span class="sd">               \\cdot\\mathrm{erfcxinv}\\left( \\frac{\\tau_{+i}}{\\sigma}</span>
+<span class="sd">               \\sqrt{\\frac{2}{\\pi}}\\right) - \\frac{\\sigma^2}{\\tau_{-i}}</span>
+<span class="sd">               \\right),</span>
+
+<span class="sd">    where the mode :math:`x_{m}` can be estimated by the peak marker position</span>
+<span class="sd">    `x_pos` and :func:`emgfit.fit_models.erfcxinv` is the inverse of the scaled</span>
+<span class="sd">    complementary error function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fit_model</span> <span class="o">==</span> <span class="s1">&#39;Gaussian&#39;</span><span class="p">:</span>
+        <span class="n">mu0</span> <span class="o">=</span> <span class="n">x_m</span>
+    <span class="k">elif</span> <span class="n">fit_model</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;emg&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">fit_model</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span>
+        <span class="n">t_order_m</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fit_model</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">sum_m</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">t_order_m</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">tau_m1</span> <span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">]</span>
+            <span class="n">sum_m</span> <span class="o">=</span> <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="o">*</span><span class="n">erfcxinv</span><span class="p">(</span><span class="n">tau_m1</span><span class="o">/</span><span class="n">sigma</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">pi</span><span class="p">))</span>
+                     <span class="o">-</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">tau_m1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_m</span><span class="p">):</span>
+                <span class="n">eta_mi</span> <span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                <span class="n">tau_mi</span> <span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                <span class="n">sum_m</span> <span class="o">+=</span> <span class="n">eta_mi</span><span class="o">*</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="o">*</span><span class="n">erfcxinv</span><span class="p">(</span><span class="n">tau_mi</span><span class="o">/</span><span class="n">sigma</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">pi</span><span class="p">))</span>
+                                 <span class="o">-</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">tau_mi</span><span class="p">)</span>
+
+        <span class="n">t_order_p</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fit_model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">sum_p</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">t_order_p</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">tau_p1</span> <span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">]</span>
+            <span class="n">sum_p</span> <span class="o">=</span> <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="o">*</span><span class="n">erfcxinv</span><span class="p">(</span><span class="n">tau_p1</span><span class="o">/</span><span class="n">sigma</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">pi</span><span class="p">))</span>
+                        <span class="o">-</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">tau_p1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_order_p</span><span class="p">):</span>
+                <span class="n">eta_pi</span> <span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                <span class="n">tau_pi</span> <span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                <span class="n">sum_p</span> <span class="o">+=</span> <span class="n">eta_pi</span><span class="o">*</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="o">*</span><span class="n">erfcxinv</span><span class="p">(</span><span class="n">tau_pi</span><span class="o">/</span><span class="n">sigma</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">pi</span><span class="p">))</span>
+                                 <span class="o">-</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">tau_pi</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">t_order_p</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">t_order_m</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">t_order_p</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">t_order_m</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span>
+
+        <span class="n">mu0</span> <span class="o">=</span> <span class="n">x_m</span> <span class="o">-</span> <span class="n">theta</span><span class="o">*</span><span class="n">sum_m</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="n">sum_p</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;fit_model must &#39;Gaussian&#39; or &#39;emgXY&#39; w/ X &amp; Y being the &quot;</span>
+                  <span class="s2">&quot;order of neg. &amp; pos. exponential tails respectively!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mu0</span></div>
+
+
+<span class="c1">################################################################################</span>
+<span class="c1">##### Define emgfit fit models</span>
+<div class="viewcode-block" id="Gaussian"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.Gaussian">[docs]</a><span class="k">def</span> <span class="nf">Gaussian</span><span class="p">(</span><span class="n">peak_index</span><span class="p">,</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">amp0</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">pars_dict</span><span class="p">,</span> <span class="n">vary_shape_pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gaussian lmfit model (single-peak Gaussian fit model)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    peak_index :  int</span>
+<span class="sd">        Index of peak to fit.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        Initial guess for centroid of underlying Gaussian.</span>
+<span class="sd">    amp0 : float</span>
+<span class="sd">        Initial guess for peak amplitude.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Initial shape parameters (&#39;amp&#39; and &#39;mu&#39; parameters in `init_pars`</span>
+<span class="sd">        dictionary are updated with the given values for `amp0` and `mu0`).</span>
+<span class="sd">    vary_shape_pars : bool</span>
+<span class="sd">        Whether to vary or fix peak shape parameters (i.e. sigma, theta,</span>
+<span class="sd">        eta&#39;s and tau&#39;s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`lmfit.model.Model`</span>
+<span class="sd">        `lmfit` model object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define model function</span>
+    <span class="k">def</span> <span class="nf">Gaussian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+        <span class="k">return</span>  <span class="n">amp</span><span class="o">/</span><span class="p">(</span><span class="n">sigma</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span> <span class="c1"># set prefix for respective peak</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">Gaussian</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">pref</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Add parameters bounds or restrictions and define starting values</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">amp0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">mu0</span> <span class="o">-</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">mu0</span> <span class="o">+</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">])</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">sigma_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="emg01"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.emg01">[docs]</a><span class="k">def</span> <span class="nf">emg01</span><span class="p">(</span><span class="n">peak_index</span><span class="p">,</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">amp0</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">pars_dict</span><span class="p">,</span> <span class="n">vary_shape_pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hyper-EMG(0,1) lmfit model (single-peak fit model with one exponential tail</span>
+<span class="sd">    on the right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    peak_index :  int</span>
+<span class="sd">        Index of peak to fit.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        Initial guess for centroid of underlying Gaussian.</span>
+<span class="sd">    amp0 : float</span>
+<span class="sd">        Initial guess for peak amplitude.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Initial shape parameters (&#39;amp&#39; and &#39;mu&#39; parameters in `init_pars`</span>
+<span class="sd">        dictionary are updated with the given values for `amp0` and `mu0`).</span>
+<span class="sd">    vary_shape_pars : bool</span>
+<span class="sd">        Whether to vary or fix peak shape parameters (i.e. sigma, theta,</span>
+<span class="sd">        eta&#39;s and tau&#39;s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`lmfit.model.Model`</span>
+<span class="sd">        `lmfit` model object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define model function</span>
+    <span class="k">def</span> <span class="nf">emg01</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">tau_p1</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">amp</span><span class="o">*</span><span class="n">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,),(</span><span class="mi">0</span><span class="p">,),(</span><span class="mi">1</span><span class="p">,),(</span><span class="n">tau_p1</span><span class="p">,))</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span> <span class="c1"># set prefix for respective peak</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">emg01</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="n">pref</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Add parameters bounds or restrictions and define starting values</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">amp0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-20</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">mu0</span> <span class="o">-</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">mu0</span> <span class="o">+</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">])</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">sigma_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="emg10"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.emg10">[docs]</a><span class="k">def</span> <span class="nf">emg10</span><span class="p">(</span><span class="n">peak_index</span><span class="p">,</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">amp0</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">pars_dict</span><span class="p">,</span> <span class="n">vary_shape_pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hyper-EMG(1,0) lmfit model (single-peak fit model with one exponential tail</span>
+<span class="sd">    on the left)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    peak_index :  int</span>
+<span class="sd">        Index of peak to fit.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        Initial guess for centroid of underlying Gaussian.</span>
+<span class="sd">    amp0 : float</span>
+<span class="sd">        Initial guess for peak amplitude.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Initial shape parameters (&#39;amp&#39; and &#39;mu&#39; parameters in `init_pars`</span>
+<span class="sd">        dictionary are updated with the given values for `amp0` and `mu0`).</span>
+<span class="sd">    vary_shape_pars : bool</span>
+<span class="sd">        Whether to vary or fix peak shape parameters (i.e. sigma, theta,</span>
+<span class="sd">        eta&#39;s and tau&#39;s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`lmfit.model.Model`</span>
+<span class="sd">        `lmfit` model object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define model function</span>
+    <span class="k">def</span> <span class="nf">emg10</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">tau_m1</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">amp</span><span class="o">*</span><span class="n">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,),(</span><span class="n">tau_m1</span><span class="p">,),(</span><span class="mi">0</span><span class="p">,),(</span><span class="mi">0</span><span class="p">,))</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span> <span class="c1"># set prefix for respective peak</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">emg10</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="n">pref</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Add parameters bounds or restrictions and define starting values</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">amp0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-20</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">mu0</span> <span class="o">-</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">mu0</span> <span class="o">+</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">])</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">sigma_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="emg11"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.emg11">[docs]</a><span class="k">def</span> <span class="nf">emg11</span><span class="p">(</span><span class="n">peak_index</span><span class="p">,</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">amp0</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">pars_dict</span><span class="p">,</span> <span class="n">vary_shape_pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hyper-EMG(1,1) lmfit model (single-peak fit model with one exponential tail</span>
+<span class="sd">    on the left and one exponential tail on the right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    peak_index :  int</span>
+<span class="sd">        Index of peak to fit.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        Initial guess for centroid of underlying Gaussian.</span>
+<span class="sd">    amp0 : float</span>
+<span class="sd">        Initial guess for peak amplitude.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Initial shape parameters (&#39;amp&#39; and &#39;mu0&#39; parameters in `init_pars`</span>
+<span class="sd">        dictionary are updated with the given values for `amp0` and `mu0`).</span>
+<span class="sd">    vary_shape_pars : bool</span>
+<span class="sd">        Whether to vary or fix peak shape parameters (i.e. sigma, theta,</span>
+<span class="sd">        eta&#39;s and tau&#39;s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`lmfit.model.Model`</span>
+<span class="sd">        `lmfit` model object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define model function</span>
+    <span class="k">def</span> <span class="nf">emg11</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">tau_m1</span><span class="p">,</span> <span class="n">tau_p1</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">amp</span><span class="o">*</span><span class="n">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,),(</span><span class="n">tau_m1</span><span class="p">,),(</span><span class="mi">1</span><span class="p">,),(</span><span class="n">tau_p1</span><span class="p">,))</span> <span class="c1"># from emg_funcs.py</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span> <span class="c1"># set prefix for respective peak</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">emg11</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="n">pref</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Add parameters bounds or restrictions and define starting values</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">amp0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-20</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">mu0</span> <span class="o">-</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">mu0</span> <span class="o">+</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">])</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">sigma_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="emg12"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.emg12">[docs]</a><span class="k">def</span> <span class="nf">emg12</span><span class="p">(</span><span class="n">peak_index</span><span class="p">,</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">amp0</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">pars_dict</span><span class="p">,</span> <span class="n">vary_shape_pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hyper-EMG(1,2) lmfit model (single-peak fit model with one exponential tail</span>
+<span class="sd">    on the left and two exponential tails on the right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    peak_index :  int</span>
+<span class="sd">        Index of peak to fit.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        Initial guess for centroid of underlying Gaussian.</span>
+<span class="sd">    amp0 : float</span>
+<span class="sd">        Initial guess for peak amplitude.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Initial shape parameters (&#39;amp&#39; and &#39;mu0&#39; parameters in `init_pars`</span>
+<span class="sd">        dictionary are updated with the given values for `amp0` and `mu0`).</span>
+<span class="sd">    vary_shape_pars : bool</span>
+<span class="sd">        Whether to vary or fix peak shape parameters (i.e. sigma, theta,</span>
+<span class="sd">        eta&#39;s and tau&#39;s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`lmfit.model.Model`</span>
+<span class="sd">        `lmfit` model object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define model function</span>
+    <span class="k">def</span> <span class="nf">emg12</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">tau_m1</span><span class="p">,</span><span class="n">eta_p1</span><span class="p">,</span><span class="n">eta_p2</span><span class="p">,</span><span class="n">tau_p1</span><span class="p">,</span><span class="n">tau_p2</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">amp</span><span class="o">*</span><span class="n">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,),(</span><span class="n">tau_m1</span><span class="p">,),(</span><span class="n">eta_p1</span><span class="p">,</span><span class="n">eta_p2</span><span class="p">),(</span><span class="n">tau_p1</span><span class="p">,</span><span class="n">tau_p2</span><span class="p">))</span> <span class="c1"># from emg_funcs.py</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span> <span class="c1"># set prefix for respective peak (e.g. &#39;p0&#39; for peak with index 0)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">emg12</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="n">pref</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Add parameters bounds or restrictions and define starting values</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">amp0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-20</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">mu0</span> <span class="o">-</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">mu0</span> <span class="o">+</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">])</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">sigma_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">)</span> <span class="c1"># ensures normalization of eta_p&#39;s</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="emg21"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.emg21">[docs]</a><span class="k">def</span> <span class="nf">emg21</span><span class="p">(</span><span class="n">peak_index</span><span class="p">,</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">amp0</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">pars_dict</span><span class="p">,</span> <span class="n">vary_shape_pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hyper-EMG(2,1) lmfit model (single-peak fit model with two exponential tails</span>
+<span class="sd">    on the left and one exponential tail on the right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    peak_index :  int</span>
+<span class="sd">        Index of peak to fit.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        Initial guess for centroid of underlying Gaussian.</span>
+<span class="sd">    amp0 : float</span>
+<span class="sd">        Initial guess for peak amplitude.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Initial shape parameters (&#39;amp&#39; and &#39;mu&#39; parameters in `init_pars`</span>
+<span class="sd">        dictionary are updated with the given values for `amp0` and `mu0`).</span>
+<span class="sd">    vary_shape_pars : bool</span>
+<span class="sd">        Whether to vary or fix peak shape parameters (i.e. sigma, theta,</span>
+<span class="sd">        eta&#39;s and tau&#39;s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`lmfit.model.Model`</span>
+<span class="sd">        `lmfit` model object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define model function</span>
+    <span class="k">def</span> <span class="nf">emg21</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">eta_m1</span><span class="p">,</span><span class="n">eta_m2</span><span class="p">,</span><span class="n">tau_m1</span><span class="p">,</span><span class="n">tau_m2</span><span class="p">,</span><span class="n">tau_p1</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">amp</span><span class="o">*</span><span class="n">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="p">(</span><span class="n">eta_m1</span><span class="p">,</span><span class="n">eta_m2</span><span class="p">),(</span><span class="n">tau_m1</span><span class="p">,</span><span class="n">tau_m2</span><span class="p">),(</span><span class="mi">1</span><span class="p">,),(</span><span class="n">tau_p1</span><span class="p">,))</span> <span class="c1"># from emg_funcs.py</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span> <span class="c1"># set prefix for respective peak (e.g. &#39;p0&#39; for peak with index 0)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">emg21</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="n">pref</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Add parameters bounds or restrictions and define starting values</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">amp0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-20</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">mu0</span> <span class="o">-</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">mu0</span> <span class="o">+</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">])</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">sigma_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">)</span> <span class="c1"># ensures normalization of eta_m&#39;s</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="emg22"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.emg22">[docs]</a><span class="k">def</span> <span class="nf">emg22</span><span class="p">(</span><span class="n">peak_index</span><span class="p">,</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">amp0</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">pars_dict</span><span class="p">,</span> <span class="n">vary_shape_pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hyper-EMG(2,2) lmfit model (single-peak fit model with two exponential tails</span>
+<span class="sd">    on the left and two exponential tails on the right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    peak_index :  int</span>
+<span class="sd">        Index of peak to fit.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        Initial guess for centroid of underlying Gaussian.</span>
+<span class="sd">    amp0 : float</span>
+<span class="sd">        Initial guess for peak amplitude.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Initial shape parameters of the reference peak (&#39;amp&#39; and &#39;mu&#39;</span>
+<span class="sd">        parameters in `init_pars` dictionary are updated with the given values</span>
+<span class="sd">        for `amp0` and `mu0`).</span>
+<span class="sd">    vary_shape_pars : bool</span>
+<span class="sd">        Whether to vary or fix peak shape parameters (i.e. sigma, theta,</span>
+<span class="sd">        eta&#39;s and tau&#39;s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`lmfit.model.Model`</span>
+<span class="sd">        `lmfit` model object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define model function</span>
+    <span class="k">def</span> <span class="nf">emg22</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">eta_m1</span><span class="p">,</span><span class="n">eta_m2</span><span class="p">,</span><span class="n">tau_m1</span><span class="p">,</span><span class="n">tau_m2</span><span class="p">,</span><span class="n">eta_p1</span><span class="p">,</span><span class="n">eta_p2</span><span class="p">,</span><span class="n">tau_p1</span><span class="p">,</span><span class="n">tau_p2</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">amp</span><span class="o">*</span><span class="n">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="p">(</span><span class="n">eta_m1</span><span class="p">,</span><span class="n">eta_m2</span><span class="p">),(</span><span class="n">tau_m1</span><span class="p">,</span><span class="n">tau_m2</span><span class="p">),(</span><span class="n">eta_p1</span><span class="p">,</span><span class="n">eta_p2</span><span class="p">),(</span><span class="n">tau_p1</span><span class="p">,</span><span class="n">tau_p2</span><span class="p">))</span> <span class="c1"># from emg_funcs.py</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span> <span class="c1"># set prefix for respective peak (e.g. &#39;p0&#39; for peak with index 0)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">emg22</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="n">pref</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Add parameters bounds or restrictions and define starting values</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">amp0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-20</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">mu0</span> <span class="o">-</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">mu0</span> <span class="o">+</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">])</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">sigma_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">)</span> <span class="c1"># ensures normalization of eta_m&#39;s</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">)</span> <span class="c1"># ensures normalization of eta_p&#39;s</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="emg23"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.emg23">[docs]</a><span class="k">def</span> <span class="nf">emg23</span><span class="p">(</span><span class="n">peak_index</span><span class="p">,</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">amp0</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">pars_dict</span><span class="p">,</span> <span class="n">vary_shape_pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hyper-EMG(2,3) lmfit model (single-peak fit model with two exponential tails</span>
+<span class="sd">    on the left and three exponential tails on the right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    peak_index :  int</span>
+<span class="sd">        Index of peak to fit.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        Initial guess for centroid of underlying Gaussian.</span>
+<span class="sd">    amp0 : float</span>
+<span class="sd">        Initial guess for peak amplitude.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Initial shape parameters (&#39;amp&#39; and &#39;mu&#39; parameters in `init_pars`</span>
+<span class="sd">        dictionary are updated with the given values for `amp0` and `mu0`).</span>
+<span class="sd">    vary_shape_pars : bool</span>
+<span class="sd">        Whether to vary or fix peak shape parameters (i.e. sigma, theta,</span>
+<span class="sd">        eta&#39;s and tau&#39;s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`lmfit.model.Model`</span>
+<span class="sd">        `lmfit` model object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define model function</span>
+    <span class="k">def</span> <span class="nf">emg23</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">eta_m1</span><span class="p">,</span><span class="n">eta_m2</span><span class="p">,</span><span class="n">tau_m1</span><span class="p">,</span><span class="n">tau_m2</span><span class="p">,</span><span class="n">eta_p1</span><span class="p">,</span><span class="n">eta_p2</span><span class="p">,</span><span class="n">eta_p3</span><span class="p">,</span><span class="n">delta_p</span><span class="p">,</span><span class="n">tau_p1</span><span class="p">,</span><span class="n">tau_p2</span><span class="p">,</span><span class="n">tau_p3</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">amp</span><span class="o">*</span><span class="n">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="p">(</span><span class="n">eta_m1</span><span class="p">,</span><span class="n">eta_m2</span><span class="p">),(</span><span class="n">tau_m1</span><span class="p">,</span><span class="n">tau_m2</span><span class="p">),(</span><span class="n">eta_p1</span><span class="p">,</span><span class="n">eta_p2</span><span class="p">,</span><span class="n">eta_p3</span><span class="p">),(</span><span class="n">tau_p1</span><span class="p">,</span><span class="n">tau_p2</span><span class="p">,</span><span class="n">tau_p3</span><span class="p">))</span> <span class="c1"># from emg_funcs.py</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span> <span class="c1"># set prefix for respective peak (e.g. &#39;p0&#39; for peak with index 0)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">emg23</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="n">pref</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># avoids math errors in peak shape uncertainty estimation</span>
+        <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Add parameters bounds or restrictions and define starting values</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">amp0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-20</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">mu0</span> <span class="o">-</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">mu0</span> <span class="o">+</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">])</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">sigma_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">)</span> <span class="c1"># ensures normalization of eta_m&#39;s</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;delta_p&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span> <span class="n">pref</span><span class="o">+</span><span class="s1">&#39;delta_p-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p3&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">)</span> <span class="c1"># ensures normalization of eta_p&#39;s</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p3&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p3&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="emg32"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.emg32">[docs]</a><span class="k">def</span> <span class="nf">emg32</span><span class="p">(</span><span class="n">peak_index</span><span class="p">,</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">amp0</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">pars_dict</span><span class="p">,</span> <span class="n">vary_shape_pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hyper-EMG(3,2) lmfit model (single-peak fit model with three exponential</span>
+<span class="sd">    tails on the left and two exponential tails on the right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    peak_index :  int</span>
+<span class="sd">        Index of peak to fit.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        Initial guess for centroid of underlying Gaussian.</span>
+<span class="sd">    amp0 : float</span>
+<span class="sd">        Initial guess for peak amplitude.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Initial shape parameters (&#39;amp&#39; and &#39;mu&#39; parameters in `init_pars`</span>
+<span class="sd">        dictionary are updated with the given values for `amp0` and `mu0`).</span>
+<span class="sd">    vary_shape_pars : bool</span>
+<span class="sd">        Whether to vary or fix peak shape parameters (i.e. sigma, theta,</span>
+<span class="sd">        eta&#39;s and tau&#39;s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`lmfit.model.Model`</span>
+<span class="sd">        `lmfit` model object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define model function</span>
+    <span class="k">def</span> <span class="nf">emg32</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">eta_m1</span><span class="p">,</span><span class="n">eta_m2</span><span class="p">,</span><span class="n">eta_m3</span><span class="p">,</span><span class="n">delta_m</span><span class="p">,</span><span class="n">tau_m1</span><span class="p">,</span><span class="n">tau_m2</span><span class="p">,</span><span class="n">tau_m3</span><span class="p">,</span><span class="n">eta_p1</span><span class="p">,</span><span class="n">eta_p2</span><span class="p">,</span><span class="n">tau_p1</span><span class="p">,</span><span class="n">tau_p2</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">amp</span><span class="o">*</span><span class="n">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="p">(</span><span class="n">eta_m1</span><span class="p">,</span><span class="n">eta_m2</span><span class="p">,</span><span class="n">eta_m3</span><span class="p">),(</span><span class="n">tau_m1</span><span class="p">,</span><span class="n">tau_m2</span><span class="p">,</span><span class="n">tau_m3</span><span class="p">),(</span><span class="n">eta_p1</span><span class="p">,</span><span class="n">eta_p2</span><span class="p">),(</span><span class="n">tau_p1</span><span class="p">,</span><span class="n">tau_p2</span><span class="p">))</span> <span class="c1"># from emg_funcs.py</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span> <span class="c1"># set prefix for respective peak (e.g. &#39;p0&#39; for peak with index 0)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">emg32</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="n">pref</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># avoids math errors in peak shape uncertainty estimation</span>
+        <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Add parameters bounds or restrictions and define starting values</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">amp0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-20</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">mu0</span> <span class="o">-</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">mu0</span> <span class="o">+</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">])</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">sigma_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;delta_m&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span> <span class="n">pref</span><span class="o">+</span><span class="s1">&#39;delta_m-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m3&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m3&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m3&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span> <span class="s1">&#39;1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">)</span> <span class="c1"># ensures normalization of eta_p&#39;s</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="emg33"><a class="viewcode-back" href="../../modules.html#emgfit.fit_models.emg33">[docs]</a><span class="k">def</span> <span class="nf">emg33</span><span class="p">(</span><span class="n">peak_index</span><span class="p">,</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">amp0</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="n">pars_dict</span><span class="p">,</span> <span class="n">vary_shape_pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hyper-EMG(3,3) lmfit model (single-peak fit model with three exponential</span>
+<span class="sd">    tails on the left and three exponential tails on the right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    peak_index :  int</span>
+<span class="sd">        Index of peak to fit.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        Initial guess for centroid of underlying Gaussian.</span>
+<span class="sd">    amp0 : float</span>
+<span class="sd">        Initial guess for peak amplitude.</span>
+<span class="sd">    init_pars : dict</span>
+<span class="sd">        Initial shape parameters (&#39;amp&#39; and &#39;mu&#39; parameters in `init_pars`</span>
+<span class="sd">        dictionary are updated with the given values for `amp0` and `mu0`).</span>
+<span class="sd">    vary_shape_pars : bool</span>
+<span class="sd">        Whether to vary or fix peak shape parameters (i.e. sigma, theta,</span>
+<span class="sd">        eta&#39;s and tau&#39;s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`lmfit.model.Model`</span>
+<span class="sd">        `lmfit` model object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define model function</span>
+    <span class="k">def</span> <span class="nf">emg33</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">eta_m1</span><span class="p">,</span><span class="n">eta_m2</span><span class="p">,</span><span class="n">eta_m3</span><span class="p">,</span><span class="n">delta_m</span><span class="p">,</span><span class="n">tau_m1</span><span class="p">,</span><span class="n">tau_m2</span><span class="p">,</span><span class="n">tau_m3</span><span class="p">,</span><span class="n">eta_p1</span><span class="p">,</span><span class="n">eta_p2</span><span class="p">,</span><span class="n">eta_p3</span><span class="p">,</span><span class="n">delta_p</span><span class="p">,</span><span class="n">tau_p1</span><span class="p">,</span><span class="n">tau_p2</span><span class="p">,</span><span class="n">tau_p3</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">amp</span><span class="o">*</span><span class="n">h_emg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="p">(</span><span class="n">eta_m1</span><span class="p">,</span><span class="n">eta_m2</span><span class="p">,</span><span class="n">eta_m3</span><span class="p">),(</span><span class="n">tau_m1</span><span class="p">,</span><span class="n">tau_m2</span><span class="p">,</span><span class="n">tau_m3</span><span class="p">),(</span><span class="n">eta_p1</span><span class="p">,</span><span class="n">eta_p2</span><span class="p">,</span><span class="n">eta_p3</span><span class="p">),(</span><span class="n">tau_p1</span><span class="p">,</span><span class="n">tau_p2</span><span class="p">,</span><span class="n">tau_p3</span><span class="p">))</span> <span class="c1"># from emg_funcs.py</span>
+    <span class="n">pref</span> <span class="o">=</span> <span class="s1">&#39;p</span><span class="si">{0}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_index</span><span class="p">)</span> <span class="c1"># set prefix for respective peak (e.g. &#39;p0&#39; for peak with index 0)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">emg33</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="n">pref</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># avoids math errors in peak shape uncertainty estimation</span>
+        <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Add parameters bounds or restrictions and define starting values</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;amp&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">amp0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-20</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">mu0</span> <span class="o">-</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">mu0</span> <span class="o">+</span> <span class="n">mu_var_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">])</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">sigma_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">sigma_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;delta_m&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span> <span class="n">pref</span><span class="o">+</span><span class="s1">&#39;delta_m-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m3&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m1&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_m2&#39;</span><span class="p">)</span> <span class="c1"># ensures normalization of eta_m&#39;s</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_m3&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_m3&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;delta_p&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span> <span class="n">pref</span><span class="o">+</span><span class="s1">&#39;delta_p-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p3&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p1&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p1-&#39;</span><span class="o">+</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;eta_p2&#39;</span><span class="p">)</span> <span class="c1"># ensures normalization of eta_p&#39;s</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p1&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p2&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p2&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">pref</span><span class="o">+</span><span class="s1">&#39;tau_p3&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span> <span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;tau_p3&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">tau_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">tau_max_nsigma</span><span class="o">*</span><span class="n">init_pars</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="n">vary_shape_pars</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Stefan Paul.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
