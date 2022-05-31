@@ -70,7 +70,8 @@ def h_m_emg_rvs(mu, sigma, *t_args,N_samples=None):
     li_eta_m = t_args[0]
     li_tau_m = t_args[1]
     t_order_m = len(li_eta_m) # order of negative tail exponentials
-    assert abs(sum(li_eta_m) - 1) < norm_precision, "eta_m's don't add up to 1."
+    if abs(sum(li_eta_m) - 1) > norm_precision:
+        raise Exception("eta_m's don't add up to 1.")
     if len(li_tau_m) != t_order_m:  # check if all arguments match tail order
         raise Exception("orders of eta_m and tau_m do not match!")
 
@@ -118,7 +119,8 @@ def h_p_emg_rvs(mu, sigma, *t_args, N_samples=None):
     li_eta_p = t_args[0]
     li_tau_p = t_args[1]
     t_order_p = len(li_eta_p) # order of negative tail exponentials
-    assert abs(sum(li_eta_p) - 1) < norm_precision, "eta_p's don't add up to 1."
+    if abs(sum(li_eta_p) - 1) > norm_precision:
+        raise Exception("eta_p's don't add up to 1.")
     if len(li_tau_p) != t_order_p:  # check if all arguments match tail order
         raise Exception("orders of eta_p and tau_p do not match!")
 
@@ -261,8 +263,10 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
     """
     mus = np.atleast_1d(mus)
     amps = np.atleast_1d(amps)
-    assert len(mus) == len(amps), "Lengths of `mus` and `amps` arrays must match."
-    assert type(N_events) == int, "`N_events` must be of type int."
+    if len(mus) != len(amps):
+        raise Exception("Lengths of `mus` and `amps` arrays must match.")
+    if type(N_events) != int:
+        raise Exception("`N_events` must be of type int.")
     if (mus < x_min).any() or (mus > x_max).any():
         import warnings
         msg = str("At least one peak centroid in `mus` is outside the sampling range.")
@@ -271,8 +275,8 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
         scl_facs = np.ones_like(mus)
     else:
         scl_facs = np.atleast_1d(scl_facs)
-        msg =  "Lengths of `mus` and `scl_facs` must match."
-        assert len(mus) == len(scl_facs), msg
+        if len(mus) != len(scl_facs):
+            raise Exception("Lengths of `mus` and `scl_facs` must match.")
 
     sample_range = x_max - x_min
 
@@ -329,14 +333,16 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
             li_eta_p = [1]
         elif len(li_eta_p) == 0 and len(li_tau_p) == 0: # emgX0
             theta = 1
-    if len(li_eta_m) > 0:
+    if len(li_eta_m) > 0 and abs(sum(li_eta_m) - 1) > norm_precision:
         msg = "Sum of elements in li_eta_m is not normalized to within {}.".format(norm_precision)
-        assert abs(sum(li_eta_m) - 1) < norm_precision, msg
-    assert len(li_eta_m) == len(li_tau_m)
-    if len(li_eta_p) > 0:
+        raise Exception(msg)
+    if len(li_eta_m) != len(li_tau_m):
+        raise Exception("Lengths of li_eta_m and li_tau_m do not match.")
+    if len(li_eta_p) > 0 and abs(sum(li_eta_p) - 1) > norm_precision:
         msg = "Sum of elements in li_eta_p is not normalized to within {}.".format(norm_precision)
-        assert abs(sum(li_eta_p) - 1) < norm_precision, msg
-    assert len(li_eta_p) == len(li_tau_p)
+        raise Exception(msg)
+    if len(li_eta_p) != len(li_tau_p):
+        raise Exception("Lengths of li_eta_p and li_tau_p do not match.")
 
     # Distribute counts over different peaks and background (bkgd)
     # randomly distribute ions using amps and c_bkg as prob. weights
@@ -443,9 +449,6 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
     Random events are created via custom Hyper-EMG extensions of Scipy's
     :meth:`scipy.stats.exponnorm.rvs` method.
 
-    Currently, all simulated peaks have identical width and shape (no re-scaling
-    of mass-dependent shape parameters to a peak's mass centroid).
-
     The returned spectrum follows the binning of the reference spectrum.
 
     Mind the different units for peak amplitudes `amps`
@@ -498,10 +501,12 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
                 scl_facs.append(result.params[pref+'scl_fac'])
             except KeyError:
                 scl_facs.append(1.0)
-    msg = "`mus`, `amps` and `scl_facs` argments must have the same length!"
-    assert len(mus)==len(amps)==len(scl_facs), msg
+    if not (len(mus)==len(amps)==len(scl_facs)):
+        msg = "`mus`, `amps` and `scl_facs` argments must have the same length!"
+        raise Exception(msg)
     if bkg_c is None:
-        assert len(indeces) != 0, "Zero background and no peaks in sampling range."
+        if len(indeces) == 0:
+            raise Exception("Zero background and no peaks in sampling range.")
         result = spec.fit_results[indeces[0]]
         bkg_c = result.best_values['bkg_c']
     if N_events is None:
