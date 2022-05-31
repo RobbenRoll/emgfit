@@ -20,7 +20,7 @@ echo "}</style></head><body><h1>emgfit documentation</h1>" >> $OUTPUT
 
 i=0
 echo "<UL>" >> $OUTPUT
-for filepath in `find . -maxdepth 1 -mindepth 1 -type d \( ! -path '*/.*' \)| sort -r`; do
+for filepath in `find . -maxdepth 1 -mindepth 1 -type d -name 'v*' \( ! -path '*/.*' \)| sort -r`; do
   path=`basename "$filepath"`
   echo $filepath
   echo "  <LI><a href=\"./$path/index.html\">$path</a></LI>" >> $OUTPUT
