@@ -5408,7 +5408,7 @@ class spectrum:
                 p = self.peaks[peak_idx]
                 pref = 'p{0}_'.format(peak_idx)
                 m_ion = p.m_ion
-                p.rel_stat_error = stat_errs[p_i]/m_ion
+                p.rel_stat_error = stat_errs[p_i]*p.abs_z/m_ion
                 # Replace simple stat. area errors with resampling errors while
                 # preserving the peakshape error contribution to area_error:
                 old_stat_area_err = self.calc_peak_area(peak_idx)[1]
