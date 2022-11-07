@@ -5608,30 +5608,36 @@ class spectrum:
             # Mark peaks with stat errors from resampling with green font
             if self.peaks_with_errors_from_resampling not in ([],None):
                 green_font = workbook.add_format({'font_color': 'green'})
+                idx_area_error = list(df_prop.columns).index("area_error")
+                idx_rel_stat_error = list(df_prop.columns).index("rel_stat_error")
                 for idx in self.peaks_with_errors_from_resampling:
-                    prop_sheet.conditional_format(idx+1, 11, idx+1, 11,
+                    prop_sheet.conditional_format(idx+1, idx_area_error+1,
+                                                  idx+1, idx_area_error+1,
                                                   {'type':     'cell',
                                                    'criteria': '>=',
                                                    'value' : 0,
                                                    'format': green_font})
-                    prop_sheet.conditional_format(idx+1, 13, idx+1, 13,
+                    prop_sheet.conditional_format(idx+1, idx_rel_stat_error+1,
+                                                  idx+1, idx_rel_stat_error+1,
                                                   {'type':     'cell',
                                                    'criteria': '>=',
                                                    'value' : 0,
                                                    'format': green_font})
-                prop_sheet.write_string(len(self.peaks)+1, 12,
+                prop_sheet.write_string(len(self.peaks)+1, idx_area_error+1,
                                         "Stat. errors from resampling",
                                         green_font) # add legend
             # Mark peaks with MC PS errors with blue font
             if self.peaks_with_MC_PS_errors not in ([],None):
+                idx_PS_error = list(df_prop.columns).index("rel_peakshape_error")
                 blue_font = workbook.add_format({'font_color': 'blue'})
                 for idx in self.peaks_with_MC_PS_errors:
-                    prop_sheet.conditional_format(idx+1, 15, idx+1, 15,
+                    prop_sheet.conditional_format(idx+1, idx_PS_error+1,
+                                                  idx+1, idx_PS_error+1,
                                                   {'type':     'cell',
                                                    'criteria': '>=',
                                                    'value' : 0,
                                                    'format': blue_font})
-                prop_sheet.write_string(len(self.peaks)+1, 15,
+                prop_sheet.write_string(len(self.peaks)+1, idx_PS_error+1,
                                         "Monte Carlo peak-shape errors",
                                         blue_font) # add legend
             for i in range(n_res): # loop over fit results
@@ -5655,8 +5661,6 @@ class spectrum:
                     fname = filename+"_fit{}".format(i)
                     os.remove(fname+'_log_plot.png')
                     os.remove(fname+'_lin_plot.png')
-
-
 
 
 ################################################################################
