@@ -7,6 +7,18 @@ versions can be found `here`_.
 
 .. _here: https://RobbenRoll.github.io/emgfit
 
+
+v0.A.B (2022-XX-YY)
+-------------------
+
+Fixed
+^^^^^
+* Fix bug in color coding of uncertainties listed in peak properties table in
+  XLSX output files.
+* Fix bug in calculation of statistical mass uncertainties of multiply charged
+  peaks with :meth:`~emgfit.spectrum.get_errors_from_resampling`.
+
+
 v0.4.1 (2022-05-31)
 -------------------
 
