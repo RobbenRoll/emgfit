@@ -4514,8 +4514,13 @@ class spectrum:
         peak.area, peak.area_error = self.calc_peak_area(index_mass_calib,
                                                          fit_result=fit_result)
         pref = 'p{0}_'.format(index_mass_calib)
-        peak.m_ion =  self._calc_m_ion(index_mass_calib, fit_result.fit_model,
-                                       fit_result.params, recal_fac=1.0)
+        peak.m_ion = self._calc_m_ion(index_mass_calib, fit_result.fit_model,
+                                      fit_result.params, recal_fac=1.0)
+        # Determine recalibration factor
+        self.recal_fac = peak.m_AME/peak.m_ion
+        # Update peak properties with new calibrant centroid
+        peak.m_ion = self.recal_fac*peak.m_ion
+
         # A_stat* FWHM/sqrt(area), w/ with A_stat_G = 0.42... and A_stat_emg
         # from `determine_A_stat_emg` method or default value from config.py
         if peak.fit_model == 'Gaussian':
@@ -4539,8 +4544,6 @@ class spectrum:
         print("Relative statistical error of mass calibrant:    {:7.1e}".format(
               peak.rel_stat_error))
 
-        # Determine recalibration factor
-        self.recal_fac = peak.m_AME/peak.m_ion
         print("\nRecalibration factor:    {:1.9f} = 1 {:=+5.1e}".format(
               self.recal_fac,self.recal_fac-1))
         if np.abs(self.recal_fac - 1) > 1e-03:
@@ -4551,8 +4554,6 @@ class spectrum:
             warnings.warn(msg, UserWarning)
         # Set mass calibrant flag to prevent overwriting of calibration results
         self.index_mass_calib = index_mass_calib
-        # Update peak properties with new calibrant centroid
-        peak.m_ion = self.recal_fac*peak.m_ion
         if peak.A and peak.z:
             # atomic Mass excess (includes electron mass) [keV]
             peak.atomic_ME_keV = np.round( (peak.m_ion + peak.z*m_e - peak.A)*
