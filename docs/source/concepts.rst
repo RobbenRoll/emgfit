@@ -116,14 +116,14 @@ are defined as:
    h_\mathrm{-emg}(x; \mu, \sigma, \eta_-, \tau_-)
    = \sum_{i=1}^{N_-}{\frac{\eta_{-i}}{2\tau_{-i}}
      \exp{\left( \left(\frac{\sigma}{\sqrt{2}\tau_{-i}}\right)^2 +
-     \frac{x-\mu}{\sqrt{2}\tau_{-i}}\right)}
+     \frac{x-\mu}{\tau_{-i}}\right)}
      \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{-i}} +
      \frac{x-\mu}{\sqrt{2}\sigma}\right)},
 
    h_\mathrm{+emg}(x; \mu, \sigma, \eta_+, \tau_+)
    = \sum_{i=1}^{N_+}{\frac{\eta_{+i}}{2\tau_{+i}}
      \exp{\left(\left(\frac{\sigma}{\sqrt{2}\tau_{+i}}\right)^2 -
-     \frac{x-\mu}{\sqrt{2}\tau_{+i}}\right)}
+     \frac{x-\mu}{\tau_{+i}}\right)}
      \mathrm{erfc}\left(\frac{\sigma}{\sqrt{2}\tau_{+i}} -
      \frac{x-\mu}{\sqrt{2}\sigma}\right)}.
 
@@ -266,7 +266,7 @@ Fits are performed by minimizing either of the following cost functions:
   the i-th bin, respectively. On each iteration the variances of the residuals
   are estimated using the latest model predictions:
   :math:`\sigma_i^2 \approx f(x_i)`. The inclusion of the small constant
-  :math:`\epsilon = 1e-10` ensures numerical robustness as :math:`f(x_i)`
+  :math:`\epsilon = 1E-10` ensures numerical robustness as :math:`f(x_i)`
   approaches zero and only causes a negligibly small bias in the parameter
   estimates. The iteratively re-calculated weights result in improved behavior
   in low-count situations.
@@ -340,7 +340,7 @@ Before the peak-shape calibration the user must decide which of the
 increasingly complicated model functions are performed on the shape calibration
 peak, starting from a regular Gaussian up to Hyper-EMG functions of successively
 increasing tail order. To avoid overfitting, models with any best-fit shape
-parameters agreeing with zero within 1:math:`\sigma` confidence are excluded
+parameters agreeing with zero within :math:`1\sigma` confidence are excluded
 from selection. Amongst the remaining models, the one yielding the lowest
 chi-square per degree of freedom is selected. Alternatively, this feature can be
 skipped by setting the `vary_tail_order` option to `False` and a peak shape can
@@ -529,7 +529,7 @@ peak areas and the mass values `m_ion`:
   :meth:`~emgfit.spectrum.spectrum._eval_peakshape_errors` method. This routine
   adapts the approach of [5]_ and re-performs a given fit a number of times,
   each time changing a different shape parameter by plus and minus its
-  1:math:`\sigma` confidence interval, respectively, while keeping all other
+  :math:`1\sigma` confidence interval, respectively, while keeping all other
   shape parameters fixed. For each shape parameter, the larger of the two shifts
   in a peak's mass and area is recorded and the peak-shape uncertainty is
   estimated for each peak by summing those values in quadrature. Mind that the
@@ -578,7 +578,7 @@ saves the analysis results to an XLSX-file with three worksheets containing:
    different columns contain.
 3. The :attr:`eff_mass_shifts` dictionary holding for each peak the larger of
    the two effective mass shifts obtained when varying each shape parameter by
-   +-1:math:`\sigma` in the default peak-shape error estimation. These shifts
+   :math:`\pm 1 \sigma` in the default peak-shape error estimation. These shifts
    are irrelevant for peaks whose peak-shape uncertainties have been estimated
    with the :meth:`~emgfit.spectrum.spectrum.get_MC_peakshape_errors` routine.
 

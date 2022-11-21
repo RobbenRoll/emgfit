@@ -86,7 +86,7 @@ autosummary_generate = True
 numpydoc_show_class_members = False
 
 # Options for building docs from Jupyter notebooks
-nbsphinx_execute = 'always' # re-run notebooks upon every doc build
+nbsphinx_execute = 'always' # 'always' to re-run notebooks upon every doc build
 nbsphinx_allow_errors = False # ignore errors in notebook execution
 nbsphinx_timeout = 600 # extend default cell timeout
 nbsphinx_kernel_name = 'python3'
