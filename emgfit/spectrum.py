@@ -71,9 +71,11 @@ class peak:
     red_chi : float
         Reduced chi-squared of peak fit. If the peak was fitted using ``'MLE'``,
         :attr:`red_chi` should be taken with caution.
-    area, area_error : float [counts]
-        Number of total counts in peak and corresponding uncertainty
-        (calculated from amplitude parameter `amp` of peak fit).
+    area : float [counts]
+        Number of total counts in the peak (calculated from amplitude parameter
+        `amp` of peak fit).
+    area_error : float [counts]
+        Uncertainty of the total number of counts in the peak.
     m_ion : float [u]
         Ionic mass value obtained in peak fit (after mass recalibration and
         corrected for respective charge state).
@@ -468,7 +470,7 @@ class spectrum:
         self.rel_recal_error = None
         self.recal_facs_pm = None
         self.eff_mass_shifts = None
-        self.eff_area_shifts = None
+        self.area_shifts = None
         self.peaks_with_errors_from_resampling = []
         self.MCMC_par_samples = None
         self.MC_recal_facs = None
@@ -1833,7 +1835,8 @@ class spectrum:
         vary_shape : bool, optional
             If `False` only the amplitude (`amp`) and Gaussian centroid (`mu`)
             model parameters will be varied in the fit. If `True`, the shape
-            parameters (`sigma`, `theta`,`etas` and `taus`) will also be varied.
+            parameters (`sigma`, `theta`, `etas` and `taus`) will also be
+            varied.
         vary_baseline : bool, optional
             If `True` a varying uniform baseline will be added to the fit
             model as varying model parameter `bkg_c`. If `False`, the baseline
@@ -2448,7 +2451,7 @@ class spectrum:
         In fits with the ``chi-square`` cost function the variance weights
         :math:`w_i` for the residuals are estimated using the latest model
         predictions: :math:`w_i = 1/(\\sigma_i^2 + \epsilon) = 1/(f(x_i)+ \epsilon)`,
-        where :math:`\epsilon = 1e-10` is a small number added to increase
+        where :math:`\epsilon = 1E-10` is a small number added to increase
         numerical robustness when :math:`f(x_i)` approaches zero. On each
         iteration the weights are updated with the new values of the model
         function.
@@ -3307,13 +3310,8 @@ class spectrum:
         uncertainty fails are likewise excluded from selection.
 
         """
-        def reset_shape_calib_attrs():
-            self.index_shape_calib = None
-            self.shape_cal_result = None
-            self.shape_cal_pars = None
-            self.shape_cal_errors = None
-            self.fit_range_shape_cal = None
-        reset_shape_calib_attrs() #needed for fit type selection in comp_model()
+        self._reset_shape_calib_props() # needed for fit type selection in comp_model()
+        self._reset_all_fit_props()
 
         if index_shape_calib is not None and (species_shape_calib is None):
             peak = self.peaks[index_shape_calib]
@@ -3559,7 +3557,7 @@ class spectrum:
 
         Note: All peaks in the specified `peak_indeces` list must
         have been fitted in the same multi-peak fit (and hence have the same
-        lmfit modelresult `fit_result`)!
+        lmfit ModelResult `fit_result`)!
 
         This routine does not yield a peak-shape error for the mass calibrant,
         since this is zero by definition. Instead, for the mass calibrant the
@@ -4711,9 +4709,13 @@ class spectrum:
         if x_fit_range is None:
             x_fit_range = self.default_fit_range
 
+        # Reset fit-related peak and spectrum attributes
+        self._reset_all_fit_props()
+
         print('##### Calibrant fit #####')
         if fit_model is None:
             fit_model = self.fit_model
+
         if x_fit_cen is None:
             x_fit_cen = peak.x_pos
         fit_result = spectrum.peakfit(self, fit_model=fit_model,
@@ -4754,6 +4756,101 @@ class spectrum:
 
         # Save fit result, in case calibrant is not fitted again
         self.fit_results[self.index_mass_calib] = fit_result
+
+
+    def _reset_shape_calib_props(self):
+        """Reset all shape-calibration-related spectrum and peak properties
+
+        See also
+        --------
+        :meth:`_reset_all_fit_props`
+
+        """
+        if self.index_shape_calib is not None:
+            self.fit_results[self.index_shape_calib] = None
+            scal_comment = self.peaks[self.index_shape_calib].comment
+            flags = ["shape & mass calibrant", "shape calibrant"]
+            replacements = ["mass calibrant", ""]
+            for flag, replacement in zip(flags, replacements):
+                if replacement != "":
+                    pref, suff = ", ", ", "
+                else:
+                    pref, suff = "", ""
+                scal_comment = scal_comment.replace(flag+", ",
+                                                    replacement+suff)
+                scal_comment = scal_comment.replace(", "+flag,
+                                                    pref+replacement)
+                scal_comment = scal_comment.replace(flag, replacement)
+            if scal_comment == "" or scal_comment == ",":
+                scal_comment = "-"
+            self.peaks[self.index_shape_calib].comment = scal_comment
+        self.index_shape_calib = None
+        self.shape_cal_result = None
+        self.shape_cal_pars = None
+        self.shape_cal_errors = None
+        self.fit_range_shape_cal = None
+
+
+    def _reset_all_fit_props(self):
+        """Reset all fit-related spectrum and peak attributes
+
+        Note
+        ----
+        This method also resets all mass-calibration-related peak properties and
+        spectrum attributes but does not affect the results obtained in the
+        peak-shape calibration.
+
+        See also
+        --------
+        :meth:`_reset_shape_calib_props`
+
+        """
+        # Peak-of-interest related attributes:
+        self.eff_mass_shifts = None
+        self.eff_mass_shifts_pm = None
+        self.area_shifts = None
+        self.peaks_with_errors_from_resampling = []
+        self.MC_recal_facs = None
+        self.peaks_with_MC_PS_errors = []
+        self.area_shifts = None
+        for idx, p in enumerate(self.peaks):
+            p.fit_model = None
+            p.cost_func = None
+            p.red_chi = None
+            p.area = None
+            p.area_error = None
+            p.m_ion = None
+            p.rel_stat_error = None
+            p.rel_recal_error = None
+            p.rel_peakshape_error = None
+            p.rel_mass_error = None
+            p.atomic_ME_keV = None
+            p.mass_error_keV = None
+            p.m_dev_keV = None
+            self.fit_results[idx] = None
+
+        # Mass calibrant related:
+        self.recal_fac = None
+        self.recal_fac_error = None
+        self.recal_facs_pm = None
+        if self.index_mass_calib is not None:
+            cal_comment = self.peaks[self.index_mass_calib].comment
+            flags = ["shape & mass calibrant", "mass calibrant"]
+            replacements = ["shape calibrant", ""]
+            for flag, replacement in zip(flags, replacements):
+                if replacement != "":
+                    pref, suff = ", ", ", "
+                else:
+                    pref, suff = "", ""
+                cal_comment = cal_comment.replace(flag+", ",
+                                                  replacement+suff)
+                cal_comment = cal_comment.replace(", "+flag,
+                                                  pref+replacement)
+                cal_comment = cal_comment.replace(flag, replacement)
+            if cal_comment == "":
+                cal_comment = "-"
+            self.peaks[self.index_mass_calib].comment = cal_comment
+            self.index_mass_calib = None
 
 
     def _update_peak_props(self, peaks, fit_result):
@@ -4897,7 +4994,7 @@ class spectrum:
 
               .. math::
 
-                  \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)^2}.
+                  \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)}.
 
             - If ``'MLE'``, a binned maximum likelihood estimation is performed
               by minimizing the (doubled) negative log likelihood ratio:
@@ -4969,7 +5066,7 @@ class spectrum:
             uncertainty evaluation are shown.
 
         Notes
-        -------
+        -----
         Updates peak properties dataframe with peak properties obtained in fit.
 
         """
@@ -5046,9 +5143,11 @@ class spectrum:
                                       error_every=error_every,
                                       plot_filename=plot_filename)
 
-        if index_mass_calib is not None:
+        if index_mass_calib is not None: # perform mass calibration
+            # Reset fit-related peak and spectrum attributes
+            self._reset_all_fit_props()
             # Update recalibration factor and calibrant properties
-            self._update_calibrant_props(index_mass_calib,fit_result)
+            self._update_calibrant_props(index_mass_calib, fit_result)
 
         # Determine peak-shape errors
         try:
