@@ -11,6 +11,14 @@ versions can be found `here`_.
 v0.A.B (2022-XX-YY)
 -------------------
 
+Changed
+^^^^^^^
+* Changed initialization of MCMC walkers in
+  :meth:`~emgfit.spectrum._get_MCMC_par_samples` to sampling from truncated
+  normal distributions.
+* Updated functions in the :mod:`emg_funcs` module to return NaN if any `tau` is
+  negative or if the `theta` parameter falls outside the interval [0,1].
+
 Fixed
 ^^^^^
 * Fix bug in color coding of uncertainties listed in peak properties table in

@@ -1995,13 +1995,10 @@ class spectrum:
         Parameters
         ----------
         fit_result : :class:`lmfit.model.ModelResult`
-            Fit result of region explore with MCMC sampling. since `emcee` only
-            efficiently samples unimodal distributions, `fit_result` should hold
-            the result of a single-peak fit (typically of the peak-shape
-            calibrant). The MCMC walkers are initialized with randomized
-            parameter values drawn from normal distributions whose mean and
-            standard deviation are given by the respective best-fit values and
-            uncertainties stored in `fit_result`.
+            Fit result to explore with MCMC sampling. Since `emcee` only
+            efficiently samples unimodal distributions, `fit_result` should
+            ideally hold the result of a single-peak fit (typically the shape
+            calibrant fit).
         steps : int, optional
             Number of MCMC sampling steps.
         burn : int, optional
@@ -2032,14 +2029,17 @@ class spectrum:
         the distributions of parameter values which are supported by the data.
         An MCMC algorithm sends out a number of so-called walkers on stochastic
         walks through the parameter space (in this method the number of MCMC
-        walkers is fixed to 20 times the number of varied parameters). MCMC
-        methods are particularly important in situations where conventional
-        sampling techniques become intractable or inefficient. For MCMC sampling
-        emgfit deploys lmfit's implementation of the
-        :class:`emcee.EnsembleSampler` from the `emcee`_ package [1]_. Since
+        walkers is fixed to 20 times the number of varied parameters). The MCMC
+        walkers are initialized with randomized parameter values drawn from
+        truncated normal distributions defined by the respective parameter
+        bounds and best-fit parameter values and uncertainties stored in
+        `fit_result`. MCMC methods are particularly important in situations
+        where conventional sampling techniques become intractable or
+        inefficient. For MCMC sampling emgfit deploys lmfit's implementation of
+        the :class:`emcee.EnsembleSampler` from the `emcee`_ package [1]_. Since
         emcee's :class:`~emcee.EnsembleSampler` is only optimized for uni-modal
-        probability density functions this method should only be used to explore
-        the parameter space of a single-peak fit.
+        probability density functions this method should ideally only be used to
+        explore the parameter space of a single-peak fit.
 
         A complication with MCMC methods is that there is usually no rigorous
         way to prove that the sampling chain has converged to the true PDF.
@@ -2132,11 +2132,18 @@ class spectrum:
         varied_par_vals = [p.value for p in varied_pars.values()]
         varied_par_errs = [p.stderr for p in varied_pars.values()]
 
-
-        # Initialize the walkers with normal dist. around best-fit values
+        # Initialize walkers with truncated normal PDFs around best-fit values
         np.random.seed(MCMC_seed) # make MCMC chains reproducible
-        r0 = np.array(varied_par_errs) # sigma of initial Gaussian PDFs
-        p0 = [varied_par_vals+r0*np.random.randn(ndim) for i in range(nwalkers)]
+        sigmas = np.array(varied_par_errs) # sigma of initial Gaussian PDFs
+        from scipy.stats import truncnorm
+        lb = [p.min for p in varied_pars.values()]
+        ub = [p.max for p in varied_pars.values()]
+        p_rvs = []
+        for p_min, p_max, mu, sigma in zip(lb, ub, varied_par_vals, sigmas):
+            a, b = (p_min - mu) / sigma, (p_max - mu) / sigma
+            p_rvs_i = truncnorm.rvs(a, b, mu, sigma, size=nwalkers)
+            p_rvs.append(p_rvs_i)
+        p0 = np.transpose(p_rvs)
 
         # Use multiprocess to enable pickling of nested functions
         from multiprocess import cpu_count, Pool
@@ -2538,7 +2545,7 @@ class spectrum:
             raise Exception("Fit failed. No peaks in specified mass range.")
         x = df_fit.index.values.flatten()
         y = df_fit.values.flatten()
-        y_err = np.maximum(1,np.sqrt(y)) # assume Poisson (counting) statistics
+        y_err = np.maximum(1, np.sqrt(y)) # assume Poisson (counting) statistics
         # Weights for residuals: residual = (fit_model - y) * weights
         weights = 1./y_err
 
