@@ -52,29 +52,35 @@ def _erfcx_jit(arg):
 ##### Define general Hyper-EMG functions
 
 @njit
-def h_m_i(x,mu,sigma,eta_m,tau_m):
+def h_m_i(x, mu, sigma, eta_m, tau_m):
     """Internal helper function to calculate single negative EMG tail for
     h_m_emg."""
-    erfcarg = np.atleast_1d(sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma))
-    mask = (erfcarg < 0)
-    ret = np.empty_like(x)
-    # Use Gauss*erfcx formulation to avoid overflow of exp and underflow of
-    # erfc at larger pos. arguments:
-    Gauss_erfcx = exp( -0.5*((x[~mask]-mu)/sigma)**2 )*_erfcx_jit(erfcarg[~mask])
-    ret[~mask] = eta_m/(2*tau_m)*Gauss_erfcx
-    # Use exp*erfc formulation to avoid overflow of erfcx at larger neg.
-    # arguments:
-    exp_erfc = exp(0.5*(sigma/tau_m)**2 + (x[mask]-mu)/tau_m)*_erfc_jit(erfcarg[mask])
-    ret[mask] = 0.5*eta_m/tau_m*exp_erfc
+    if tau_m < 0:
+        ret = np.full_like(x, np.nan)
+    else:
+        erfcarg = np.atleast_1d(sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma))
+        mask = (erfcarg < 0)
+        ret = np.empty_like(x)
+        # Use Gauss*erfcx formulation to avoid overflow of exp and underflow of
+        # erfc at larger pos. arguments:
+        Gauss_erfcx = exp( -0.5*((x[~mask]-mu)/sigma)**2 )*_erfcx_jit(erfcarg[~mask])
+        ret[~mask] = eta_m/(2*tau_m)*Gauss_erfcx
+        # Use exp*erfc formulation to avoid overflow of erfcx at larger neg.
+        # arguments:
+        exp_erfc = exp(0.5*(sigma/tau_m)**2 + (x[mask]-mu)/tau_m)*_erfc_jit(erfcarg[mask])
+        ret[mask] = 0.5*eta_m/tau_m*exp_erfc
 
     return ret
 
 
-def h_m_i_prec(x,mu,sigma,eta_m,tau_m):
+def h_m_i_prec(x, mu, sigma, eta_m, tau_m):
     """Arbitrary precision version of internal helper function for h_m_emg."""
-    expval = exp_mp( 0.5*(sigma/tau_m)**2 + (x-mu)/tau_m )
-    erfcval = erfc_mp( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
-    ret = 0.5*eta_m/tau_m*expval*erfcval
+    if tau_m < 0:
+        ret = np.full_like(x, np.nan)
+    else:
+        expval = exp_mp( 0.5*(sigma/tau_m)**2 + (x-mu)/tau_m )
+        erfcval = erfc_mp( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
+        ret = 0.5*eta_m/tau_m*expval*erfcval
     return ret.astype(float)
 
 
@@ -87,9 +93,9 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
 
     Parameters
     ----------
-    x  : float >= 0
+    x  : :class:`numpy.ndarray` of floats
         Abscissa data (mass data).
-    mu : float >= 0
+    mu : float
         Mean value of underlying Gaussian distribution.
     sigma : float >= 0
         Standard deviation of underlying Gaussian distribution.
@@ -163,29 +169,35 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
 
 
 @njit
-def h_p_i(x,mu,sigma,eta_p,tau_p):
+def h_p_i(x, mu, sigma, eta_p, tau_p):
     """Internal helper function to calculate single positive EMG tail for
     h_p_emg."""
-    erfcarg = np.atleast_1d(sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma))
-    mask = (erfcarg < 0)
-    ret = np.empty_like(x)
-    # Use Gauss*erfcx formulation to avoid overflow of exp and underflow of
-    # erfc at larger pos. arguments:
-    Gauss_erfcx = exp( -0.5*((x[~mask]-mu)/sigma)**2 )*_erfcx_jit(erfcarg[~mask])
-    ret[~mask] = eta_p/(2*tau_p)*Gauss_erfcx
-    # Use exp*erfc formulation to avoid overflow of erfcx at larger neg.
-    # arguments:
-    exp_erfc = exp(0.5*(sigma/tau_p)**2 - (x[mask]-mu)/tau_p)*_erfc_jit(erfcarg[mask])
-    ret[mask] = 0.5*eta_p/tau_p*exp_erfc
+    if tau_p < 0:
+        ret = np.full_like(x, np.nan)
+    else:
+        erfcarg = np.atleast_1d(sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma))
+        mask = (erfcarg < 0)
+        ret = np.empty_like(x)
+        # Use Gauss*erfcx formulation to avoid overflow of exp and underflow of
+        # erfc at larger pos. arguments:
+        Gauss_erfcx = exp( -0.5*((x[~mask]-mu)/sigma)**2 )*_erfcx_jit(erfcarg[~mask])
+        ret[~mask] = eta_p/(2*tau_p)*Gauss_erfcx
+        # Use exp*erfc formulation to avoid overflow of erfcx at larger neg.
+        # arguments:
+        exp_erfc = exp(0.5*(sigma/tau_p)**2 - (x[mask]-mu)/tau_p)*_erfc_jit(erfcarg[mask])
+        ret[mask] = 0.5*eta_p/tau_p*exp_erfc
 
     return ret
 
 
-def h_p_i_prec(x,mu,sigma,eta_p,tau_p):
+def h_p_i_prec(x, mu, sigma, eta_p, tau_p):
     """Arbitrary precision version of internal helper function for h_p_emg."""
-    expval = exp_mp( 0.5*(sigma/tau_p)**2 - (x-mu)/tau_p )
-    erfcval = erfc_mp( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
-    ret = 0.5*eta_p/tau_p*expval*erfcval
+    if tau_p < 0:
+        ret = np.full_like(x, np.nan)
+    else:
+        expval = exp_mp( 0.5*(sigma/tau_p)**2 - (x-mu)/tau_p )
+        erfcval = erfc_mp( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
+        ret = 0.5*eta_p/tau_p*expval*erfcval
     return ret.astype(float)
 
 
@@ -198,9 +210,9 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
 
     Parameters
     ----------
-    x  : float >= 0
+    x  : :class:`numpy.ndarray` of floats
         Abscissa data (mass data).
-    mu : float >= 0
+    mu : float
         Mean value of underlying Gaussian distribution.
     sigma : float >= 0
         Standard deviation of underlying Gaussian distribution.
@@ -283,9 +295,9 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
 
     Parameters
     ----------
-    x  : float >= 0
+    x  : :class:`numpy.ndarray` of floats
         Abscissa data (mass data).
-    mu : float >= 0
+    mu : float
         Mean value of underlying Gaussian distribution.
     sigma : float >= 0
         Standard deviation of underlying Gaussian distribution.
@@ -341,7 +353,9 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
        245-254.
 
     """
-    if theta == 1:
+    if theta < 0 or theta > 1:
+        h = np.full_like(x, np.nan)
+    elif theta == 1:
         h = h_m_emg(x, mu, sigma, li_eta_m, li_tau_m)
     elif theta == 0:
         h = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
@@ -361,7 +375,7 @@ def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
 
     Parameters
     ----------
-    mu : float >= 0
+    mu : float
         Mean value of underlying Gaussian distribution.
     theta : float, 0 <= theta <= 1
         Left-right-weight factor (negative-skewed EMG weight: theta;
