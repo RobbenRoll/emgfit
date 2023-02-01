@@ -1576,7 +1576,10 @@ class spectrum:
             x_max = max(fit_result.x)
         # Select peaks in mass range of interest:
         peaks_to_plot = [p for p in self.peaks if (x_min < p.x_pos < x_max)]
-        idx_first_peak = self.peaks.index(peaks_to_plot[0])
+        try:
+            idx_first_peak = self.peaks.index(peaks_to_plot[0])
+        except IndexError:
+            pass
         # If still not defined, get fit result from 1st peak in mass range
         if fit_result is None:
            fit_result = self.fit_results[idx_first_peak]
