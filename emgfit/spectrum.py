@@ -2871,61 +2871,6 @@ class spectrum:
         return sigma_EMG
 
 
-    @staticmethod
-    def bootstrap_spectrum(df,N_events=None,x_cen=None,x_range=0.02):
-        """Create simulated spectrum via bootstrap resampling from dataset `df`.
-
-        Parameters
-        ----------
-        df : class:`pandas.DataFrame`
-            Original histogrammed spectrum data to re-sample from.
-        N_events : int, optional
-            Number of events to create via bootstrap re-sampling, defaults to
-            number of events in original DataFrame `df`.
-        x_cen : float [u/z], optional
-            Center of mass range to re-sample from. If ``None``, re-sample from
-            full mass range of input data `df`.
-        x_range : float [u/z], optional
-            Width of mass range to re-sample from. Defaults to 0.02 u. `x_range`
-            is only relevant if a `x_cen` argument is specified.
-
-        Returns
-        -------
-        :class:`pandas.DataFrame`
-            Histogram with simulated spectrum data from non-parametric
-            bootstrap.
-
-        """
-        if x_cen:
-            x_min = x_cen - 0.5*x_range
-            x_max = x_cen + 0.5*x_range
-            df = df[x_min:x_max]
-        mass_bins = df.index.values
-        counts = df['Counts'].values.astype(int)
-
-        # Convert histogrammed spectrum (equivalent to MAc HIST export mode) to
-        # list of events (equivalent to MAc LIST export mode)
-        orig_events =  np.repeat(mass_bins, counts, axis=0)
-
-        # Create new DataFrame of events by bootstrapping from `orig_events`
-        if N_events == None:
-            N_events = len(orig_events)
-        random_indeces = np.random.randint(0, len(orig_events), N_events)
-        events = orig_events[random_indeces]
-        df_events = pd.DataFrame(events)
-
-        # Convert list of events back to a DataFrame with histogram data
-        bin_centers = df.index.values
-        bin_width = df.index.values[1] - df.index.values[0]
-        bin_edges = np.append(bin_centers-0.5*bin_width,
-                              bin_centers[-1]+0.5*bin_width)
-        hist = np.histogram(df_events, bins=bin_edges)
-        df_new = pd.DataFrame(data=hist[0], index=bin_centers, dtype=float,
-                              columns=["Counts"])
-        df_new.index.name = "m/z [u]"
-        return df_new
-
-
     def determine_A_stat_emg(self, peak_index=None, species="?", x_pos=None,
                              x_range=None, N_spectra=1000, fit_model=None,
                              cost_func='MLE', method='least_squares',
@@ -3077,6 +3022,7 @@ class spectrum:
         np.random.seed(seed=34) # to make bootstrapped spectra reproducible
         std_devs_of_mus = np.array([]) # standard deviation of sample means mu
         mean_areas = np.array([]) # array for numbers of detected counts
+        import emgfit.sample as sample
         from tqdm.auto import tqdm # add progress bar with tqdm
         t = tqdm(total=len(li_N_counts)*N_spectra)
         for N_counts in li_N_counts:
@@ -3084,14 +3030,14 @@ class spectrum:
             areas = np.array([])
 
             for i in range(N_spectra):
-                # create boostrapped spectrum data
-                df_boot = spectrum.bootstrap_spectrum(self.data,
-                                                      N_events=N_counts,
-                                                      x_cen=x_cen,
-                                                      x_range=x_range)
+                # create resampled spectrum data
+                df_boot = sample.resample_events(self.data,
+                                                 N_events=N_counts,
+                                                 x_cen=x_cen,
+                                                 x_range=x_range)
                 # create boostrapped spectrum object
-                spec_boot = spectrum(None,df=df_boot,show_plot=False)
-                spec_boot.add_peak(x_cen,verbose=False)
+                spec_boot = spectrum(None, df=df_boot, show_plot=False)
+                spec_boot.add_peak(x_cen, verbose=False)
                 # fit boostrapped spectrum with model and (fixed) shape
                 # parameters from peak-shape calibration
                 try:

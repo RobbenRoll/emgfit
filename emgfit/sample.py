@@ -183,7 +183,8 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
 
 
 ################################################################################
-##### Define functions for creating simulated spectra
+##### Define functions for simulating events or spectra through random sampling
+##### from a reference distribution
 
 def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
                     out='hist', scl_facs=None, N_bins=None, bin_cens=None):
@@ -223,7 +224,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
 
         - ``'hist'`` for binned mass spectrum (default). The centres of the mass
           bins must be specified with the `bin_cens` argument.
-        - ``'list'`` for unbinned list of single ion and background events.
+        - ``'array'`` for unbinned array of single ion and background events.
 
     N_bins : int, optional
         Number of uniform bins to use in ``'hist'`` output mode. The **outer**
@@ -238,9 +239,9 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
 
     Returns
     -------
-    :class:`numpy.ndarray` or :class:`pandas.Dataframe`
+    :class:`pandas.Dataframe` or :class:`numpy.ndarray`
        If out='hist' a dataframe with a histogram of the format
-       [bin centre, counts in bin] is returned. If out='list' an unbinned
+       [bin centre, counts in bin] is returned. If out='array' an unbinned
        array with the x-values of single ion or background events is returned.
 
     Notes
@@ -380,7 +381,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
         warnings.warn(msg, UserWarning)
 
     # Return unbinned array of events or dataframe with histogram
-    if out == 'list':
+    if out == 'array':
         np.random.shuffle(events) # randomize event ordering
         return events
     elif out == 'hist':
@@ -531,3 +532,79 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         new_spec = spectrum(df=df, show_plot=False)
 
     return new_spec
+
+
+################################################################################
+##### Define functions for non-parametric resampling
+def resample_events(df, N_events=None, x_cen=None, x_range=0.02, out='hist'):
+    """Create simulated spectrum via non-parametric resampling from `df`.
+
+    The simulated data is obtained through resampling with replacement and
+    follows the.
+
+    Parameters
+    ----------
+    df : class:`pandas.DataFrame`
+        Original histogrammed spectrum data to re-sample from.
+    N_events : int, optional
+        Number of events to create via non-parametric re-sampling, defaults to
+        number of events in original DataFrame `df`.
+    x_cen : float [u/z], optional
+        Center of mass range to re-sample from. If ``None``, re-sample from
+        full mass range of input data `df`.
+    x_range : float [u/z], optional
+        Width of mass range to re-sample from. Defaults to 0.02 u. `x_range`
+        is only relevant if a `x_cen` argument is specified.
+    out : str, optional
+        Output format of sampled data. Options:
+
+        - ``'hist'`` for binned mass spectrum (default). The centres of the mass
+          bins must be specified with the `bin_cens` argument.
+        - ``'array'`` for unbinned array of single ion and background events.
+
+    Returns
+    -------
+    :class:`pandas.Dataframe` or :class:`numpy.ndarray`
+       If out='hist' a dataframe with a histogram of the format
+       [bin centre, counts in bin] is returned. If out='array' an unbinned
+       array with the x-values of single ion or background events is returned.
+
+    """
+    if x_cen:
+        x_min = x_cen - 0.5*x_range
+        x_max = x_cen + 0.5*x_range
+        df = df[x_min:x_max]
+    mass_bins = df.index.values
+    counts = df['Counts'].values.astype(int)
+
+    # Convert histogrammed spectrum (equivalent to MAc HIST export mode) to
+    # list of events (equivalent to MAc LIST export mode)
+    orig_events =  np.repeat(mass_bins, counts, axis=0)
+
+    # Create new DataFrame of events by bootstrapping from `orig_events`
+    if N_events == None:
+        N_events = len(orig_events)
+    random_indeces = np.random.randint(0, len(orig_events), N_events)
+    events = pd.DataFrame(orig_events[random_indeces])
+
+    # Convert list of events back to a DataFrame with histogram data
+    bin_cens = df.index.values
+    bin_width = df.index.values[1] - df.index.values[0]
+    bin_edges = np.append(bin_centers-0.5*bin_width,
+                          bin_centers[-1]+0.5*bin_width)
+
+    hist = np.histogram(events, bins=bin_edges)
+    df_new = pd.DataFrame(data=hist[0], index=bin_centers, dtype=float,
+                          columns=["Counts"])
+    df_new.index.name = "m/z [u]"
+    return df_new
+
+    # Return unbinned array of events or dataframe with histogram
+    if out == 'array':
+        np.random.shuffle(events) # randomize event ordering
+        return events
+    elif out == 'hist':
+        y = np.histogram(events, bins=bin_edges)[0]
+        df_new = pd.DataFrame(data=y, index=bin_cens, columns=['Counts'])
+        df_new.index.rename('m/z [u]', inplace=True)
+        return df_new
