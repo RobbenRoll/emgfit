@@ -370,7 +370,7 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     return h
 
 
-def _check_par_values(theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
+def _check_par_values(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     """Check if parameters are in bounds, throw error otherwise """
     if sigma <= 0:
         raise Exception("sigma must be positive!")
@@ -443,7 +443,7 @@ def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
        245-254.
 
     """
-    _check_par_values(theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p)
+    _check_par_values(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p)
 
     t_order_m = len(li_eta_m)
     sum_M_mh = 0
@@ -507,7 +507,7 @@ def sigma_emg(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
        245-254.
 
     """
-    _check_par_values(theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p)
+    _check_par_values(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p)
 
     t_order_m = len(li_eta_m)
 
