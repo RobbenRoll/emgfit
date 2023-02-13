@@ -5,6 +5,7 @@
 
 import numpy as np
 import pandas as pd
+import warnings
 from scipy.stats import exponnorm, uniform, norm
 
 ################################################################################
@@ -269,7 +270,6 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
     if type(N_events) != int:
         raise Exception("`N_events` must be of type int.")
     if (mus < x_min).any() or (mus > x_max).any():
-        import warnings
         msg = str("At least one peak centroid in `mus` is outside the sampling range.")
         warnings.warn(msg, UserWarning)
     if scl_facs is None:
@@ -374,7 +374,6 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
     events = events[np.logical_and(events >= x_min, events <= x_max)]
     N_discarded = N_events - events.size
     if N_discarded > 0:
-        import warnings
         msg = str("{:.0f} simulated events fell outside the specified sampling "
                   "range and were discarded. Peak areas and area ratios might "
                   "deviate from expectation.").format(N_discarded)
@@ -435,7 +434,7 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         If `False` (default), this function returns a fresh
         :class:`~emgfit.spectrum.spectrum` object created from the simulated
         mass data. If `True`, this function returns an exact copy of `spec` with
-        only the :attr`data` attribute replaced by the new simulated mass data.
+        only the :attr:`data` attribute replaced by the new simulated mass data.
 
     Returns
     -------
@@ -479,7 +478,6 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         indeces = [i for i in range(len(peaks)) if x_min <= peaks[i].x_pos <= x_max]
     if mus is None:
         if len(indeces) == 0:
-            import warnings
             msg = str("No peaks in sampling range.")
             warnings.warn(msg, UserWarning)
         mus = []
@@ -534,13 +532,183 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
     return new_spec
 
 
+def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
+                          seed=None, n_cores=-1):
+    """Fit spectra simulated via sampling from a reference distribution
+
+    This function performs fits of many simulated spectra. The simulated spectra
+    are created by sampling events from the best-fit PDF asociated with
+    `fit_result` (as e.g. needed for a parametric bootstrap). The `alt_model`
+    can be used to perform the fits with a different distribution than the
+    reference PDF used for the event sampling.
+
+    Parameters
+    ----------
+    spec : :class:`emgfit.spectrum.spectrum`
+        Spectrum object to perform bootstrap on.
+    fit_result : :class:`lmfit.model.ModelResult`
+        Fit result object holding the best-fit distribution to sample from.
+    alt_result : :class:`lmfit.model.ModelResult`, optional
+        Fit result object holding a prepared fit model to be used for the
+        fitting. Defaults to the fit model stored in `fit_result`.
+    N_spectra : int, optional
+        Number of simulated spectra to fit. Defaults to 1000, which
+        typically yields statistical uncertainty estimates with a relative
+        precision of a few percent.
+    seed : int, optional
+        Random seed to use for reproducible sampling.
+    n_cores : int, optional
+        Number of CPU cores to use for parallelized fitting of simulated
+        spectra. When set to `-1` (default) all available cores are used.
+
+    Returns
+    -------
+    :class:`numpy.ndarray` of :class:`lmfit.minimizer.MinimizerResult`
+        MinimizerResults obtained in the fits of the simulated spectra.
+
+    The event sampling is performed with the
+    :func:`emgfit.sample.simulate_events` function.
+
+    See also
+    --------
+    :meth:`~spectrum.get_errors_from_resampling`
+    :func:`emgfit.sample.simulate_events`
+
+    """
+    bkg_c = fit_result.best_values['bkg_c']
+    cost_func = fit_result.cost_func
+    method = fit_result.method
+    shape_pars = spec.shape_cal_pars
+    x_cen = fit_result.x_fit_cen
+    x_range = fit_result.x_fit_range
+    x = fit_result.x
+    y = fit_result.y
+    x_min = x_cen - 0.5*x_range
+    x_max = x_cen + 0.5*x_range
+
+    if alt_result is None:
+        fit_model = fit_result.fit_model
+        model = fit_result.model
+        init_pars = fit_result.init_params
+    else:
+        fit_model = alt_result.fit_model
+        model = alt_result.model
+        init_pars = alt_result.init_params
+
+    # Collect aLL peaks, peak centroids and amplitudes of fit_result
+    fitted_peaks = [idx for idx, p in enumerate(spec.peaks)
+                    if x_min < p.x_pos < x_max] # indeces of all fitted peaks
+    mus = []
+    amps = []
+    scl_facs = []
+    for idx in fitted_peaks:
+        pref = 'p{0}_'.format(idx)
+        mus.append(fit_result.best_values[pref+'mu'])
+        amps.append(fit_result.best_values[pref+'amp'])
+        try:
+            scl_facs.append(fit_result.params[pref+'scl_fac'])
+        except KeyError:
+            scl_facs.append(1)
+
+    import emgfit.fit_models as fit_models
+    from numpy import maximum, sqrt, array, log
+    from joblib import Parallel, delayed
+    from lmfit.model import save_model, load_model
+    from lmfit.minimizer import minimize
+    import lmfit
+    import time
+    datetime = time.localtime() # get current date and time
+    datetime_str = time.strftime("%Y-%m-%d_%H-%M-%S", datetime)
+    if spec.input_filename is not None:
+        data_fname = spec.input_filename.rsplit('.', 1)[0] # del. extension
+    else:
+        data_fname = ''
+    modelfname = data_fname+datetime_str+"_resampl_model.sav"
+    save_model(model, modelfname)
+    N_events = int(np.sum(y))
+    tiny = np.finfo(float).tiny # get smallest pos. float in numpy
+    funcdefs = {'constant': lmfit.models.ConstantModel,
+                str(fit_model): getattr(fit_models,fit_model)}
+    def refit(seed):
+        # create simulated spectrum data by sampling from fit-result PDF
+        np.random.seed(seed)
+        df = simulate_events(shape_pars, mus, amps, bkg_c,
+                             N_events, x_min, x_max,
+                             out='hist', scl_facs=scl_facs, bin_cens=x)
+        new_x = df.index.values
+        new_y = df['Counts'].values
+        new_y_err = np.maximum(1, np.sqrt(new_y)) # Poisson (counting) stats
+        # Weights for residuals: residual = (fit_model - y) * weights
+        new_weights = 1./new_y_err
+
+        model = load_model(modelfname, funcdefs=funcdefs)
+        if cost_func  == 'chi-square':
+            ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x))
+            eps = 1e-10 # small number to bound Pearson weights
+            def resid_Pearson_chi_square(pars,y_data,weights,x=x):
+                y_m = model.eval(pars,x=x)
+                # Calculate weights for current iteration, add tiny number
+                # `eps` in denominator for numerical stability
+                weights = 1./sqrt(y_m + eps)
+                return (y_m - y_data)*weights
+            # Overwrite lmfit's standard least square residuals
+            model._residual = resid_Pearson_chi_square
+        elif cost_func  == 'MLE':
+            # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
+            # summands:
+            def sqrt_NLLR(pars,y_data,weights,x=x):
+                y_m = model.eval(pars,x=x) # model
+                # Add tiniest pos. float representable by numpy to arguments
+                # of np.log to smoothly handle divergences for log(arg -> 0)
+                NLLR = 2*(y_m-y_data) + 2*y_data*(log(y_data+tiny)-log(y_m+tiny))
+                ret = sqrt(NLLR)
+                return ret
+            # Overwrite lmfit's standard least square residuals
+            model._residual = sqrt_NLLR
+        else:
+            raise Exception("'cost_func' of given `fit_result` not supported.")
+
+        # re-perform fit on simulated spectrum - for performance use only the
+        # underlying Minimizer object instead of full lmfit model interface
+        try:
+            min_res = minimize(model._residual, init_pars, method=method,
+                               args=(new_y, new_weights), kws={'x': x},
+                               scale_covar=False, nan_policy='propagate',
+                               reduce_fcn=None, calc_covar=False)
+            return min_res
+
+        except ValueError:
+            with warnings.catch_warnings():
+                warnings.simplefilter('always')
+                msg = str("Fit failed with ValueError (likely NaNs in "
+                           "y-model array) and will be excluded.")
+                warnings.warn(msg, UserWarning)
+            return None
+
+    # For reproducible sampling with joblib parallel, generate `N_spectra`
+    # random seeds for refit() - only works with the default Loky backend
+    np.random.seed(seed=seed) # for reproducible sampling
+    joblib_seeds = np.random.randint(2**31, size=N_spectra)
+    from tqdm.auto import tqdm # add progress bar with tqdm
+    try:
+        min_results = np.array(Parallel(n_jobs=n_cores)
+                               (delayed(refit)(s) for s in tqdm(joblib_seeds)))
+    finally:
+        # Force workers to shut down and clean up temp SAV file
+        from joblib.externals.loky import get_reusable_executor
+        import os
+        get_reusable_executor().shutdown(wait=True)
+        os.remove(modelfname)
+
+    return min_results
+
 ################################################################################
 ##### Define functions for non-parametric resampling
 def resample_events(df, N_events=None, x_cen=None, x_range=0.02, out='hist'):
     """Create simulated spectrum via non-parametric resampling from `df`.
 
-    The simulated data is obtained through resampling with replacement and
-    follows the.
+    The simulated data is obtained through resampling from the specified dataset
+    with replacement.
 
     Parameters
     ----------
