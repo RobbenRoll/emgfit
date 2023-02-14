@@ -120,98 +120,6 @@ def _likelihood_ratio_test(spec, null_result_index, alt_x_pos, x_fit_cen=None,
     return LLR, null_result, alt_result
 
 
-def run_serial_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
-                                        min_significance=3, N_spectra=10000):
-    """
-    spec : :class:`emgfit.spectrum.spectrum`
-        Sprectrum object to perform MC
-    null_result_index : int
-        Index (of one) of the peak(s) present in the null-model fit.
-
-    """
-    from scipy.stats import norm
-    alpha = norm.sf(min_significance, loc=0, scale=1) # sf := 1 - cdf
-
-    ref_null_result = spec.fit_results[null_result_index]
-    if ref_null_result.cost_func != "MLE":
-        raise Exception("The likelihood ratio test is only compatible with "
-                        "the `MLE` cost function.")
-    x_fit_cen = ref_null_result.x_fit_cen
-    x_fit_range = ref_null_result.x_fit_range
-
-    print("\n##### Performing Monte Carlo likelihood ratio test #####")
-    print("N_spectra:",N_spectra)
-    print(f"Test at {min_significance:.1f} sigma significance level, i.e. alpha = {alpha:.2e}")
-    print()
-
-    # Perform LRT on the observed data
-    print("### Determine test statistic for observed data ###")
-    LLR, null_res, alt_res = _likelihood_ratio_test(spec, null_result_index,
-                                                    alt_x_pos,
-                                                    verbose=True,
-                                                    show_results=False,
-                                                    show_plots=True,
-                                                    vary_alt_mu=True)
-
-    print("\n### Determine test statistic for simulated Monte Carlo spectra ###")
-    # Run LRTs on spectra sampled from best null-model fit of the observed data
-    MC_LLRs = []
-    for i in tqdm(range(N_spectra)):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning)
-            sim_spec = simulate_spectrum(spec, copy_spec=True)
-
-        LLR_i, _, _ = _likelihood_ratio_test(sim_spec, null_result_index,
-                                             alt_x_pos,
-                                             verbose=False,
-                                             show_results=False,
-                                             show_plots=False,
-                                             vary_alt_mu=True)
-        MC_LLRs.append(LLR_i)
-
-    #plt.figure(figsize=(8,12))
-    plt.hist(MC_LLRs, density=False, bins=20)
-    plt.gca().axvline(LLR, color="black")
-    plt.xlabel("Likelihood ratio test statistic")
-    plt.ylabel("Occurences")
-    plt.yscale("log")
-    plt.show()
-
-    # Determine p-value from the fraction of LLR samples above the obs. LLR
-    N_above = np.sum(np.where(np.array(MC_LLRs) > LLR, 1, 0))
-    N_tot = np.sum(np.isfinite(np.array(MC_LLRs)))
-    p_val = N_above/N_tot
-    if N_above > 0:
-        p_val_err = np.sqrt(p_val/N_tot)
-    elif N_above == 0:
-        p_val_err = np.sqrt(1/N_tot)
-    print("Monte Carlo p-value: p=", p_val,"+-", p_val_err)
-    if p_val_err < alpha:
-        success= True
-        # Compare to defined alpha
-        if p_val < alpha:
-            print(f"p < alpha = {alpha:.2e} => Reject null model in favor of "
-                   "alternative model with additional peak!")
-            reject_null_model = True
-        else:
-            print(f"p > alpha = {alpha:.2e} => Reject alternative model in favor "
-                   "of null model with fewer peaks!")
-            reject_null_model = False
-    else:
-        warnings.warn("MC error of the p-value >= alpha. "
-                      "Re-run with larger `N_spectra`!")
-        success = False
-        reject_null_model = None
-
-    LRT_results = {"success" : success,
-                   "LLR" : LLR,
-                   "MC LLRs" : MC_LLRs,
-                   "p-value" : p_val,
-                   "p-value error" : p_val_err,
-                   "reject_null_model" : reject_null_model}
-    return LRT_results
-
-
 def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
                                  min_significance=3, N_spectra=10000,
                                  seed=None, n_cores=-1):
@@ -227,7 +135,7 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
     null_result_index : int
         Index (of one) of the peak(s) present in the null-model fit.
     alt_x_pos : float, optional
-        Whether to
+        Initial position to use for alternative peak
 
     """
     from scipy.stats import norm
