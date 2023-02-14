@@ -758,11 +758,11 @@ def resample_events(df, N_events=None, x_cen=None, x_range=0.02, out='hist'):
     # Convert list of events back to a DataFrame with histogram data
     bin_cens = df.index.values
     bin_width = df.index.values[1] - df.index.values[0]
-    bin_edges = np.append(bin_centers-0.5*bin_width,
-                          bin_centers[-1]+0.5*bin_width)
+    bin_edges = np.append(bin_cens-0.5*bin_width,
+                          bin_cens[-1]+0.5*bin_width)
 
     hist = np.histogram(events, bins=bin_edges)
-    df_new = pd.DataFrame(data=hist[0], index=bin_centers, dtype=float,
+    df_new = pd.DataFrame(data=hist[0], index=bin_cens, dtype=float,
                           columns=["Counts"])
     df_new.index.name = "m/z [u]"
     return df_new
