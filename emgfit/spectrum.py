@@ -2470,8 +2470,8 @@ class spectrum:
         -----
         In fits with the ``chi-square`` cost function the variance weights
         :math:`w_i` for the residuals are estimated using the latest model
-        predictions: :math:`w_i = 1/(\\sigma_i^2 + \epsilon) = 1/(f(x_i)+ \epsilon)`,
-        where :math:`\epsilon = 1E-10` is a small number added to increase
+        predictions: :math:`w_i = 1/(\\sigma_i^2 + \\epsilon) = 1/(f(x_i)+ \\epsilon)`,
+        where :math:`\\epsilon = 1E-10` is a small number added to increase
         numerical robustness when :math:`f(x_i)` approaches zero. On each
         iteration the weights are updated with the new values of the model
         function.
@@ -2529,8 +2529,8 @@ class spectrum:
 
         References
         ----------
-        .. [#Kaastra] Kaastra, J. S. "On the use of C-stat in testing models for X-ray
-           spectra" Astronomy & Astrophysics 605, A51 (2017), DOI:
+        .. [#Kaastra] Kaastra, J. S. "On the use of C-stat in testing models for
+           X-ray spectra" Astronomy & Astrophysics 605, A51 (2017), DOI:
            https://doi.org/10.1051/0004-6361/201629319
         .. [#Ross] Ross, G. J. S. "Least squares optimisation of general
            log-likelihood functions and estimation of separable linear
@@ -3714,7 +3714,7 @@ class spectrum:
                 fig, axs = plt.subplots(1,2,
                                         figsize=(figwidth*1.5, figwidth*6/18))
                 ax0 = axs[0]
-                ax0.set_title(r"Re-fit with ("+str(par)+" + 1$\sigma$) = {:.4E}".format(
+                ax0.set_title(r"Re-fit with ("+str(par)+" + 1$\\sigma$) = {:.4E}".format(
                                 self.shape_cal_pars[par]+self.shape_cal_errors[par]))
                 ax0.errorbar(fit_result_p.x, fit_result_p.y, fmt='.',
                              yerr=fit_result_p.y_err, errorevery=10,
@@ -3724,7 +3724,7 @@ class spectrum:
                 ax0.plot(fit_result_p.x, fit_result_p.best_fit, '-', zorder=5,
                          color="black", linewidth=lwidth, label="re-fit")
                 ax1 = axs[1]
-                ax1.set_title(r"Re-fit with ("+str(par)+" - 1$\sigma$) = {:.4E}".format(
+                ax1.set_title(r"Re-fit with ("+str(par)+" - 1$\\sigma$) = {:.4E}".format(
                                 self.shape_cal_pars[par]-self.shape_cal_errors[par]))
                 ax1.errorbar(fit_result_m.x, fit_result_m.y, fmt='.',
                              yerr=fit_result_m.y_err, errorevery=10,

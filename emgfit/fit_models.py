@@ -241,7 +241,7 @@ def get_mu0(x_m, init_pars, fit_model):
     For highly asymmetric hyper-EMG distributions the centroid of the underlying
     Gaussian `mu` can strongly deviate from the mode :math:`x_{m}` (i.e. the
     x-position of the peak maximum). Hence, the initial Gaussian centroid `mu`
-    (:math:`\mu`) is calculated by rearranging the equation for the mode of the
+    (:math:`\\mu`) is calculated by rearranging the equation for the mode of the
     hyper-EMG distribution:
 
     .. math::
