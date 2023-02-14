@@ -18,6 +18,9 @@ Changed
   normal distributions.
 * Updated functions in the :mod:`emg_funcs` module to return NaN if any `tau` is
   negative or if the `theta` parameter falls outside the interval [0,1].
+* Renamed the static :meth:`~emgfit.spectrum.bootstrap_spectrum` method to
+  :func:`~emgfit.sample.resample_events` and moved it to the
+  :mod:`~emgfit.sample` module. 
 
 Fixed
 ^^^^^

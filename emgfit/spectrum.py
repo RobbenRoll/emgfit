@@ -335,7 +335,7 @@ class spectrum:
         List with indeces of peaks whose statistical mass and area uncertainties
         have been determined by fitting synthetic spectra resampled from the
         best-fit model (see :meth:`get_errors_from_resampling`).
-    MCMC_par_samples : list of dict
+    MCMC_par_samples : :class:`pandas.DataFrame`
         Shape parameter samples obtained via Markov chain Monte Carlo (MCMC)
         sampling with :meth:`_get_MCMC_par_samples`.
     MC_recal_facs : list of float
@@ -1555,7 +1555,7 @@ class spectrum:
             Show error bars only for every `error_every`-th data point.
         x_min, x_max : float [u/z], optional
             Start and end of x-range to plot. If ``None``, defaults to the
-            minimum and maximum of the spectrum's mass :attr:`data`.
+            minimum and maximum of the fitted x-range in `fit_result`.
         plot_filename : str, optional, default: None
             If not ``None``, the plots will be saved to two separate files named
             '<`plot_filename`>_log_plot.png' & '<`plot_filename`>_lin_plot.png'.
@@ -2470,8 +2470,8 @@ class spectrum:
         -----
         In fits with the ``chi-square`` cost function the variance weights
         :math:`w_i` for the residuals are estimated using the latest model
-        predictions: :math:`w_i = 1/(\\sigma_i^2 + \epsilon) = 1/(f(x_i)+ \epsilon)`,
-        where :math:`\epsilon = 1E-10` is a small number added to increase
+        predictions: :math:`w_i = 1/(\\sigma_i^2 + \\epsilon) = 1/(f(x_i)+ \\epsilon)`,
+        where :math:`\\epsilon = 1E-10` is a small number added to increase
         numerical robustness when :math:`f(x_i)` approaches zero. On each
         iteration the weights are updated with the new values of the model
         function.
@@ -2529,8 +2529,8 @@ class spectrum:
 
         References
         ----------
-        .. [#Kaastra] Kaastra, J. S. "On the use of C-stat in testing models for X-ray
-           spectra" Astronomy & Astrophysics 605, A51 (2017), DOI:
+        .. [#Kaastra] Kaastra, J. S. "On the use of C-stat in testing models for
+           X-ray spectra" Astronomy & Astrophysics 605, A51 (2017), DOI:
            https://doi.org/10.1051/0004-6361/201629319
         .. [#Ross] Ross, G. J. S. "Least squares optimisation of general
            log-likelihood functions and estimation of separable linear
@@ -2871,61 +2871,6 @@ class spectrum:
         return sigma_EMG
 
 
-    @staticmethod
-    def bootstrap_spectrum(df,N_events=None,x_cen=None,x_range=0.02):
-        """Create simulated spectrum via bootstrap resampling from dataset `df`.
-
-        Parameters
-        ----------
-        df : class:`pandas.DataFrame`
-            Original histogrammed spectrum data to re-sample from.
-        N_events : int, optional
-            Number of events to create via bootstrap re-sampling, defaults to
-            number of events in original DataFrame `df`.
-        x_cen : float [u/z], optional
-            Center of mass range to re-sample from. If ``None``, re-sample from
-            full mass range of input data `df`.
-        x_range : float [u/z], optional
-            Width of mass range to re-sample from. Defaults to 0.02 u. `x_range`
-            is only relevant if a `x_cen` argument is specified.
-
-        Returns
-        -------
-        :class:`pandas.DataFrame`
-            Histogram with simulated spectrum data from non-parametric
-            bootstrap.
-
-        """
-        if x_cen:
-            x_min = x_cen - 0.5*x_range
-            x_max = x_cen + 0.5*x_range
-            df = df[x_min:x_max]
-        mass_bins = df.index.values
-        counts = df['Counts'].values.astype(int)
-
-        # Convert histogrammed spectrum (equivalent to MAc HIST export mode) to
-        # list of events (equivalent to MAc LIST export mode)
-        orig_events =  np.repeat(mass_bins, counts, axis=0)
-
-        # Create new DataFrame of events by bootstrapping from `orig_events`
-        if N_events == None:
-            N_events = len(orig_events)
-        random_indeces = np.random.randint(0, len(orig_events), N_events)
-        events = orig_events[random_indeces]
-        df_events = pd.DataFrame(events)
-
-        # Convert list of events back to a DataFrame with histogram data
-        bin_centers = df.index.values
-        bin_width = df.index.values[1] - df.index.values[0]
-        bin_edges = np.append(bin_centers-0.5*bin_width,
-                              bin_centers[-1]+0.5*bin_width)
-        hist = np.histogram(df_events, bins=bin_edges)
-        df_new = pd.DataFrame(data=hist[0], index=bin_centers, dtype=float,
-                              columns=["Counts"])
-        df_new.index.name = "m/z [u]"
-        return df_new
-
-
     def determine_A_stat_emg(self, peak_index=None, species="?", x_pos=None,
                              x_range=None, N_spectra=1000, fit_model=None,
                              cost_func='MLE', method='least_squares',
@@ -3077,6 +3022,7 @@ class spectrum:
         np.random.seed(seed=34) # to make bootstrapped spectra reproducible
         std_devs_of_mus = np.array([]) # standard deviation of sample means mu
         mean_areas = np.array([]) # array for numbers of detected counts
+        import emgfit.sample as sample
         from tqdm.auto import tqdm # add progress bar with tqdm
         t = tqdm(total=len(li_N_counts)*N_spectra)
         for N_counts in li_N_counts:
@@ -3084,15 +3030,15 @@ class spectrum:
             areas = np.array([])
 
             for i in range(N_spectra):
-                # create boostrapped spectrum data
-                df_boot = spectrum.bootstrap_spectrum(self.data,
-                                                      N_events=N_counts,
-                                                      x_cen=x_cen,
-                                                      x_range=x_range)
-                # create boostrapped spectrum object
-                spec_boot = spectrum(None,df=df_boot,show_plot=False)
-                spec_boot.add_peak(x_cen,verbose=False)
-                # fit boostrapped spectrum with model and (fixed) shape
+                # create resampled spectrum data
+                df_boot = sample.resample_events(self.data,
+                                                 N_events=N_counts,
+                                                 x_cen=x_cen,
+                                                 x_range=x_range)
+                # create bootstrapped spectrum object
+                spec_boot = spectrum(None, df=df_boot, show_plot=False)
+                spec_boot.add_peak(x_cen, verbose=False)
+                # fit bootstrapped spectrum with model and (fixed) shape
                 # parameters from peak-shape calibration
                 try:
                     fit_result = spec_boot.peakfit(fit_model=self.fit_model,
@@ -3768,7 +3714,7 @@ class spectrum:
                 fig, axs = plt.subplots(1,2,
                                         figsize=(figwidth*1.5, figwidth*6/18))
                 ax0 = axs[0]
-                ax0.set_title(r"Re-fit with ("+str(par)+" + 1$\sigma$) = {:.4E}".format(
+                ax0.set_title(r"Re-fit with ("+str(par)+" + 1$\\sigma$) = {:.4E}".format(
                                 self.shape_cal_pars[par]+self.shape_cal_errors[par]))
                 ax0.errorbar(fit_result_p.x, fit_result_p.y, fmt='.',
                              yerr=fit_result_p.y_err, errorevery=10,
@@ -3778,7 +3724,7 @@ class spectrum:
                 ax0.plot(fit_result_p.x, fit_result_p.best_fit, '-', zorder=5,
                          color="black", linewidth=lwidth, label="re-fit")
                 ax1 = axs[1]
-                ax1.set_title(r"Re-fit with ("+str(par)+" - 1$\sigma$) = {:.4E}".format(
+                ax1.set_title(r"Re-fit with ("+str(par)+" - 1$\\sigma$) = {:.4E}".format(
                                 self.shape_cal_pars[par]-self.shape_cal_errors[par]))
                 ax1.errorbar(fit_result_m.x, fit_result_m.y, fmt='.',
                              yerr=fit_result_m.y_err, errorevery=10,
@@ -5211,12 +5157,11 @@ class spectrum:
                 self.fit_results[self.peaks.index(p)] = fit_result
 
 
-    def parametric_bootstrap(self, fit_result, peak_indeces=[], N_spectra=1000,
-                             seed=None, n_cores=-1, show_hists=False):
+    def _parametric_bootstrap(self, fit_result, peak_indeces=[],
+                              N_spectra=1000, seed=None,
+                              n_cores=-1, show_hists=False):
         """Get statistical and area uncertainties via resampling from best-fit
         PDF.
-
-        **This method is primarily for internal usage.**
 
         This method provides bootstrap estimates of the statistical errors and
         peak area errors by evaluating the scatter of peak centroids and areas
@@ -5275,151 +5220,43 @@ class spectrum:
         :func:`emgfit.sample.simulate_events`
 
         """
-        bkg_c = fit_result.best_values['bkg_c']
-        fit_model = fit_result.fit_model
-        cost_func = fit_result.cost_func
-        method = fit_result.method
-        shape_pars = self.shape_cal_pars
-        x_cen = fit_result.x_fit_cen
-        x_range = fit_result.x_fit_range
-        x = fit_result.x
-        y = fit_result.y
-        model = fit_result.model
-        init_pars = fit_result.init_params
-        x_min = x_cen - 0.5*x_range
-        x_max = x_cen + 0.5*x_range
-        # Get indeces of ALL peaks contained in `fit_result`:
+        x_min = fit_result.x_fit_cen - 0.5*fit_result.x_fit_range
+        x_max = fit_result.x_fit_cen + 0.5*fit_result.x_fit_range
         fitted_peaks = [idx for idx, p in enumerate(self.peaks)
-                        if x_min < p.x_pos < x_max]
-
+                        if x_min < p.x_pos < x_max] # indeces of fitted peaks
         if peak_indeces is None:
             peak_indeces = fitted_peaks
         elif not all(ids in fitted_peaks for ids in peak_indeces):
             raise Exception("Not all peaks referenced in `peak_indeces` are "
                             "contained in `fit_result`.")
+        peak_indeces = sorted(peak_indeces)
 
-        # Collect ALL peaks, peak centroids and amplitudes of fit_result
-        mus = []
-        amps = []
-        scl_facs = []
-        for idx in fitted_peaks:
-            pref = 'p{0}_'.format(idx)
-            mus.append(fit_result.best_values[pref+'mu'])
-            amps.append(fit_result.best_values[pref+'amp'])
-            try:
-                scl_facs.append(fit_result.params[pref+'scl_fac'])
-            except KeyError:
-                scl_facs.append(1)
-
-        from emgfit.sample import simulate_events
-        from numpy import maximum, sqrt, array, log
-        from joblib import Parallel, delayed
-        from lmfit.model import save_model, load_model
-        from lmfit.minimizer import minimize
-        import time
-        datetime = time.localtime() # get current date and time
-        datetime_str = time.strftime("%Y-%m-%d_%H-%M-%S", datetime)
-        if self.input_filename is not None:
-            data_fname = self.input_filename.rsplit('.', 1)[0] # del. extension
-        else:
-            data_fname = ''
-        modelfname = data_fname+datetime_str+"_resampl_model.sav"
-        save_model(model, modelfname)
-        N_events = int(np.sum(y))
-        tiny = np.finfo(float).tiny # get smallest pos. float in numpy
-        funcdefs = {'constant': fit.models.ConstantModel,
-                    str(fit_model): getattr(fit_models,fit_model)}
         print("Fitting {0} simulated spectra to ".format(N_spectra)+
               "determine statistical mass and peak area errors.")
-        def refit(seed):
-            # create simulated spectrum data by sampling from fit-result PDF
-            np.random.seed(seed)
-            df =  simulate_events(shape_pars, mus, amps, bkg_c,
-                                  N_events, x_min, x_max,
-                                  out='hist', scl_facs=scl_facs, bin_cens=x)
-            new_x = df.index.values
-            new_y = df['Counts'].values
-            new_y_err = np.maximum(1,np.sqrt(new_y)) # Poisson (counting) stats
-            # Weights for residuals: residual = (fit_model - y) * weights
-            new_weights = 1./new_y_err
+        from emgfit.sample import fit_simulated_spectra
+        min_results = fit_simulated_spectra(self, fit_result,
+                                            N_spectra=N_spectra,
+                                            seed=seed, n_cores=n_cores)
 
-            model = load_model(modelfname,funcdefs=funcdefs)
-            if cost_func  == 'chi-square':
-                ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x))
-                eps = 1e-10 # small number to bound Pearson weights
-                def resid_Pearson_chi_square(pars,y_data,weights,x=x):
-                    y_m = model.eval(pars,x=x)
-                    # Calculate weights for current iteration, add tiny number
-                    # `eps` in denominator for numerical stability
-                    weights = 1./sqrt(y_m + eps)
-                    return (y_m - y_data)*weights
-                # Overwrite lmfit's standard least square residuals
-                model._residual = resid_Pearson_chi_square
-            elif cost_func  == 'MLE':
-                # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
-                # summands:
-                def sqrt_NLLR(pars,y_data,weights,x=x):
-                    y_m = model.eval(pars,x=x) # model
-                    # Add tiniest pos. float representable by numpy to arguments
-                    # of np.log to smoothly handle divergences for log(arg -> 0)
-                    NLLR = 2*(y_m-y_data) + 2*y_data*(log(y_data+tiny)-log(y_m+tiny))
-                    ret = sqrt(NLLR)
-                    return ret
-                # Overwrite lmfit's standard least square residuals
-                model._residual = sqrt_NLLR
-            else:
-                raise Exception("'cost_func' of given `fit_result` not supported.")
+        # Extract centroids and amplitudes of peaks of interest
+        arr_mus = np.full((min_results.size, len(peak_indeces)), np.nan)
+        arr_amps = np.full((min_results.size, len(peak_indeces)), np.nan)
+        for i, min_res in enumerate(min_results):
+                for j, idx in enumerate(peak_indeces):
+                    try:
+                        if min_res.success:
+                            pref = 'p{0}_'.format(idx)
+                            arr_mus[i,j] = min_res.params[pref+'mu']
+                            arr_amps[i,j] = min_res.params[pref+'amp']
+                    except AttributeError:
+                        pass
 
-            # re-perform fit on simulated spectrum - for performance use only the
-            # underlying Minimizer object instead of full lmfit model interface
-            try:
-                min_res = minimize(model._residual, init_pars, method=method,
-                                   args=(new_y,new_weights), kws={'x': x},
-                                   scale_covar=False, nan_policy='propagate',
-                                   reduce_fcn=None,calc_covar=False)
-
-                # Record centroids and amplitudes of peaks of interest
-                new_mus = []
-                new_amps = []
-                for idx in peak_indeces:
-                    pref = 'p{0}_'.format(idx)
-                    mu = min_res.params[pref+'mu']
-                    amp = min_res.params[pref+'amp']
-                    new_mus.append(mu)
-                    new_amps.append(amp)
-
-                return np.array([new_mus, new_amps])
-
-            except ValueError:
-                with warnings.catch_warnings():
-                    warnings.simplefilter('always')
-                    msg = str("Fit failed with ValueError (likely NaNs in "
-                               "y-model array) and will be excluded.")
-                    warnings.warn(msg, UserWarning)
-                N_POI = len(peak_indeces)
-                return np.array([[np.NaN]*N_POI, [np.NaN]*N_POI])
-
-        # For reproducible sampling with joblib parallel, generate `N_spectra`
-        # random seeds for refit() - only works with the default Loky backend
-        np.random.seed(seed=seed) # for reproducible sampling
-        joblib_seeds = np.random.randint(1e9, size=N_spectra)
-        from tqdm.auto import tqdm # add progress bar with tqdm
-        try:
-            results = np.array(Parallel(n_jobs=n_cores)
-                                (delayed(refit)(s) for s in tqdm(joblib_seeds)))
-        finally:
-            # Force workers to shut down and clean up temp SAV file
-            from joblib.externals.loky import get_reusable_executor
-            get_reusable_executor().shutdown(wait=True)
-            os.remove(modelfname)
-
-        # Format results
-        arr_mus, arr_amps = results[:,0], results[:,1]
+        # Format results and calculate bootstrapping errors
         transp_mus = arr_mus.transpose()
         transp_amps = arr_amps.transpose()
-        stat_errs = np.nanstd(transp_mus,axis=1)
-        bin_width = x[1] - x[0] # assume approximately uniform binning
-        area_errs = np.nanstd(transp_amps,axis=1)/bin_width
+        stat_errs = np.nanstd(transp_mus, axis=1)
+        bin_width = fit_result.x[1] - fit_result.x[0] # assumes approx. uniform binning
+        area_errs = np.nanstd(transp_amps, axis=1)/bin_width
 
         if show_hists: # plot histograms of centroids and areas
             boxprops = dict(boxstyle='round', facecolor='grey', alpha=0.5)
@@ -5530,7 +5367,7 @@ class spectrum:
 
         # Perform bootstrap for each fit_result and update peak properties
         for res_i, res in enumerate(results):
-            stat_errs, area_errs = self.parametric_bootstrap(
+            stat_errs, area_errs = self._parametric_bootstrap(
                                                         res,
                                                         peak_indeces=POI[res_i],
                                                         N_spectra=N_spectra,

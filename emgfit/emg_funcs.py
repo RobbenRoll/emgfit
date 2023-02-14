@@ -116,11 +116,11 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
 
     .. math::
 
-        h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
-        = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(u)} \mathrm{erfc}(v),
+        h_\\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \\mathrm{erfcx}(v)
+        = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(u)} \\mathrm{erfc}(v),
 
-    where :math:`u = \\left(\\frac{\\sigma}{\\sqrt{2}\\tau_{-i}}\\right)^2 + \\frac{x-\mu}{\\tau_{-i}}`
-    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
+    where :math:`u = \\left(\\frac{\\sigma}{\\sqrt{2}\\tau_{-i}}\\right)^2 + \\frac{x-\\mu}{\\tau_{-i}}`
+    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\\mu}{\\sqrt{2}\\sigma}`.
     In double float precision, the `exp(u)`_ routine overflows if u > 709.78. The
     complementary error function `erfc(v)`_ underflows to 0.0 if v > 26.54. The
     scaled complementary error function `erfcx(v)`_ overflows if v < -26.62. To
@@ -235,11 +235,11 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
 
     .. math::
 
-        h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
-        = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(u)} \mathrm{erfc}(v),
+        h_\\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \\mathrm{erfcx}(v)
+        = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(u)} \\mathrm{erfc}(v),
 
-    where :math:`u = \\left(\\frac{\\sigma}{\\sqrt{2}\\tau_{+i}}\\right)^2 - \\frac{x-\mu}{\\tau_{+i}}`
-    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
+    where :math:`u = \\left(\\frac{\\sigma}{\\sqrt{2}\\tau_{+i}}\\right)^2 - \\frac{x-\\mu}{\\tau_{+i}}`
+    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\\mu}{\\sqrt{2}\\sigma}`.
     In double precision, the `exp(u)`_ routine overflows if u > 709.78. The
     complementary error function `erfc(v)`_ underflows to 0.0 if v > 26.54. The
     scaled complementary error function `erfcx(v)`_ overflows if v < -26.62. To
@@ -370,7 +370,7 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     return h
 
 
-def _check_par_values(theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
+def _check_par_values(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     """Check if parameters are in bounds, throw error otherwise """
     if sigma <= 0:
         raise Exception("sigma must be positive!")
@@ -380,16 +380,16 @@ def _check_par_values(theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
 
     if any(np.array(li_eta_m) < 0) or any(np.array(li_eta_m) > 1):
         raise Exception("All eta_m's must lie in the interval [0,1].")
-    elif len(li_eta_m) > 0 and abs(sum(li_eta_m) - 1) > norm_precision:
+    elif len(np.array(li_eta_m)) > 0 and abs(sum(li_eta_m) - 1) > norm_precision:
         raise Exception("eta_m's don't add up to 1.")
-    if any(li_tau_m <= 0):
+    if any(np.array(li_tau_m) <= 0):
         raise Exception("All tau_m must be positive!")
 
     if any(np.array(li_eta_p) < 0) or any(np.array(li_eta_p) > 1):
         raise Exception("All eta_p's must lie in the interval [0,1].")
-    elif len(li_eta_p) > 0 and abs(sum(li_eta_p) - 1) > norm_precision:
+    elif len(np.array(li_eta_p)) > 0 and abs(sum(li_eta_p) - 1) > norm_precision:
         raise Exception("eta_p's don't add up to 1.")
-    if any(li_tau_p) <= 0:
+    if any(np.array(li_tau_p) <= 0):
         raise Exception("All tau_p must be positive!")
 
 
@@ -443,7 +443,7 @@ def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
        245-254.
 
     """
-    _check_par_values(theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p)
+    _check_par_values(1.0, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p)
 
     t_order_m = len(li_eta_m)
     sum_M_mh = 0
@@ -507,7 +507,7 @@ def sigma_emg(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
        245-254.
 
     """
-    _check_par_values(theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p)
+    _check_par_values(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p)
 
     t_order_m = len(li_eta_m)
 
