@@ -16,11 +16,11 @@ from numpy import sqrt, pi
 ###### Define parameter bounds
 # Variables ending with _nsigma define bounds in multiples of the initial value
 # for the sigma parameter of the underlying Gaussian ('<initial_sigma>')
-mu_var_nsigma = 5 # bound mus to <mu0> +- mu_var_sigma*<initial_sigma>
-sigma_min = 1e-15 # lower bound of sigmas
-sigma_max_nsigma = 10 # upper bound of sigmas = sigma_max_nsigma*<initial_sigma>
-tau_min = 1e-15 # lower bound of taus
-tau_max_nsigma = 500 # upper bound of taus = tau_max_nsigma*<initial_sigma>
+MU_VAR_NSIGMA = 5 # bound mus to <mu0> +- mu_var_sigma*<initial_sigma>
+SIGMA_MIN = 1e-15 # lower bound of sigmas
+SIGMA_MAX_NSIGMA = 10 # upper bound of sigmas = SIGMA_MAX_NSIGMA*<initial_sigma>
+TAU_MIN = 1e-15 # lower bound of taus
+TAU_MAX_NSIGMA = 500 # upper bound of taus = TAU_MAX_NSIGMA*<initial_sigma>
 
 def create_default_init_pars(mass_number=100): #TODO: Consider moving to config for user control
     """
@@ -342,8 +342,8 @@ def Gaussian(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=0)
-    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - mu_var_nsigma*init_pars['sigma'], max=mu0 + mu_var_nsigma*init_pars['sigma'])
-    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=sigma_min, max=sigma_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
 
@@ -382,9 +382,9 @@ def emg01(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
-    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - mu_var_nsigma*init_pars['sigma'], max=mu0 + mu_var_nsigma*init_pars['sigma'])
-    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=sigma_min, max=sigma_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
 
@@ -423,9 +423,9 @@ def emg10(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
-    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - mu_var_nsigma*init_pars['sigma'], max=mu0 + mu_var_nsigma*init_pars['sigma'])
-    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=sigma_min, max=sigma_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
 
@@ -464,11 +464,11 @@ def emg11(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
-    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - mu_var_nsigma*init_pars['sigma'], max=mu0 + mu_var_nsigma*init_pars['sigma'])
-    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=sigma_min, max=sigma_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
 
@@ -507,14 +507,14 @@ def emg12(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
-    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - mu_var_nsigma*init_pars['sigma'], max=mu0 + mu_var_nsigma*init_pars['sigma'])
-    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=sigma_min, max=sigma_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1') # ensures normalization of eta_p's
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
 
@@ -553,14 +553,14 @@ def emg21(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
-    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - mu_var_nsigma*init_pars['sigma'], max=mu0 + mu_var_nsigma*init_pars['sigma'])
-    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=sigma_min, max=sigma_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1') # ensures normalization of eta_m's
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
 
@@ -600,17 +600,17 @@ def emg22(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
-    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - mu_var_nsigma*init_pars['sigma'], max=mu0 + mu_var_nsigma*init_pars['sigma'])
-    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=sigma_min, max=sigma_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1') # ensures normalization of eta_m's
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1') # ensures normalization of eta_p's
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
 
@@ -654,20 +654,20 @@ def emg23(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
-    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - mu_var_nsigma*init_pars['sigma'], max=mu0 + mu_var_nsigma*init_pars['sigma'])
-    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=sigma_min, max=sigma_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1') # ensures normalization of eta_m's
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'delta_p', value= init_pars['eta_p1']+init_pars['eta_p2'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, vary=vary_shape_pars, expr= pref+'delta_p-'+pref+'eta_p1')
     model.set_param_hint(pref+'eta_p3', value= 1-init_pars['eta_p1']-init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1-'+pref+'eta_p2') # ensures normalization of eta_p's
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
 
@@ -711,20 +711,20 @@ def emg32(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
-    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - mu_var_nsigma*init_pars['sigma'], max=mu0 + mu_var_nsigma*init_pars['sigma'])
-    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=sigma_min, max=sigma_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'delta_m', value= init_pars['eta_m1']+init_pars['eta_m2'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, vary=vary_shape_pars, expr= pref+'delta_m-'+pref+'eta_m1')
     model.set_param_hint(pref+'eta_m3', value= 1-init_pars['eta_m1']-init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1-'+pref+'eta_m2')
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p2', value= 1-init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars, expr= '1-'+pref+'eta_p1') # ensures normalization of eta_p's
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
 
@@ -772,22 +772,22 @@ def emg33(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
-    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - mu_var_nsigma*init_pars['sigma'], max=mu0 + mu_var_nsigma*init_pars['sigma'])
-    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=sigma_min, max=sigma_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
+    model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m1', value= init_pars['eta_m1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'delta_m', value= init_pars['eta_m1']+init_pars['eta_m2'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_m2', value= init_pars['eta_m2'], min=0, max=1, vary=vary_shape_pars, expr= pref+'delta_m-'+pref+'eta_m1')
     model.set_param_hint(pref+'eta_m3', value= 1-init_pars['eta_m1']-init_pars['eta_m2'], min=0, max=1, expr='1-'+pref+'eta_m1-'+pref+'eta_m2') # ensures normalization of eta_m's
-    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m2', value= init_pars['tau_m2'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_m3', value= init_pars['tau_m3'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p1', value= init_pars['eta_p1'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'delta_p', value= init_pars['eta_p1']+init_pars['eta_p2'], min=0, max=1, vary=vary_shape_pars)
     model.set_param_hint(pref+'eta_p2', value= init_pars['eta_p2'], min=0, max=1, vary=vary_shape_pars, expr= pref+'delta_p-'+pref+'eta_p1')
     model.set_param_hint(pref+'eta_p3', value= 1-init_pars['eta_p1']-init_pars['eta_p2'], min=0, max=1, expr='1-'+pref+'eta_p1-'+pref+'eta_p2') # ensures normalization of eta_p's
-    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
-    model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=tau_min, max=tau_max_nsigma*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p2', value= init_pars['tau_p2'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
+    model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
