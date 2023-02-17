@@ -11,18 +11,19 @@ from tqdm.auto import tqdm
 from emgfit.sample import simulate_spectrum
 
 ################################################################################
-def _likelihood_ratio_test(spec, null_result_index, alt_x_pos, x_fit_cen=None,
+def _likelihood_ratio_test(spec, ref_result, alt_x_pos, x_fit_cen=None,
                            x_fit_range=None, vary_alt_mu=True,
-                           vary_baseline=True, verbose=False,
-                           show_plots=False, show_results=False):
+                           alt_mu_min=None, alt_mu_max=None,
+                           vary_baseline=True, par_hint_args=None,
+                           verbose=False, show_plots=False, show_results=False):
     """Perform a local likelihood ratio test on the specified spectrum
 
     Parameters
     ----------
     spec : :class:`emgfit.spectrum.spectrum`
         Spectrum object to perform likelihood ratio test on.
-    null_result_index : int
-        Index (of one) of the peak(s) present in the null-model fit.
+    ref_result : :class:`lmfit.ModelResult`
+        Fit result storing the null model.
     alt_x_pos : float [u]
         Position of the hypothesized alternative peak.
     x_fit_cen : float [u], optional
@@ -33,32 +34,36 @@ def _likelihood_ratio_test(spec, null_result_index, alt_x_pos, x_fit_cen=None,
         asociated with `null_result_index`.
     vary_alt_mu : bool, optional
         Whether to vary the alternative-peak centroid in the fit.
+    alt_mu_min : float [u], optional
+        Lower boundary to use when varying the alternative-peak centroid.
+        Defaults to the range defined by the `MU_VAR_NSIGMA` constant in the
+        :mod:`emgfit.fit_models` module.
+    alt_mu_max : float [u], optional
+        Upper boundary to use when varying the alternative-peak centroid.
+        Defaults to the range defined by the `MU_VAR_NSIGMA` constant in the
+        :mod:`emgfit.fit_models` module.
     vary_baseline : bool, optional
         If `True`, the constant background will be fitted with a varying
         uniform baseline parameter `bkg_c`. If `False`, the baseline parameter
         `bkg_c` will be fixed to 0.
+    par_hint_args : dict of dicts, optional
+        Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
+        modify or add model parameters. See docs of
+        :meth:`~emgfit.spectrum.spectrum.peakfit` method for details.
     verbose : bool, optional
         Whether to print status updates and results.
     show_plots : bool, optional
         Whether to show plots of the fit results.
     show_results : bool, optional
         Whether to display reports with the fit results.
-
-
-
-    #TODO
     """
-    try:
-        fit_model = spec.fit_model
-    except:
-        raise
-        print("Could not define the fit model to use. Ensure that a "
-              "successful peak-shape calibration has been performed.")
-    ref_result = spec.fit_results[null_result_index]
+    fit_model = ref_result.fit_model
     if x_fit_cen is None:
         x_fit_cen = ref_result.x_fit_cen
     if x_fit_range is None:
         x_fit_range = ref_result.x_fit_range
+    if par_hint_args is None:
+        par_hint_args = ref_result.par_hint_args
     if ref_result.cost_func != "MLE":
         raise Exception("This method is only applicable to fits with the "
                         "'MLE' cost function." )
@@ -70,6 +75,7 @@ def _likelihood_ratio_test(spec, null_result_index, alt_x_pos, x_fit_cen=None,
                                    fit_model=fit_model,
                                    cost_func='MLE',
                                    vary_baseline=vary_baseline,
+                                   par_hint_args=par_hint_args,
                                    show_plots=show_plots)
 
         if show_results:
@@ -85,22 +91,28 @@ def _likelihood_ratio_test(spec, null_result_index, alt_x_pos, x_fit_cen=None,
         print("# Fit data with alternative model #")
     alt_spec.add_peak(x_pos=alt_x_pos, verbose=verbose)
 
-    if not vary_alt_mu:
-        # Fix centroid of alternative peak
-        alt_peak = [p for p in alt_spec.peaks if p.x_pos==alt_x_pos][0]
-        pref_alt_peak = "p{}_".format(alt_spec.peaks.index(alt_peak))
-        par_hint_args = {pref_alt_peak+"mu" : {"vary" : False}}
+    # Update initial parameters of alternative peak
+    alt_peak = [p for p in alt_spec.peaks if p.x_pos==alt_x_pos][0]
+    pref_alt_peak = "p{}_".format(alt_spec.peaks.index(alt_peak))
+    alt_mu_hints = {}
+    if vary_alt_mu:
+        if alt_mu_min is not None:
+            alt_mu_hints.update({"min" : alt_mu_min})
+        if alt_mu_max is not None:
+            alt_mu_hints.update({"max" : alt_mu_max})
     else:
-        par_hint_args = {}
+        alt_mu_hints.update({"vary" : False})
+    alt_par_hint_args = copy.deepcopy(par_hint_args)
+    alt_par_hint_args.update({pref_alt_peak+"mu" : alt_mu_hints})
 
-    try: #TODO: FIx fit range to same range as for null model fit?!
+    try:
         alt_result = alt_spec.peakfit(x_fit_cen=null_result.x_fit_cen,
                                       x_fit_range=null_result.x_fit_range,
                                       fit_model=fit_model,
                                       cost_func='MLE',
                                       vary_baseline=vary_baseline,
                                       show_plots=show_plots,
-                                      par_hint_args=par_hint_args)
+                                      par_hint_args=alt_par_hint_args)
         if show_results:
             display(alt_result)
         alt_LLR = alt_result.chisqr
@@ -109,7 +121,7 @@ def _likelihood_ratio_test(spec, null_result_index, alt_x_pos, x_fit_cen=None,
         alt_result = None
         alt_LLR = np.nan
 
-    # Calculate (doubled) log-likelihood ratio
+    # Calculate likelihood ratio test statistic
     LLR = null_LLR - alt_LLR
     from scipy.stats import chi2
     dof = 1 # difference in number of free parameters
@@ -121,6 +133,7 @@ def _likelihood_ratio_test(spec, null_result_index, alt_x_pos, x_fit_cen=None,
 
 
 def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
+                                 alt_mu_min=None, alt_mu_max=None,
                                  min_significance=3, N_spectra=10000,
                                  seed=None, n_cores=-1):
     """Perform Monte Carlo likelihood ratio test by fitting simulated spectra
@@ -136,30 +149,42 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
         Index (of one) of the peak(s) present in the null-model fit.
     alt_x_pos : float, optional
         Initial position to use for alternative peak
+    alt_mu_min : float [u], optional
+        Lower boundary to use when varying the alternative-peak centroid.
+        Defaults to the range defined by the `MU_VAR_NSIGMA` constant in the
+        :mod:`emgfit.fit_models` module.
+    alt_mu_max : float [u], optional
+        Upper boundary to use when varying the alternative-peak centroid.
+        Defaults to the range defined by the `MU_VAR_NSIGMA` constant in the
+        :mod:`emgfit.fit_models` module.
+    min_significance : float, optional, default: 3
+        Critical significance level for rejecting the null hypothesis (measured
+        in sigma).
+    N_spectra : int, optional, default: 10000
+        Number of simulated spectra to sample from the null model.
+    seed : int, optional
+        Random seed to use for reproducible sampling.
+    n_cores : int, optional, default: -1
+        Number of CPU cores to use for parallelized sampling and fitting of
+        simulated spectra. If ``-1``, all available cores are used.
 
     """
     from scipy.stats import norm
     alpha = norm.sf(min_significance, loc=0, scale=1) # sf := 1 - cdf
-
     ref_null_result = spec.fit_results[null_result_index]
-    if ref_null_result.cost_func != "MLE":
-        raise Exception("The likelihood ratio test is only compatible with "
-                        "the `MLE` cost function.")
-    x_fit_cen = ref_null_result.x_fit_cen
-    x_fit_range = ref_null_result.x_fit_range
 
     print("\n##### Performing Monte Carlo likelihood ratio test #####")
     print("N_spectra:",N_spectra)
     print(f"Test at {min_significance:.1f} sigma significance level, i.e. alpha = {alpha:.2e}")
-    print()
 
     # Perform LRT on the observed data
-    print("### Determine test statistic for observed data ###")
-    LLR, _, alt_res = _likelihood_ratio_test(spec, null_result_index,
-                                             alt_x_pos,
-                                             verbose=True,
+    print("\n### Determine test statistic for observed data ###")
+    LLR, _, alt_res = _likelihood_ratio_test(spec, ref_null_result,
+                                             alt_x_pos, verbose=True,
                                              show_results=False,
                                              show_plots=True,
+                                             alt_mu_min=alt_mu_min,
+                                             alt_mu_max=alt_mu_max,
                                              vary_alt_mu=True)
 
     # Run LRTs on spectra sampled from best null-model fit of the observed data
@@ -227,9 +252,10 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
     return LRT_results
 
 
-def run_GV_LLR_test(spec, alt_x_min, alt_x_max, alt_x_steps=100,
-                    min_significance=3, N_spectra=100, c0=0.5, seed=None,
-                    show_upcrossings=True, show_fits=True):
+def run_GV_likelihood_ratio_test(spec, null_result_index, alt_x_min, alt_x_max,
+                                 alt_x_steps=100, min_significance=3,
+                                 N_spectra=100, c0=0.5, seed=None,
+                                 show_upcrossings=True, show_fits=True):
     """Perform a likelihood ratio test following the method of Gross & Vitells
 
     **Decide on an appropriate significance level before executing this method
@@ -239,6 +265,8 @@ def run_GV_LLR_test(spec, alt_x_min, alt_x_max, alt_x_steps=100,
     ----------
     spec : :class:`~emgfit.spectrum.spectrum`
         Spectrum object to perform test on.
+    null_result_index : int
+        Index (of one) of the peak(s) present in the null-model fit.
     alt_x_min : float
         Minimal x-position to use in the alternative-peak position scan.
     alt_x_max : float
@@ -287,10 +315,10 @@ def run_GV_LLR_test(spec, alt_x_min, alt_x_max, alt_x_steps=100,
 
     .. math::
 
-       p = P(LRT > c) \leq P(\chi^2_1 > c)/2 + \langle N(c_0)\rangle e^{-\left(c-c_0\right)/2}
+       p = P(LLR > c) \leq P(\chi^2_1 > c)/2 + \langle N(c_0)\rangle e^{-\left(c-c_0\right)/2}
 
-    where :math:`P(LRT > c)` is the probability for the likelihood ratio test
-    statistic (LRT) to exceed the maximum of the observed local LRT statistic
+    where :math:`P(LLR > c)` is the probability for the likelihood ratio test
+    statistic (LLR) to exceed the maximum of the observed local LRT statistic
     :math:`c`, :math:`P(\chi^2_1 > c)` is the probability that the :math:`chi^2`
     statistic with one degree of freedom exceeds the level :math:`c` and
     :math:`\langle N(c_0)\rangle ` is the expected number of times the local LRT
@@ -314,6 +342,7 @@ def run_GV_LLR_test(spec, alt_x_min, alt_x_max, alt_x_steps=100,
     alt_x_pos = np.linspace(alt_x_min, alt_x_max, alt_x_steps+1)
     scan_res = np.mean(alt_x_pos[1:] - alt_x_pos[:-1])
     avg_bin_width = np.mean(spec.data.index.values[1:] - spec.data.index.values[:-1])
+    ref_null_result = spec.fit_results[null_result_index]
     # Check for approriately fine scan resolution:
     if scan_res > 2*avg_bin_width:
         warnings.warn("The resolution of the peak-position scan is coarser "
@@ -336,7 +365,7 @@ def run_GV_LLR_test(spec, alt_x_min, alt_x_max, alt_x_steps=100,
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
             obs_LLR, null_res, alt_res = _likelihood_ratio_test(spec,
-                                                                null_result_index,
+                                                                ref_null_result,
                                                                 x_alt,
                                                                 verbose=False,
                                                                 vary_alt_mu=False,
@@ -348,7 +377,7 @@ def run_GV_LLR_test(spec, alt_x_min, alt_x_max, alt_x_steps=100,
 
     max_LLR = max(obs_LLRs)
     idx_max_LLR = obs_LLRs.index(max_LLR)
-    x_max_LLR = alt_x_pos[np.argmax(obs_LLRs)]
+    x_max_LLR = alt_x_pos[idx_max_LLR]
     # Plot null and alternative model fits yielding maximal LRT statistic
     if show_fits:
         print("### Fit results yielding the maximal LRT statistic with the observed data ###")
@@ -364,7 +393,7 @@ def run_GV_LLR_test(spec, alt_x_min, alt_x_max, alt_x_steps=100,
         ax.axhline(c0, color="black")
         ax.axvline(x_max_LLR, color="black")
         #ax.ticklabel_format(useOffset=False, style='plain')
-        plt.xlabel("Alternative-peak centroid")
+        plt.xlabel("Alternative-peak centroid [u]")
         plt.ylabel("Local LRT statistic")
         plt.show()
     print(f"Max. LRT statistic determined from exp. data: {max_LLR:.2f} at {x_max_LLR:.6f} u \n")
@@ -385,7 +414,7 @@ def run_GV_LLR_test(spec, alt_x_min, alt_x_max, alt_x_steps=100,
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=UserWarning)
                 LLR_i, _, _ = _likelihood_ratio_test(sim_spec,
-                                                     null_result_index,
+                                                     ref_null_result,
                                                      x_alt,
                                                      verbose=False,
                                                      vary_alt_mu=False,
@@ -408,7 +437,7 @@ def run_GV_LLR_test(spec, alt_x_min, alt_x_max, alt_x_steps=100,
             for i in i_upcross:
                 ax.axvline(alt_x_pos[i], color="black")
             #ax.ticklabel_format(useOffset=False, style='plain')
-            plt.xlabel("Alternative-peak centroid")
+            plt.xlabel("Alternative-peak centroid [u]")
             plt.ylabel("Local LRT statistic")
             plt.show()
 
@@ -447,6 +476,8 @@ def run_GV_LLR_test(spec, alt_x_min, alt_x_max, alt_x_steps=100,
 
     LRT_results = {"LLR" : max_LLR,
                    "MC LLRs" : all_sim_LLRs,
+                   "Mean number of upcrossings" : mean_n_upcross,
+                   "Error mean number of upcrossings" : std_n_upcross,
                    "p-value" : p_val,
                    "p-value error" : p_val_err,
                    "reject_null_model" : reject_null_model}
