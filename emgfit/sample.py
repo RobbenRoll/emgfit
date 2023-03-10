@@ -533,7 +533,8 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
 
 
 def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
-                          seed=None, n_cores=-1):
+                          seed=None, randomize_ref_mus_and_amps=False,
+                          n_cores=-1):
     """Fit spectra simulated via sampling from a reference distribution
 
     This function performs fits of many simulated spectra. The simulated spectra
@@ -553,8 +554,13 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
         fitting. Defaults to the fit model stored in `fit_result`.
     N_spectra : int, optional
         Number of simulated spectra to fit. Defaults to 1000, which
-        typically yields statistical uncertainty estimates with a relative
-        precision of a few percent.
+        typically yields statistical uncertainty estimates with a Monte Carlo
+        uncertainty of a few percent.
+    randomize_ref_mus_and_amps : bool, default: False
+        If `True`, the peak and background amplitudes and the peak centroids of
+        the reference spectrum to sample from will be varied assuming normal
+        distributions around the best-fit values with standard deviations given
+        by the respective standard errors stored in `fit_result`.
     seed : int, optional
         Random seed to use for reproducible sampling.
     n_cores : int, optional
@@ -566,16 +572,24 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     :class:`numpy.ndarray` of :class:`lmfit.minimizer.MinimizerResult`
         MinimizerResults obtained in the fits of the simulated spectra.
 
-    The event sampling is performed with the
-    :func:`emgfit.sample.simulate_events` function.
+    Note
+    ----
+    The `randomize_ref_mus_and_amps` option allows one to propagate systematic
+    uncertainties in the determination of the reference parameters into the
+    Monte Carlo results. If varying the centroid and amplitude parameters of the
+    reference spectrum, the standard deviations of the parameter distributions
+    will be taken as the respective standard errors determined by lmfit (see
+    lmfit fit report table) and might not be consistent with the area and mass
+    uncertainty estimates shown in the peak properties table.
 
     See also
     --------
     :meth:`~spectrum.get_errors_from_resampling`
-    :func:`emgfit.sample.simulate_events`
+    :func:`emgfit.sample.simulate_events` for details on the event sampling.
 
     """
     bkg_c = fit_result.best_values['bkg_c']
+    bkg_c_err = fit_result.params['bkg_c'].stderr
     cost_func = fit_result.cost_func
     method = fit_result.method
     shape_pars = spec.shape_cal_pars
@@ -598,13 +612,15 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     # Collect aLL peaks, peak centroids and amplitudes of fit_result
     fitted_peaks = [idx for idx, p in enumerate(spec.peaks)
                     if x_min < p.x_pos < x_max] # indeces of all fitted peaks
-    mus = []
-    amps = []
+    mus, mu_errs = [], []
+    amps, amp_errs = [], []
     scl_facs = []
     for idx in fitted_peaks:
         pref = 'p{0}_'.format(idx)
         mus.append(fit_result.best_values[pref+'mu'])
+        mu_errs.append(fit_result.params[pref+'mu'].stderr)
         amps.append(fit_result.best_values[pref+'amp'])
+        amp_errs.append(fit_result.params[pref+'amp'].stderr)
         try:
             scl_facs.append(fit_result.params[pref+'scl_fac'])
         except KeyError:
@@ -632,7 +648,16 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     def refit(seed):
         # create simulated spectrum data by sampling from fit-result PDF
         np.random.seed(seed)
-        df = simulate_events(shape_pars, mus, amps, bkg_c,
+        if randomize_ref_mus_and_amps:
+            bkg_c_i = np.random.normal(loc=bkg_c, scale=bkg_c_err, size=1)
+            amps_i = np.random.normal(loc=amps, scale=amp_errs)
+            mus_i = np.random.normal(loc=mus, scale=mu_errs)
+        else:
+            bkg_c_i = bkg_c
+            amps_i = amps
+            mus_i = mus
+
+        df = simulate_events(shape_pars, mus_i, amps_i, bkg_c_i,
                              N_events, x_min, x_max,
                              out='hist', scl_facs=scl_facs, bin_cens=x)
         new_x = df.index.values
@@ -645,7 +670,7 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
         if cost_func  == 'chi-square':
             ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x))
             eps = 1e-10 # small number to bound Pearson weights
-            def resid_Pearson_chi_square(pars,y_data,weights,x=x):
+            def resid_Pearson_chi_square(pars, y_data, weights, x=x):
                 y_m = model.eval(pars,x=x)
                 # Calculate weights for current iteration, add tiny number
                 # `eps` in denominator for numerical stability
@@ -656,7 +681,7 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
         elif cost_func  == 'MLE':
             # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
             # summands:
-            def sqrt_NLLR(pars,y_data,weights,x=x):
+            def sqrt_NLLR(pars, y_data, weights, x=x):
                 y_m = model.eval(pars,x=x) # model
                 # Add tiniest pos. float representable by numpy to arguments
                 # of np.log to smoothly handle divergences for log(arg -> 0)
@@ -692,7 +717,7 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     from tqdm.auto import tqdm # add progress bar with tqdm
     try:
         min_results = np.array(Parallel(n_jobs=n_cores)
-                               (delayed(refit)(s) for s in tqdm(joblib_seeds)))
+                                 (delayed(refit)(s) for s in tqdm(joblib_seeds)))
     finally:
         # Force workers to shut down and clean up temp SAV file
         from joblib.externals.loky import get_reusable_executor
