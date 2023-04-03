@@ -253,6 +253,19 @@ class peak:
             print("Reduced chi square:",np.round(self.red_chi))
 
 
+def _strip_pref(s):
+    """Strip peak prefix from parameter string """
+    return s.lstrip("p1234567890_")
+
+
+def _strip_prefs(d):
+    """Strip peak prefixes from parameter names """
+    new_dict = {}
+    for pname, val in d.items():
+        new_dict[_strip_pref(pname)] = val
+    return new_dict
+
+
 ################################################################################
 ###### Define spectrum class
 class spectrum:
