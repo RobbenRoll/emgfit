@@ -135,6 +135,8 @@ def _likelihood_ratio_test(spec, ref_result, alt_x_pos, x_fit_cen=None,
 def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
                                  alt_mu_min=None, alt_mu_max=None,
                                  min_significance=3, N_spectra=10000,
+                                 vary_ref_mus_and_amps=False,
+                                 vary_ref_peak_shape=False,
                                  seed=None, n_cores=-1):
     """Perform Monte Carlo likelihood ratio test by fitting simulated spectra
 
@@ -157,6 +159,16 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
         Upper boundary to use when varying the alternative-peak centroid.
         Defaults to the range defined by the `MU_VAR_NSIGMA` constant in the
         :mod:`emgfit.fit_models` module.
+    vary_ref_mus_and_amps : bool, optional
+        Whether to randomly vary the peak positions and the peak and background
+        amplitudes of the reference spectrum within their parameter
+        uncertainties.
+    vary_ref_peak_shape : bool, optional
+        Whether to vary the reference peak shape used for the event sampling in
+        the creation of simulated spectra. If `True`, `N_spectra` parameter
+        samples are drawn randomly with replacement from the
+        :attr:`~.spectrum.MCMC_par_samples` obtained in the MCMC shape parameter
+         sampling.
     min_significance : float, optional, default: 3
         Critical significance level for rejecting the null hypothesis (measured
         in sigma).
@@ -172,6 +184,11 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
     from scipy.stats import norm
     alpha = norm.sf(min_significance, loc=0, scale=1) # sf := 1 - cdf
     ref_null_result = spec.fit_results[null_result_index]
+    if vary_ref_peak_shape:
+        MC_shape_par_samples = spec.MCMC_par_samples.sample(n=N_spectra,
+                                                            replace=True)
+    else:
+        MC_shape_par_samples = None
 
     print("\n##### Performing Monte Carlo likelihood ratio test #####")
     print("N_spectra:",N_spectra)
@@ -194,10 +211,13 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
     from emgfit.sample import fit_simulated_spectra
     null_results = fit_simulated_spectra(spec, ref_null_result,
                                          N_spectra=N_spectra,
+                                         randomize_ref_mus_and_amps=vary_ref_mus_and_amps,
+                                         MC_shape_par_samples=MC_shape_par_samples,
                                          seed=seed, n_cores=n_cores)
     alt_results = fit_simulated_spectra(spec, ref_null_result,
-                                        alt_result=alt_res,
-                                        N_spectra=N_spectra,
+                                        alt_result=alt_res, N_spectra=N_spectra,
+                                        randomize_ref_mus_and_amps=vary_ref_mus_and_amps,
+                                        MC_shape_par_samples=MC_shape_par_samples,
                                         seed=seed, n_cores=n_cores)
     # Calculate Monte Carlo LRT statistics
     MC_LLRs = []
@@ -310,8 +330,8 @@ def run_GV_likelihood_ratio_test(spec, null_result_index, alt_x_min, alt_x_max,
     in the tested region, a procedure is needed that accounts for correlations
     between the local p-values obtained for the various tested peak positions.
     To this end, this function adapts the method outlined by Gross and Vitells
-    in [#Gross]_. Namely, a conservative upper limit on the global p-value
-    :math:`p` is deduced from the relation:
+    in [#Gross]_. Namely, an upper limit on the global p-value :math:`p` is
+    deduced from the relation:
 
     .. math::
 
