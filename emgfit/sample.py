@@ -534,7 +534,7 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
 
 def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
                           seed=None, randomize_ref_mus_and_amps=False,
-                          n_cores=-1):
+                          MC_shape_par_samples=None, n_cores=-1):
     """Fit spectra simulated via sampling from a reference distribution
 
     This function performs fits of many simulated spectra. The simulated spectra
@@ -561,6 +561,7 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
         the reference spectrum to sample from will be varied assuming normal
         distributions around the best-fit values with standard deviations given
         by the respective standard errors stored in `fit_result`.
+    MC_shape_par_samples : :class:`pandas.DataFrame` TODO
     seed : int, optional
         Random seed to use for reproducible sampling.
     n_cores : int, optional
@@ -609,6 +610,14 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
         model = alt_result.model
         init_pars = alt_result.init_params
 
+    # Determine tail order of fit model for normalization of initial etas
+    if fit_result.fit_model.startswith('emg'):
+        n_ltails = int(fit_result.fit_model.lstrip('emg')[0])
+        n_rtails = int(fit_result.fit_model.lstrip('emg')[1])
+    else:
+        n_ltails = 0
+        n_rtails = 0
+
     # Collect aLL peaks, peak centroids and amplitudes of fit_result
     fitted_peaks = [idx for idx, p in enumerate(spec.peaks)
                     if x_min < p.x_pos < x_max] # indeces of all fitted peaks
@@ -645,7 +654,7 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     tiny = np.finfo(float).tiny # get smallest pos. float in numpy
     funcdefs = {'constant': lmfit.models.ConstantModel,
                 str(fit_model): getattr(fit_models,fit_model)}
-    def refit(seed):
+    def refit(seed, shape_pars_i):
         # create simulated spectrum data by sampling from fit-result PDF
         np.random.seed(seed)
         if randomize_ref_mus_and_amps:
@@ -657,7 +666,19 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
             amps_i = amps
             mus_i = mus
 
-        df = simulate_events(shape_pars, mus_i, amps_i, bkg_c_i,
+        if MC_shape_par_samples is not None:
+            # Calculate missing parameters from normalization
+            if n_ltails == 2:
+                shape_pars_i['eta_m2'] = 1 - shape_pars_i['eta_m1']
+            elif n_ltails == 3:
+                eta_m2 = shape_pars_i['delta_m'] - shape_pars_i['eta_m1']
+                shape_pars_i['eta_m3'] = 1 - shape_pars_i['eta_m1'] - eta_m2
+            if n_rtails == 2:
+                shape_pars_i['eta_p2'] = 1 - shape_pars_i['eta_p1']
+            elif n_rtails == 3:
+                eta_p2 = shape_pars_i['delta_p'] - shape_pars_i['eta_p1']
+                shape_pars_i['eta_p3'] = 1 - shape_pars_i['eta_p1'] - eta_p2
+        df = simulate_events(shape_pars_i, mus_i, amps_i, bkg_c_i,
                              N_events, x_min, x_max,
                              out='hist', scl_facs=scl_facs, bin_cens=x)
         new_x = df.index.values
@@ -716,8 +737,13 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     joblib_seeds = np.random.randint(2**31, size=N_spectra)
     from tqdm.auto import tqdm # add progress bar with tqdm
     try:
-        min_results = np.array(Parallel(n_jobs=n_cores)
-                                 (delayed(refit)(s) for s in tqdm(joblib_seeds)))
+        if MC_shape_par_samples is None:
+            min_results = np.array(Parallel(n_jobs=n_cores)
+                                     (delayed(refit)(s, shape_pars) for s in tqdm(joblib_seeds)))
+        else:
+            from .spectrum import _strip_prefs
+            min_results = np.array(Parallel(n_jobs=n_cores)
+                                    (delayed(refit)(s, _strip_prefs(dict(MC_shape_par_samples.iloc[i]))) for i, s in tqdm(enumerate(joblib_seeds))))
     finally:
         # Force workers to shut down and clean up temp SAV file
         from joblib.externals.loky import get_reusable_executor
