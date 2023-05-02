@@ -301,6 +301,10 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
         bin_edges = np.linspace(x_min, x_max, num=N_bins+1, endpoint=True)
         bin_width = sample_range/N_bins
         bin_cens = bin_edges[:-1] + bin_width/2
+    elif out == "array":
+        bin_width = 1.
+        N_bins = 1.
+        pass
     else:
         raise Exception("`N_bins` or `bin_cens` argument must be specified!")
 
