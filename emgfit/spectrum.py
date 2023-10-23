@@ -4776,16 +4776,19 @@ class spectrum:
         self.shape_cal_pars = None
         self.shape_cal_errors = None
         self.fit_range_shape_cal = None
+        self.A_stat_emg = A_stat_emg_default
+        self.A_stat_emg_error = None
+        self.MCMC_par_samples = None
 
 
     def _reset_all_fit_props(self):
-        """Reset all fit-related spectrum and peak attributes
+        """Reset all fit-related spectrum and peak attributes to their defaults 
 
         Note
         ----
         This method also resets all mass-calibration-related peak properties and
-        spectrum attributes but does not affect the results obtained in the
-        peak-shape calibration.
+        spectrum attributes to their default values but does not affect the results 
+        obtained in the peak-shape calibration.
 
         See also
         --------
@@ -4816,9 +4819,9 @@ class spectrum:
             p.mass_error_keV = None
             p.m_dev_keV = None
             self.fit_results[idx] = None
-
+            
         # Mass calibrant related:
-        self.recal_fac = None
+        self.recal_fac = 1.0
         self.recal_fac_error = None
         self.recal_facs_pm = None
         if self.index_mass_calib is not None:
@@ -5104,7 +5107,10 @@ class spectrum:
         elif index_mass_calib is not None and species_mass_calib is not None:
             raise Exception("Definition of mass calibrant peak failed. Define "
                             "EITHER the index OR the species name of the peak "
-                            "to use as mass calibrant! ")
+                            "to be used as mass calibrant! ")
+        elif index_mass_calib is None and self.index_mass_calib is None:
+            raise Exception("No mass calibration available. Perform a mass calibration upfront or use "
+                            "`index_mass_calib` argument to specify peak to be used as mass calibrant!")
 
         if index_mass_calib is not None and index_mass_calib not in peak_indeces:
             raise Exception("If a mass calibrant is specified its index "
@@ -5151,7 +5157,7 @@ class spectrum:
             msg = str("Peak-shape error determination failed with: "+repr(err))
             warnings.warn(msg, UserWarning)
 
-        self._update_peak_props(peaks_to_fit,fit_result)
+        self._update_peak_props(peaks_to_fit, fit_result)
         self.show_peak_properties()
         if show_fit_report:
             if cost_func == 'MLE':
