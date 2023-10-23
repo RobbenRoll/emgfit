@@ -4497,11 +4497,11 @@ class spectrum:
         # A_stat* FWHM/sqrt(area), w/ with A_stat_G = 0.42... and A_stat_emg
         # from `determine_A_stat_emg` method or default value from config.py
         if peak.fit_model == 'Gaussian':
-            std_dev = fit_result.best_values[pref+'sigma']*peak.abs_z
+            std_dev = fit_result.best_values[pref+'sigma']
         else:  # for emg models
             FWHM_emg = self.calc_FWHM_emg(index_mass_calib,fit_result=fit_result)
-            std_dev = self.A_stat_emg*FWHM_emg*peak.abs_z
-        stat_error = std_dev/np.sqrt(peak.area)
+            std_dev = self.A_stat_emg*FWHM_emg
+        stat_error = std_dev/np.sqrt(peak.area)*peak.abs_z
         peak.rel_stat_error = stat_error/peak.m_ion
         peak.rel_peakshape_error = None # reset to None
         peak.red_chi = np.round(fit_result.redchi, 2)
