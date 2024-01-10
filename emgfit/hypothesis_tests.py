@@ -180,6 +180,36 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
         Number of CPU cores to use for parallelized sampling and fitting of
         simulated spectra. If ``-1``, all available cores are used.
 
+    Notes 
+    -----
+    Simulated spectra are created by randomly sampling events from the null model 
+    best fitting the observed data. These simulated spectra are then fitted with 
+    both the null and the alternative model and the respective values for the likelihood 
+    ratio test statistic :math:`\Lambda` are calculated using the relation 
+
+    .. math::
+
+      \Lambda = \log\left(\frac{\mathcal{L}(H_1)}{\mathcal{L}(H_0)}\right) = L(H_1) - L(H_0),
+
+    where :math:`L(H_0)` and :math:`L(H_1)` denote the MLE cost function values (i.e. 
+    the negative doubled log-likelihood values) obtained from the null-model and 
+    alternative-model fits, respectively, and :math:`\mathcal{L}(H_0)` and :math:`\mathcal{L}(H_1)` 
+    mark the corresponding likelihood functions. Finally, the p-value is calculated as 
+
+    .. math:: 
+
+      p = \frac{N_>}{N_< + N_>}, 
+
+    where :math:`N_<` and :math:`N_>` denote the number of likelihood ratio values 
+    :math:`\Lambda` that fall below and above the observed value for the likelihood 
+    ratio test statistic :math:`\Lambda_\mathrm{obs}`, respectively. 
+
+    See also
+    --------
+    :func:`run_GV_likelihood_ratio_test`
+    :func:`_likelihood_ratio_test`
+
+
     """
     from scipy.stats import norm
     alpha = norm.sf(min_significance, loc=0, scale=1) # sf := 1 - cdf
@@ -315,6 +345,7 @@ def run_GV_likelihood_ratio_test(spec, null_result_index, alt_x_min, alt_x_max,
 
     See also
     --------
+    func:`run_MC_likelihood_ratio_test`
     :func:`_likelihood_ratio_test`
 
     Notes
@@ -352,7 +383,7 @@ def run_GV_likelihood_ratio_test(spec, null_result_index, alt_x_min, alt_x_max,
 
     References
     ----------
-    .. [#Gross] Gross, Eilam, and Ofer Vitells. "Trial factors for the look
+    .. [#Gross] Gross, Eilam, and Vitells, Ofer. "Trial factors for the look
        elsewhere effect in high energy physics." The European Physical Journal
        C 70 (2010): 525-530.
 
