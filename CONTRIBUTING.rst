@@ -67,27 +67,35 @@ Ready to contribute? Here's how to set up `emgfit` for local development.
     $ cd emgfit/
     $ python setup.py develop
 
-4. Create a branch for local development::
+4. Install development requirements by executing the following in the emgfit/ directory:
+    
+    $ pip install -r requirements-dev.txt 
+
+5. Install pandoc following the instructions given for your given operating system at https://pandoc.org/installing.html.
+6. Create a branch for local development::
 
     $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
+7. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
 
-    $ flake8 emgfit tests
-    $ python setup.py test
-    $ tox
+    $ flake8 emgfit
+    $ pytest emgfit/tests
+    
+8. Build the documentation and check that any changes are properly displayed in the html pages under docs/build/html. 
+   The documentation build also automatically runs the tutorial notebook which will fail if errors are encountered.
 
-   To get flake8 and tox, just pip install them into your virtualenv.
+    $ cd docs 
+    $ make html 
 
-6. Commit your changes and push your branch to GitHub::
+9. Commit your changes and push your branch to GitHub::
 
     $ git add .
     $ git commit -m "Your detailed description of your changes."
     $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website.
+10. Submit a pull request through the GitHub website.
 
 Pull Request Guidelines
 -----------------------
