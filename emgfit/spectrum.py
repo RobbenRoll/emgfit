@@ -4556,7 +4556,7 @@ class spectrum:
 
     def fit_calibrant(self, index_mass_calib=None, species_mass_calib=None,
                       fit_model=None, cost_func='MLE', x_fit_cen=None,
-                      x_fit_range=None, vary_baseline=True,
+                      x_fit_range=None, vary_shape=False, vary_baseline=True, 
                       method='least_squares', fit_kws=None, par_hint_args={},
                       show_plots=True, show_peak_markers=True,
                       sigmas_of_conf_band=0, error_every=1,
@@ -4603,6 +4603,11 @@ class spectrum:
             if None, defaults to marker position (x_pos) of mass calibrant peak
         x_fit_range : float [u/z], optional
             width of mass range to fit; if None, defaults to 'default_fit_range' spectrum attribute
+        vary_shape : bool, optional, default: `False`
+            If `False` peak-shape parameters (`sigma`, `theta`,`etas` and
+            `taus`) are kept fixed at their initial values. If `True` the
+            shared shape parameters are varied (ensuring identical shape
+            parameters for all peaks).
         vary_baseline : bool, optional, default: `True`
             If `True`, the constant background will be fitted with a varying
             uniform baseline parameter `bkg_c`.
@@ -4709,7 +4714,7 @@ class spectrum:
                                       cost_func=cost_func,
                                       x_fit_cen=x_fit_cen,
                                       x_fit_range=x_fit_range,
-                                      vary_shape=False,
+                                      vary_shape=vary_shape,
                                       vary_baseline=vary_baseline,
                                       share_shape_pars=self.share_shape_pars,
                                       scale_shape_pars=self.scale_shape_pars,
