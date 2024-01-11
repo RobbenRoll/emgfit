@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import lmfit as fit
 import sys
+import warnings
 from .config import *
 from .emg_funcs import *
 from scipy.special import erfcx
@@ -218,7 +219,10 @@ def erfcxinv(y):
     # to erfcx
     ret[~mask] = -sqrt(np.log(y[~mask]))
     for n in range(7):
-        ret += - (erfcx(ret) - y)/(2*ret*erfcx(ret) - 2/sqrt(pi))
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=RuntimeWarning)
+            denom = 2*ret*erfcx(ret) - 2/sqrt(pi)
+            ret += np.where(denom==0, 0.0, - (erfcx(ret) - y)/denom)
     return ret
 
 
@@ -283,7 +287,7 @@ def get_mu0(x_m, init_pars, fit_model):
         if t_order_p == 1:
             tau_p1 = init_pars['tau_p1']
             sum_p = (sqrt(2)*sigma*erfcxinv(tau_p1/sigma*sqrt(2/pi))
-                        - sigma**2/tau_p1)
+                     - sigma**2/tau_p1)
         else:
             for i in range(t_order_p):
                 eta_pi = init_pars['eta_p{}'.format(i+1)]
@@ -300,10 +304,9 @@ def get_mu0(x_m, init_pars, fit_model):
 
         mu0 = x_m - theta*sum_m + (1-theta)*sum_p
     else:
-        msg = str("fit_model must 'Gaussian' or 'emgXY' w/ X & Y being the "
-                  "order of neg. & pos. exponential tails respectively!")
+        msg = str("fit_model must be 'Gaussian' or 'emgXY' with X & Y denoting the tail orders!")
         raise Exception(msg)
-
+    
     return mu0
 
 

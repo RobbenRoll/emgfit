@@ -3671,6 +3671,9 @@ class spectrum:
         for par in shape_pars:
             pars = copy.deepcopy(self.shape_cal_pars) # avoid changes in original dict
             pars[par] = self.shape_cal_pars[par] + self.shape_cal_errors[par]
+            scal_pref = "p{}_".format(self.index_shape_calib)
+            if pars[par] > self.shape_cal_result.params[scal_pref+par].max:
+                pars[par] = self.shape_cal_result.params[scal_pref+par].max
             if par == 'delta_m':
                 pars['eta_m2'] = pars[par] - self.shape_cal_pars['eta_m1']
                 pars['eta_m3'] = 1 - self.shape_cal_pars['eta_m1'] - pars['eta_m2']
@@ -3697,6 +3700,8 @@ class spectrum:
             #display(fit_result_p) # show fit result
 
             pars[par] = self.shape_cal_pars[par] - self.shape_cal_errors[par]
+            if pars[par] < self.shape_cal_result.params[scal_pref+par].min:
+                pars[par] = self.shape_cal_result.params[scal_pref+par].min
             if par == 'delta_m':
                 pars['eta_m2'] =  pars[par] - self.shape_cal_pars['eta_m1']
                 pars['eta_m3'] = 1 - self.shape_cal_pars['eta_m1'] - pars['eta_m2']
@@ -3835,7 +3840,7 @@ class spectrum:
             p.rel_peakshape_error = PS_mass_error/m_ion
             if p._stat_area_error is None:
                 p._stat_area_error = self.calc_peak_area(peak_idx,
-                                                       fit_result=fit_result)[1]
+                                                         fit_result=fit_result)[1]
             p.area_error = np.sqrt(p._stat_area_error**2 + PS_area_error**2)
             # remove MC PS error flag (if applicable)
             if peak_idx in self.peaks_with_MC_PS_errors:
@@ -4393,7 +4398,7 @@ class spectrum:
                     msg = str("Properties of peak {} not updated since "
                               "MC estimates of mass or area peak-shape error "
                               "are NaN.").format(peak_idx)
-                    warings.warn(msg)
+                    warnings.warn(msg)
                     continue # skip updating properties of this peak
                 p = self.peaks[peak_idx]
                 pref = 'p{0}_'.format(peak_idx)
