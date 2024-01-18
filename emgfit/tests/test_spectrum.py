@@ -2,7 +2,7 @@ import pytest
 import emgfit as emg
 import numpy as np
 
-class Test_spectrum:
+class TestSpectrum:
     # Create simulated spectrum data
     from emgfit.sample import simulate_events
     true_sigma = 7.77901056381226e-05
