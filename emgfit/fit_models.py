@@ -1,10 +1,9 @@
-################################################################################
-##### Module with lmfit models for Gaussian and Hyper-EMG distributions
+###############################################################################
+##### Module with emgfit models for Gaussian and Hyper-EMG distributions
 ##### Author: Stefan Paul
 
 ##### Import dependencies
 import numpy as np
-import lmfit
 import warnings
 from .config import *
 from .emg_funcs import *
@@ -23,7 +22,7 @@ TAU_MIN = 1e-15 # lower bound of taus
 TAU_MAX_NSIGMA = 500 # upper bound of taus = TAU_MAX_NSIGMA*<initial_sigma>
 AMP_MIN = 1e-20
 
-def create_default_init_pars(mass_number=100): #TODO: Consider moving to config for user control
+def create_default_init_pars(mass_number=100): 
     """
     Scale default parameters to mass of interest and return parameter dictionary.
 
@@ -94,7 +93,7 @@ def _enforce_shared_shape_pars(model, peak_index, index_ref_peak,
 
     Parameters
     ----------
-    model : :class:`lmfit.model.Model`
+    model : :class:`emgfit.model.EMGModel`
         Fit model to impose parameter constraints on.
     peak_index : int
         Index of the :class:`~emgfit.spectrum.peak` corresponding to `model`.
@@ -157,7 +156,7 @@ def _calc_mu_emg(fit_model, pars, pref=""):
     ----------
     fit_model :
         Name of fit model used to obtain `pars`.
-    pars : :class:`lmfit.parameter.Parameters`, optional
+    pars : :class:`emgfit.parameter.Parameters`, optional
         Parameters object to obtain shape parameters for calculation from.
         This argument can be used when no fit result is available.
     pref : str, optional
@@ -310,11 +309,11 @@ def get_mu0(x_m, init_pars, fit_model):
     return mu0
 
 
-################################################################################
+###############################################################################
 ##### Define emgfit fit models
 def Gaussian(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
-    Gaussian lmfit model (single-peak Gaussian fit model)
+    Gaussian emgfit model (single-peak Gaussian fit model)
 
     Parameters
     ----------
@@ -330,12 +329,12 @@ def Gaussian(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, *
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
-    kws : TODO: Add ALL kws docstring and implement cost_func argument in spectrum.comp_model()
+    kws : Keyword arguments to pass to EMGModel interface.
 
     Returns
     -------
-    :class:`lmfit.model.Model`
-        `lmfit` model object
+    :class:`emgfit.model.EMGModel`
+        `emgfit` model object
 
     """
     # Define model function
@@ -355,8 +354,8 @@ def Gaussian(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, *
 
 def emg01(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
-    Hyper-EMG(0,1) lmfit model (single-peak fit model with one exponential tail
-    on the right)
+    Hyper-EMG(0,1) emgfit model (single-peak fit model with one exponential 
+    tail on the right)
 
     Parameters
     ----------
@@ -372,11 +371,12 @@ def emg01(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
+    kws : Keyword arguments to pass to EMGModel interface.
 
     Returns
     -------
-    :class:`lmfit.model.Model`
-        `lmfit` model object
+    :class:`emgfit.model.EMGModel`
+        `emgfit` model object
 
     """
     # Define model function
@@ -397,8 +397,8 @@ def emg01(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
 
 def emg10(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
-    Hyper-EMG(1,0) lmfit model (single-peak fit model with one exponential tail
-    on the left)
+    Hyper-EMG(1,0) emgfit model (single-peak fit model with one exponential 
+    tail on the left)
 
     Parameters
     ----------
@@ -414,11 +414,12 @@ def emg10(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
+    kws : Keyword arguments to pass to EMGModel interface.
 
     Returns
     -------
-    :class:`lmfit.model.Model`
-        `lmfit` model object
+    :class:`emgfit.model.EMGModel`
+        `emgfit` model object
 
     """
     # Define model function
@@ -439,8 +440,8 @@ def emg10(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
 
 def emg11(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
-    Hyper-EMG(1,1) lmfit model (single-peak fit model with one exponential tail
-    on the left and one exponential tail on the right)
+    Hyper-EMG(1,1) emgfit model (single-peak fit model with one exponential 
+    tail on the left and one exponential tail on the right)
 
     Parameters
     ----------
@@ -456,11 +457,12 @@ def emg11(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
+    kws : Keyword arguments to pass to EMGModel interface.
 
     Returns
     -------
-    :class:`lmfit.model.Model`
-        `lmfit` model object
+    :class:`emgfit.model.EMGModel`
+        `emgfit` model object
 
     """
     # Define model function
@@ -483,8 +485,8 @@ def emg11(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
 
 def emg12(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
-    Hyper-EMG(1,2) lmfit model (single-peak fit model with one exponential tail
-    on the left and two exponential tails on the right)
+    Hyper-EMG(1,2) emgfit model (single-peak fit model with one exponential 
+    tail on the left and two exponential tails on the right)
 
     Parameters
     ----------
@@ -500,11 +502,12 @@ def emg12(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
+    kws : Keyword arguments to pass to EMGModel interface.
 
     Returns
     -------
-    :class:`lmfit.model.Model`
-        `lmfit` model object
+    :class:`emgfit.model.EMGModel`
+        `emgfit` model object
 
     """
     # Define model function
@@ -530,8 +533,8 @@ def emg12(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
 
 def emg21(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
-    Hyper-EMG(2,1) lmfit model (single-peak fit model with two exponential tails
-    on the left and one exponential tail on the right)
+    Hyper-EMG(2,1) emgfit model (single-peak fit model with two exponential 
+    tails on the left and one exponential tail on the right)
 
     Parameters
     ----------
@@ -547,11 +550,12 @@ def emg21(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
+    kws : Keyword arguments to pass to EMGModel interface.
 
     Returns
     -------
-    :class:`lmfit.model.Model`
-        `lmfit` model object
+    :class:`emgfit.model.EMGModel`
+        `emgfit` model object
 
     """
     # Define model function
@@ -577,8 +581,8 @@ def emg21(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
 
 def emg22(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
-    Hyper-EMG(2,2) lmfit model (single-peak fit model with two exponential tails
-    on the left and two exponential tails on the right)
+    Hyper-EMG(2,2) emgfit model (single-peak fit model with two exponential 
+    tails on the left and two exponential tails on the right)
 
     Parameters
     ----------
@@ -595,11 +599,12 @@ def emg22(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
+    kws : Keyword arguments to pass to EMGModel interface.
 
     Returns
     -------
-    :class:`lmfit.model.Model`
-        `lmfit` model object
+    :class:`emgfit.model.EMGModel`
+        `emgfit` model object
 
     """
     # Define model function
@@ -628,8 +633,8 @@ def emg22(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
 
 def emg23(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
-    Hyper-EMG(2,3) lmfit model (single-peak fit model with two exponential tails
-    on the left and three exponential tails on the right)
+    Hyper-EMG(2,3) emgfit model (single-peak fit model with two exponential 
+    tails on the left and three exponential tails on the right)
 
     Parameters
     ----------
@@ -645,11 +650,12 @@ def emg23(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
+    kws : Keyword arguments to pass to EMGModel interface.
 
     Returns
     -------
-    :class:`lmfit.model.Model`
-        `lmfit` model object
+    :class:`emgfit.model.EMGModel`
+        `emgfit` model object
 
     """
     # Define model function
@@ -686,7 +692,7 @@ def emg23(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
 
 def emg32(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
-    Hyper-EMG(3,2) lmfit model (single-peak fit model with three exponential
+    Hyper-EMG(3,2) emgfit model (single-peak fit model with three exponential
     tails on the left and two exponential tails on the right)
 
     Parameters
@@ -703,11 +709,12 @@ def emg32(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
+    kws : Keyword arguments to pass to EMGModel interface.
 
     Returns
     -------
-    :class:`lmfit.model.Model`
-        `lmfit` model object
+    :class:`emgfit.model.EMGModel`
+        `emgfit` model object
 
     """
     # Define model function
@@ -744,7 +751,7 @@ def emg32(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
 
 def emg33(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
-    Hyper-EMG(3,3) lmfit model (single-peak fit model with three exponential
+    Hyper-EMG(3,3) emgfit model (single-peak fit model with three exponential
     tails on the left and three exponential tails on the right)
 
     Parameters
@@ -761,11 +768,12 @@ def emg33(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
+    kws : Keyword arguments to pass to EMGModel interface.
 
     Returns
     -------
-    :class:`lmfit.model.Model`
-        `lmfit` model object
+    :class:`emgfit.model.EMGModel`
+        `emgfit` model object
 
     """
     # Define model function
@@ -807,13 +815,52 @@ def emg33(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kw
     return model
 
 
-################################################################################
+###############################################################################
 ###### Define emgfit ConstantModel class
-class ConstantModel(EMGModel): 
-    def __init__(self, cost_func='default', independent_vars=['x'], prefix='bkg', 
-                 nan_policy='propagate',**kwargs):
+class ConstantModel(EMGModel):
+    """Constant background model""" 
+    def __init__(self, cost_func='default', independent_vars=['x'], 
+                 prefix='bkg', nan_policy='propagate',**kwargs):
         kwargs.update({'prefix': prefix, 'nan_policy': nan_policy,
                        'independent_vars': independent_vars})
+        """Create constant background model 
+
+        Parameters 
+        ----------
+        cost_func : str, optional
+            Name of cost function to use for minimization - overrides the 
+            model's :attr:`~lmfit.model.Model._residual` attribute. 
+
+            - If ``'chi-square'``, the fit is performed by minimizing Pearson's
+              chi-squared statistic:
+
+              .. math::
+
+                  \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)}.
+
+            - If ``'MLE'``, a binned maximum likelihood estimation is performed
+              by minimizing the (doubled) negative log likelihood ratio:
+
+              .. math::
+
+                  L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]
+
+            - If ``'default'`` (default), use the standard residual from lmfit.
+
+            See `Notes` of :meth:`~emgfit.spectrum.spectrum.peakfit` method for 
+            more details.
+        independent_vars : :obj:`list` of :obj:`str`, optional
+            Arguments to `func` that are independent variables (default is
+            None).
+            parameters (default is None).
+        prefix : str, optional
+            Prefix used for the model.
+        nan_policy : {'raise', 'propagate', 'omit'}, optional
+            How to handle NaN and missing values in data. See Notes below.
+        **kws : dict, optional
+            Additional keyword arguments to pass to model function.
+
+        """
 
         def constant(x, c=0.0):
             return c * np.ones(np.shape(x))
