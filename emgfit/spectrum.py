@@ -363,8 +363,8 @@ class spectrum:
         ascending mass. The index of a peak within the `peaks` list is referred
         to as the ``peak_index``.
     fit_results : list of :class:`emgfit.model.EMGModelResult`
-        List containing fit results (:class:`emgfit.model.EMGModelResult` objects)
-        for peaks associated with spectrum.
+        List containing fit results (:class:`emgfit.model.EMGModelResult` 
+        objects) for peaks associated with spectrum.
     blinded_peaks : list of int
         List with indeces of peaks whose mass values and peak positions are to
         be hidden to enable blind analysis. The mass values will be unblinded
@@ -373,6 +373,8 @@ class spectrum:
         Histogrammed spectrum data.
     mass_number : int
         Atomic mass number associated with central bin of spectrum.
+    resolving_power : float, optional 
+        Typical resolving power of the spectrometer at FWHM level.
     default_fit_range : float [u/z]
         Default x-range for fits, scaled to :attr:`mass_number` of spectrum.
     default_lit_src : str, optional
@@ -394,13 +396,16 @@ class spectrum:
 
     """
     def __init__(self, filename=None, m_start=None, m_stop=None, skiprows=18,
-                 show_plot=True, df=None, default_lit_src='AME2020'):
-        """Create a :class:`spectrum` object by importing histogrammed mass data
-        from .txt or .csv file.
+                 show_plot=True, df=None, resolving_power=3e05, 
+                 default_fit_range=None, default_lit_src='AME2020'):
+        """Create a :class:`spectrum` object from histogrammed mass data
 
-        Input file format:
+        By default the data is loaded from an input file of the format:
         two-column .csv- or .txt-file with tab-separated values
         (column 1: mass bin, column 2: counts in bin).
+
+        Alternatively, the data can be passed as a DataFrame to the `df` 
+        argument.
 
         Optionally the spectrum can be cut to a specified fit range using the
         `m_start` and `m_stop` parameters. Mass data outside this range will be
@@ -415,8 +420,8 @@ class spectrum:
         filename : str, optional
             Filename of mass spectrum to analyze. If the input file is not
             located in the working directory the directory path has to be
-            included in `filename`, too. If no `filename` is given, data must be
-            provided via `df` argument.
+            included in `filename`, too. If no `filename` is given, data must 
+            be provided via `df` argument.
 	    m_start : float [u/z], optional
             Start of fit range, data at lower m/z will be discarded.
 	    m_stop : float [u/z], optional
@@ -427,7 +432,12 @@ class spectrum:
         df : :class:`pandas.DataFrame`, optional
             DataFrame with spectrum data to use, this enables the creation of a
             spectrum object from a DataFrame instead of from an external file.
-            **Primarily intended for internal use.**
+        resolving_power : float, optional
+            Typical resolving power of the spectrometer at FWHM level. Defaults 
+            to 3e05.
+        default_fit_range : float [u/z], optional
+            Default x-range for fits, scaled to :attr:`mass_number` of spectrum.
+            Defaults to ``0.01*(mass_number/100)``.
         default_lit_src : str, optional
             Source of literature mass data - either 'AME2020' (default) or
             'AME2016'. If AME2016 is used, :literal:`'lit_src: AME2016'` is
@@ -501,7 +511,9 @@ class spectrum:
         # round to closest integer:
         x_val_cen = int(np.round(self.data.index.values[int(len(self.data)/2)]))
         self.mass_number = x_val_cen if x_val_cen > 0 else 1
-        self.default_fit_range = 0.01*(self.mass_number/100)
+        self.resolving_power = resolving_power
+        if default_fit_range is None:
+            self.default_fit_range = 0.01*(self.mass_number/100)
         self.default_lit_src = default_lit_src
 
         if show_plot:
@@ -2605,7 +2617,9 @@ class spectrum:
         if init_pars == 'default':
             # Take default params defined in create_default_init_pars() in
             # fit_models.py and re-scale to spectrum's 'mass_number' attribute
-            init_pars = fit_models.create_default_init_pars(mass_number=self.mass_number)
+            init_pars = fit_models.create_default_init_pars(
+                            mass_number=self.mass_number, 
+                            resolving_power=self.resolving_power)
         elif init_pars is None:
             # Use shape parameters asociated with spectrum unless other
             # parameters have been specified
@@ -3287,7 +3301,7 @@ class spectrum:
             x_fit_range = self.default_fit_range
 
         if vary_tail_order is True and fit_model != 'Gaussian':
-            print('\n##### Determine optimal tail order #####\n')
+            print('\n##### Determine optimal tail order #####--------------------------------------------------\n')
             # Fit peak with Hyper-EMG of increasingly higher tail orders and compile results
             # use fit model that produces the lowest chi-square without having eta's compatible with zero within errobar
             li_fit_models = ['Gaussian','emg01','emg10','emg11','emg12','emg21',
@@ -3299,7 +3313,7 @@ class spectrum:
             li_flags =np.array([False]*len(li_fit_models))
             for model in li_fit_models:
                 try:
-                    print("\n### Fitting data with",model,"###---------------------------------------------------------------------------------\n")
+                    print("\n### Fitting data with",model,"###\n")
                     self.index_shape_calib = index_shape_calib # signals shape_calib fit to comp_model()
                     out = spectrum.peakfit(self, fit_model=model, cost_func=cost_func,
                                            x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
@@ -3384,7 +3398,7 @@ class spectrum:
         elif not vary_tail_order:
             self.fit_model = fit_model
 
-        print('\n##### Peak-shape determination #####-------------------------------------------------------------------------------')
+        print('\n##### Peak-shape determination #####------------------------------------------------------')
         # Perform fit
         try:
             self.index_shape_calib = index_shape_calib

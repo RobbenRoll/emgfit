@@ -22,7 +22,7 @@ TAU_MIN = 1e-15 # lower bound of taus
 TAU_MAX_NSIGMA = 500 # upper bound of taus = TAU_MAX_NSIGMA*<initial_sigma>
 AMP_MIN = 1e-20
 
-def create_default_init_pars(mass_number=100): 
+def create_default_init_pars(mass_number=100, resolving_power=3e05): 
     """
     Scale default parameters to mass of interest and return parameter dictionary.
 
@@ -30,6 +30,9 @@ def create_default_init_pars(mass_number=100):
     ----------
     mass_number : int, optional
         Atomic mass number of peaks of interest, defaults to 100.
+    resolving_power : float, optional
+        Typical resolving power of the spectrometer  at FWHM level. 
+        Defaults to 3e05.
 
     Returns
     -------
@@ -42,25 +45,31 @@ def create_default_init_pars(mass_number=100):
     parameters at other masses all mass-dependent parameters (i.e. shape
     parameters & `amp`) are multiplied by the scaling factor `mass_number`/100.
 
+    The standard deviation of the underlying Gaussian :math:`\sigma` is 
+    calculated as :math::`\\sigma = A / (R 2 \\sqrt(2 \\ln(2))`, where 
+    :math:`A` denotes the specified `mass_number` and :math:`R` is the given 
+    `resolving_power`.  
+
     """
     # Default initial parameters for peaks around mass 100 (with
     # mass scaling factor):
     scl_factor = mass_number/100
+    sigma_to_FWHM = 2*np.sqrt(2*np.log(2))  # for Gaussian peak
     amp = 0.45*scl_factor
     mu = None  # flag for below that this is a generic shape parameter set
-    sigma = 0.00014*scl_factor # [u]
+    sigma = mass_number/(resolving_power*sigma_to_FWHM) # [u]
     theta = 0.5
     eta_m1 = 0.85
     eta_m2 = 0.10
     eta_m3 = 0.05
-    tau_m1 = 50e-06*scl_factor # [u]
-    tau_m2 = 500e-06*scl_factor # [u]
+    tau_m1 =   50e-06*scl_factor # [u]
+    tau_m2 =  500e-06*scl_factor # [u]
     tau_m3 = 1000e-06*scl_factor # [u]
     eta_p1 = 0.85
     eta_p2 = 0.10
     eta_p3 = 0.05
-    tau_p1 = 50e-06*scl_factor # [u]
-    tau_p2 = 500e-06*scl_factor # [u]
+    tau_p1 =   50e-06*scl_factor # [u]
+    tau_p2 =  500e-06*scl_factor # [u]
     tau_p3 = 1000e-06*scl_factor # [u]
     pars_dict = {'amp': amp, 'mu': mu, 'sigma': sigma, 'theta': theta,
                  'eta_m1': eta_m1, 'eta_m2': eta_m2, 'eta_m3': eta_m3,
