@@ -22,7 +22,7 @@ def _likelihood_ratio_test(spec, ref_result, alt_x_pos, x_fit_cen=None,
     ----------
     spec : :class:`emgfit.spectrum.spectrum`
         Spectrum object to perform likelihood ratio test on.
-    ref_result : :class:`lmfit.ModelResult`
+    ref_result : :class:`emgfit.EmgModelResult`
         Fit result storing the null model.
     alt_x_pos : float [u]
         Position of the hypothesized alternative peak.

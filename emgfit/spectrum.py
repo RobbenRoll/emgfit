@@ -286,7 +286,7 @@ class spectrum:
         Reduced chi-squared of peak-shape determination fit.
     fit_range_shape_cal : float [u/z]
         Fit range used for peak-shape calibration.
-    shape_cal_result : :class:`lmfit.model.ModelResult`
+    shape_cal_result : :class:`emgfit.model.EMGModelResult`
         Fit result obtained in peak-shape calibration.
     shape_cal_pars : dict
         Model parameter values obtained in peak-shape calibration.
@@ -362,8 +362,8 @@ class spectrum:
         List containing all peaks associated with the spectrum sorted by
         ascending mass. The index of a peak within the `peaks` list is referred
         to as the ``peak_index``.
-    fit_results : list of :class:`lmfit.model.ModelResult`
-        List containing fit results (:class:`lmfit.model.ModelResult` objects)
+    fit_results : list of :class:`emgfit.model.EMGModelResult`
+        List containing fit results (:class:`emgfit.model.EMGModelResult` objects)
         for peaks associated with spectrum.
     blinded_peaks : list of int
         List with indeces of peaks whose mass values and peak positions are to
@@ -1549,7 +1549,7 @@ class spectrum:
 
         Parameters
         ----------
-        fit_result : :class:`lmfit.model.ModelResult`, optional, default: ``None``
+        fit_result : :class:`emgfit.model.EMGModelResult`, optional, default: ``None``
             Fit result to plot. If ``None``, defaults to fit result of first
             peak in specified mass range (taken from :attr:`fit_results` list).
         plot_title : str or None, optional
@@ -1791,7 +1791,7 @@ class spectrum:
         peak_index : int, optional, default: 0
             Peak index specifying from which result in
             :attr:`spectrum.fit_results` the fit data will be written.
-        fit_result : :class:`lmfit.model.ModelResult`, optional
+        fit_result : :class:`emgfit.model.EMGModelResult`, optional
             Fit result to obtain fit curve from. Only needed to write grab data
             from a fit result not stored in the spectrum's :attr:`fit_results`
             attribute.
@@ -1838,8 +1838,9 @@ class spectrum:
 
 
     def comp_model(self, peaks_to_fit, fit_model='emg22', init_pars=None,
-                   vary_shape=False, vary_baseline=True, share_shape_pars=True,
-                   scale_shape_pars=False, scale_shape_to_peak_cen=False):
+                   cost_func="chi-square", vary_shape=False, vary_baseline=True, 
+                   share_shape_pars=True, scale_shape_pars=False, 
+                   scale_shape_to_peak_cen=False):
         """Create a multi-peak composite model with the specified peak shape.
 
         **Primarily intended for internal usage.**
@@ -1858,6 +1859,27 @@ class spectrum:
             will be used after scaling to the spectrum's :attr:`mass_number`.
             For more details and a list of all shape parameters see the
             :ref:`peak-shape calibration` article.
+        cost_func : str, optional
+            Name of cost function to use for minimization. 
+
+            - If ``'chi-square'``, the fit is performed by minimizing Pearson's
+              chi-squared statistic:
+
+              .. math::
+
+                  \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)}.
+
+            - If ``'MLE'``, a binned maximum likelihood estimation is performed
+              by minimizing the (doubled) negative log likelihood ratio:
+
+              .. math::
+
+                  L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]
+
+            - If ``'default'`` (default), use the standrad residual from lmfit.
+
+            See `Notes` of :meth:`~emgfit.spectrum.spectrum.peakfit` method for 
+            details.
         vary_shape : bool, optional
             If `False` only the amplitude (`amp`) and Gaussian centroid (`mu`)
             model parameters will be varied in the fit. If `True`, the shape
@@ -1877,6 +1899,11 @@ class spectrum:
             Whether to scale the scale-dependent shape parameters to the
             centroid `mu` of the underlying Gaussian of a given peak. Requires
             `scale_shape_pars` to be `True`. See Notes for details.
+
+        Return
+        ------
+        :class:`emgfit.model.EMGModel`
+            emgfit multi-peak composite model
 
         Notes
         -----
@@ -1925,7 +1952,7 @@ class spectrum:
 
         """
         model = getattr(fit_models, fit_model)
-        mod = fit.models.ConstantModel(prefix='bkg_') #(independent_vars='x',prefix='bkg_')
+        mod = fit_models.ConstantModel(cost_func=cost_func, prefix='bkg_') #(independent_vars='x',prefix='bkg_')
         df = self.data
         if init_pars is None:
             init_pars = fit_models.create_default_init_pars(self.mass_number)
@@ -1978,7 +2005,7 @@ class spectrum:
             amp0 = 3*max(y_max, 1)*init_pars["sigma"]
             mu0 = fit_models.get_mu0(peak.x_pos, init_pars, fit_model)
             this_mod = model(peak_index, mu0, amp0, init_pars=init_pars,
-                             vary_shape_pars=vary_shape)
+                             vary_shape_pars=vary_shape, cost_func=cost_func)
 
             if index_ref_peak is not None and (peak_index != index_ref_peak):
                 this_mod = _enforce_shared_shape_pars(this_mod, peak_index,
@@ -2020,7 +2047,7 @@ class spectrum:
 
         Parameters
         ----------
-        fit_result : :class:`lmfit.model.ModelResult`
+        fit_result : :class:`emgfit.model.EMGModelResult`
             Fit result to explore with MCMC sampling. Since `emcee` only
             efficiently samples unimodal distributions, `fit_result` should
             ideally hold the result of a single-peak fit (typically the shape
@@ -2347,7 +2374,7 @@ class spectrum:
         ##set_matplotlib_formats(plot_fmt) # reset image format
 
 
-    def peakfit(self,fit_model='emg22', cost_func='chi-square', x_fit_cen=None,
+    def peakfit(self, fit_model='emg22', cost_func='chi-square', x_fit_cen=None,
                 x_fit_range=None, init_pars=None, vary_shape=False,
                 vary_baseline=True, share_shape_pars=True,
                 scale_shape_pars=False, scale_shape_to_peak_cen=False,
@@ -2436,10 +2463,10 @@ class spectrum:
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
         fit_kws : dict, optional, default: None
-            Options to pass to lmfit minimizer used in
-            :meth:`lmfit.model.Model.fit` method.
+            Options to pass to minimizer used in
+            :meth:`emgfit.model.EMGModel.fit` method.
         par_hint_args : dict of dicts, optional
-            Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
+            Arguments to pass to :meth:`lmfit.model.set_param_hint` to
             modify or add model parameters. The keys of the `par_hint_args`
             dictionary specify parameter names; the values must likewise be
             dictionaries that hold the respective keyword arguments to pass to
@@ -2471,7 +2498,7 @@ class spectrum:
 
         Returns
         -------
-        :class:`lmfit.model.ModelResult`
+        :class:`emgfit.model.EMGModelResult`
             Fit model result.
 
         See also
@@ -2590,10 +2617,10 @@ class spectrum:
                                 "argument.")
             init_pars = self.shape_cal_pars
 
-        model_name = str(fit_model)+' + const. background (bkg_c)'
         # Create multi-peak fit model
         mod = self.comp_model(peaks_to_fit=peaks_to_fit, fit_model=fit_model,
-                              init_pars=init_pars, vary_shape=vary_shape,
+                              cost_func=cost_func, init_pars=init_pars, 
+                              vary_shape=vary_shape,
                               vary_baseline=vary_baseline,
                               share_shape_pars=share_shape_pars,
                               scale_shape_pars=scale_shape_pars,
@@ -2603,65 +2630,9 @@ class spectrum:
         pars = mod.make_params() # create parameters object for model
 
         # Perform fit & store results
-        if cost_func == 'chi-square':
-            ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x_i))
-            mod_Pearson = mod
-            eps = 1e-10 # small number to bound Pearson weights
-            from numpy import sqrt
-            def resid_Pearson_chi_square(pars,y_data,weights,x=x):
-                y_m = mod_Pearson.eval(pars,x=x)
-                # Calculate weights for current iteration, add tiny number `eps`
-                # in denominator for numerical stability
-                weights = 1./sqrt(y_m + eps)
-                return (y_m - y_data)*weights
-
-            # Overwrite lmfit's standard least square residuals with iterative
-            # residuals for Pearson chi-square fit
-            mod_Pearson._residual = resid_Pearson_chi_square
-            out = mod_Pearson.fit(y, params=pars, x=x, weights=weights,
-                                  method=method, fit_kws=fit_kws,
-                                  scale_covar=False, nan_policy='propagate')
-            # Calculate final weights for plotting
-            y_m = out.best_fit
-            Pearson_weights = 1./sqrt(y_m + eps)
-            out.y_err = 1./Pearson_weights
-        elif cost_func == 'MLE':
-            ## Binned max. likelihood fit using negative log-likelihood ratio
-            mod_MLE = mod
-            # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
-            # summands:
-            tiny = np.finfo(float).tiny # get smallest pos. float in numpy
-            from numpy import log, sqrt
-            def sqrt_NLLR(pars,y_data,weights,x=x):
-                y_m = mod_MLE.eval(pars,x=x)
-                # Add tiniest pos. float representable by numpy to arguments of
-                # np.log to smoothly handle divergences for log(arg -> 0)
-                NLLR = 2*(y_m-y_data) + 2*y_data*(log(y_data+tiny)-log(y_m+tiny))
-                ret = sqrt(NLLR)
-                return ret
-
-            # Overwrite lmfit's standard least square residuals with the
-            # square-roots of the NLLR summands, this enables usage of scipy's
-            # `least_squares` minimizer and yields much faster optimization
-            # than with scalar minimizers
-            mod_MLE._residual = sqrt_NLLR
-            out = mod_MLE.fit(y, params=pars, x=x, weights=weights,
-                              method=method, fit_kws=fit_kws, scale_covar=False,
-                              calc_covar=False, nan_policy='propagate')
-            out.y_err = 1./out.weights
-        else:
-            raise Exception(" Definition of `cost_func` failed!")
-        out.x = x
-        out.y = y
-        out.fit_model = fit_model
-        out.cost_func = cost_func
-        out.method = method
-        out.fit_kws = fit_kws
-        out.par_hint_args = par_hint_args
-        out.x_fit_cen = x_fit_cen
-        out.x_fit_range = x_fit_range
-        out.vary_baseline = vary_baseline
-        out.vary_shape = vary_shape
+        out = mod.fit(y, params=pars, x=x, weights=weights,
+                      method=method, fit_kws=fit_kws, scale_covar=False,
+                      calc_covar=False, nan_policy='propagate')
 
         # Check if any best-fit mus agree with initial value, warn if any
         # agreement within tolerance `atol` is found
@@ -2711,7 +2682,7 @@ class spectrum:
         ----------
         peak_index : str
             Index of peak of interest.
-        fit_result : :class:`lmfit.model.ModelResult`, optional
+        fit_result : :class:`emgfit.model.EMGModelResult`, optional
             Fit result object to use for area calculation. If ``None`` (default)
             use corresponding fit result stored in
             :attr:`~emgfit.spectrum.spectrum.fit_results` list.
@@ -2759,7 +2730,7 @@ class spectrum:
         ----------
         peak_index : int
             Index of peak of interest.
-        fit_result : :class:`lmfit.model.ModelResult`, optional
+        fit_result : :class:`emgfit.model.EMGModelResult`, optional
             Fit result containing peak of interest. If ``None`` (default) the
             corresponding fit result from the spectrum's :attr:`fit_results`
             list will be fetched.
@@ -2808,7 +2779,7 @@ class spectrum:
         ----------
         peak_index : int
             Index of peak of interest.
-        fit_result : :class:`lmfit.model.ModelResult`, optional
+        fit_result : :class:`emgfit.model.EMGModelResult`, optional
             Fit result containing peak of interest. If ``None`` (default) the
             corresponding fit result from the spectrum's :attr:`fit_results`
             list will be used.
@@ -2840,7 +2811,7 @@ class spectrum:
         ----------
         peak_index : int
             Index of peak of interest.
-        fit_result : :class:`lmfit.model.ModelResult`, optional
+        fit_result : :class:`emgfit.model.EMGModelResult`, optional
             Fit result containing peak of interest. If ``None`` (default) the
             corresponding fit result from the spectrum's :attr:`fit_results`
             list will be used.
@@ -2956,7 +2927,7 @@ class spectrum:
             check arguments of :func:`lmfit.minimizer.minimize`.
         fit_kws : dict, optional, default: None
             Options to pass to lmfit minimizer used in
-            :meth:`lmfit.model.Model.fit` method.
+            :meth:`emgfit.model.EMGModel.fit` method.
         par_hint_args : dict of dicts, optional
             Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
             modify or add model parameters. The keys of the `par_hint_args`
@@ -3236,8 +3207,8 @@ class spectrum:
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
         fit_kws : dict, optional, default: None
-            Options to pass to lmfit minimizer used in
-            :meth:`lmfit.model.Model.fit` method.
+            Options to pass to minimizer used in
+            :meth:`emgfit.model.EMGModel.fit` method.
         par_hint_args : dict of dicts, optional
             Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
             modify or add model parameters. The keys of the `par_hint_args`
@@ -3328,7 +3299,7 @@ class spectrum:
             li_flags =np.array([False]*len(li_fit_models))
             for model in li_fit_models:
                 try:
-                    print("\n### Fitting data with",model,"###---------------------------------------------------------------------------------------------\n")
+                    print("\n### Fitting data with",model,"###---------------------------------------------------------------------------------\n")
                     self.index_shape_calib = index_shape_calib # signals shape_calib fit to comp_model()
                     out = spectrum.peakfit(self, fit_model=model, cost_func=cost_func,
                                            x_fit_cen=x_fit_cen, x_fit_range=x_fit_range,
@@ -3413,7 +3384,7 @@ class spectrum:
         elif not vary_tail_order:
             self.fit_model = fit_model
 
-        print('\n##### Peak-shape determination #####-------------------------------------------------------------------------------------------')
+        print('\n##### Peak-shape determination #####-------------------------------------------------------------------------------')
         # Perform fit
         try:
             self.index_shape_calib = index_shape_calib
@@ -3466,7 +3437,7 @@ class spectrum:
             self.shape_cal_errors['bkg_c'] = out.params['bkg_c'].stderr
             self.fit_range_shape_cal = x_fit_range
         except:
-            reset_shape_calib_attrs()
+            self._reset_shape_calib_props()
             raise
 
         # Save thinned and flattened MCMC chain for MC peakshape evaluation
@@ -3549,7 +3520,7 @@ class spectrum:
             List containing indeces of peaks to evaluate peak-shape uncertainty
             for, e.g. to evaluate peak-shape error of peaks 0 and 3 use
             ``peak_indeces=[0,3]``.
-        fit_result : :class:`lmfit.model.ModelResult`, optional
+        fit_result : :class:`emgfit.model.EMGModelResult`, optional
             Fit result object to evaluate peak-shape error for.
         verbose : bool, optional, default: `False`
             If `True`, print all individual eff. mass shifts obtained by
@@ -3879,7 +3850,7 @@ class spectrum:
         peak_indeces : int or list of int
             Indeces of peaks to evaluate MC peak-shape uncertainties for. The
             peaks of interest must belong to the same `fit_result`.
-        fit_result : :class:`~lmfit.model.ModelResult`, optional
+        fit_result : :class:`~emgfit.model.EMGModelResult`, optional
             Fit result for which MC peak-shape uncertainties are to be evaluated
             for. Defaults to the fit result stored for the peaks of interest in
             the :attr:`spectrum.fit_results` spectrum attribute.
@@ -4020,24 +3991,18 @@ class spectrum:
 
         # Iterate over selected parameter sets and re-fit peaks with each set
         # recording the respective centroid shifts and areas
-        bkg_c = fit_result.best_values['bkg_c']
         fit_model = fit_result.fit_model
-        cost_func = fit_result.cost_func
         method = fit_result.method
         fit_kws = fit_result.fit_kws
         if fit_kws is None:
             fit_kws = {}
-        x_cen = fit_result.x_fit_cen
-        x_range = fit_result.x_fit_range
         x = fit_result.x
         y = fit_result.y
         weights = 1/np.maximum(1,np.sqrt(y))
         model = fit_result.model
         init_pars = fit_result.init_params
 
-        from numpy import maximum, sqrt, array, log
-        from joblib import Parallel, delayed
-        from lmfit.model import save_model, load_model
+        from .model import save_model, load_model
         from lmfit.minimizer import minimize
         from copy import deepcopy
         import time
@@ -4050,12 +4015,8 @@ class spectrum:
         modelfname =  data_fname+datetime_str+"_MC_PS_model.sav"
         save_model(model, modelfname)
         N_peaks = len(peak_indeces)
-        N_events = int(np.sum(y))
-        tiny = np.finfo(float).tiny # get smallest pos. float in numpy
         funcdefs = {'constant': fit.models.ConstantModel,
                     str(fit_model): getattr(fit_models,fit_model)}
-        x_min = x_cen - 0.5*x_range
-        x_max = x_cen + 0.5*x_range
 
         # Define function for parallelized fitting
         def refit(shape_pars):
@@ -4083,36 +4044,6 @@ class spectrum:
                         pref = "p{0}_".format(idx)
                         pars[pref+par].value = val
 
-            if cost_func  == 'chi-square':
-                ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x_i))
-                eps = 1e-10 # small number to bound Pearson weights
-                def resid_Pearson_chi_square(pars,y_data,weights,x=x):
-                    y_m = model.eval(pars,x=x)
-                    # Calculate weights for current iteration, add tiny number `eps`
-                    # in denominator for numerical stability
-                    weights = 1./sqrt(y_m + eps)
-                    return (y_m - y_data)*weights
-                # Overwrite lmfit's standard least square residuals with iterative
-                # residuals for Pearson chi-square fit
-                model._residual = resid_Pearson_chi_square
-            elif cost_func  == 'MLE':
-                # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
-                # summands:
-                def sqrt_NLLR(pars,y_data,weights,x=x):
-                    y_m = model.eval(pars,x=x) # model
-                    # Add tiniest pos. float representable by numpy to arguments of
-                    # np.log to smoothly handle divergences for log(arg -> 0)
-                    NLLR = 2*(y_m-y_data) + 2*y_data*(log(y_data+tiny)-log(y_m+tiny))
-                    ret = sqrt(NLLR)
-                    return ret
-                # Overwrite lmfit's standard least square residuals with the
-                # square-roots of the NLLR summands, this enables usage of scipy's
-                # `least_squares` minimizer and yields much faster optimization
-                # than with scalar minimizers
-                model._residual = sqrt_NLLR
-            else:
-                raise Exception("'cost_func' of given `fit_result` not supported.")
-
             # re-perform fit on simulated spectrum - for performance use only the
             # underlying Minimizer object instead of full lmfit model interface
             try:
@@ -4139,6 +4070,7 @@ class spectrum:
                 return np.array([[np.nan]*N_peaks, [np.nan]*N_peaks])
 
         from tqdm.auto import tqdm
+        from joblib import Parallel, delayed
         print("Fitting peaks with "+str(N_samples)+" different MCMC-shape-"
               "parameter sets to determine refined peak-shape errors.")
         try:
@@ -4472,7 +4404,7 @@ class spectrum:
         ----------
         index_mass_calib : int
             Index of mass calibrant peak.
-        fit_result : :class:`lmfit.model.ModelResult`
+        fit_result : :class:`emgfit.model.EMGModelResult`
             Fit result to use for calculating the re-calibration factor and
             for updating the calibrant properties.
 
@@ -4602,12 +4534,14 @@ class spectrum:
 
                   L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]
 
-            See `Notes` of :meth:`spectrum.peakfit` for more details.
+            See `Notes` of :meth:`~emgfit.spectrum.spectrum.peakfit` method for 
+            details.
         x_fit_cen : float or None, [u/z], optional
             center of mass range to fit;
             if None, defaults to marker position (x_pos) of mass calibrant peak
         x_fit_range : float [u/z], optional
-            width of mass range to fit; if None, defaults to 'default_fit_range' spectrum attribute
+            width of mass range to fit; if None, defaults to 'default_fit_range' 
+            spectrum attribute
         vary_shape : bool, optional, default: `False`
             If `False` peak-shape parameters (`sigma`, `theta`,`etas` and
             `taus`) are kept fixed at their initial values. If `True` the
@@ -4621,8 +4555,8 @@ class spectrum:
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
         fit_kws : dict, optional, default: None
-            Options to pass to lmfit minimizer used in
-            :meth:`lmfit.model.Model.fit` method.
+            Options to pass to minimizer used in
+            :meth:`emgfit.model.EMGModel.fit` method.
         par_hint_args : dict of dicts, optional
             Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
             modify or add model parameters. The keys of the `par_hint_args`
@@ -4868,8 +4802,8 @@ class spectrum:
             List of indeces of peaks to update. (To get peak indeces, see plot
             markers or consult the peak properties table by calling the
             :meth:`spectrum.show_peak_properties` method)
-        fit_result : :class:`lmfit.model.ModelResult`
-            :class:`~lmfit.model.ModelResult` holding the fit results of all
+        fit_result : :class:`emgfit.model.EMGModelResult`
+            :class:`~emgfit.model.EMGModelResult` holding the fit results of all
             `peaks` to be updated.
 
         Note
@@ -5005,13 +4939,14 @@ class spectrum:
 
                   L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]
 
-            See `Notes` of :meth:`peakfit` method for details.
+            See `Notes` of :meth:`~emgfit.spectrum.spectrum.peakfit` method for 
+            details.
         method : str, optional, default: `'least_squares'`
             Name of minimization algorithm to use. For full list of options
             check arguments of :func:`lmfit.minimizer.minimize`.
         fit_kws : dict, optional, default: None
-            Options to pass to lmfit minimizer used in
-            :meth:`lmfit.model.Model.fit` method.
+            Options to pass to minimizer used in
+            :meth:`emgfit.model.EMGModel.fit` method.
         par_hint_args : dict of dicts, optional
             Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to
             modify or add model parameters. The keys of the `par_hint_args`
@@ -5202,7 +5137,7 @@ class spectrum:
 
         Parameters
         ----------
-        fit_result : :class:`lmfit.model.ModelResult`
+        fit_result : :class:`emgfit.model.EMGModelResult`
             Fit result object to evaluate statistical errors for.
         peak_indeces : list, optional
             List containing indeces of peaks to determine refined stat. errors

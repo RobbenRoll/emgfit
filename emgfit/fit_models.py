@@ -4,16 +4,15 @@
 
 ##### Import dependencies
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import lmfit as fit
-import sys
+import lmfit
 import warnings
 from .config import *
 from .emg_funcs import *
+from .model import EMGModel
 from scipy.special import erfcx
 from numpy import sqrt, pi
 
+    
 ###### Define parameter bounds
 # Variables ending with _nsigma define bounds in multiples of the initial value
 # for the sigma parameter of the underlying Gaussian ('<initial_sigma>')
@@ -22,6 +21,7 @@ SIGMA_MIN = 1e-15 # lower bound of sigmas
 SIGMA_MAX_NSIGMA = 10 # upper bound of sigmas = SIGMA_MAX_NSIGMA*<initial_sigma>
 TAU_MIN = 1e-15 # lower bound of taus
 TAU_MAX_NSIGMA = 500 # upper bound of taus = TAU_MAX_NSIGMA*<initial_sigma>
+AMP_MIN = 1e-20
 
 def create_default_init_pars(mass_number=100): #TODO: Consider moving to config for user control
     """
@@ -312,7 +312,7 @@ def get_mu0(x_m, init_pars, fit_model):
 
 ################################################################################
 ##### Define emgfit fit models
-def Gaussian(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
+def Gaussian(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
     Gaussian lmfit model (single-peak Gaussian fit model)
 
@@ -330,6 +330,7 @@ def Gaussian(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     vary_shape_pars : bool
         Whether to vary or fix peak shape parameters (i.e. sigma, theta,
         eta's and tau's).
+    kws : TODO: Add ALL kws docstring and implement cost_func argument in spectrum.comp_model()
 
     Returns
     -------
@@ -341,7 +342,8 @@ def Gaussian(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     def Gaussian(x, amp, mu, sigma):
         return  amp/(sigma*np.sqrt(2*np.pi)) * np.exp(-(x-mu)**2/(2*sigma**2))
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak
-    model = fit.Model(Gaussian, prefix=pref, nan_policy='propagate')
+    model = EMGModel(Gaussian, prefix=pref, nan_policy='propagate', 
+                     vary_shape=vary_shape_pars, **kws)
 
     # Add parameters bounds or restrictions and define starting values
     model.set_param_hint(pref+'amp', value=amp0, min=0)
@@ -351,7 +353,7 @@ def Gaussian(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     return model
 
 
-def emg01(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
+def emg01(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
     Hyper-EMG(0,1) lmfit model (single-peak fit model with one exponential tail
     on the right)
@@ -381,10 +383,11 @@ def emg01(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     def emg01(x, amp, mu, sigma, tau_p1):
         return amp*h_emg(x, mu, sigma, 0, (0,),(0,),(1,),(tau_p1,))
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak
-    model = fit.Model(emg01, prefix = pref, nan_policy='propagate')
+    model = EMGModel(emg01, prefix = pref, nan_policy='propagate', 
+                     vary_shape=vary_shape_pars, **kws)
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
+    model.set_param_hint(pref+'amp', value=amp0, min=AMP_MIN)
     model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'tau_p1', value= init_pars['tau_p1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
@@ -392,7 +395,7 @@ def emg01(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     return model
 
 
-def emg10(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
+def emg10(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
     Hyper-EMG(1,0) lmfit model (single-peak fit model with one exponential tail
     on the left)
@@ -422,10 +425,11 @@ def emg10(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     def emg10(x, amp, mu, sigma, tau_m1):
         return amp*h_emg(x, mu, sigma, 1, (1,),(tau_m1,),(0,),(0,))
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak
-    model = fit.Model(emg10, prefix = pref, nan_policy='propagate')
+    model = EMGModel(emg10, prefix = pref, nan_policy='propagate', 
+                     vary_shape=vary_shape_pars, **kws)
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
+    model.set_param_hint(pref+'amp', value=amp0, min=AMP_MIN)
     model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'tau_m1', value= init_pars['tau_m1'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
@@ -433,7 +437,7 @@ def emg10(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     return model
 
 
-def emg11(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
+def emg11(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
     Hyper-EMG(1,1) lmfit model (single-peak fit model with one exponential tail
     on the left and one exponential tail on the right)
@@ -463,10 +467,11 @@ def emg11(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     def emg11(x, amp, mu, sigma, theta, tau_m1, tau_p1):
         return amp*h_emg(x, mu, sigma, theta, (1,),(tau_m1,),(1,),(tau_p1,)) # from emg_funcs.py
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak
-    model = fit.Model(emg11, prefix = pref, nan_policy='propagate')
+    model = EMGModel(emg11, prefix = pref, nan_policy='propagate', 
+                     vary_shape=vary_shape_pars, **kws)
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
+    model.set_param_hint(pref+'amp', value=amp0, min=AMP_MIN)
     model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -476,7 +481,7 @@ def emg11(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     return model
 
 
-def emg12(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
+def emg12(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
     Hyper-EMG(1,2) lmfit model (single-peak fit model with one exponential tail
     on the left and two exponential tails on the right)
@@ -506,10 +511,11 @@ def emg12(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     def emg12(x, amp, mu, sigma, theta, tau_m1,eta_p1,eta_p2,tau_p1,tau_p2):
         return amp*h_emg(x, mu, sigma, theta, (1,),(tau_m1,),(eta_p1,eta_p2),(tau_p1,tau_p2)) # from emg_funcs.py
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak (e.g. 'p0' for peak with index 0)
-    model = fit.Model(emg12, prefix = pref, nan_policy='propagate')
+    model = EMGModel(emg12, prefix = pref, nan_policy='propagate', 
+                     vary_shape=vary_shape_pars, **kws)
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
+    model.set_param_hint(pref+'amp', value=amp0, min=AMP_MIN)
     model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -522,7 +528,7 @@ def emg12(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     return model
 
 
-def emg21(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
+def emg21(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
     Hyper-EMG(2,1) lmfit model (single-peak fit model with two exponential tails
     on the left and one exponential tail on the right)
@@ -552,10 +558,11 @@ def emg21(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     def emg21(x, amp, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,tau_p1):
         return amp*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2),(tau_m1,tau_m2),(1,),(tau_p1,)) # from emg_funcs.py
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak (e.g. 'p0' for peak with index 0)
-    model = fit.Model(emg21, prefix = pref, nan_policy='propagate')
+    model = EMGModel(emg21, prefix = pref, nan_policy='propagate', 
+                     vary_shape=vary_shape_pars, **kws)
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
+    model.set_param_hint(pref+'amp', value=amp0, min=AMP_MIN)
     model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -568,7 +575,7 @@ def emg21(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     return model
 
 
-def emg22(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
+def emg22(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
     Hyper-EMG(2,2) lmfit model (single-peak fit model with two exponential tails
     on the left and two exponential tails on the right)
@@ -599,10 +606,11 @@ def emg22(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     def emg22(x, amp, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,tau_p1,tau_p2):
         return amp*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2),(tau_m1,tau_m2),(eta_p1,eta_p2),(tau_p1,tau_p2)) # from emg_funcs.py
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak (e.g. 'p0' for peak with index 0)
-    model = fit.Model(emg22, prefix = pref, nan_policy='propagate')
-
+    model = EMGModel(emg22, prefix = pref, nan_policy='propagate', 
+                     vary_shape=vary_shape_pars, **kws)
+    
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
+    model.set_param_hint(pref+'amp', value=amp0, min=AMP_MIN)
     model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -618,7 +626,7 @@ def emg22(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     return model
 
 
-def emg23(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
+def emg23(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
     Hyper-EMG(2,3) lmfit model (single-peak fit model with two exponential tails
     on the left and three exponential tails on the right)
@@ -648,7 +656,8 @@ def emg23(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     def emg23(x, amp, mu, sigma, theta, eta_m1,eta_m2,tau_m1,tau_m2,eta_p1,eta_p2,eta_p3,delta_p,tau_p1,tau_p2,tau_p3):
         return amp*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2),(tau_m1,tau_m2),(eta_p1,eta_p2,eta_p3),(tau_p1,tau_p2,tau_p3)) # from emg_funcs.py
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak (e.g. 'p0' for peak with index 0)
-    model = fit.Model(emg23, prefix = pref, nan_policy='propagate')
+    model = EMGModel(emg23, prefix = pref, nan_policy='propagate', 
+                     vary_shape=vary_shape_pars, **kws)
 
     if init_pars['eta_p2'] < 0: # avoids math errors in peak shape uncertainty estimation
         init_pars['eta_p2'] = 0
@@ -656,7 +665,7 @@ def emg23(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
         init_pars['eta_p2'] = 1
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
+    model.set_param_hint(pref+'amp', value=amp0, min=AMP_MIN)
     model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -675,7 +684,7 @@ def emg23(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     return model
 
 
-def emg32(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
+def emg32(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
     Hyper-EMG(3,2) lmfit model (single-peak fit model with three exponential
     tails on the left and two exponential tails on the right)
@@ -705,7 +714,8 @@ def emg32(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     def emg32(x, amp, mu, sigma, theta, eta_m1,eta_m2,eta_m3,delta_m,tau_m1,tau_m2,tau_m3,eta_p1,eta_p2,tau_p1,tau_p2):
         return amp*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2,eta_m3),(tau_m1,tau_m2,tau_m3),(eta_p1,eta_p2),(tau_p1,tau_p2)) # from emg_funcs.py
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak (e.g. 'p0' for peak with index 0)
-    model = fit.Model(emg32, prefix = pref, nan_policy='propagate')
+    model = EMGModel(emg32, prefix = pref, nan_policy='propagate', 
+                     vary_shape=vary_shape_pars, **kws)
 
     if init_pars['eta_m2'] < 0: # avoids math errors in peak shape uncertainty estimation
         init_pars['eta_m2'] = 0
@@ -713,7 +723,7 @@ def emg32(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
         init_pars['eta_m2'] = 1
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
+    model.set_param_hint(pref+'amp', value=amp0, min=AMP_MIN)
     model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -732,7 +742,7 @@ def emg32(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     return model
 
 
-def emg33(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
+def emg33(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True, **kws):
     """
     Hyper-EMG(3,3) lmfit model (single-peak fit model with three exponential
     tails on the left and three exponential tails on the right)
@@ -762,7 +772,8 @@ def emg33(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     def emg33(x, amp, mu, sigma, theta, eta_m1,eta_m2,eta_m3,delta_m,tau_m1,tau_m2,tau_m3,eta_p1,eta_p2,eta_p3,delta_p,tau_p1,tau_p2,tau_p3):
         return amp*h_emg(x, mu, sigma, theta, (eta_m1,eta_m2,eta_m3),(tau_m1,tau_m2,tau_m3),(eta_p1,eta_p2,eta_p3),(tau_p1,tau_p2,tau_p3)) # from emg_funcs.py
     pref = 'p{0}_'.format(peak_index) # set prefix for respective peak (e.g. 'p0' for peak with index 0)
-    model = fit.Model(emg33, prefix = pref, nan_policy='propagate')
+    model = EMGModel(emg33, prefix = pref, nan_policy='propagate', 
+                     vary_shape=vary_shape_pars, **kws)
 
     if init_pars['eta_m2'] < 0: # avoids math errors in peak shape uncertainty estimation
         init_pars['eta_m2'] = 0
@@ -774,7 +785,7 @@ def emg33(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
         init_pars['eta_p2'] = 1
 
     # Add parameters bounds or restrictions and define starting values
-    model.set_param_hint(pref+'amp', value=amp0, min=1e-20)
+    model.set_param_hint(pref+'amp', value=amp0, min=AMP_MIN)
     model.set_param_hint(pref+'mu', value=mu0, min=mu0 - MU_VAR_NSIGMA*init_pars['sigma'], max=mu0 + MU_VAR_NSIGMA*init_pars['sigma'])
     model.set_param_hint(pref+'sigma', value= init_pars['sigma'], min=SIGMA_MIN, max=SIGMA_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
     model.set_param_hint(pref+'theta', value= init_pars['theta'], min=0, max=1, vary=vary_shape_pars)
@@ -794,3 +805,23 @@ def emg33(peak_index, mu0, amp0, init_pars=pars_dict, vary_shape_pars=True):
     model.set_param_hint(pref+'tau_p3', value= init_pars['tau_p3'], min=TAU_MIN, max=TAU_MAX_NSIGMA*init_pars['sigma'], vary=vary_shape_pars)
 
     return model
+
+
+################################################################################
+###### Define emgfit ConstantModel class
+class ConstantModel(EMGModel): 
+    def __init__(self, cost_func='default', independent_vars=['x'], prefix='bkg', 
+                 nan_policy='propagate',**kwargs):
+        kwargs.update({'prefix': prefix, 'nan_policy': nan_policy,
+                       'independent_vars': independent_vars})
+
+        def constant(x, c=0.0):
+            return c * np.ones(np.shape(x))
+        super().__init__(constant, cost_func=cost_func, **kwargs)
+
+    def guess(self, data, x=None, **kwargs):
+        """Estimate initial model parameter values from data."""
+        pars = self.make_params()
+
+        pars[f'{self.prefix}c'].set(value=data.mean())
+        return update_param_vals(pars, self.prefix, **kwargs)

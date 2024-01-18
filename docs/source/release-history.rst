@@ -8,19 +8,32 @@ versions can be found `here`_.
 .. _here: https://RobbenRoll.github.io/emgfit
 
 
-v0.A.B (2022-XX-YY)
+v0.5.0 (2024-01-10)
 -------------------
+
+Added 
+^^^^^
+* Add the :mod:`hypothesis_tests` module to allow for likelihood ratio hypothesis 
+  testing as a means to quantify the experimental evidence for the presence of a 
+  peak. 
+* Add `vary_shape` option to :meth:`~emgfit.spectrum.fit_calibrant` method of 
+  spectrum class. 
+* Add :mod:`~emgfit.model` module with custom model interface, thus providing
+  a cleaner way to override lmfit's default residual with emgfit's custom cost 
+  functions. 
 
 Changed
 ^^^^^^^
-* Changed initialization of MCMC walkers in
+* Change initialization of MCMC walkers in
   :meth:`~emgfit.spectrum._get_MCMC_par_samples` to sampling from truncated
-  normal distributions.
-* Updated functions in the :mod:`emg_funcs` module to return NaN if any `tau` is
+  normal distributions to prevent walkers from starting outside the allowed 
+  parameter ranges.
+* Update functions in the :mod:`emg_funcs` module to return NaN if any `tau` is
   negative or if the `theta` parameter falls outside the interval [0,1].
-* Renamed the static :meth:`~emgfit.spectrum.bootstrap_spectrum` method to
+* Rename the static :meth:`~emgfit.spectrum.bootstrap_spectrum` method to
   :func:`~emgfit.sample.resample_events` and moved it to the
   :mod:`~emgfit.sample` module. 
+* Ensure a mass calibrant is available when running :meth:`~emgfit.spectrum.fit_peaks`.
 
 Fixed
 ^^^^^
@@ -28,6 +41,9 @@ Fixed
   XLSX output files.
 * Fix bug in calculation of statistical mass uncertainties of multiply charged
   peaks with :meth:`~emgfit.spectrum.get_errors_from_resampling`.
+* Fix peak shape error evalution with :meth:`~emgfit.spectrum._eval_peak_shape_errors` 
+  failing due to varied parameters falling outside of bounds or due to 
+  precision loss in mu0 calculation. 
 
 
 v0.4.1 (2022-05-31)

@@ -562,7 +562,7 @@ Saving fit traces
 -----------------
 Obtained fit curves and the underlying count data can be exported to a TXT file
 using the :meth:`~emgfit.spectrum.spectrum.save_fit_trace` method of the
-:class:`spectrum` class.
+:class:`~emgfit.spectrum.spectrum` class.
 
 Saving fit results
 ------------------

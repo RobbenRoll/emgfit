@@ -561,7 +561,8 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
         the reference spectrum to sample from will be varied assuming normal
         distributions around the best-fit values with standard deviations given
         by the respective standard errors stored in `fit_result`.
-    MC_shape_par_samples : :class:`pandas.DataFrame` TODO
+    MC_shape_par_samples : :class:`pandas.DataFrame` 
+        Monte Carlo shape parameter samples to use in the fitting. 
     seed : int, optional
         Random seed to use for reproducible sampling.
     n_cores : int, optional
@@ -585,13 +586,12 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
 
     See also
     --------
-    :meth:`~spectrum.get_errors_from_resampling`
+    :meth:`emgfit.spectrum.spectrum.get_errors_from_resampling`
     :func:`emgfit.sample.simulate_events` for details on the event sampling.
 
     """
     bkg_c = fit_result.best_values['bkg_c']
     bkg_c_err = fit_result.params['bkg_c'].stderr
-    cost_func = fit_result.cost_func
     method = fit_result.method
     shape_pars = spec.shape_cal_pars
     x_cen = fit_result.x_fit_cen
@@ -636,9 +636,7 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
             scl_facs.append(1)
 
     import emgfit.fit_models as fit_models
-    from numpy import maximum, sqrt, array, log
-    from joblib import Parallel, delayed
-    from lmfit.model import save_model, load_model
+    from .model import save_model, load_model
     from lmfit.minimizer import minimize
     import lmfit
     import time
@@ -651,7 +649,6 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     modelfname = data_fname+datetime_str+"_resampl_model.sav"
     save_model(model, modelfname)
     N_events = int(np.sum(y))
-    tiny = np.finfo(float).tiny # get smallest pos. float in numpy
     funcdefs = {'constant': lmfit.models.ConstantModel,
                 str(fit_model): getattr(fit_models,fit_model)}
     def refit(seed, shape_pars_i):
@@ -688,37 +685,12 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
         new_weights = 1./new_y_err
 
         model = load_model(modelfname, funcdefs=funcdefs)
-        if cost_func  == 'chi-square':
-            ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x))
-            eps = 1e-10 # small number to bound Pearson weights
-            def resid_Pearson_chi_square(pars, y_data, weights, x=x):
-                y_m = model.eval(pars,x=x)
-                # Calculate weights for current iteration, add tiny number
-                # `eps` in denominator for numerical stability
-                weights = 1./sqrt(y_m + eps)
-                return (y_m - y_data)*weights
-            # Overwrite lmfit's standard least square residuals
-            model._residual = resid_Pearson_chi_square
-        elif cost_func  == 'MLE':
-            # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
-            # summands:
-            def sqrt_NLLR(pars, y_data, weights, x=x):
-                y_m = model.eval(pars,x=x) # model
-                # Add tiniest pos. float representable by numpy to arguments
-                # of np.log to smoothly handle divergences for log(arg -> 0)
-                NLLR = 2*(y_m-y_data) + 2*y_data*(log(y_data+tiny)-log(y_m+tiny))
-                ret = sqrt(NLLR)
-                return ret
-            # Overwrite lmfit's standard least square residuals
-            model._residual = sqrt_NLLR
-        else:
-            raise Exception("'cost_func' of given `fit_result` not supported.")
 
-        # re-perform fit on simulated spectrum - for performance use only the
+        # re-perform fit on simulated spectrum - for performance, use only the
         # underlying Minimizer object instead of full lmfit model interface
         try:
             min_res = minimize(model._residual, init_pars, method=method,
-                               args=(new_y, new_weights), kws={'x': x},
+                               args=(new_y, new_weights), kws={'x': new_x},
                                scale_covar=False, nan_policy='propagate',
                                reduce_fcn=None, calc_covar=False)
             return min_res
@@ -736,10 +708,11 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     np.random.seed(seed=seed) # for reproducible sampling
     joblib_seeds = np.random.randint(2**31, size=N_spectra)
     from tqdm.auto import tqdm # add progress bar with tqdm
+    from joblib import Parallel, delayed
     try:
         if MC_shape_par_samples is None:
             min_results = np.array(Parallel(n_jobs=n_cores)
-                                     (delayed(refit)(s, shape_pars) for s in tqdm(joblib_seeds)))
+                                    (delayed(refit)(s, shape_pars) for s in tqdm(joblib_seeds)))
         else:
             from .spectrum import _strip_prefs
             min_results = np.array(Parallel(n_jobs=n_cores)
@@ -763,7 +736,7 @@ def resample_events(df, N_events=None, x_cen=None, x_range=0.02, out='hist'):
 
     Parameters
     ----------
-    df : class:`pandas.DataFrame`
+    df : :class:`pandas.DataFrame`
         Original histogrammed spectrum data to re-sample from.
     N_events : int, optional
         Number of events to create via non-parametric re-sampling, defaults to
@@ -812,18 +785,14 @@ def resample_events(df, N_events=None, x_cen=None, x_range=0.02, out='hist'):
     bin_edges = np.append(bin_cens-0.5*bin_width,
                           bin_cens[-1]+0.5*bin_width)
 
-    hist = np.histogram(events, bins=bin_edges)
-    df_new = pd.DataFrame(data=hist[0], index=bin_cens, dtype=float,
-                          columns=["Counts"])
-    df_new.index.name = "m/z [u]"
-    return df_new
-
     # Return unbinned array of events or dataframe with histogram
     if out == 'array':
         np.random.shuffle(events) # randomize event ordering
         return events
     elif out == 'hist':
-        y = np.histogram(events, bins=bin_edges)[0]
-        df_new = pd.DataFrame(data=y, index=bin_cens, columns=['Counts'])
-        df_new.index.rename('m/z [u]', inplace=True)
+        hist = np.histogram(events, bins=bin_edges)
+        df_new = pd.DataFrame(data=hist[0], index=bin_cens, dtype=float,
+                            columns=["Counts"])
+        df_new.index.name = "m/z [u]"
         return df_new
+    
