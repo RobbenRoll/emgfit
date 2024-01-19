@@ -8,7 +8,7 @@ versions can be found `here`_.
 .. _here: https://RobbenRoll.github.io/emgfit
 
 
-v0.5.0 (2024-01-18)
+v0.5.0 (2024-01-19)
 -------------------
 
 Added 
@@ -53,7 +53,7 @@ Fixed
 * Fix bug in preparation of MCMC shape parameters samples in 
   :meth:`~emgfit.spectrum.spectrum.get_MC_peakshape_errors` for cases where 
   the shape calibrant is not the leftmost peak fitted in the shape calibration. 
-  
+
 
 v0.4.1 (2022-05-31)
 -------------------
