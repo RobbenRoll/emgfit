@@ -105,7 +105,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'emgfit'
-copyright = '2022, Stefan Paul'
+copyright = '2024, Stefan Paul'
 author = 'Stefan Paul'
 
 # The version info for the project you're documenting, acts as replacement for
