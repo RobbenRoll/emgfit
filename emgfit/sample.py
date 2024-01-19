@@ -537,7 +537,8 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
 
 
 def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
-                          seed=None, n_cores=-1):
+                          seed=None, randomize_ref_mus_and_amps=False,
+                          MC_shape_par_samples=None, n_cores=-1):
     """Fit spectra simulated via sampling from a reference distribution
 
     This function performs fits of many simulated spectra. The simulated spectra
@@ -557,8 +558,15 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
         fitting. Defaults to the fit model stored in `fit_result`.
     N_spectra : int, optional
         Number of simulated spectra to fit. Defaults to 1000, which
-        typically yields statistical uncertainty estimates with a relative
-        precision of a few percent.
+        typically yields statistical uncertainty estimates with a Monte Carlo
+        uncertainty of a few percent.
+    randomize_ref_mus_and_amps : bool, default: False
+        If `True`, the peak and background amplitudes and the peak centroids of
+        the reference spectrum to sample from will be varied assuming normal
+        distributions around the best-fit values with standard deviations given
+        by the respective standard errors stored in `fit_result`.
+    MC_shape_par_samples : :class:`pandas.DataFrame` 
+        Monte Carlo shape parameter samples to use in the fitting. 
     seed : int, optional
         Random seed to use for reproducible sampling.
     n_cores : int, optional
@@ -570,17 +578,24 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     :class:`numpy.ndarray` of :class:`lmfit.minimizer.MinimizerResult`
         MinimizerResults obtained in the fits of the simulated spectra.
 
-    The event sampling is performed with the
-    :func:`emgfit.sample.simulate_events` function.
+    Note
+    ----
+    The `randomize_ref_mus_and_amps` option allows one to propagate systematic
+    uncertainties in the determination of the reference parameters into the
+    Monte Carlo results. If varying the centroid and amplitude parameters of the
+    reference spectrum, the standard deviations of the parameter distributions
+    will be taken as the respective standard errors determined by lmfit (see
+    lmfit fit report table) and might not be consistent with the area and mass
+    uncertainty estimates shown in the peak properties table.
 
     See also
     --------
-    :meth:`~spectrum.get_errors_from_resampling`
-    :func:`emgfit.sample.simulate_events`
+    :meth:`emgfit.spectrum.spectrum.get_errors_from_resampling`
+    :func:`emgfit.sample.simulate_events` for details on the event sampling.
 
     """
     bkg_c = fit_result.best_values['bkg_c']
-    cost_func = fit_result.cost_func
+    bkg_c_err = fit_result.params['bkg_c'].stderr
     method = fit_result.method
     shape_pars = spec.shape_cal_pars
     x_cen = fit_result.x_fit_cen
@@ -599,25 +614,33 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
         model = alt_result.model
         init_pars = alt_result.init_params
 
+    # Determine tail order of fit model for normalization of initial etas
+    if fit_result.fit_model.startswith('emg'):
+        n_ltails = int(fit_result.fit_model.lstrip('emg')[0])
+        n_rtails = int(fit_result.fit_model.lstrip('emg')[1])
+    else:
+        n_ltails = 0
+        n_rtails = 0
+
     # Collect aLL peaks, peak centroids and amplitudes of fit_result
     fitted_peaks = [idx for idx, p in enumerate(spec.peaks)
                     if x_min < p.x_pos < x_max] # indeces of all fitted peaks
-    mus = []
-    amps = []
+    mus, mu_errs = [], []
+    amps, amp_errs = [], []
     scl_facs = []
     for idx in fitted_peaks:
         pref = 'p{0}_'.format(idx)
         mus.append(fit_result.best_values[pref+'mu'])
+        mu_errs.append(fit_result.params[pref+'mu'].stderr)
         amps.append(fit_result.best_values[pref+'amp'])
+        amp_errs.append(fit_result.params[pref+'amp'].stderr)
         try:
             scl_facs.append(fit_result.params[pref+'scl_fac'])
         except KeyError:
             scl_facs.append(1)
 
     import emgfit.fit_models as fit_models
-    from numpy import maximum, sqrt, array, log
-    from joblib import Parallel, delayed
-    from lmfit.model import save_model, load_model
+    from .model import save_model, load_model
     from lmfit.minimizer import minimize
     import lmfit
     import time
@@ -630,13 +653,33 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     modelfname = data_fname+datetime_str+"_resampl_model.sav"
     save_model(model, modelfname)
     N_events = int(np.sum(y))
-    tiny = np.finfo(float).tiny # get smallest pos. float in numpy
     funcdefs = {'constant': lmfit.models.ConstantModel,
                 str(fit_model): getattr(fit_models,fit_model)}
-    def refit(seed):
+    def refit(seed, shape_pars_i):
         # create simulated spectrum data by sampling from fit-result PDF
         np.random.seed(seed)
-        df = simulate_events(shape_pars, mus, amps, bkg_c,
+        if randomize_ref_mus_and_amps:
+            bkg_c_i = np.random.normal(loc=bkg_c, scale=bkg_c_err, size=1)
+            amps_i = np.random.normal(loc=amps, scale=amp_errs)
+            mus_i = np.random.normal(loc=mus, scale=mu_errs)
+        else:
+            bkg_c_i = bkg_c
+            amps_i = amps
+            mus_i = mus
+
+        if MC_shape_par_samples is not None:
+            # Calculate missing parameters from normalization
+            if n_ltails == 2:
+                shape_pars_i['eta_m2'] = 1 - shape_pars_i['eta_m1']
+            elif n_ltails == 3:
+                eta_m2 = shape_pars_i['delta_m'] - shape_pars_i['eta_m1']
+                shape_pars_i['eta_m3'] = 1 - shape_pars_i['eta_m1'] - eta_m2
+            if n_rtails == 2:
+                shape_pars_i['eta_p2'] = 1 - shape_pars_i['eta_p1']
+            elif n_rtails == 3:
+                eta_p2 = shape_pars_i['delta_p'] - shape_pars_i['eta_p1']
+                shape_pars_i['eta_p3'] = 1 - shape_pars_i['eta_p1'] - eta_p2
+        df = simulate_events(shape_pars_i, mus_i, amps_i, bkg_c_i,
                              N_events, x_min, x_max,
                              out='hist', scl_facs=scl_facs, bin_cens=x)
         new_x = df.index.values
@@ -646,37 +689,12 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
         new_weights = 1./new_y_err
 
         model = load_model(modelfname, funcdefs=funcdefs)
-        if cost_func  == 'chi-square':
-            ## Pearson's chi-squared fit with iterative weights 1/Sqrt(f(x))
-            eps = 1e-10 # small number to bound Pearson weights
-            def resid_Pearson_chi_square(pars,y_data,weights,x=x):
-                y_m = model.eval(pars,x=x)
-                # Calculate weights for current iteration, add tiny number
-                # `eps` in denominator for numerical stability
-                weights = 1./sqrt(y_m + eps)
-                return (y_m - y_data)*weights
-            # Overwrite lmfit's standard least square residuals
-            model._residual = resid_Pearson_chi_square
-        elif cost_func  == 'MLE':
-            # Define sqrt of (doubled) negative log-likelihood ratio (NLLR)
-            # summands:
-            def sqrt_NLLR(pars,y_data,weights,x=x):
-                y_m = model.eval(pars,x=x) # model
-                # Add tiniest pos. float representable by numpy to arguments
-                # of np.log to smoothly handle divergences for log(arg -> 0)
-                NLLR = 2*(y_m-y_data) + 2*y_data*(log(y_data+tiny)-log(y_m+tiny))
-                ret = sqrt(NLLR)
-                return ret
-            # Overwrite lmfit's standard least square residuals
-            model._residual = sqrt_NLLR
-        else:
-            raise Exception("'cost_func' of given `fit_result` not supported.")
 
-        # re-perform fit on simulated spectrum - for performance use only the
+        # re-perform fit on simulated spectrum - for performance, use only the
         # underlying Minimizer object instead of full lmfit model interface
         try:
             min_res = minimize(model._residual, init_pars, method=method,
-                               args=(new_y, new_weights), kws={'x': x},
+                               args=(new_y, new_weights), kws={'x': new_x},
                                scale_covar=False, nan_policy='propagate',
                                reduce_fcn=None, calc_covar=False)
             return min_res
@@ -694,9 +712,15 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     np.random.seed(seed=seed) # for reproducible sampling
     joblib_seeds = np.random.randint(2**31, size=N_spectra)
     from tqdm.auto import tqdm # add progress bar with tqdm
+    from joblib import Parallel, delayed
     try:
-        min_results = np.array(Parallel(n_jobs=n_cores)
-                               (delayed(refit)(s) for s in tqdm(joblib_seeds)))
+        if MC_shape_par_samples is None:
+            min_results = np.array(Parallel(n_jobs=n_cores)
+                                    (delayed(refit)(s, shape_pars) for s in tqdm(joblib_seeds)))
+        else:
+            from .spectrum import _strip_prefs
+            min_results = np.array(Parallel(n_jobs=n_cores)
+                                    (delayed(refit)(s, _strip_prefs(dict(MC_shape_par_samples.iloc[i]))) for i, s in tqdm(enumerate(joblib_seeds))))
     finally:
         # Force workers to shut down and clean up temp SAV file
         from joblib.externals.loky import get_reusable_executor
@@ -716,7 +740,7 @@ def resample_events(df, N_events=None, x_cen=None, x_range=0.02, out='hist'):
 
     Parameters
     ----------
-    df : class:`pandas.DataFrame`
+    df : :class:`pandas.DataFrame`
         Original histogrammed spectrum data to re-sample from.
     N_events : int, optional
         Number of events to create via non-parametric re-sampling, defaults to
@@ -765,18 +789,14 @@ def resample_events(df, N_events=None, x_cen=None, x_range=0.02, out='hist'):
     bin_edges = np.append(bin_cens-0.5*bin_width,
                           bin_cens[-1]+0.5*bin_width)
 
-    hist = np.histogram(events, bins=bin_edges)
-    df_new = pd.DataFrame(data=hist[0], index=bin_cens, dtype=float,
-                          columns=["Counts"])
-    df_new.index.name = "m/z [u]"
-    return df_new
-
     # Return unbinned array of events or dataframe with histogram
     if out == 'array':
         np.random.shuffle(events) # randomize event ordering
         return events
     elif out == 'hist':
-        y = np.histogram(events, bins=bin_edges)[0]
-        df_new = pd.DataFrame(data=y, index=bin_cens, columns=['Counts'])
-        df_new.index.rename('m/z [u]', inplace=True)
+        hist = np.histogram(events, bins=bin_edges)
+        df_new = pd.DataFrame(data=hist[0], index=bin_cens, dtype=float,
+                            columns=["Counts"])
+        df_new.index.name = "m/z [u]"
         return df_new
+    

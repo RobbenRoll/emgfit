@@ -135,9 +135,6 @@ following command::
 
     $ jupyter notebook
 
-**Users that installed emgfit into a virtual environment must first activate
-their emgfit environment (see step 2 above) before running this command.**
-
 This will make a window pop up in your default browser. In there, you can
 navigate to different directories and create new notebooks (using the `new`
 panel on the top right) or open existing ones. Ensure the correct kernel is

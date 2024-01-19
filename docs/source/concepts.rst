@@ -4,7 +4,9 @@ Note that `emgfit` is tailored to the needs of analyzing high-precision
 time-of-flight mass spectra. However, both the available selection of
 hyper-exponentially-modified Gaussian (Hyper-EMG) line shapes as well as the
 implemented statistical techniques could be used as powerful tools for
-analyzing spectroscopic data sets from a variety of fields.
+analyzing spectroscopic data sets from a variety of fields. The subsequent 
+sections provide an overview of the central concepts underlying the emgfit 
+fitting methodology and complement the :doc:`tutorial. <emgfit_tutorial>` 
 
 
 The peak and spectrum classes
@@ -560,7 +562,7 @@ Saving fit traces
 -----------------
 Obtained fit curves and the underlying count data can be exported to a TXT file
 using the :meth:`~emgfit.spectrum.spectrum.save_fit_trace` method of the
-:class:`spectrum` class.
+:class:`~emgfit.spectrum.spectrum` class.
 
 Saving fit results
 ------------------
@@ -648,6 +650,93 @@ blinding is automatically lifted once the processing of the spectrum is
 finalized and the results are exported.
 
 
+Hypothesis testing 
+------------------ 
+Hypothesis (or significance) testing can help to inform whether a feature in the 
+observed spectrum can be regarded as a peak or simply arises from statistical 
+fluctuations. The critical question to be addressed in a hypothesis test with emgfit 
+is whether a bump in a spectrum is significant enough to be considered a peak.
+
+In a typical frequentist hypothesis test, a null and an alternative hypothesis are 
+compared and a p-value is used to judge whether the observed data provides sufficient 
+evidence to reject the null hypothesis :math:`H_0` in favour of the alternative hypothesis 
+:math:`H_1`. In an emgfit hypothesis test, the alternative hypothesis states that the spectrum 
+contains an additional peak, resulting in :math:`N+1` peaks in total, whereas the null hypothesis 
+regards the simpler null model as true and claims that the spectrum only contains :math:`N` peaks. 
+The p-value quantifies the probability that the null hypothesis is true and that the supposed 
+additional peak was merely due to statistical fluctuations. Before evaluating the p-value, 
+one should specify a critical significance level :math:`\alpha`. If :math:`p < \alpha`, 
+the null hypothesis is rejected in favour of the alternative; otherwise, the null hypothesis 
+is accepted and observation of the additional peak can be claimed. 
+
+The critical step in a hypothesis test is the determination of the p-value. The hypothesis 
+testing methods implemented in emgfit's :mod:`~emgfit.hypothesis_tests` module are different 
+variants of a so-called likelihood ratio test and exploit the fact that emgfit's ``MLE`` cost 
+function is given by the negative log-likelihood ratio. The different methods to perform 
+likelihood ratio tests with emgfit differ in the approach taken to determine the p-value 
+and are given by:
+
+1. The :func:`~emgfit.hypothesis_tests.run_MC_likelihood_ratio_test` function performs a likelihood 
+ratio test based on Monte Carlo sampling. To this end, simulated spectra are created by randomly 
+sampling events from the null model best fitting the observed data. These simulated spectra are then 
+fitted with both the null and the alternative model and the respective values for the likelihood 
+ratio test statistic :math:`LLR` are calculated using the relation 
+
+.. math::
+
+   LLR = \log\left(\frac{\mathcal{L}(H_1)}{\mathcal{L}(H_0)}\right) = L(H_1) - L(H_0),
+
+where :math:`L(H_0)` and :math:`L(H_1)` denote the MLE cost function values (i.e. the negative 
+doubled log-likelihood values) obtained from the null-model and alternative-model fits, 
+respectively, and :math:`\mathcal{L}(H_0)` and :math:`\mathcal{L}(H_1)` mark the corresponding 
+likelihood functions. Finally, the p-value is calculated as 
+
+.. math:: 
+
+   p = \frac{N_>}{N_< + N_>}, 
+
+where :math:`N_<` and :math:`N_>` denote the number of likelihood ratio values 
+:math:`LLR` that fall below and above the observed value for the likelihood 
+ratio test statistic :math:`c`, respectively. The main drawback of 
+this method is the large number of samples required to obtain a sufficient precision 
+on the p-value in case a high significance level (:math:`>3\sigma`) is demanded. It 
+should further be noted that this method considers the likelihood to find a peak 
+anywhere within the range over which the peak centroid `\mu` is varied around the 
+alternative-peak marker position (default range: :math:`\pm 5\sigma_0` with initial 
+standard deviation :math:`\sigma_0`).
+
+2. The :func:`~emgfit.hypothesis_tests.run_GV_likelihood_ratio_test` function performs a likelihood 
+ratio test based on the method presented by Gross and Vitells in Ref. [8]_. This methodology 
+has famously been used in the experimental discovery of the Higgs boson. Method 2 is 
+particularly well suited when one aims to perform a hypothesis test with a very high 
+significance threshold (:math:`>3\sigma`), in which case method 1 may become 
+computationally prohibitive. The approach can further be used to test for the presence 
+of a peak over an arbitrarily wide mass range. To this end, the user-specified mass range 
+of interest is subdivided by a set of equidistant alternative-peak positions (100 by default). 
+At each position, a local hypothesis test is performed that only probes for the likelihood 
+to observe an alternative peak centred at the given mass position. From these multiple local 
+hypothesis tests, a global p-value can be deduced allowing one to judge whether an alternative 
+peak has been observed whose peak position is unknown but lies anywhere within the searched 
+mass range. In determining the global p-value, one has to account for correlations between the 
+multiple local hypothesis tests, thus preventing the so-called look-elsewhere effect. This is 
+achieved by calculating the global p-value from the following relation given by Gross and 
+Vitells[8]_:
+
+.. math::
+
+       p = P(LLR > c) \leq P(\chi^2_1 > c)/2 + \langle N(c_0)\rangle e^{-\left(c-c_0\right)/2},
+
+where :math:`P(LLR > c)` is the probability for the likelihood ratio test statistic (LLR) 
+to exceed the maximum of the observed local LRT statistic :math:`c`, :math:`P(\chi^2_1 > c)` is the 
+probability that the :math:`\chi^2` statistic with one degree of freedom exceeds the level :math:`c` 
+and :math:`\langle N(c_0)\rangle` is the expected number of times the local LRT statistics surpass the 
+threshold level :math:`c_0 \ll c` under the null hypothesis. This number is estimated by 
+simulating :math:`N_{spectra}` spectra from the null model and taken as the mean number of times the local 
+LRT statistic rises above the specified threshold level :math:`c_0`. Further details on the GV method can be 
+found in the documentation of the :func:`run_GV_likelihood_ratio_test` function. For a general review on 
+likelihood ratio hypothesis testing see Ref. [9]_.
+
+
 .. _AME2016: http://amdc.in2p3.fr/web/masseval.html
 
 References
@@ -657,17 +746,17 @@ References
    asymmetric peak shapes in high-resolution time-of-flight mass spectrometry."
    International Journal of Mass Spectrometry 421 (2017): 245-254.
 
-.. [2] Pommé, S., and B. Caro Marroyo. "Improved peak shape fitting in alpha
+.. [2] Pommé, S., and Caro Marroyo, B. "Improved peak shape fitting in alpha
    spectra." Applied Radiation and Isotopes 96 (2015): 148-153.
 
-.. [3] Naish, Pamela J., and S. Hartwell. "Exponentially modified Gaussian
+.. [3] Naish, Pamela J., and Hartwell, S. "Exponentially modified Gaussian
    functions — a good model for chromatographic peaks in isocratic HPLC?."
    Chromatographia 26.1 (1988): 285-296.
 
-.. [4] Cash, Webster. "Parameter estimation in astronomy through application of
+.. [4] Cash, W. "Parameter estimation in astronomy through application of
    the likelihood ratio." The Astrophysical Journal 228 (1979): 939-947.
 
-.. [5] San Andrés, Samuel Ayet, et al. "High-resolution, accurate
+.. [5] Ayet San Andrés, S., et al. "High-resolution, accurate
   multiple-reflection time-of-flight mass spectrometry for short-lived,
   exotic nuclei of a few events in their ground and low-lying isomeric
   states." Physical Review C 99.6 (2019): 064313.
@@ -677,3 +766,9 @@ References
 
 .. [7] Wang, M., et al. "The AME2016 atomic mass evaluation (II). Tables, graphs
    and references." Chinese Physics C 41.3 (2017): 030003.
+
+.. [8] Gross, E., Vitells, O. "Trial factors for the look elsewhere effect in high 
+   energy physics." European Physics Journal C 70 (2010): 525-530.
+
+.. [9] Algeri, S., Aalbers, J., Dundas Mora, K., Conrad, J. "Searching for new phenomena 
+   with profile likelihood ratio tests." Nature Reviews Physics 2, (2020): 245-252. 

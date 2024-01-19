@@ -32,10 +32,19 @@ modified Gaussian probability density function.
 
 emgfit.fit\_models module
 -------------------------
-Module with lmfit models for single peaks with Gaussian or various
+Module with fit models for single peaks with Gaussian or various
 hyper-exponentially-modified Gaussian line shapes.
 
 .. automodule:: emgfit.fit_models
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+emgfit.model module
+-------------------------
+Module with custom model interface based on :mod:`lmfit.model` module.
+
+.. automodule:: emgfit.model
    :members:
    :undoc-members:
    :show-inheritance:

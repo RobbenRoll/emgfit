@@ -10,13 +10,13 @@ import numpy as np
 from copy import deepcopy
 
 ##### Import AME2016 & AME2020 data into pandas dataframes
-directory = Path(__file__).parent  # get directory containing this file
-filename_AME2016 = str(directory)+"/AME2016/AME2016-mass-formatted.csv"
-df_AME2016 = pd.read_csv(filename_AME2016, encoding='UTF-8', delimiter=';')
-df_AME2016.set_index(['A','Element'], inplace=True)
-filename_AME2020 = str(directory)+"/AME2020/AME2020-mass-formatted.csv"
-df_AME2020 = pd.read_csv(filename_AME2020, encoding='UTF-8', delimiter=';')
-df_AME2020.set_index(['A','Element'], inplace=True)
+DIR = Path(__file__).parent  # get directory containing this file
+FNAME_AME2016 = str(DIR)+"/AME2016/AME2016-mass-formatted.csv"
+DF_AME2016 = pd.read_csv(FNAME_AME2016, encoding='UTF-8', delimiter=';')
+DF_AME2016.set_index(['A','Element'], inplace=True)
+FNAME_AME2020 = str(DIR)+"/AME2020/AME2020-mass-formatted.csv"
+DF_AME2020 = pd.read_csv(FNAME_AME2020, encoding='UTF-8', delimiter=';')
+DF_AME2020.set_index(['A','Element'], inplace=True)
 
 ##### Define functions
 def mdata_AME(El, A, src='AME2020'):
@@ -39,9 +39,9 @@ def mdata_AME(El, A, src='AME2020'):
 
     """
     if src == 'AME2020':
-        df_AME = deepcopy(df_AME2020)
+        df_AME = deepcopy(DF_AME2020)
     elif src == 'AME2016':
-        df_AME = deepcopy(df_AME2016)
+        df_AME = deepcopy(DF_AME2016)
 
     try:
         Z = df_AME['Z'].loc[(A,El)]
@@ -71,12 +71,12 @@ def get_El_from_Z(Z):
     # Use only AME2020 since AME2016 contains some misassignments for superheavy
     # element symbols
     if isinstance(Z, (list, tuple, np.ndarray)):
-        li = [df_AME2020.index[(df_AME2020['Z']==Z_i)].get_level_values(
+        li = [DF_AME2020.index[(DF_AME2020['Z']==Z_i)].get_level_values(
                                                      'Element')[0] for Z_i in Z]
         El = np.array(li)
     else:
-        mask = (df_AME2020['Z'] == Z)
-        El = df_AME2020.index[mask].get_level_values('Element')[0]
+        mask = (DF_AME2020['Z'] == Z)
+        El = DF_AME2020.index[mask].get_level_values('Element')[0]
     return El
 
 

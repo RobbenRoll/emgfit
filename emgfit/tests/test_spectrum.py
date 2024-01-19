@@ -2,7 +2,7 @@ import pytest
 import emgfit as emg
 import numpy as np
 
-class Test_spectrum:
+class TestSpectrum:
     # Create simulated spectrum data
     from emgfit.sample import simulate_events
     true_sigma = 7.77901056381226e-05
@@ -167,7 +167,7 @@ class Test_spectrum:
         assert spec.peaks[0].m_ion is None, msg1
         assert spec.peaks[1].m_ion is None, msg1
         assert spec.peaks[1].comment == "comm3"
-        assert spec.recal_fac is None, msg1
+        assert spec.recal_fac == 1.0, msg1
         assert spec.recal_fac_error is None, msg1
         assert spec.MC_recal_facs is None, msg1
         assert spec.peaks_with_MC_PS_errors == [], msg1
