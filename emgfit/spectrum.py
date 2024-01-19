@@ -1,4 +1,4 @@
-################################################################################
+###############################################################################
 ##### Python module for peak fitting in TOF mass spectra
 ##### Author: Stefan Paul
 
@@ -22,7 +22,7 @@ import dill
 # Remove dill types from pickle registry to avoid pickle errors in parallelized
 # fits:
 dill.extend(False)
-################################################################################
+###############################################################################
 ##### Define peak class
 class peak:
     """Object storing all relevant information about a mass peak.
@@ -53,7 +53,7 @@ class peak:
         Charge state of the species.
     scl_coeff : float, optional
         Scale coefficient used to scale the scale-dependent reference shape
-        parameters when fitting this peak. Defaults to 1.
+        parameters (`sigma` and `tau`s) when fitting this peak. Defaults to 1.
     m_AME : float [u], optional
         Ionic literature mass value, from AME or user-defined.
     m_AME_error : float [u], optional
@@ -266,7 +266,7 @@ def _strip_prefs(d):
     return new_dict
 
 
-################################################################################
+###############################################################################
 ###### Define spectrum class
 class spectrum:
     r"""Object storing spectrum data, associated peaks and all relevant
@@ -2230,7 +2230,7 @@ class spectrum:
         # It is advisable to thin by about half the autocorrelation time
         emcee_kws = dict(steps=steps, burn=burn, thin=thin, nwalkers=nwalkers,
                          float_behavior='chi2', is_weighted=True, pos=p0,
-                         progress='notebook', seed=MCMC_seed, workers=Pool)
+                         progress='notebook', seed=MCMC_seed, workers=workers)
 
         mod = fit_result.model
         x = fit_result.x
@@ -2350,7 +2350,8 @@ class spectrum:
         #         chain[s] = (chain[s] - offset)*1e06
         #         lab += r" [$\mu u$] - {:.3f}$u$".format(offset)
         #     labels.append(lab)
-        labels = [s.lstrip("p0123456789_") for s in result_emcee.var_names]
+        labels = [s if s.endswith(("mu", "amp")) else s.lstrip("p0123456789_")
+                      for s in result_emcee.var_names]
         peak_idx = varied_par_names[-1].split('p')[1].split('_')[0]
         print("\nCovariance map for peak {} with 0.16, 0.50 & 0.84 quantiles "
               "(dashed lines) and best-fit values (blue lines):".format(
@@ -3986,13 +3987,9 @@ class spectrum:
                                                    replace=False,
                                                    random_state=seed)
 
-        # Get index of first peak contained in shape calib. result:
-        xmin_shape_cal = min(self.shape_cal_result.x)
-        xmax_shape_cal = max(self.shape_cal_result.x)
-        first_idx_shape_cal = min([idx for idx, p in enumerate(self.peaks)
-                               if xmin_shape_cal < p.x_pos < xmax_shape_cal])
-        par_samples.columns = par_samples.columns.str.replace('p'+str(
-                                                    first_idx_shape_cal)+'_','')
+        # Remove shape calibrant prefix from parameter names & store in dict
+        par_samples.columns = par_samples.columns.str.replace(
+                                'p'+str(self.index_shape_calib)+'_','')
         shape_par_samples = par_samples.to_dict('records') #(orient="row")
 
         # Determine tail order of fit model for normalization of initial etas
@@ -4347,8 +4344,6 @@ class spectrum:
                     warnings.warn(msg)
                     continue # skip updating properties of this peak
                 p = self.peaks[peak_idx]
-                pref = 'p{0}_'.format(peak_idx)
-                m_ion = p.m_ion
 
                 # Add best-fit area error and peakshape area error in quadrature
                 p.area_error = np.sqrt(p._stat_area_error**2
@@ -4844,7 +4839,6 @@ class spectrum:
                     p.area_error = self.calc_peak_area(peak_idx, fit_result=
                                                        fit_result)[1]
                     p._stat_area_error = p.area_error
-                abs_z = p.abs_z
                 p.m_ion = self._calc_m_ion(peak_idx, fit_result.fit_model,
                                            fit_result.params)
                 # stat_error = A_stat * FWHM / sqrt(peak_area), w/ with
@@ -5612,4 +5606,4 @@ class spectrum:
                     os.remove(fname+'_lin_plot.png')
 
 
-################################################################################
+###############################################################################
