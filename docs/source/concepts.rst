@@ -219,9 +219,10 @@ determined as follows:
   :attr:`x_pos` and the initial value of the standard deviation of the
   Gaussian peak component (`sigma`). This product is multiplied by an empirical
   proportionality factor. The factor is somewhat peak-shape dependent but has
-  been found to work well for a variety of hyper-EMG peaks. If user intervention
-  still becomes necessary, the `par_hint_args` option of the :meth:`peakfit`
-  method can be used to overwrite the initial value of the peak amplitude.
+  been found to work well for a variety of hyper-EMG peaks. If user 
+  intervention still becomes necessary, the `par_hint_args` option of the 
+  :meth:`~emgfit.spectrum.spectrum.peakfit` method can be used to overwrite the 
+  initial value of the peak amplitude.
 * In the case of a Gaussian, the peak centroid is initialized at the peak marker
   position :attr:`x_pos`. For a hyper-EMG fit, the initial centroid of the
   underlying Gaussian (denoted `mu` or :math:`\mu`) is calculated by rearranging

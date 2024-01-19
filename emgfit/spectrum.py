@@ -7,7 +7,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import scipy.signal as sig
-import scipy.special as spl
 import time
 import copy
 from IPython.display import display
@@ -53,7 +52,7 @@ class peak:
         Charge state of the species.
     scl_coeff : float, optional
         Scale coefficient used to scale the scale-dependent reference shape
-        parameters (`sigma` and `tau`s) when fitting this peak. Defaults to 1.
+        parameters when fitting this peak. Defaults to 1.
     m_AME : float [u], optional
         Ionic literature mass value, from AME or user-defined.
     m_AME_error : float [u], optional
@@ -111,7 +110,6 @@ class peak:
 
         Parameters
         ----------
-
         x_pos : float [u/z]
             Coarse position of peak centroid. In fits the Hyper-EMG parameter
             for the (Gaussian) peak centroid `mu` will be initialized at this
