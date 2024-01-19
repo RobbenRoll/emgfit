@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import warnings
 from tqdm.auto import tqdm
 from emgfit.sample import simulate_spectrum
+from IPython.display import display
 
 ################################################################################
 def _likelihood_ratio_test(spec, ref_result, alt_x_pos, x_fit_cen=None,
