@@ -4,6 +4,7 @@
 import lmfit
 import operator
 import json
+import warnings
 import numpy as np
 import lmfit.lineshapes as lineshapes
 from lmfit.jsonutils import HAS_DILL
