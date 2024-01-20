@@ -170,7 +170,9 @@ class EMGModel(lmfit.model.Model):
         
         Parameters
         ----------
-        Name of cost function to use for minimization. 
+        cost_func : str, optional 
+            Name of cost function to use for minimization - overrides the 
+            model's :attr:`~lmfit.model.Model._residual` attribute. 
 
             - If ``'chi-square'``, the fit is performed by minimizing Pearson's
               chi-squared statistic:
