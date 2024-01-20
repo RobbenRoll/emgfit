@@ -2,7 +2,7 @@ import pytest
 import emgfit as emg
 import numpy as np
 
-class Test_spectrum:
+class TestSpectrum:
     # Create simulated spectrum data
     from emgfit.sample import simulate_events
     true_sigma = 7.77901056381226e-05
@@ -103,7 +103,7 @@ class Test_spectrum:
 
         """
         # Instantiate spectrum object, calibrate peak shape and fit all peaks
-        spec = emg.spectrum(df=self.data,show_plot=False)
+        spec = emg.spectrum(df=self.data, show_plot=False)
         spec.detect_peaks(thres=0.0053, plot_smoothed_spec=False,
                           plot_2nd_deriv=False, plot_detection_result=False)
         msg0 = "Incorrect number of peaks detected."
@@ -128,3 +128,47 @@ class Test_spectrum:
                            "excess from literature differ by > 1 sigma for "
                            "Sn116:-2e.")
                 assert abs(ME_dev_keV - p.m_dev_keV) < p.mass_error_keV, msg2
+
+
+    def test_reset_all_fit_and_shape_calib_props(self):
+        """Check resetting of peak properties"""
+        spec = emg.spectrum(df=self.data, show_plot=False)
+        spec.add_peak(self.m_Ni58-0.01, "Ni58:-1e")
+        spec.add_peak(self.m_Co58-0.01, "Co58:-1e")
+        spec.add_peak(self.m_Mn58-0.01, "Mn58?:-1e")
+        spec.add_peak(self.m_Sn116-0.01, "Sn116:-2e")
+        spec.index_shape_calib = 0
+        spec.peaks[0].comment = "comm1, shape calibrant, comm2"
+        spec.peaks[0].m_ion = self.m_Ni58
+        spec.shape_cal_result = 123
+        spec.shape_cal_pars = {"par" : "value"}
+        spec.shape_cal_errors = {"par_err" : "value"}
+        spec.fit_range_shape_cal = 0.4
+        spec.index_mass_calib = 1
+
+        spec.peaks[1].comment = "mass calibrant, comm3"
+        spec.peaks[1].m_ion = self.m_Co58
+        spec.recal_fac = 1.01
+        spec.recal_fac_error = 1e-04
+        spec.MC_recal_facs = [1.0, 1.01, 1.02, 1.03]
+        spec.peaks_with_MC_PS_errors = [1, 2, 3]
+        spec.peaks_with_errors_from_resampling = [1, 2, 3]
+
+        spec._reset_shape_calib_props()
+        msg0 = "Resetting of shape calibration properties failed!"
+        assert spec.index_shape_calib is None, msg0
+        assert spec.peaks[0].comment == "comm1, comm2"
+        assert spec.shape_cal_result is None, msg0
+        assert spec.shape_cal_pars is None, msg0
+        assert spec.fit_range_shape_cal is None, msg0
+        spec._reset_all_fit_props()
+        msg1 = "Resetting of fit properties failed!"
+        assert spec.index_mass_calib is None, msg1
+        assert spec.peaks[0].m_ion is None, msg1
+        assert spec.peaks[1].m_ion is None, msg1
+        assert spec.peaks[1].comment == "comm3"
+        assert spec.recal_fac == 1.0, msg1
+        assert spec.recal_fac_error is None, msg1
+        assert spec.MC_recal_facs is None, msg1
+        assert spec.peaks_with_MC_PS_errors == [], msg1
+        assert spec.peaks_with_errors_from_resampling == [], msg1

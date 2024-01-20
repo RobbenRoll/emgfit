@@ -1,9 +1,10 @@
 import pytest
 import emgfit as emg
 import numpy as np
+import unittest
 
 
-class Test_h_emg(object):
+class Test_h_emg(unittest.TestCase):
 
     def h_emg_mpmath(self, x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p,
                      li_tau_p):
@@ -20,7 +21,7 @@ class Test_h_emg(object):
             for i in range(t_order_m):
                 eta_m = li_eta_m[i]
                 tau_m = li_tau_m[i]
-                h_m += emg.emg_funcs.h_m_i_prec(x,mu,sigma,eta_m,tau_m)
+                h_m += emg.emg_funcs._h_m_i_prec(x,mu,sigma,eta_m,tau_m)
             return h_m
 
         def h_p(x, mu, sigma, li_eta_p, li_tau_p):
@@ -34,7 +35,7 @@ class Test_h_emg(object):
             for i in range(t_order_p):
                 eta_p = li_eta_p[i]
                 tau_p = li_tau_p[i]
-                h_p += emg.emg_funcs.h_p_i_prec(x,mu,sigma,eta_p,tau_p)
+                h_p += emg.emg_funcs._h_p_i_prec(x,mu,sigma,eta_p,tau_p)
             return h_p
 
         # Calculate full Hyper-EMG function
@@ -43,7 +44,8 @@ class Test_h_emg(object):
         elif theta == 0:
             h = h_p(x, mu, sigma, li_eta_p, li_tau_p)
         else:
-            h = theta*h_m(x, mu, sigma, li_eta_m, li_tau_m) + (1-theta)*h_p(x, mu, sigma, li_eta_p, li_tau_p)
+            h = theta*h_m(x, mu, sigma, li_eta_m, li_tau_m)
+            h += (1-theta)*h_p(x, mu, sigma, li_eta_p, li_tau_p)
         return h
 
     def test_accuracy(self):
@@ -106,3 +108,64 @@ class Test_h_emg(object):
                                   (tau_p1,tau_p2,tau_p3))
 
         assert np.all(np.isfinite(ret))
+
+
+    def test_check_par_values(self):
+        """Test if Exceptions are thrown when parameters are out of bounds """
+        x = np.array([100.])
+        mu = 100.
+        sigma = 0.01
+        theta = 0.9
+        li_eta_m, li_eta_p = (0.9, 0.1), (0.9, 0.1)
+        li_tau_m, li_tau_p = (1e-03, 1e-04), (1e-03, 1e-04)
+        from emgfit.emg_funcs import h_emg, _check_par_values
+        # Ensure that baseline parameters pass
+        assert np.isclose(h_emg(x, mu, sigma, theta, li_eta_m, li_tau_m,
+                                li_eta_p, li_tau_p), 39.54504867)
+        try:
+            _check_par_values(sigma, theta, li_eta_m, li_tau_m,
+                              li_eta_p, li_tau_p)
+        except:
+            raise
+
+        # negative sigma
+        self.assertRaises(Exception, h_emg, x, mu, -0.001, theta,
+                          li_eta_m, li_tau_m, li_eta_p, li_tau_p)
+        self.assertRaises(Exception, _check_par_values, -0.001, theta,
+                          li_eta_m, li_tau_m, li_eta_p, li_tau_p)
+
+        # theta out of bounds:
+        self.assertRaises(Exception, h_emg, x, mu, sigma, 1.1,
+                          li_eta_m, li_tau_m, li_eta_p, li_tau_p)
+        self.assertRaises(Exception, _check_par_values, sigma, 1.1,
+                          li_eta_m, li_tau_m, li_eta_p, li_tau_p)
+
+        # etas not normalized:
+        self.assertRaises(Exception, h_emg, x, mu, sigma, theta,
+                          (0.9, 0.2), li_tau_m, li_eta_p, li_tau_p)
+        self.assertRaises(Exception, _check_par_values, sigma, theta,
+                          (0.9, 0.2), li_tau_m, li_eta_p, li_tau_p)
+        self.assertRaises(Exception, h_emg, x, mu, sigma, theta,
+                          li_eta_m, li_tau_m, (0.9, 0.2), li_tau_p)
+        self.assertRaises(Exception, _check_par_values, sigma, theta,
+                          li_eta_m, li_tau_m, (0.9, 0.2), li_tau_p)
+
+        # etas out of bounds
+        self.assertRaises(Exception, h_emg, x, mu, sigma, theta,
+                          (1.5, -0.5), li_tau_m, li_eta_p, li_tau_p)
+        self.assertRaises(Exception, _check_par_values, sigma, theta,
+                          (1.5, -0.5), li_tau_m, li_eta_p, li_tau_p)
+        self.assertRaises(Exception, h_emg, x, mu, sigma, theta,
+                          li_eta_m, li_tau_m, (1.5, -0.5), li_tau_p)
+        self.assertRaises(Exception, _check_par_values, sigma, theta,
+                          li_eta_m, li_tau_m, (1.5, -0.5), li_tau_p)
+
+        # taus not positive
+        self.assertRaises(Exception, h_emg, x, mu, sigma, theta,
+                          li_eta_m, (0, -1e-03), li_eta_p, li_tau_p)
+        self.assertRaises(Exception, _check_par_values, sigma, theta,
+                          li_eta_m, li_tau_m, li_eta_p, (0, -1e-03))
+        self.assertRaises(Exception, h_emg, x, mu, sigma, theta,
+                          li_eta_m, li_tau_m, li_eta_p, (0, -1e-03))
+        self.assertRaises(Exception, _check_par_values, sigma, theta,
+                          li_eta_m, (0, -1e-03), li_eta_p, li_tau_p)

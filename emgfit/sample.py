@@ -5,6 +5,7 @@
 
 import numpy as np
 import pandas as pd
+import warnings
 from scipy.stats import exponnorm, uniform, norm
 
 ################################################################################
@@ -183,7 +184,8 @@ def h_emg_rvs(mu, sigma , theta, *t_args, N_samples=None):
 
 
 ################################################################################
-##### Define functions for creating simulated spectra
+##### Define functions for simulating events or spectra through random sampling
+##### from a reference distribution
 
 def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
                     out='hist', scl_facs=None, N_bins=None, bin_cens=None):
@@ -223,7 +225,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
 
         - ``'hist'`` for binned mass spectrum (default). The centres of the mass
           bins must be specified with the `bin_cens` argument.
-        - ``'list'`` for unbinned list of single ion and background events.
+        - ``'array'`` for unbinned array of single ion and background events.
 
     N_bins : int, optional
         Number of uniform bins to use in ``'hist'`` output mode. The **outer**
@@ -238,9 +240,9 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
 
     Returns
     -------
-    :class:`numpy.ndarray` or :class:`pandas.Dataframe`
+    :class:`pandas.Dataframe` or :class:`numpy.ndarray`
        If out='hist' a dataframe with a histogram of the format
-       [bin centre, counts in bin] is returned. If out='list' an unbinned
+       [bin centre, counts in bin] is returned. If out='array' an unbinned
        array with the x-values of single ion or background events is returned.
 
     Notes
@@ -268,7 +270,6 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
     if type(N_events) != int:
         raise Exception("`N_events` must be of type int.")
     if (mus < x_min).any() or (mus > x_max).any():
-        import warnings
         msg = str("At least one peak centroid in `mus` is outside the sampling range.")
         warnings.warn(msg, UserWarning)
     if scl_facs is None:
@@ -300,6 +301,10 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
         bin_edges = np.linspace(x_min, x_max, num=N_bins+1, endpoint=True)
         bin_width = sample_range/N_bins
         bin_cens = bin_edges[:-1] + bin_width/2
+    elif out == "array":
+        bin_width = 1.
+        N_bins = 1.
+        pass
     else:
         raise Exception("`N_bins` or `bin_cens` argument must be specified!")
 
@@ -373,14 +378,13 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
     events = events[np.logical_and(events >= x_min, events <= x_max)]
     N_discarded = N_events - events.size
     if N_discarded > 0:
-        import warnings
         msg = str("{:.0f} simulated events fell outside the specified sampling "
                   "range and were discarded. Peak areas and area ratios might "
                   "deviate from expectation.").format(N_discarded)
         warnings.warn(msg, UserWarning)
 
     # Return unbinned array of events or dataframe with histogram
-    if out == 'list':
+    if out == 'array':
         np.random.shuffle(events) # randomize event ordering
         return events
     elif out == 'hist':
@@ -434,7 +438,7 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         If `False` (default), this function returns a fresh
         :class:`~emgfit.spectrum.spectrum` object created from the simulated
         mass data. If `True`, this function returns an exact copy of `spec` with
-        only the :attr`data` attribute replaced by the new simulated mass data.
+        only the :attr:`data` attribute replaced by the new simulated mass data.
 
     Returns
     -------
@@ -478,7 +482,6 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         indeces = [i for i in range(len(peaks)) if x_min <= peaks[i].x_pos <= x_max]
     if mus is None:
         if len(indeces) == 0:
-            import warnings
             msg = str("No peaks in sampling range.")
             warnings.warn(msg, UserWarning)
         mus = []
@@ -531,3 +534,269 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         new_spec = spectrum(df=df, show_plot=False)
 
     return new_spec
+
+
+def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
+                          seed=None, randomize_ref_mus_and_amps=False,
+                          MC_shape_par_samples=None, n_cores=-1):
+    """Fit spectra simulated via sampling from a reference distribution
+
+    This function performs fits of many simulated spectra. The simulated spectra
+    are created by sampling events from the best-fit PDF asociated with
+    `fit_result` (as e.g. needed for a parametric bootstrap). The `alt_model`
+    can be used to perform the fits with a different distribution than the
+    reference PDF used for the event sampling.
+
+    Parameters
+    ----------
+    spec : :class:`emgfit.spectrum.spectrum`
+        Spectrum object to perform bootstrap on.
+    fit_result : :class:`lmfit.model.ModelResult`
+        Fit result object holding the best-fit distribution to sample from.
+    alt_result : :class:`lmfit.model.ModelResult`, optional
+        Fit result object holding a prepared fit model to be used for the
+        fitting. Defaults to the fit model stored in `fit_result`.
+    N_spectra : int, optional
+        Number of simulated spectra to fit. Defaults to 1000, which
+        typically yields statistical uncertainty estimates with a Monte Carlo
+        uncertainty of a few percent.
+    randomize_ref_mus_and_amps : bool, default: False
+        If `True`, the peak and background amplitudes and the peak centroids of
+        the reference spectrum to sample from will be varied assuming normal
+        distributions around the best-fit values with standard deviations given
+        by the respective standard errors stored in `fit_result`.
+    MC_shape_par_samples : :class:`pandas.DataFrame` 
+        Monte Carlo shape parameter samples to use in the fitting. 
+    seed : int, optional
+        Random seed to use for reproducible sampling.
+    n_cores : int, optional
+        Number of CPU cores to use for parallelized fitting of simulated
+        spectra. When set to `-1` (default) all available cores are used.
+
+    Returns
+    -------
+    :class:`numpy.ndarray` of :class:`lmfit.minimizer.MinimizerResult`
+        MinimizerResults obtained in the fits of the simulated spectra.
+
+    Note
+    ----
+    The `randomize_ref_mus_and_amps` option allows one to propagate systematic
+    uncertainties in the determination of the reference parameters into the
+    Monte Carlo results. If varying the centroid and amplitude parameters of the
+    reference spectrum, the standard deviations of the parameter distributions
+    will be taken as the respective standard errors determined by lmfit (see
+    lmfit fit report table) and might not be consistent with the area and mass
+    uncertainty estimates shown in the peak properties table.
+
+    See also
+    --------
+    :meth:`emgfit.spectrum.spectrum.get_errors_from_resampling`
+    :func:`emgfit.sample.simulate_events` for details on the event sampling.
+
+    """
+    bkg_c = fit_result.best_values['bkg_c']
+    bkg_c_err = fit_result.params['bkg_c'].stderr
+    method = fit_result.method
+    shape_pars = spec.shape_cal_pars
+    x_cen = fit_result.x_fit_cen
+    x_range = fit_result.x_fit_range
+    x = fit_result.x
+    y = fit_result.y
+    x_min = x_cen - 0.5*x_range
+    x_max = x_cen + 0.5*x_range
+
+    if alt_result is None:
+        fit_model = fit_result.fit_model
+        model = fit_result.model
+        init_pars = fit_result.init_params
+    else:
+        fit_model = alt_result.fit_model
+        model = alt_result.model
+        init_pars = alt_result.init_params
+
+    # Determine tail order of fit model for normalization of initial etas
+    if fit_result.fit_model.startswith('emg'):
+        n_ltails = int(fit_result.fit_model.lstrip('emg')[0])
+        n_rtails = int(fit_result.fit_model.lstrip('emg')[1])
+    else:
+        n_ltails = 0
+        n_rtails = 0
+
+    # Collect aLL peaks, peak centroids and amplitudes of fit_result
+    fitted_peaks = [idx for idx, p in enumerate(spec.peaks)
+                    if x_min < p.x_pos < x_max] # indeces of all fitted peaks
+    mus, mu_errs = [], []
+    amps, amp_errs = [], []
+    scl_facs = []
+    for idx in fitted_peaks:
+        pref = 'p{0}_'.format(idx)
+        mus.append(fit_result.best_values[pref+'mu'])
+        mu_errs.append(fit_result.params[pref+'mu'].stderr)
+        amps.append(fit_result.best_values[pref+'amp'])
+        amp_errs.append(fit_result.params[pref+'amp'].stderr)
+        try:
+            scl_facs.append(fit_result.params[pref+'scl_fac'])
+        except KeyError:
+            scl_facs.append(1)
+
+    import emgfit.fit_models as fit_models
+    from .model import save_model, load_model
+    from lmfit.minimizer import minimize
+    import lmfit
+    import time
+    datetime = time.localtime() # get current date and time
+    datetime_str = time.strftime("%Y-%m-%d_%H-%M-%S", datetime)
+    if spec.input_filename is not None:
+        data_fname = spec.input_filename.rsplit('.', 1)[0] # del. extension
+    else:
+        data_fname = ''
+    modelfname = data_fname+datetime_str+"_resampl_model.sav"
+    save_model(model, modelfname)
+    N_events = int(np.sum(y))
+    funcdefs = {'constant': lmfit.models.ConstantModel,
+                str(fit_model): getattr(fit_models,fit_model)}
+    def refit(seed, shape_pars_i):
+        # create simulated spectrum data by sampling from fit-result PDF
+        np.random.seed(seed)
+        if randomize_ref_mus_and_amps:
+            bkg_c_i = np.random.normal(loc=bkg_c, scale=bkg_c_err, size=1)
+            amps_i = np.random.normal(loc=amps, scale=amp_errs)
+            mus_i = np.random.normal(loc=mus, scale=mu_errs)
+        else:
+            bkg_c_i = bkg_c
+            amps_i = amps
+            mus_i = mus
+
+        if MC_shape_par_samples is not None:
+            # Calculate missing parameters from normalization
+            if n_ltails == 2:
+                shape_pars_i['eta_m2'] = 1 - shape_pars_i['eta_m1']
+            elif n_ltails == 3:
+                eta_m2 = shape_pars_i['delta_m'] - shape_pars_i['eta_m1']
+                shape_pars_i['eta_m3'] = 1 - shape_pars_i['eta_m1'] - eta_m2
+            if n_rtails == 2:
+                shape_pars_i['eta_p2'] = 1 - shape_pars_i['eta_p1']
+            elif n_rtails == 3:
+                eta_p2 = shape_pars_i['delta_p'] - shape_pars_i['eta_p1']
+                shape_pars_i['eta_p3'] = 1 - shape_pars_i['eta_p1'] - eta_p2
+        df = simulate_events(shape_pars_i, mus_i, amps_i, bkg_c_i,
+                             N_events, x_min, x_max,
+                             out='hist', scl_facs=scl_facs, bin_cens=x)
+        new_x = df.index.values
+        new_y = df['Counts'].values
+        new_y_err = np.maximum(1, np.sqrt(new_y)) # Poisson (counting) stats
+        # Weights for residuals: residual = (fit_model - y) * weights
+        new_weights = 1./new_y_err
+
+        model = load_model(modelfname, funcdefs=funcdefs)
+
+        # re-perform fit on simulated spectrum - for performance, use only the
+        # underlying Minimizer object instead of full lmfit model interface
+        try:
+            min_res = minimize(model._residual, init_pars, method=method,
+                               args=(new_y, new_weights), kws={'x': new_x},
+                               scale_covar=False, nan_policy='propagate',
+                               reduce_fcn=None, calc_covar=False)
+            return min_res
+
+        except ValueError:
+            with warnings.catch_warnings():
+                warnings.simplefilter('always')
+                msg = str("Fit failed with ValueError (likely NaNs in "
+                           "y-model array) and will be excluded.")
+                warnings.warn(msg, UserWarning)
+            return None
+
+    # For reproducible sampling with joblib parallel, generate `N_spectra`
+    # random seeds for refit() - only works with the default Loky backend
+    np.random.seed(seed=seed) # for reproducible sampling
+    joblib_seeds = np.random.randint(2**31, size=N_spectra)
+    from tqdm.auto import tqdm # add progress bar with tqdm
+    from joblib import Parallel, delayed
+    try:
+        if MC_shape_par_samples is None:
+            min_results = np.array(Parallel(n_jobs=n_cores)
+                                    (delayed(refit)(s, shape_pars) for s in tqdm(joblib_seeds)))
+        else:
+            from .spectrum import _strip_prefs
+            min_results = np.array(Parallel(n_jobs=n_cores)
+                                    (delayed(refit)(s, _strip_prefs(dict(MC_shape_par_samples.iloc[i]))) for i, s in tqdm(enumerate(joblib_seeds))))
+    finally:
+        # Force workers to shut down and clean up temp SAV file
+        from joblib.externals.loky import get_reusable_executor
+        import os
+        get_reusable_executor().shutdown(wait=True)
+        os.remove(modelfname)
+
+    return min_results
+
+################################################################################
+##### Define functions for non-parametric resampling
+def resample_events(df, N_events=None, x_cen=None, x_range=0.02, out='hist'):
+    """Create simulated spectrum via non-parametric resampling from `df`.
+
+    The simulated data is obtained through resampling from the specified dataset
+    with replacement.
+
+    Parameters
+    ----------
+    df : :class:`pandas.DataFrame`
+        Original histogrammed spectrum data to re-sample from.
+    N_events : int, optional
+        Number of events to create via non-parametric re-sampling, defaults to
+        number of events in original DataFrame `df`.
+    x_cen : float [u/z], optional
+        Center of mass range to re-sample from. If ``None``, re-sample from
+        full mass range of input data `df`.
+    x_range : float [u/z], optional
+        Width of mass range to re-sample from. Defaults to 0.02 u. `x_range`
+        is only relevant if a `x_cen` argument is specified.
+    out : str, optional
+        Output format of sampled data. Options:
+
+        - ``'hist'`` for binned mass spectrum (default). The centres of the mass
+          bins must be specified with the `bin_cens` argument.
+        - ``'array'`` for unbinned array of single ion and background events.
+
+    Returns
+    -------
+    :class:`pandas.Dataframe` or :class:`numpy.ndarray`
+       If out='hist' a dataframe with a histogram of the format
+       [bin centre, counts in bin] is returned. If out='array' an unbinned
+       array with the x-values of single ion or background events is returned.
+
+    """
+    if x_cen:
+        x_min = x_cen - 0.5*x_range
+        x_max = x_cen + 0.5*x_range
+        df = df[x_min:x_max]
+    mass_bins = df.index.values
+    counts = df['Counts'].values.astype(int)
+
+    # Convert histogrammed spectrum (equivalent to MAc HIST export mode) to
+    # list of events (equivalent to MAc LIST export mode)
+    orig_events =  np.repeat(mass_bins, counts, axis=0)
+
+    # Create new DataFrame of events by bootstrapping from `orig_events`
+    if N_events == None:
+        N_events = len(orig_events)
+    random_indeces = np.random.randint(0, len(orig_events), N_events)
+    events = pd.DataFrame(orig_events[random_indeces])
+
+    # Convert list of events back to a DataFrame with histogram data
+    bin_cens = df.index.values
+    bin_width = df.index.values[1] - df.index.values[0]
+    bin_edges = np.append(bin_cens-0.5*bin_width,
+                          bin_cens[-1]+0.5*bin_width)
+
+    # Return unbinned array of events or dataframe with histogram
+    if out == 'array':
+        np.random.shuffle(events) # randomize event ordering
+        return events
+    elif out == 'hist':
+        hist = np.histogram(events, bins=bin_edges)
+        df_new = pd.DataFrame(data=hist[0], index=bin_cens, dtype=float,
+                            columns=["Counts"])
+        df_new.index.name = "m/z [u]"
+        return df_new
+    

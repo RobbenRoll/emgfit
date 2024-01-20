@@ -52,7 +52,7 @@ def _erfcx_jit(arg):
 ##### Define general Hyper-EMG functions
 
 @njit
-def h_m_i(x,mu,sigma,eta_m,tau_m):
+def _h_m_i(x, mu, sigma, eta_m, tau_m):
     """Internal helper function to calculate single negative EMG tail for
     h_m_emg."""
     erfcarg = np.atleast_1d(sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma))
@@ -70,7 +70,7 @@ def h_m_i(x,mu,sigma,eta_m,tau_m):
     return ret
 
 
-def h_m_i_prec(x,mu,sigma,eta_m,tau_m):
+def _h_m_i_prec(x, mu, sigma, eta_m, tau_m):
     """Arbitrary precision version of internal helper function for h_m_emg."""
     expval = exp_mp( 0.5*(sigma/tau_m)**2 + (x-mu)/tau_m )
     erfcval = erfc_mp( sigma/(sqrt(2)*tau_m) + (x-mu)/(sqrt(2)*sigma) )
@@ -80,30 +80,30 @@ def h_m_i_prec(x,mu,sigma,eta_m,tau_m):
 
 @njit
 def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
-    """Negative skewed exponentially-modified Gaussian (EMG) distribution.
+    """Negative-skewed exponentially-modified Gaussian (EMG) distribution.
 
     The lengths of `li_eta_m` & `li_tau_m` must match and define the order of
     negative tails.
 
     Parameters
     ----------
-    x  : float >= 0
+    x  : :class:`numpy.ndarray` of floats
         Abscissa data (mass data).
-    mu : float >= 0
+    mu : float
         Mean value of underlying Gaussian distribution.
     sigma : float >= 0
         Standard deviation of underlying Gaussian distribution.
     li_eta_m : tuple
         Tuple containing the neg. tail weights with the signature:
         ``(eta_m1, eta_m2, ...)``.
-    li_tau_m : tuple
+    li_tau_m : tuple of floats > 0
         Tuple containing the neg. tail decay constants with the signature:
         ``(tau_m1, tau_m2, ...)``.
 
     Returns
     -------
     float
-        Ordinate values of the negative skewed EMG distribution.
+        Ordinate values of the negative-skewed EMG distribution.
 
     Notes
     -----
@@ -116,11 +116,11 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
 
     .. math::
 
-        h_\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
-        = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(u)} \mathrm{erfc}(v),
+        h_\\mathrm{emg,-i} = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \\mathrm{erfcx}(v)
+        = \\frac{\\eta_{-i}}{2\\tau_{-i}} \\exp{(u)} \\mathrm{erfc}(v),
 
-    where :math:`u = \\left(\\frac{\\sigma}{\\sqrt{2}\\tau_{-i}}\\right)^2 + \\frac{x-\mu}{\\sqrt{2}\\tau_{-i}}`
-    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
+    where :math:`u = \\left(\\frac{\\sigma}{\\sqrt{2}\\tau_{-i}}\\right)^2 + \\frac{x-\\mu}{\\tau_{-i}}`
+    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{-i}} + \\frac{x-\\mu}{\\sqrt{2}\\sigma}`.
     In double float precision, the `exp(u)`_ routine overflows if u > 709.78. The
     complementary error function `erfc(v)`_ underflows to 0.0 if v > 26.54. The
     scaled complementary error function `erfcx(v)`_ overflows if v < -26.62. To
@@ -143,12 +143,16 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
        245-254.
 
     """
+    if sigma <= 0:
+        raise Exception("sigma must be positive!")
+
     li_eta_m = np.array(li_eta_m).astype(np.float_)
     li_tau_m = np.array(li_tau_m).astype(np.float_)
     t_order_m = len(li_eta_m) # order of negative tail exponentials
     sum_eta_m = 0.
     for i in range(t_order_m):
         sum_eta_m += li_eta_m[i]
+
     if abs(sum_eta_m - 1) > norm_precision:  # check normalization of eta_m's
         raise Exception("eta_m's don't add up to 1.")
     if len(li_tau_m) != t_order_m:  # check if all arguments match tail order
@@ -158,12 +162,16 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
     for i in range(t_order_m):
         eta_m = li_eta_m[i]
         tau_m = li_tau_m[i]
-        h_m += h_m_i(x,mu,sigma,eta_m,tau_m)
+        if  eta_m < 0 or eta_m > 1:
+            raise Exception("All eta_m's must lie in the interval [0,1].")
+        if tau_m <= 0:
+            raise Exception("All tau_m's must be positive!")
+        h_m += _h_m_i(x,mu,sigma,eta_m,tau_m)
     return h_m
 
 
 @njit
-def h_p_i(x,mu,sigma,eta_p,tau_p):
+def _h_p_i(x, mu, sigma, eta_p, tau_p):
     """Internal helper function to calculate single positive EMG tail for
     h_p_emg."""
     erfcarg = np.atleast_1d(sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma))
@@ -181,7 +189,7 @@ def h_p_i(x,mu,sigma,eta_p,tau_p):
     return ret
 
 
-def h_p_i_prec(x,mu,sigma,eta_p,tau_p):
+def _h_p_i_prec(x, mu, sigma, eta_p, tau_p):
     """Arbitrary precision version of internal helper function for h_p_emg."""
     expval = exp_mp( 0.5*(sigma/tau_p)**2 - (x-mu)/tau_p )
     erfcval = erfc_mp( sigma/(sqrt(2)*tau_p) - (x-mu)/(sqrt(2)*sigma) )
@@ -191,30 +199,30 @@ def h_p_i_prec(x,mu,sigma,eta_p,tau_p):
 
 @njit
 def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
-    """Positive skewed exponentially-modified Gaussian (EMG) distribution.
+    """Positive-skewed exponentially-modified Gaussian (EMG) distribution.
 
     The lengths of `li_eta_p` & `li_tau_p` must match and define the order of
     positive tails.
 
     Parameters
     ----------
-    x  : float >= 0
+    x  : :class:`numpy.ndarray` of floats
         Abscissa data (mass data).
-    mu : float >= 0
+    mu : float
         Mean value of underlying Gaussian distribution.
     sigma : float >= 0
         Standard deviation of underlying Gaussian distribution.
     li_eta_p : tuple
         Tuple containing the pos. tail weights with the signature:
         ``(eta_p1, eta_p2, ...)``.
-    li_tau_p : tuple
+    li_tau_p : tuple of floats > 0
         Tuple containing the pos. tail decay constants with the signature:
         ``(tau_p1, tau_p2, ...)``.
 
     Returns
     -------
     float
-        Ordinate values of the positive skewed EMG distribution.
+        Ordinate values of the positive-skewed EMG distribution.
 
     Notes
     -----
@@ -227,11 +235,11 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
 
     .. math::
 
-        h_\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \mathrm{erfcx}(v)
-        = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(u)} \mathrm{erfc}(v),
+        h_\\mathrm{emg,+i} = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(-\\left(\\frac{x-\\mu}{\\sqrt{2}\\sigma}\\right)^2)} \\mathrm{erfcx}(v)
+        = \\frac{\\eta_{+i}}{2\\tau_{+i}} \\exp{(u)} \\mathrm{erfc}(v),
 
-    where :math:`u = \\left(\\frac{\\sigma}{\\sqrt{2}\\tau_{+i}}\\right)^2 - \\frac{x-\mu}{\\sqrt{2}\\tau_{+i}}`
-    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\mu}{\\sqrt{2}\\sigma}`.
+    where :math:`u = \\left(\\frac{\\sigma}{\\sqrt{2}\\tau_{+i}}\\right)^2 - \\frac{x-\\mu}{\\tau_{+i}}`
+    and :math:`v = \\frac{\\sigma}{\\sqrt{2}\\tau_{+i}} - \\frac{x-\\mu}{\\sqrt{2}\\sigma}`.
     In double precision, the `exp(u)`_ routine overflows if u > 709.78. The
     complementary error function `erfc(v)`_ underflows to 0.0 if v > 26.54. The
     scaled complementary error function `erfcx(v)`_ overflows if v < -26.62. To
@@ -254,12 +262,16 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
        245-254.
 
     """
+    if sigma <= 0:
+        raise Exception("sigma must be positive!")
+
     li_eta_p = np.array(li_eta_p).astype(np.float_)
     li_tau_p = np.array(li_tau_p).astype(np.float_)
     t_order_p = len(li_eta_p) # order of positive tails
     sum_eta_p = 0.
     for i in range(t_order_p):
         sum_eta_p += li_eta_p[i]
+
     if abs(sum_eta_p - 1) > norm_precision:  # check normalization of eta_p's
         raise Exception("eta_p's don't add up to 1.")
     if len(li_tau_p) != t_order_p:  # check if all arguments match tail order
@@ -269,7 +281,11 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
     for i in range(t_order_p):
         eta_p = li_eta_p[i]
         tau_p = li_tau_p[i]
-        h_p += h_p_i(x,mu,sigma,eta_p,tau_p)
+        if  eta_p < 0 or eta_p > 1:
+            raise Exception("All eta_p's must lie in the interval [0,1].")
+        if tau_p <= 0:
+            raise Exception("All tau_p must be positive!")
+        h_p += _h_p_i(x,mu,sigma,eta_p,tau_p)
     return h_p
 
 
@@ -283,9 +299,9 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
 
     Parameters
     ----------
-    x  : float >= 0
+    x  : :class:`numpy.ndarray` of floats
         Abscissa data (mass data).
-    mu : float >= 0
+    mu : float
         Mean value of underlying Gaussian distribution.
     sigma : float >= 0
         Standard deviation of underlying Gaussian distribution.
@@ -295,20 +311,20 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     li_eta_m : tuple
         Tuple containing the neg. tail weights with the signature:
         ``(eta_m1, eta_m2, ...)``.
-    li_tau_m : tuple
+    li_tau_m : tuple of floats > 0
         Tuple containing the neg. tail decay constants with the signature:
         ``(tau_m1, tau_m2, ...)``.
     li_eta_p : tuple
         Tuple containing the pos. tail weights with the signature:
         ``(eta_p1, eta_p2, ...)``.
-    li_tau_p : tuple
+    li_tau_p : tuple of floats > 0
         Tuple containing the pos. tail decay constants with the signature:
         ``(tau_p1, tau_p2, ...)``.
 
     Returns
     -------
     float
-        Ordinate of hyper-EMG distribution
+        Ordinate values of hyper-EMG distribution
 
     See also
     --------
@@ -341,7 +357,9 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
        245-254.
 
     """
-    if theta == 1:
+    if theta < 0 or theta > 1:
+        raise Exception("theta must lie in the interval [0,1]")
+    elif theta == 1:
         h = h_m_emg(x, mu, sigma, li_eta_m, li_tau_m)
     elif theta == 0:
         h = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
@@ -350,6 +368,30 @@ def h_emg(x, mu, sigma , theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
         pos_tails = h_p_emg(x, mu, sigma, li_eta_p, li_tau_p)
         h = theta*neg_tails + (1-theta)*pos_tails
     return h
+
+
+def _check_par_values(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
+    """Check if parameters are in bounds, throw error otherwise """
+    if sigma <= 0:
+        raise Exception("sigma must be positive!")
+
+    if theta < 0 or theta > 1:
+        raise Exception("theta must lie in the interval [0,1]")
+
+    if any(np.array(li_eta_m) < 0) or any(np.array(li_eta_m) > 1):
+        raise Exception("All eta_m's must lie in the interval [0,1].")
+    elif len(np.array(li_eta_m)) > 0 and abs(sum(li_eta_m) - 1) > norm_precision:
+        raise Exception("eta_m's don't add up to 1.")
+    if any(np.array(li_tau_m) <= 0):
+        raise Exception("All tau_m must be positive!")
+
+    if any(np.array(li_eta_p) < 0) or any(np.array(li_eta_p) > 1):
+        raise Exception("All eta_p's must lie in the interval [0,1].")
+    elif len(np.array(li_eta_p)) > 0 and abs(sum(li_eta_p) - 1) > norm_precision:
+        raise Exception("eta_p's don't add up to 1.")
+    if any(np.array(li_tau_p) <= 0):
+        raise Exception("All tau_p must be positive!")
+
 
 
 def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
@@ -361,7 +403,7 @@ def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
 
     Parameters
     ----------
-    mu : float >= 0
+    mu : float
         Mean value of underlying Gaussian distribution.
     theta : float, 0 <= theta <= 1
         Left-right-weight factor (negative-skewed EMG weight: theta;
@@ -369,13 +411,13 @@ def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     li_eta_m : tuple
         Tuple containing the neg. tail weights with the signature:
         ``(eta_m1, eta_m2, ...)``.
-    li_tau_m : tuple
+    li_tau_m : tuple of floats > 0
         Tuple containing the neg. tail decay constants with the signature:
         ``(tau_m1, tau_m2, ...)``.
     li_eta_p : tuple
         Tuple containing the pos. tail weights with the signature:
         ``(eta_p1, eta_p2, ...)``.
-    li_tau_p : tuple
+    li_tau_p : tuple of floats > 0
         Tuple containing the pos. tail decay constants with the signature:
         ``(tau_p1, tau_p2, ...)``.
 
@@ -401,14 +443,13 @@ def mu_emg(mu, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
        245-254.
 
     """
-    if len(li_eta_m) > 0 and abs(sum(li_eta_m) - 1) > norm_precision:
-        raise Exception("eta_m's don't add up to 1.")
+    _check_par_values(1.0, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p)
+
     t_order_m = len(li_eta_m)
     sum_M_mh = 0
     for i in range(t_order_m):
         sum_M_mh += li_eta_m[i]*li_tau_m[i]
-    if len(li_eta_p) > 0 and abs(sum(li_eta_p) - 1) > norm_precision:
-        raise Exception("eta_p's don't add up to 1.")
+
     t_order_p = len(li_eta_p)
     sum_M_ph = 0
     for i in range(t_order_p):
@@ -434,13 +475,13 @@ def sigma_emg(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
     li_eta_m : tuple
         Tuple containing the neg. tail weights with the signature:
         ``(eta_m1, eta_m2, ...)``.
-    li_tau_m : tuple
+    li_tau_m : tuple of floats > 0
         Tuple containing the neg. tail decay constants with the signature:
         ``(tau_m1, tau_m2, ...)``.
     li_eta_p : tuple
         Tuple containing the pos. tail weights with the signature:
         ``(eta_p1, eta_p2, ...)``.
-    li_tau_p : tuple
+    li_tau_p : tuple of floats > 0
         Tuple containing the pos. tail decay constants with the signature:
         ``(tau_p1, tau_p2, ...)``.
 
@@ -466,8 +507,8 @@ def sigma_emg(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
        245-254.
 
     """
-    if len(li_eta_m) > 0 and abs(sum(li_eta_m) - 1) > norm_precision:
-        raise Exception("eta_m's don't add up to 1.")
+    _check_par_values(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p)
+
     t_order_m = len(li_eta_m)
 
     sum_M_mh = 0
@@ -476,8 +517,6 @@ def sigma_emg(sigma, theta, li_eta_m, li_tau_m, li_eta_p, li_tau_p):
         sum_M_mh += li_eta_m[i]* li_tau_m[i]
         sum_S_mh += (li_eta_m[i] + li_eta_m[i]*(1.-li_eta_m[i])**2)*li_tau_m[i]**2
 
-    if len(li_eta_p) > 0 and abs(sum(li_eta_p) - 1) > norm_precision:  
-        raise Exception("eta_p's don't add up to 1.")
     t_order_p = len(li_eta_p)
     sum_M_ph = 0
     sum_S_ph = 0

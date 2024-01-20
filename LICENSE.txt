@@ -1,6 +1,6 @@
 BSD-3
 
-Copyright 2022 Stefan Paul, TRIUMF/University of Heidelberg
+Copyright 2024 Stefan Paul, TRIUMF
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -31,8 +31,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 emgfit is a wrapper around the lmfit Python package. Some code has been adapted
-from example codes of the lmfit Python package whose license is shown below
-under "lmfit LICENSE".
+from source code and usage examples of the lmfit Python package whose license is 
+shown below under "lmfit LICENSE".
 
 emgfit's spectrum._smooth method is adapted from a code sample from SciPy
 Cookbook whose license is shown below under "SciPy Cookbook LICENSE".

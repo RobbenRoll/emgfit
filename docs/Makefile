@@ -7,6 +7,7 @@ SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = emgfit
 SOURCEDIR     = source
 BUILDDIR      = build
+OUTPUTDIR     = $(SOURCEDIR)/outputs
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -18,4 +19,5 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 
 %: Makefile
+	rm -f $(OUTPUTDIR)/*.png $(OUTPUTDIR)/*.xlsx $(OUTPUTDIR)/*calib.txt 
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

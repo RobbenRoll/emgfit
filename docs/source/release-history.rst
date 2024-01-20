@@ -8,15 +8,51 @@ versions can be found `here`_.
 .. _here: https://RobbenRoll.github.io/emgfit
 
 
-v0.A.B (2022-XX-YY)
+v0.5.0 (2024-01-19)
 -------------------
+
+Added 
+^^^^^
+* Add the :mod:`~emgfit.hypothesis_tests` module to allow for likelihood ratio 
+  hypothesis testing as a means to quantify the experimental evidence for the 
+  presence of a peak. 
+* Add `vary_shape` option to :meth:`~emgfit.spectrum.spectrum.fit_calibrant` 
+  method of spectrum class. 
+* Add :attr:`~emgfit.spectrum.spectrum.resolving_power` attribute to spectrum 
+  class to enable the convenient initialization of the peak width parameter 
+  `sigma` based on the typical resolving power of the instrument.
+* Add :mod:`~emgfit.model` module with custom model interface, thus providing
+  a cleaner way to override lmfit's default residual with emgfit's custom cost 
+  functions. 
+  
+Changed
+^^^^^^^
+* Change initialization of MCMC walkers in
+  :meth:`~emgfit.spectrum.spectrum._get_MCMC_par_samples` to sampling from 
+  truncated normal distributions to prevent walkers from starting outside the 
+  allowed parameter ranges.
+* Update functions in the :mod:`~emgfit.emg_funcs` module to return NaN if any 
+  `tau` is negative or if the `theta` parameter falls outside the 
+  interval [0,1].
+* Rename the static :meth:`~emgfit.spectrum.spectrum.bootstrap_spectrum` method 
+  to :func:`~emgfit.sample.resample_events` and moved it to the 
+  :mod:`~emgfit.sample` module. 
+* Ensure a mass calibrant is available when running 
+  :meth:`~emgfit.spectrum.spectrum.fit_peaks`.
 
 Fixed
 ^^^^^
 * Fix bug in color coding of uncertainties listed in peak properties table in
   XLSX output files.
 * Fix bug in calculation of statistical mass uncertainties of multiply charged
-  peaks with :meth:`~emgfit.spectrum.get_errors_from_resampling`.
+  peaks with :meth:`~emgfit.spectrum.spectrum.get_errors_from_resampling`.
+* Fix peak shape error evalution with 
+  :meth:`~emgfit.spectrum.spectrum._eval_peak_shape_errors` failing due to 
+  varied parameters falling outside of bounds or due to precision loss in mu0 
+  calculation. 
+* Fix bug in preparation of MCMC shape parameters samples in 
+  :meth:`~emgfit.spectrum.spectrum.get_MC_peakshape_errors` for cases where 
+  the shape calibrant is not the leftmost peak fitted in the shape calibration. 
 
 
 v0.4.1 (2022-05-31)
@@ -30,8 +66,8 @@ Added
   :class:`~emgfit.spectrum.peak` attribute.
 * Add the convenience method :meth:`~emgfit.spectrum.spectrum.save_fit_trace`
   for exporting the trace data of a fit to a TXT file.
-* Add `method` :class:`peak` attribute to store which optimization algorithm was
-  used for a fit.
+* Add `method` :class:`~emgfit.spectrum.peak` attribute to store which 
+  minimization algorithm was used for a fit.
 * Enable flexible adding and modification of a fit model's parameter constraints
   via the new `par_hint_args` option of :meth:`~emgfit.spectrum.spectrum.peakfit`
   and related spectrum methods.

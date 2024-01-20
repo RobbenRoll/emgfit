@@ -43,7 +43,7 @@ def test_sampling():
 
     return test_sampling_func
 
-class Test_sampling(object):
+class TestSampling():
 
     def test_Gaussian_sampling(self, test_sampling):
         """Test simulate_events() for sampling from Gaussian PDF"""

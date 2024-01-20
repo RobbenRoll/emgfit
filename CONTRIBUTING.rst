@@ -61,33 +61,52 @@ Ready to contribute? Here's how to set up `emgfit` for local development.
 
     $ git clone git@github.com:your_name_here/emgfit.git
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
+3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper 
+   installed, this is how you set up your fork for local development::
 
     $ mkvirtualenv emgfit
     $ cd emgfit/
     $ python setup.py develop
 
-4. Create a branch for local development::
+4. Install development requirements by executing the following in the emgfit/ directory:
+    
+    $ pip install -r requirements-dev.txt 
+
+5. Install pandoc following the instructions given for your given operating 
+   system at https://pandoc.org/installing.html.
+6. Navigate into your local emgfit directory and install nbstripout by running:
+    
+    $ nbstripout --install 
+
+   This adds a git filter which ensures that the output is stripped from 
+   Jupyter notebooks before a commit to avoid blowing up git with bulky output 
+   code. This step only needs to be executed once before your first commit.
+7. Create a branch for local development::
 
     $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
+8. When you're done making changes, check that your changes pass flake8 and the 
+   tests, including testing other Python versions with tox::
 
-5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
+    $ flake8 emgfit
+    $ pytest emgfit/tests
+    
+9. Build the documentation and check that any changes are properly displayed in 
+   the html pages under docs/build/html. The documentation build also 
+   automatically runs the tutorial notebook which will fail if errors are 
+   encountered.
 
-    $ flake8 emgfit tests
-    $ python setup.py test
-    $ tox
+    $ cd docs 
+    $ make html 
 
-   To get flake8 and tox, just pip install them into your virtualenv.
-
-6. Commit your changes and push your branch to GitHub::
+10. Commit your changes and push your branch to GitHub::
 
     $ git add .
     $ git commit -m "Your detailed description of your changes."
     $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website.
+11. Submit a pull request through the GitHub website.
 
 Pull Request Guidelines
 -----------------------
@@ -98,6 +117,6 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in release-history.rst.
-3. The pull request should work for Python >= 3.7. Check
+3. The pull request should work for Python >= 3.8. Check
    https://github.com/RobbenRoll/emgfit/actions/workflows/CI-tests.yml
    and make sure that the tests pass for all supported Python versions.
