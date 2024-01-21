@@ -2045,7 +2045,7 @@ class spectrum:
 
         # Ensure shape-reference parameters are contained in composite model:
         if self.shape_cal_result is not None and shape_calib_in_range is False:
-            ref_pref = "p{0}_".format(self.index_shape_calib)
+            ref_pref = self.peaks[self.index_shape_calib]._prefix 
             for pname, pval in self.shape_cal_pars.items():
                 if pname.startswith(("sigma","theta","eta","tau","delta")):
                     mod.param_names.append(ref_pref+pname)
@@ -3644,7 +3644,7 @@ class spectrum:
             print('\n##### Peak-shape uncertainty evaluation #####\n')
         if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
-        pref = 'p{0}_'.format(self.index_shape_calib) 
+        pref = self.peaks[self.index_shape_calib]._prefix  
         # grab shape parameters to be varied by +/- sigma:
         shape_pars = [key for key in self.shape_cal_pars
                       if (key.startswith(('sigma','theta','eta','tau','delta'))
@@ -4416,8 +4416,7 @@ class spectrum:
         if recal_fac is None:
             recal_fac = self.recal_fac
         p = self.peaks[peak_index]
-        pref = "p{0}_".format(peak_index)
-        m_ion = pars[pref+'mu']*recal_fac*p.abs_z
+        m_ion = pars[p._prefix+'mu']*recal_fac*p.abs_z
         return m_ion
 
 
@@ -4463,7 +4462,7 @@ class spectrum:
         peak.area, peak.area_error = self.calc_peak_area(index_mass_calib,
                                                          fit_result=fit_result)
         peak._stat_area_error = peak.area_error
-        pref = 'p{0}_'.format(index_mass_calib)
+        pref = peak._index
         peak.m_ion = self._calc_m_ion(index_mass_calib, fit_result.fit_model,
                                       fit_result.params, recal_fac=1.0)
         # Determine recalibration factor
@@ -4846,7 +4845,7 @@ class spectrum:
                 pass  # prevent overwritting of mass recalibration results
             else:
                 peak_idx = self.peaks.index(p)
-                pref = 'p{0}_'.format(peak_idx)
+                pref = self.peaks[peak_idx]._prefix
                 p.fit_model = fit_result.fit_model
                 p.cost_func = fit_result.cost_func
                 p.method = fit_result.method
@@ -5368,7 +5367,6 @@ class spectrum:
             # Update peak properties with refined stat. and area uncertainties
             for p_i, peak_idx in enumerate(POI[res_i]):
                 p = self.peaks[peak_idx]
-                pref = 'p{0}_'.format(peak_idx)
                 m_ion = p.m_ion
                 p.rel_stat_error = stat_errs[p_i]*p.abs_z/m_ion
                 # Replace stat. area errors with resampling errors while
