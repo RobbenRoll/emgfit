@@ -650,7 +650,7 @@ class spectrum:
         ----------
         df : :class:`pandas.DataFrame`
             Spectrum data to plot.
-        fig : :class:`matplotlib.pyplot.figure`, optional
+        fig : :class:`matplotlib.figure.Figure`, optional
             Figure object to plot onto.
         title : str, optional
             Optional plot title.
@@ -755,7 +755,7 @@ class spectrum:
         peaks : list of :class:`peaks`, optional
             List of :class:`peaks` to show peak markers for. Defaults to
             :attr:`peaks`. Use `peaks=[]` to turn markers off.
-        fig : :class:`matplotlib.pyplot.figure`, optional
+        fig : :class:`matplotlib.figure.Figure`, optional
             Figure object to plot onto.
         dpi : int, optional
             Dots per inch for plot. Defaults to `dpi` value defined in
