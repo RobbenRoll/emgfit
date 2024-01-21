@@ -434,10 +434,12 @@ class EMGModel(lmfit.model.Model):
         if fit_kws is None:
             fit_kws = {}
 
-        output = EMGModelResult(self, params, data=data, #kwargs[self.independent_vars[0]], data,  #TODO: clean up
-                                weights=weights, fitted_peaks=fitted_peaks, method=method, 
-                                fcn_kws=kwargs, iter_cb=iter_cb, scale_covar=scale_covar, 
-                                nan_policy=self.nan_policy, calc_covar=calc_covar, 
+        output = EMGModelResult(self, params, data=data, weights=weights, 
+                                fitted_peaks=fitted_peaks, method=method, 
+                                fcn_kws=kwargs, iter_cb=iter_cb, 
+                                scale_covar=scale_covar, 
+                                nan_policy=self.nan_policy, 
+                                calc_covar=calc_covar, 
                                 max_nfev=max_nfev, **fit_kws)
         output.fit(data=data, weights=weights) 
         output.components = self.components
@@ -761,10 +763,11 @@ def load_modelresult(fname, funcdefs=None):
 class EMGModelResult(lmfit.model.ModelResult):
     """Result from an EMGModel fit."""
 
-    def __init__(self, model, params, data=None, weights=None, fitted_peaks=None, 
-                 method='least_squares', fcn_args=None, fcn_kws=None, 
-                 iter_cb=None, scale_covar=False, nan_policy='propagate', 
-                 calc_covar=False, max_nfev=None, **fit_kws):
+    def __init__(self, model, params, data=None, weights=None, 
+                 fitted_peaks=None, method='least_squares', fcn_args=None, 
+                 fcn_kws=None, iter_cb=None, scale_covar=False, 
+                 nan_policy='propagate', calc_covar=False, max_nfev=None, 
+                 **fit_kws):
         """
         Parameters
         ----------

@@ -147,6 +147,8 @@ class peak:
         m, m_error, extrapol, A_tot = get_AME_values(species, Ex=Ex,
                                                      Ex_error=Ex_error,
                                                      src=lit_src)
+        self._index = None
+        self._blinded = False
         self.x_pos = x_pos
         self.species = species # e.g. '1Cs133:-1e or 'Cs133:-e' or '4H1:1C12:-1e'
         self.comment = '-'
@@ -189,6 +191,16 @@ class peak:
 
         """
         return abs(self.z or 1)
+
+
+    @property
+    def _prefix(self):
+        """Get peak prefix"""
+        if self._index is not None:
+            pref = "p{}_".format(self._index)
+        else:
+            pref = None 
+        return pref
 
 
     def update_lit_values(self, Ex=0.0, Ex_error=0.0, lit_src='AME2020'):
@@ -733,12 +745,11 @@ class spectrum:
         """
         if peaks is None:
             peaks = self.peaks
-        data = self.data
         ax = plt.gca()
         for p in peaks:
             plt.axvline(x=p.x_pos, ymin=0, ymax=vline_max, color='black',
                         linestyle='--', clip_on=True)
-            plt.text(p.x_pos, vline_max+0.0028*labelsize, self.peaks.index(p),
+            plt.text(p.x_pos, vline_max+0.0028*labelsize, p._index,
                      fontsize=labelsize, horizontalalignment='center',
                      verticalalignment='center', clip_on=True,
                      transform=ax.get_xaxis_transform())
@@ -773,6 +784,12 @@ class spectrum:
             fig = plt.figure(figsize=(figwidth,figwidth*4.5/18), dpi=dpi)
         self._add_peak_markers(peaks=peaks, vline_max=0.92)
         self._plot_df(self.data, fig=fig, dpi=dpi, **plot_kwargs)
+
+
+    def _update_peak_indeces(self):
+        """Update all peak indeces"""
+        for p in self.peaks:
+            p._index = self.peaks.index(p)
 
 
     def detect_peaks(self, thres=0.003, window_len=23, window='blackman',
@@ -882,11 +899,12 @@ class spectrum:
         # Reset peak list
         self.peaks = []
 
-        # Create list of peak objects
+        # Create list of peak objects and fit results, set peak indeces
         for x in li_peak_pos:
             p = peak(x,'?') # instantiate new peak
             self.peaks.append(p)
             self.fit_results.append(None)
+        self._update_peak_indeces()
 
         # Plot raw spectrum with detected peaks marked
         if plot_detection_result:
@@ -974,8 +992,8 @@ class spectrum:
             """Helper function for sorting peak list by marker pos. x_pos """
             return peak.x_pos
         self.peaks.sort(key=sort_x) # sort peak positions in ascending order
-        peak_idx = self.peaks.index(p)
-        self.fit_results.insert(peak_idx, None) # create empty fit result
+        self._update_peak_indeces()
+        self.fit_results.insert(p._index, None) # create empty fit result
         if verbose:
             print("Added peak at",x_pos,"u")
 
@@ -1041,7 +1059,7 @@ class spectrum:
                 err_msg3 = str("Selection of one or multiple peaks from "
                                "specified `x_pos` failed.")
                 raise Exception(err_msg3)
-        # Make safety copies for case of error in peak removals
+        # Remove peaks - make safety copies for case of error in peak removals
         orig_peaks = copy.deepcopy(self.peaks)
         orig_results = copy.deepcopy(self.fit_results)
         rem_pos = []
@@ -1057,6 +1075,7 @@ class spectrum:
                 msg = str("Removal of peak {0} failed! Restored the original "
                           " peaks and fit_results lists.").format(i)
                 raise Exception(msg)
+        self._update_peak_indeces()
         if verbose:
             rem_pos.reverse() # switch to ascending order
             for x_pos in rem_pos:
@@ -1148,8 +1167,7 @@ class spectrum:
 
         # Hide peaks of interest if blindfolded mode is on
         defined = [True if p.m_ion != None else False for p in self.peaks]
-        pindeces = range(len(self.peaks))
-        blinded = [True if i in self.blinded_peaks else False for i in pindeces]
+        blinded = [p._blinded for p in self.peaks]
         mask = np.logical_and(blinded, defined)
         df_prop.loc[mask, ['m_ion','atomic_ME_keV','m_dev_keV']] = 'blinded'
 
@@ -1524,6 +1542,8 @@ class spectrum:
                     self.blinded_peaks.append(idx)
         else:
             self.blinded_peaks = indeces # overwrite list
+        for idx in self.blinded_peaks:
+            self.peaks[idx]._blinded = True
 
         self.blinded_peaks.sort()
         s_list = ', '.join(map(str, self.blinded_peaks)) # convert list to str
@@ -1559,7 +1579,7 @@ class spectrum:
 
         Parameters
         ----------
-        fit_result : :class:`emgfit.model.EMGModelResult`, optional, default: ``None``
+        fit_result : :class:`emgfit.model.EMGModelResult`, optional
             Fit result to plot. If ``None``, defaults to fit result of first
             peak in specified mass range (taken from :attr:`fit_results` list).
         plot_title : str or None, optional
@@ -1590,27 +1610,27 @@ class spectrum:
         :meth:`save_fit_trace`
 
         """
-        if fit_result is None and x_min is None and x_max is None: # full spec
-            x_min = min(self.data.index)
-            x_max = max(self.data.index)
-        if fit_result is not None and x_min is None:
-            x_min = min(fit_result.x)
-        if fit_result is not None and x_max is None:
-            x_max = max(fit_result.x)
-        # Select peaks in mass range of interest:
-        peaks_to_plot = [p for p in self.peaks if (x_min < p.x_pos < x_max)]
-        try:
-            idx_first_peak = self.peaks.index(peaks_to_plot[0])
-        except IndexError:
-            pass
-        # If still not defined, get fit result from 1st peak in mass range
         if fit_result is None:
-           fit_result = self.fit_results[idx_first_peak]
-           idx_last_peak = self.peaks.index(peaks_to_plot[-1])
-           if fit_result != self.fit_results[idx_last_peak]:
-               raise Exception("Multiple fit results in specified mass range - "
-                               "chose range to only include peaks contained in "
-                               "a single fit result. ")
+            if x_min is None:
+                x_min = min(self.data.index)
+            if x_max is None:
+                x_max = max(self.data.index)
+            peaks_to_plot = [p for p in self.peaks if (x_min < p.x_pos < x_max)]
+
+            # Get fit result from 1st peak in plotted mass range
+            idx_first_peak = self.peaks.index(peaks_to_plot[0])
+            fit_result = self.fit_results[idx_first_peak]
+            idx_last_peak = self.peaks.index(peaks_to_plot[-1])
+            if fit_result != self.fit_results[idx_last_peak]:
+                raise Exception("Multiple fit results in specified mass range "
+                                "- chose range to only include peaks contained "
+                                "in a single fit result. ")
+        else:
+            peaks_to_plot = fit_result.fitted_peaks
+        if x_min is None:
+            x_min = min(fit_result.x)
+        if x_max is None:
+            x_max = max(fit_result.x)
         if plot_title is None:
            plot_title = fit_result.fit_model+' '+fit_result.cost_func+' fit'
 
@@ -1644,9 +1664,8 @@ class spectrum:
                      errorevery=error_every, label='data', zorder=1)
         plt.plot(x_fine, y_best_fit_fine, '-', color='red', linewidth=lwidth,
                  label='best-fit', zorder=10)
-        for peak in peaks_to_plot: # loop over peaks to plot
-            peak_index = self.peaks.index(peak)
-            pref = 'p{0}_'.format(peak_index)
+        for i in range(len(fit_result.fitted_peaks)): # loop over fitted peaks
+            pref = fit_result.components[i+1].prefix
             plt.plot(x_fine, y_comps_fine[pref], '--', linewidth=lwidth, zorder=5)
         if show_peak_markers:
             self._add_peak_markers(peaks=peaks_to_plot)
@@ -2643,8 +2662,9 @@ class spectrum:
         pars = mod.make_params() # create parameters object for model
 
         # Perform fit & store results
-        out = mod.fit(y, params=pars, x=x, weights=weights,
-                      method=method, fit_kws=fit_kws, scale_covar=False,
+        out = mod.fit(y, params=pars, x=x, weights=weights, 
+                      fitted_peaks=peaks_to_fit, method=method, 
+                      fit_kws=fit_kws, scale_covar=False,
                       calc_covar=False, nan_policy='propagate')
 
         # Check if any best-fit mus agree with initial value, warn if any
@@ -3624,7 +3644,7 @@ class spectrum:
             print('\n##### Peak-shape uncertainty evaluation #####\n')
         if fit_result is None:
             fit_result = self.fit_results[peak_indeces[0]]
-        pref = 'p{0}_'.format(self.index_shape_calib) # 'p{0}_'.format(peak_indeces[0]) TODO: remove comment
+        pref = 'p{0}_'.format(self.index_shape_calib) 
         # grab shape parameters to be varied by +/- sigma:
         shape_pars = [key for key in self.shape_cal_pars
                       if (key.startswith(('sigma','theta','eta','tau','delta'))
