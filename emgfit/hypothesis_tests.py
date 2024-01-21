@@ -124,9 +124,6 @@ def _likelihood_ratio_test(spec, ref_result, alt_x_pos, x_fit_cen=None,
 
     # Calculate likelihood ratio test statistic
     LLR = null_LLR - alt_LLR
-    from scipy.stats import chi2
-    dof = 1 # difference in number of free parameters
-    p_val = chi2.sf(LLR, dof, loc=0, scale=1) # sf := 1 - cdf
     if verbose:
         print("Log-likelihood ratio test statistic:  LLR = {:.2f}".format(LLR))
 
@@ -138,7 +135,8 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
                                  min_significance=3, N_spectra=10000,
                                  vary_ref_mus_and_amps=False,
                                  vary_ref_peak_shape=False,
-                                 seed=None, n_cores=-1):
+                                 seed=None, n_cores=-1, show_plots=True, 
+                                 show_results=True, show_LLR_hist=True):
     """Perform Monte Carlo likelihood ratio test by fitting simulated spectra
 
     The simulated spectra are sampled from the null model stored in the
@@ -180,6 +178,13 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
     n_cores : int, optional, default: -1
         Number of CPU cores to use for parallelized sampling and fitting of
         simulated spectra. If ``-1``, all available cores are used.
+    show_plots : bool, optional
+        Whether to show plots of the fit results.
+    show_results : bool, optional
+        Whether to display reports with the fit results.
+    show_LLR_hist : bool, optional 
+        Whether to display histogram of log-likelihood ratio values collected
+        for p-value determination.
 
     Notes 
     -----
@@ -229,8 +234,8 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
     print("\n### Determine test statistic for observed data ###")
     LLR, _, alt_res = _likelihood_ratio_test(spec, ref_null_result,
                                              alt_x_pos, verbose=True,
-                                             show_results=False,
-                                             show_plots=True,
+                                             show_results=show_results,
+                                             show_plots=show_plots,
                                              alt_mu_min=alt_mu_min,
                                              alt_mu_max=alt_mu_max,
                                              vary_alt_mu=True)
@@ -241,15 +246,16 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
         seed = np.random.randint(2**31)
     from emgfit.sample import fit_simulated_spectra
     null_results = fit_simulated_spectra(spec, ref_null_result,
-                                         N_spectra=N_spectra,
-                                         randomize_ref_mus_and_amps=vary_ref_mus_and_amps,
-                                         MC_shape_par_samples=MC_shape_par_samples,
-                                         seed=seed, n_cores=n_cores)
+                                        N_spectra=N_spectra,
+                                        randomize_ref_mus_and_amps=vary_ref_mus_and_amps,
+                                        MC_shape_par_samples=MC_shape_par_samples,
+                                        seed=seed, n_cores=n_cores)
     alt_results = fit_simulated_spectra(spec, ref_null_result,
                                         alt_result=alt_res, N_spectra=N_spectra,
                                         randomize_ref_mus_and_amps=vary_ref_mus_and_amps,
                                         MC_shape_par_samples=MC_shape_par_samples,
                                         seed=seed, n_cores=n_cores)
+
     # Calculate Monte Carlo LRT statistics
     MC_LLRs = []
     for null, alt in zip(null_results, alt_results):
@@ -260,13 +266,14 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
         else:
             MC_LLRs.append(null.chisqr - alt.chisqr)
 
-    #plt.figure(figsize=(8,12))
-    plt.hist(MC_LLRs, density=False, bins=20)
-    plt.gca().axvline(LLR, color="black")
-    plt.xlabel("Likelihood ratio test statistic")
-    plt.ylabel("Occurences")
-    plt.yscale("log")
-    plt.show()
+    if show_LLR_hist:
+        #plt.figure(figsize=(8,12))
+        plt.hist(MC_LLRs, density=False, bins=20)
+        plt.gca().axvline(LLR, color="black")
+        plt.xlabel("Likelihood ratio test statistic")
+        plt.ylabel("Occurences")
+        plt.yscale("log")
+        plt.show()
 
     # Determine p-value from the fraction of LLR samples above the obs. LLR
     N_above = np.sum(np.where(np.array(MC_LLRs) > LLR, 1, 0))
@@ -276,7 +283,7 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
         p_val_err = np.sqrt(p_val/N_tot)
     elif N_above == 0:
         p_val_err = np.sqrt(1/N_tot)
-    print("Monte Carlo p-value: p =", p_val,"+-", p_val_err)
+    print(f"Monte Carlo p-value: p = {p_val:.2e} +- {p_val_err:.2e}")
     if p_val_err < alpha:
         success= True
         # Compare to defined alpha
