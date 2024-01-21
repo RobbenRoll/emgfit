@@ -41,7 +41,7 @@ hyper-exponentially-modified Gaussian line shapes.
    :show-inheritance:
 
 emgfit.model module
--------------------------
+-------------------
 Module with custom model interface based on :mod:`lmfit.model` module.
 
 .. automodule:: emgfit.model
@@ -50,7 +50,7 @@ Module with custom model interface based on :mod:`lmfit.model` module.
    :show-inheritance:
 
 emgfit.sample module
--------------------------
+--------------------
 Module for creating simulated time-of-flight mass spectra with Gaussian and
 hyper-exponentially-modified line shapes.
 
@@ -68,4 +68,14 @@ Module for fitting time-of-flight mass spectra.
    :members:
    :undoc-members:
    :private-members: spectrum._eval_peakshape_errors, spectrum.get_MC_peakshape_errors, spectrum._eval_MC_peakshape_errors, spectrum._get_MCMC_par_samples
+   :show-inheritance:
+
+emgfit.hypothesis_tests module
+------------------------------
+Module with routines for hypothesis tests allowing to assess the significance 
+of potential peaks in the data. 
+
+.. automodule:: emgfit.hypothesis_tests
+   :members:
+   :undoc-members:
    :show-inheritance:
