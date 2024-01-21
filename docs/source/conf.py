@@ -48,6 +48,7 @@ extensions = [
     'jupyter_sphinx', # executes code within the docs with a jupyter kernel
     'nbsphinx',
     'nbsphinx_link', # for linking to notebooks outside source directory
+    'sphinxcontrib.jquery',
 ]
 
 # Add mappings to other package docs
@@ -55,7 +56,7 @@ intersphinx_mapping = {
     'py': ('https://docs.python.org/3/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     'pandas': ('https://pandas.pydata.org/pandas-docs/stable', None),
-    'matplotlib': ('http://matplotlib.sourceforge.net', None),
+    'matplotlib': ('http://matplotlib.org/stable', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'lmfit': ('https://lmfit.github.io/lmfit-py', None),
     'emcee': ('https://emcee.readthedocs.io/en/stable',None),
