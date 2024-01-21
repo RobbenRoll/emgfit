@@ -8,7 +8,7 @@ versions can be found `here`_.
 .. _here: https://RobbenRoll.github.io/emgfit
 
 
-v0.5.0 (2024-01-19)
+v0.5.0 (2024-01-20)
 -------------------
 
 Added 
