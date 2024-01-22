@@ -2,7 +2,7 @@
 Installation
 ============
 
-Find below instructions for either 'quick and dirty' way or a neater way of
+Find below instructions for either the 'quick and dirty' way or a neater way of
 installing emgfit. The second approach is intended for more advanced users
 that want to keep their Python setup cleaner by using virtual environments.
 
