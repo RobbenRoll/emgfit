@@ -2,12 +2,11 @@
 emgfit
 ======
 
-.. image:: https://github.com/RobbenRoll/emgfit/workflows/CI%20tests/badge.svg?branch=master
-        :target: https://github.com/RobbenRoll/emgfit/actions?query=workflow%3A%22CI+tests%22
+.. image:: https://github.com/RobbenRoll/emgfit/actions/workflows/CI-tests.yml/badge.svg?branch=master
+        :target: https://github.com/RobbenRoll/emgfit/actions/workflows/CI-tests.yml
 
 .. image:: https://img.shields.io/pypi/v/emgfit.svg
         :target: https://pypi.python.org/pypi/emgfit
-
 
 Fitting of time-of-flight mass spectra with Hyper-EMG models
 
