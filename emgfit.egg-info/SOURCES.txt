@@ -1,0 +1,40 @@
+AUTHORS.rst
+LICENSE.txt
+MANIFEST.in
+README.rst
+requirements.txt
+setup.cfg
+setup.py
+versioneer.py
+emgfit/__init__.py
+emgfit/_version.py
+emgfit/ame_funcs.py
+emgfit/config.py
+emgfit/emg_funcs.py
+emgfit/fit_models.py
+emgfit/hypothesis_tests.py
+emgfit/model.py
+emgfit/sample.py
+emgfit/spectrum.py
+emgfit.egg-info/PKG-INFO
+emgfit.egg-info/SOURCES.txt
+emgfit.egg-info/dependency_links.txt
+emgfit.egg-info/requires.txt
+emgfit.egg-info/top_level.txt
+emgfit/AME2016/AME2016 mass data to csv.ipynb
+emgfit/AME2016/AME2016-mass-formatted.csv
+emgfit/AME2016/mass16.txt
+emgfit/AME2020/AME2020 mass data to csv.ipynb
+emgfit/AME2020/AME2020-mass-formatted.csv
+emgfit/AME2020/mass20.txt
+emgfit/examples/tutorial/2019-09-13_004-_006 SUMMED High stats 62Ga.txt
+emgfit/examples/tutorial/emgfit_tutorial.ipynb
+emgfit/examples/tutorial/outputs/readme.txt
+emgfit/tests/__init__.py
+emgfit/tests/test_ame_funcs_AME2016.py
+emgfit/tests/test_ame_funcs_AME2020.py
+emgfit/tests/test_emg_funcs.py
+emgfit/tests/test_hypothesis_tests.py
+emgfit/tests/test_model.py
+emgfit/tests/test_sample.py
+emgfit/tests/test_spectrum.py
