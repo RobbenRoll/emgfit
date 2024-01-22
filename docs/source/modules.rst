@@ -70,8 +70,8 @@ Module for fitting time-of-flight mass spectra.
    :private-members: spectrum._eval_peakshape_errors, spectrum.get_MC_peakshape_errors, spectrum._eval_MC_peakshape_errors, spectrum._get_MCMC_par_samples
    :show-inheritance:
 
-emgfit.hypothesis_tests module
-------------------------------
+emgfit.hypothesis\_tests module
+-------------------------------
 Module with routines for hypothesis tests allowing to assess the significance 
 of potential peaks in the data. 
 

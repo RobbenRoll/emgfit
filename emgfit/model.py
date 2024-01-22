@@ -355,7 +355,7 @@ class EMGModel(lmfit.model.Model):
         keyword arguments.
 
         3. Parameters are copied on input, so that the original Parameter objects
-        are unchanged, and the updated values are in the returned `ModelResult`.
+        are unchanged, and the updated values are in the returned `EMGModelResult`.
 
         Examples
         --------

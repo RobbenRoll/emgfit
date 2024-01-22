@@ -23,7 +23,7 @@ def _likelihood_ratio_test(spec, ref_result, alt_x_pos, x_fit_cen=None,
     ----------
     spec : :class:`emgfit.spectrum.spectrum`
         Spectrum object to perform likelihood ratio test on.
-    ref_result : :class:`emgfit.EmgModelResult`
+    ref_result : :class:`emgfit.model.EMGModelResult`
         Fit result storing the null model.
     alt_x_pos : float [u]
         Position of the hypothesized alternative peak.
@@ -57,6 +57,13 @@ def _likelihood_ratio_test(spec, ref_result, alt_x_pos, x_fit_cen=None,
         Whether to show plots of the fit results.
     show_results : bool, optional
         Whether to display reports with the fit results.
+
+    Returns 
+    -------
+    tuple of format (float, :class:`~emgfit.model.EMGModelResult`, :class:`~emgfit.model.EMGModelResult`)
+        Tuple storing the Log-likelihood ratio of null and alternative model, 
+        the null fit result and the alternative model result.
+
     """
     fit_model = ref_result.fit_model
     if x_fit_cen is None:
@@ -143,8 +150,9 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
     spectrum's fit results list and asociated with the peak index
     `null_result_index`.
 
-
-    spec : :class:`emgfit.spectrum.spectrum`
+    Parameters
+    ----------
+    spec : :class:`~emgfit.spectrum.spectrum`
         Spectrum object to perform likelihood ratio test on.
     null_result_index : int
         Index (of one) of the peak(s) present in the null-model fit.
@@ -160,14 +168,14 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
         :mod:`emgfit.fit_models` module.
     vary_ref_mus_and_amps : bool, optional
         Whether to randomly vary the peak positions and the peak and background
-        amplitudes of the reference spectrum within their parameter
+        amplitudes of the reference spectrum within their parameter 
         uncertainties.
     vary_ref_peak_shape : bool, optional
         Whether to vary the reference peak shape used for the event sampling in
         the creation of simulated spectra. If `True`, `N_spectra` parameter
-        samples are drawn randomly with replacement from the
-        :attr:`~.spectrum.MCMC_par_samples` obtained in the MCMC shape parameter
-         sampling.
+        samples are drawn randomly with replacement from the 
+        :attr:`~emgfit.spectrum.spectrum.MCMC_par_samples` obtained in the MCMC 
+        shape parameter sampling.
     min_significance : float, optional, default: 3
         Critical significance level for rejecting the null hypothesis (measured
         in sigma).
@@ -186,35 +194,41 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
         Whether to display histogram of log-likelihood ratio values collected
         for p-value determination.
 
-    Notes 
-    -----
-    Simulated spectra are created by randomly sampling events from the null model 
-    best fitting the observed data. These simulated spectra are then fitted with 
-    both the null and the alternative model and the respective values for the likelihood 
-    ratio test statistic :math:`\Lambda` are calculated using the relation 
-
-    .. math::
-
-      \Lambda = \log\left(\frac{\mathcal{L}(H_1)}{\mathcal{L}(H_0)}\right) = L(H_1) - L(H_0),
-
-    where :math:`L(H_0)` and :math:`L(H_1)` denote the MLE cost function values (i.e. 
-    the negative doubled log-likelihood values) obtained from the null-model and 
-    alternative-model fits, respectively, and :math:`\mathcal{L}(H_0)` and :math:`\mathcal{L}(H_1)` 
-    mark the corresponding likelihood functions. Finally, the p-value is calculated as 
-
-    .. math:: 
-
-      p = \frac{N_>}{N_< + N_>}, 
-
-    where :math:`N_<` and :math:`N_>` denote the number of likelihood ratio values 
-    :math:`\Lambda` that fall below and above the observed value for the likelihood 
-    ratio test statistic :math:`\Lambda_\mathrm{obs}`, respectively. 
+    Returns
+    -------
+    dict
+        Dictionary with results of the likelihood ratio test.
 
     See also
     --------
     :func:`run_GV_likelihood_ratio_test`
     :func:`_likelihood_ratio_test`
 
+    Notes 
+    -----
+    Simulated spectra are created by randomly sampling events from the null 
+    model best fitting the observed data. These simulated spectra are then 
+    fitted with both the null and the alternative model and the respective 
+    values for the likelihood ratio test statistic :math:`\Lambda` are 
+    calculated using the relation 
+
+    .. math::
+
+      \\Lambda = \\log\\left(\\frac{\\mathcal{L}(H_1)}{\\mathcal{L}(H_0)}\\right) = L(H_1) - L(H_0),
+
+    where :math:`L(H_0)` and :math:`L(H_1)` denote the MLE cost function values 
+    (i.e. the negative doubled log-likelihood values) obtained from the 
+    null-model and alternative-model fits, respectively, and 
+    :math:`\mathcal{L}(H_0)` and :math:`\mathcal{L}(H_1)` mark the 
+    corresponding likelihood functions. Finally, the p-value is calculated as 
+
+    .. math:: 
+
+      p = \\frac{N_>}{N_< + N_>}, 
+
+    where :math:`N_<` and :math:`N_>` denote the number of likelihood ratio 
+    values :math:`\Lambda` that fall below and above the observed value for the 
+    likelihood ratio test statistic :math:`\Lambda_\mathrm{obs}`, respectively. 
 
     """
     from scipy.stats import norm
@@ -353,7 +367,7 @@ def run_GV_likelihood_ratio_test(spec, null_result_index, alt_x_min, alt_x_max,
 
     See also
     --------
-    func:`run_MC_likelihood_ratio_test`
+    :func:`run_MC_likelihood_ratio_test`
     :func:`_likelihood_ratio_test`
 
     Notes
@@ -363,26 +377,26 @@ def run_GV_likelihood_ratio_test(spec, null_result_index, alt_x_min, alt_x_max,
     different fixed alternative-peak positions. However, performing multiple
     tests on the same dataset artificially increases the rate of false discovery
     due to the increased chance for random background fluctuations to mimick a
-    signal. In the high-energy particle physics literature, this complication is
-    referred to as the look-elsewhere effect. To obtain a global p-value that
-    correctly quantifies the likelihood to observe the alternative peak anywhere
-    in the tested region, a procedure is needed that accounts for correlations
-    between the local p-values obtained for the various tested peak positions.
-    To this end, this function adapts the method outlined by Gross and Vitells
-    in [#Gross]_. Namely, an upper limit on the global p-value :math:`p` is
-    deduced from the relation:
+    signal. In the high-energy particle physics literature, this complication 
+    is referred to as the look-elsewhere effect. To obtain a global p-value 
+    that correctly quantifies the likelihood to observe the alternative peak 
+    anywhere in the tested region, a procedure is needed that accounts for 
+    correlations between the local p-values obtained for the various tested 
+    peak positions. To this end, this function adapts the method outlined by 
+    Gross and Vitells in [#Gross]_. Namely, an upper limit on the global 
+    p-value :math:`p` is deduced from the relation:
 
     .. math::
 
-       p = P(LLR > c) \leq P(\chi^2_1 > c)/2 + \langle N(c_0)\rangle e^{-\left(c-c_0\right)/2}
+       p = P(LLR > c) \\leq P(\\chi^2_1 > c)/2 + \\langle N(c_0)\\rangle e^{-\\left(c-c_0\\right)/2},
 
-    where :math:`P(LLR > c)` is the probability for the likelihood ratio test
-    statistic (LLR) to exceed the maximum of the observed local LRT statistic
-    :math:`c`, :math:`P(\chi^2_1 > c)` is the probability that the :math:`chi^2`
+    where :math:`P(LLR > c)` is the probability for the log-likelihood ratio 
+    statistic (LLR) to exceed the maximum of the observed local LLR statistic
+    :math:`c`, :math:`P(\chi^2_1 > c)` is the probability that the :math:`\chi^2`
     statistic with one degree of freedom exceeds the level :math:`c` and
-    :math:`\langle N(c_0)\rangle ` is the expected number of times the local LRT
-    statistics surpass the threshold level :math:`c_0 \ll c` under the null
-    hypothesis. This number is estimated by simulating :math:`N_{spectra}`
+    :math:`\\langle N(c_0)\\rangle` is the expected number of times the local 
+    LLR test statistics surpass the threshold level :math:`c_0 \ll c` under the 
+    null hypothesis. This number is estimated by simulating :math:`N_{spectra}`
     spectra from the null model and taken as the mean number of times the local
     LRT statistics cross up through the specified threshold level :math:`c_0`.
     In principle, :math:`c_0` should be chosen as small as possible but care

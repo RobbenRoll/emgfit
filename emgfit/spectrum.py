@@ -1809,8 +1809,9 @@ class spectrum:
         """Write count data and best-fit curve to TXT file
 
         By default, the fit curve data is taken from the first fit result stored
-        in the spectrum's :attr:`fit_results` list; data from other fit results
-        can accessed through the `peak_index` or `fit_result` arguments.
+        in the spectrum's :attr:`~spectrum.fit_results` list; data from other 
+        fit results can accessed through the `peak_index` or `fit_result` 
+        arguments.
 
         Parameters
         ----------
@@ -1862,8 +1863,8 @@ class spectrum:
             header =  "m/z [u], Best-fit counts"
             fmt = fmt[0::3]
 
-        np.savetxt(filename+"_fit_trace.txt", plot_data, header=header, fmt=fmt,
-                   comments=comment, delimiter=", ")
+        np.savetxt(filename+"_fit_trace.txt", plot_data, header=header, 
+                   fmt=fmt, comments=comment, delimiter=", ")
 
 
     def comp_model(self, peaks_to_fit, fit_model='emg22', init_pars=None,
@@ -3320,7 +3321,7 @@ class spectrum:
             x_fit_range = self.default_fit_range
 
         if vary_tail_order is True and fit_model != 'Gaussian':
-            print('\n##### Determine optimal tail order #####--------------------------------------------------\n')
+            print('\n##### Determine optimal tail order #####--------------------------------------------------------------------------\n')
             # Fit peak with Hyper-EMG of increasingly higher tail orders and compile results
             # use fit model that produces the lowest chi-square without having eta's compatible with zero within errobar
             li_fit_models = ['Gaussian','emg01','emg10','emg11','emg12','emg21',
@@ -3417,7 +3418,7 @@ class spectrum:
         elif not vary_tail_order:
             self.fit_model = fit_model
 
-        print('\n##### Peak-shape determination #####------------------------------------------------------')
+        print('\n##### Peak-shape determination #####------------------------------------------------------------------------------')
         # Perform fit
         try:
             self.index_shape_calib = index_shape_calib
