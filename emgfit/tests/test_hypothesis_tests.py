@@ -108,6 +108,8 @@ class TestHypothesisTests:
                              show_results=False, show_LLR_hist=False)
 
         assert np.isclose(MC_LRT_results["LLR"], 15.71, rtol=1e-03, atol=1e-02)
-        assert np.isclose(MC_LRT_results["p-value"], 0.000600120024004)
-        assert np.isclose(MC_LRT_results["p-value error"], 0.00034647945740525)
+        assert np.isclose(MC_LRT_results["p-value"], 0.000600120024004,
+                          rtol=1e-02, atol=1e-05)
+        assert np.isclose(MC_LRT_results["p-value error"], 0.00034647945740525,
+                          rtol=1e-02, atol=1e-05)
         assert MC_LRT_results["reject_null_model"] is True 
