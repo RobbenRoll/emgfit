@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>emgfit.model &mdash; emgfit 0.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/jupyter-sphinx.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/thebelab.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=3fadbb4a"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=f281be69"></script>
+        <script src="../../_static/thebelab-helper.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            emgfit
+          </a>
+              <div class="version">
+                0.5.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Getting started with emgfit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../emgfit_tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Central concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">emgfit API docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">emgfit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">emgfit.model</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for emgfit.model</h1><div class="highlight"><pre>
+<span></span><span class="c1">##################################################################################</span>
+<span class="c1">##### Module defining hyper-EMG model interface based on parent classes from lmfit </span>
+<span class="c1">##### Authors: lmfit authors and Stefan Paul</span>
+<span class="kn">import</span> <span class="nn">lmfit</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">lmfit.lineshapes</span> <span class="k">as</span> <span class="nn">lineshapes</span>
+<span class="kn">from</span> <span class="nn">lmfit.jsonutils</span> <span class="kn">import</span> <span class="n">HAS_DILL</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">lmfit.model</span> <span class="kn">import</span> <span class="n">_align</span><span class="p">,</span> <span class="n">tiny</span>
+<span class="kn">from</span> <span class="nn">lmfit</span> <span class="kn">import</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">Parameters</span>
+<span class="kn">from</span> <span class="nn">lmfit.jsonutils</span> <span class="kn">import</span> <span class="n">HAS_DILL</span><span class="p">,</span> <span class="n">decode4js</span><span class="p">,</span> <span class="n">encode4js</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">log</span>
+
+<span class="n">EPS</span> <span class="o">=</span> <span class="mf">1e-10</span> <span class="c1"># small number to bound Pearson cost function weights</span>
+
+<span class="c1"># Use pandas.isnull for aligning missing data if pandas is available.</span>
+<span class="c1"># otherwise use numpy.isnan</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">Series</span><span class="p">,</span> <span class="n">isnull</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">isnull</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span>
+    <span class="n">Series</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">NotImplemented</span><span class="p">)</span>
+
+<div class="viewcode-block" id="coerce_arraylike"><a class="viewcode-back" href="../../modules.html#emgfit.model.coerce_arraylike">[docs]</a><span class="k">def</span> <span class="nf">coerce_arraylike</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    coerce lists, tuples, and pandas Series, hdf5 Groups, etc to an</span>
+<span class="sd">    ndarray float64 or complex128, but leave other data structures</span>
+<span class="sd">    and objects unchanged</span>
+
+<span class="sd">    Function adopted from :mod:`lmfit.model` module.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">Series</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;__array__&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isrealobj</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="EMGModel"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModel">[docs]</a><span class="k">class</span> <span class="nc">EMGModel</span><span class="p">(</span><span class="n">lmfit</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create hyper-EMG fit model  </span>
+<span class="sd">    </span>
+<span class="sd">    This class inherits from the :class`lmfit.model.Model` class and creates a </span>
+<span class="sd">    single-peak model. This class enables overriding of lmfit&#39;s default </span>
+<span class="sd">    residuals with emgfit&#39;s custom cost functions, thereby enabling fits beyond </span>
+<span class="sd">    standard least squares minimization. </span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="EMGModel.__init__"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">cost_func</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> 
+                 <span class="n">par_hint_args</span><span class="o">=</span><span class="p">{},</span> <span class="n">vary_baseline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">vary_shape</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                 <span class="n">independent_vars</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">param_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The model function will normally take an independent variable</span>
+<span class="sd">        (generally, the first argument) and a series of arguments that are</span>
+<span class="sd">        meant to be parameters for the model. It will return an array of</span>
+<span class="sd">        data to model some data as for a curve-fitting problem.</span>
+
+<span class="sd">        Method adopted from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : callable</span>
+<span class="sd">            Function to be wrapped.</span>
+<span class="sd">        cost_func : str, optional</span>
+<span class="sd">            Name of cost function to use for minimization - overrides the </span>
+<span class="sd">            model&#39;s :attr:`~lmfit.model.Model._residual` attribute. </span>
+
+<span class="sd">            - If ``&#39;chi-square&#39;``, the fit is performed by minimizing Pearson&#39;s</span>
+<span class="sd">              chi-squared statistic:</span>
+
+<span class="sd">              .. math::</span>
+
+<span class="sd">                  \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)}.</span>
+
+<span class="sd">            - If ``&#39;MLE&#39;``, a binned maximum likelihood estimation is performed</span>
+<span class="sd">              by minimizing the (doubled) negative log likelihood ratio:</span>
+
+<span class="sd">              .. math::</span>
+
+<span class="sd">                  L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]</span>
+
+<span class="sd">            - If ``&#39;default&#39;`` (default), use the standard residual from lmfit.</span>
+
+<span class="sd">            See `Notes` of :meth:`~emgfit.spectrum.spectrum.peakfit` method for </span>
+<span class="sd">            more details.</span>
+<span class="sd">        par_hint_args : dict of dicts, optional</span>
+<span class="sd">            Arguments to pass to :meth:`lmfit.model.Model.set_param_hint` to</span>
+<span class="sd">            modify or add model parameters. The keys of the `par_hint_args`</span>
+<span class="sd">            dictionary specify parameter names; the values must likewise be</span>
+<span class="sd">            dictionaries that hold the respective keyword arguments to pass to</span>
+<span class="sd">            :meth:`~lmfit.model.Model.set_param_hint`.</span>
+<span class="sd">        vary_baseline : bool, optional, default: `True`</span>
+<span class="sd">            If `True`, the constant background will be fitted with a varying</span>
+<span class="sd">            uniform baseline parameter `bkg_c`.</span>
+<span class="sd">            If `False`, the baseline parameter `bkg_c` will be fixed to 0.</span>
+<span class="sd">        vary_shape : bool, optional, default: `False`</span>
+<span class="sd">            If `False` peak-shape parameters of hyper-EMG models (`sigma`, </span>
+<span class="sd">            `theta`,`etas` and `taus`) are kept fixed at their initial values. </span>
+<span class="sd">            If `True` the shared shape parameters are varied (ensuring </span>
+<span class="sd">            identical shape parameters for all peaks).</span>
+<span class="sd">        independent_vars : :obj:`list` of :obj:`str`, optional</span>
+<span class="sd">            Arguments to `func` that are independent variables (default is</span>
+<span class="sd">            None).</span>
+<span class="sd">        param_names : :obj:`list` of :obj:`str`, optional</span>
+<span class="sd">            Names of arguments to `func` that are to be made into</span>
+<span class="sd">            parameters (default is None).</span>
+<span class="sd">        nan_policy : {&#39;raise&#39;, &#39;propagate&#39;, &#39;omit&#39;}, optional</span>
+<span class="sd">            How to handle NaN and missing values in data. See Notes below.</span>
+<span class="sd">        prefix : str, optional</span>
+<span class="sd">            Prefix used for the model.</span>
+<span class="sd">        name : str, optional</span>
+<span class="sd">            Name for the model. When None (default) the name is the same</span>
+<span class="sd">            as the model function (`func`).</span>
+<span class="sd">        **kws : dict, optional</span>
+<span class="sd">            Additional keyword arguments to pass to model function.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        1. Parameter names are inferred from the function arguments, and a</span>
+<span class="sd">        residual function is automatically constructed.</span>
+
+<span class="sd">        2. The model function must return an array that will be the same</span>
+<span class="sd">        size as the data being modeled.</span>
+
+<span class="sd">        3. `nan_policy` sets what to do when a NaN or missing value is</span>
+<span class="sd">        seen in the data. Should be one of:</span>
+
+<span class="sd">           - `&#39;raise&#39;` : raise a `ValueError` (default)</span>
+<span class="sd">           - `&#39;propagate&#39;` : do nothing</span>
+<span class="sd">           - `&#39;omit&#39;` : drop missing data</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The model function will normally take an independent variable</span>
+<span class="sd">        (generally, the first argument) and a series of arguments that are</span>
+<span class="sd">        meant to be parameters for the model. Thus, a simple peak using a</span>
+<span class="sd">        Gaussian defined as:</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; def gaussian(x, amp, cen, wid):</span>
+<span class="sd">        ...     return amp * np.exp(-(x-cen)**2 / wid)</span>
+
+<span class="sd">        can be turned into a Model with:</span>
+
+<span class="sd">        &gt;&gt;&gt; gmodel = Model(gaussian)</span>
+
+<span class="sd">        this will automatically discover the names of the independent</span>
+<span class="sd">        variables and parameters:</span>
+
+<span class="sd">        &gt;&gt;&gt; print(gmodel.param_names, gmodel.independent_vars)</span>
+<span class="sd">        [&#39;amp&#39;, &#39;cen&#39;, &#39;wid&#39;], [&#39;x&#39;]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">independent_vars</span><span class="o">=</span><span class="n">independent_vars</span><span class="p">,</span> 
+                         <span class="n">param_names</span><span class="o">=</span><span class="n">param_names</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="n">nan_policy</span><span class="p">,</span> 
+                         <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_override_residual</span><span class="p">(</span><span class="n">cost_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_hint_args</span> <span class="o">=</span> <span class="n">par_hint_args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vary_baseline</span> <span class="o">=</span> <span class="n">vary_baseline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vary_shape</span> <span class="o">=</span> <span class="n">vary_shape</span></div>
+
+
+<div class="viewcode-block" id="EMGModel._override_residual"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModel._override_residual">[docs]</a>    <span class="k">def</span> <span class="nf">_override_residual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cost_func</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Override residual method </span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cost_func : str, optional </span>
+<span class="sd">            Name of cost function to use for minimization - overrides the </span>
+<span class="sd">            model&#39;s :attr:`~lmfit.model.Model._residual` attribute. </span>
+
+<span class="sd">            - If ``&#39;chi-square&#39;``, the fit is performed by minimizing Pearson&#39;s</span>
+<span class="sd">              chi-squared statistic:</span>
+
+<span class="sd">              .. math::</span>
+
+<span class="sd">                  \\chi^2_P = \\sum_i \\frac{(f(x_i) - y_i)^2}{f(x_i)}.</span>
+
+<span class="sd">            - If ``&#39;MLE&#39;``, a binned maximum likelihood estimation is performed</span>
+<span class="sd">              by minimizing the (doubled) negative log likelihood ratio:</span>
+
+<span class="sd">              .. math::</span>
+
+<span class="sd">                  L = 2\\sum_i \\left[ f(x_i) - y_i + y_i ln\\left(\\frac{y_i}{f(x_i)}\\right)\\right]</span>
+
+<span class="sd">            - If ``&#39;default&#39;`` (default), use the standrad residual from lmfit.</span>
+
+<span class="sd">            See `Notes` of :meth:`~emgfit.spectrum.spectrum.peakfit` method for </span>
+<span class="sd">            more details.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cost_func</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">cost_func</span> <span class="o">==</span> <span class="s2">&quot;chi-square&quot;</span><span class="p">:</span>
+            <span class="c1"># Pearson&#39;s chi-squared cost function with iterative weights 1/Sqrt(f(x_i))</span>
+            <span class="k">def</span> <span class="nf">resid_Pearson_chi_square</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="n">y_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="c1"># Calculate weights for current iteration, add tiny number `EPS`</span>
+                <span class="c1"># in denominator for numerical stability</span>
+                <span class="n">weights</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">y_m</span> <span class="o">+</span> <span class="n">EPS</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">y_m</span> <span class="o">-</span> <span class="n">y_data</span><span class="p">)</span><span class="o">*</span><span class="n">weights</span>
+            <span class="c1"># Override lmfit&#39;s standard least square residuals with iterative</span>
+            <span class="c1"># residuals for Pearson chi-square fit</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_residual</span> <span class="o">=</span> <span class="n">resid_Pearson_chi_square</span>
+        <span class="k">elif</span> <span class="n">cost_func</span> <span class="o">==</span> <span class="s2">&quot;MLE&quot;</span><span class="p">:</span>
+            <span class="c1"># Define sqrt of (doubled) negative log-likelihood ratio (NLLR) summands</span>
+            <span class="k">def</span> <span class="nf">sqrt_NLLR</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="n">y_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> 
+                <span class="c1"># Add tiniest pos. float representable by numpy to arguments of</span>
+                <span class="c1"># np.log to smoothly handle divergences for log(arg -&gt; 0)</span>
+                <span class="n">NLLR</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">y_m</span><span class="o">-</span><span class="n">y_data</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">y_data</span><span class="o">*</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">y_data</span><span class="o">+</span><span class="n">tiny</span><span class="p">)</span><span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="n">y_m</span><span class="o">+</span><span class="n">tiny</span><span class="p">))</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">NLLR</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ret</span>
+            <span class="c1"># Override lmfit&#39;s standard least square residual with the</span>
+            <span class="c1"># square-roots of the NLLR summands, this enables usage of scipy&#39;s</span>
+            <span class="c1"># `least_squares` minimizer and yields much faster optimization</span>
+            <span class="c1"># than with scalar minimizers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_residual</span> <span class="o">=</span> <span class="n">sqrt_NLLR</span>    
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot; Definition of `cost_func` failed!&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost_func</span> <span class="o">=</span> <span class="n">cost_func</span></div>
+
+
+<div class="viewcode-block" id="EMGModel._reprstring"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModel._reprstring">[docs]</a>    <span class="k">def</span> <span class="nf">_reprstring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print representation string</span>
+
+<span class="sd">        Method adopted from :mod:`lmfit.model` module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prefix</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;prefix=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_prefix</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">long</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;EMGModel(</span><span class="si">{</span><span class="n">out</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+        
+
+<div class="viewcode-block" id="EMGModel._get_state"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModel._get_state">[docs]</a>    <span class="k">def</span> <span class="nf">_get_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save a Model for serialization.</span>
+
+<span class="sd">        Note: like the standard-ish &#39;__getstate__&#39; method but not really</span>
+<span class="sd">        useful with Pickle.</span>
+
+<span class="sd">        Method modified from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">funcdef</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">HAS_DILL</span><span class="p">:</span>
+            <span class="n">funcdef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;_eval&#39;</span><span class="p">:</span>
+            <span class="n">funcdef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">funcdef</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost_func</span><span class="p">,</span> 
+                 <span class="bp">self</span><span class="o">.</span><span class="n">par_hint_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vary_baseline</span><span class="p">,</span> 
+                 <span class="bp">self</span><span class="o">.</span><span class="n">vary_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefix</span><span class="p">,</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">independent_vars</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_param_root_names</span><span class="p">,</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">param_hints</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nan_policy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+    
+
+<div class="viewcode-block" id="EMGModel._set_state"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModel._set_state">[docs]</a>    <span class="k">def</span> <span class="nf">_set_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restore Model from serialization.</span>
+
+<span class="sd">        Note: like the standard-ish &#39;__setstate__&#39; method but not really</span>
+<span class="sd">        useful with Pickle.</span>
+
+<span class="sd">        Method adopted from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state</span>
+<span class="sd">            Serialized state from `_get_state`.</span>
+<span class="sd">        funcdefs : dict, optional</span>
+<span class="sd">            Dictionary of function definitions to use to construct Model.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_buildmodel</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="n">funcdefs</span><span class="p">)</span></div>
+    
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return representation of EMGModel.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;emgfit.EMGModel: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+    
+
+<div class="viewcode-block" id="EMGModel.fit"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModel.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fitted_peaks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+            <span class="n">method</span><span class="o">=</span><span class="s1">&#39;least_squares&#39;</span><span class="p">,</span> <span class="n">iter_cb</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_covar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+            <span class="n">fit_kws</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">calc_covar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_nfev</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">coerce_farray</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit the model to the data using the supplied Parameters.</span>
+
+<span class="sd">        Method modified from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : array_like</span>
+<span class="sd">            Array of data to be fit.</span>
+<span class="sd">        params : Parameters, optional</span>
+<span class="sd">            Parameters to use in fit (default is None).</span>
+<span class="sd">        weights : array_like, optional</span>
+<span class="sd">            Weights to use for the calculation of the fit residual [i.e.,</span>
+<span class="sd">            `weights*(data-fit)`]. Default is None; must have the same size as</span>
+<span class="sd">            `data`.</span>
+<span class="sd">        fitted_peaks : list of :class:`emgfit.spectrum.peak`</span>
+<span class="sd">            List of peaks to be fitted.</span>
+<span class="sd">        method : str, optional</span>
+<span class="sd">            Name of fitting method to use (default is `&#39;least_squares&#39;`).</span>
+<span class="sd">        iter_cb : callable, optional</span>
+<span class="sd">            Callback function to call at each iteration (default is None).</span>
+<span class="sd">        scale_covar : bool, optional</span>
+<span class="sd">            Whether to automatically scale the covariance matrix when</span>
+<span class="sd">            calculating uncertainties (default is True).</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Whether to print a message when a new parameter is added</span>
+<span class="sd">            because of a hint (default is True).</span>
+<span class="sd">        fit_kws : dict, optional</span>
+<span class="sd">            Options to pass to the minimizer being used.</span>
+<span class="sd">        nan_policy : {&#39;raise&#39;, &#39;propagate&#39;, &#39;omit&#39;}, optional</span>
+<span class="sd">            What to do when encountering NaNs when fitting Model.</span>
+<span class="sd">        calc_covar : bool, optional</span>
+<span class="sd">            Whether to calculate the covariance matrix (default is True)</span>
+<span class="sd">            for solvers other than `&#39;leastsq&#39;` and `&#39;least_squares&#39;`.</span>
+<span class="sd">            Requires the ``numdifftools`` package to be installed.</span>
+<span class="sd">        max_nfev : int or None, optional</span>
+<span class="sd">            Maximum number of function evaluations (default is None). The</span>
+<span class="sd">            default value depends on the fitting method.</span>
+<span class="sd">        coerce_farray : bool, optional</span>
+<span class="sd">            Whether to coerce data and independent data to be ndarrays</span>
+<span class="sd">            with dtype of float64 (or complex128).  If set to False, data</span>
+<span class="sd">            and independent data are not coerced at all, but the output of</span>
+<span class="sd">            the model function will be. (default is True)</span>
+<span class="sd">        **kwargs : optional</span>
+<span class="sd">            Arguments to pass to the model function, possibly overriding</span>
+<span class="sd">            parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`emgfit.model.EMGModelResult`</span>
+<span class="sd">            EMGModelResult</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        1. if `params` is None, the values for all parameters are expected</span>
+<span class="sd">        to be provided as keyword arguments. Mixing `params` and</span>
+<span class="sd">        keyword arguments is deprecated (see `Model.eval`).</span>
+
+<span class="sd">        2. all non-parameter arguments for the model function, **including</span>
+<span class="sd">        all the independent variables** will need to be passed in using</span>
+<span class="sd">        keyword arguments.</span>
+
+<span class="sd">        3. Parameters are copied on input, so that the original Parameter objects</span>
+<span class="sd">        are unchanged, and the updated values are in the returned `EMGModelResult`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Take ``t`` to be the independent variable and data to be the curve</span>
+<span class="sd">        we will fit. Use keyword arguments to set initial guesses:</span>
+
+<span class="sd">        &gt;&gt;&gt; result = my_model.fit(data, tau=5, N=3, t=t)</span>
+
+<span class="sd">        Or, for more control, pass a Parameters object.</span>
+
+<span class="sd">        &gt;&gt;&gt; result = my_model.fit(data, params, t=t)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_params</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+        <span class="c1"># If any kwargs match parameter names, override params.</span>
+        <span class="n">param_kwargs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">param_kwargs</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">):</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>  <span class="c1"># allows N=Parameter(value=5) with implicit name</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+        <span class="c1"># All remaining kwargs should correspond to independent variables.</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_vars</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The keyword argument </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> does not &quot;</span> <span class="o">+</span>
+                              <span class="s2">&quot;match any arguments of the model function. &quot;</span> <span class="o">+</span>
+                              <span class="s2">&quot;It will be ignored.&quot;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+
+        <span class="c1"># If any parameter is not initialized raise a more helpful error.</span>
+        <span class="n">missing_param</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">)</span>
+        <span class="n">blank_param</span> <span class="o">=</span> <span class="nb">any</span><span class="p">((</span><span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">expr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+                          <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">missing_param</span> <span class="ow">or</span> <span class="n">blank_param</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Assign each parameter an initial value by passing &#39;</span>
+                   <span class="s1">&#39;Parameters or keyword arguments to fit.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+            <span class="n">blank</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                     <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">expr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;Missing parameters: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;Non initialized parameters: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">blank</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># Handle null/missing values.</span>
+        <span class="k">if</span> <span class="n">nan_policy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nan_policy</span> <span class="o">=</span> <span class="n">nan_policy</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nan_policy</span> <span class="o">==</span> <span class="s1">&#39;omit&#39;</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">isnull</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">weights</span> <span class="o">=</span> <span class="n">_align</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># If independent_vars and data are alignable (pandas), align them,</span>
+        <span class="c1"># and apply the mask from above if there is one.</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_vars</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">var</span><span class="p">]):</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">_align</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">mask</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">coerce_farray</span><span class="p">:</span>
+            <span class="c1"># coerce data and independent variable(s) that are &#39;array-like&#39; (list,</span>
+            <span class="c1"># tuples, pandas Series) to float64/complex128.</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">coerce_arraylike</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_vars</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">coerce_arraylike</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">fit_kws</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fit_kws</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="n">EMGModelResult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> 
+                                <span class="n">fitted_peaks</span><span class="o">=</span><span class="n">fitted_peaks</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> 
+                                <span class="n">fcn_kws</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">iter_cb</span><span class="o">=</span><span class="n">iter_cb</span><span class="p">,</span> 
+                                <span class="n">scale_covar</span><span class="o">=</span><span class="n">scale_covar</span><span class="p">,</span> 
+                                <span class="n">nan_policy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nan_policy</span><span class="p">,</span> 
+                                <span class="n">calc_covar</span><span class="o">=</span><span class="n">calc_covar</span><span class="p">,</span> 
+                                <span class="n">max_nfev</span><span class="o">=</span><span class="n">max_nfev</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_kws</span><span class="p">)</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span> 
+        <span class="n">output</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+    
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;+&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">CompositeEMGModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;-&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">CompositeEMGModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">sub</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;*&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">CompositeEMGModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;/&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">CompositeEMGModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">truediv</span><span class="p">)</span></div>
+    
+
+
+<div class="viewcode-block" id="CompositeEMGModel"><a class="viewcode-back" href="../../modules.html#emgfit.model.CompositeEMGModel">[docs]</a><span class="k">class</span> <span class="nc">CompositeEMGModel</span><span class="p">(</span><span class="n">EMGModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Combine two EMGModels (`left` and `right`) with binary operator (`op`).</span>
+
+<span class="sd">    Normally, one does not have to explicitly create a `CompositeModel`,</span>
+<span class="sd">    but can use normal Python operators ``+``, ``-``, ``*``, and ``/`` to</span>
+<span class="sd">    combine components as in::</span>
+
+<span class="sd">    &gt;&gt;&gt; mod = EMGModel(fcn1) + EMGModel(fcn2) * EMGModel(fcn3)</span>
+
+<span class="sd">    Class modified from :mod:`lmfit.model.CompositeModel` class.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_known_ops</span> <span class="o">=</span> <span class="p">{</span><span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">:</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span>
+                  <span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">:</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">truediv</span><span class="p">:</span> <span class="s1">&#39;/&#39;</span><span class="p">}</span>
+
+<div class="viewcode-block" id="CompositeEMGModel.__init__"><a class="viewcode-back" href="../../modules.html#emgfit.model.CompositeEMGModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create composite EMG model</span>
+
+<span class="sd">        Method modified from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        left : Model</span>
+<span class="sd">            Left-hand model.</span>
+<span class="sd">        right : Model</span>
+<span class="sd">            Right-hand model.</span>
+<span class="sd">        op : callable binary operator</span>
+<span class="sd">            Operator to combine `left` and `right` models.</span>
+<span class="sd">        **kws : optional</span>
+<span class="sd">            Additional keywords are passed to `Model` when creating this</span>
+<span class="sd">            new model.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The two models can use different independent variables.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">EMGModel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;CompositeModel: argument </span><span class="si">{</span><span class="n">left</span><span class="si">}</span><span class="s1"> is not a Model&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">EMGModel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;CompositeModel: argument </span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s1"> is not a Model&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;CompositeModel: operator </span><span class="si">{</span><span class="n">op</span><span class="si">}</span><span class="s1"> is not callable&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="n">left</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">right</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="n">op</span>
+
+        <span class="n">name_collisions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">param_names</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">right</span><span class="o">.</span><span class="n">param_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name_collisions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">for</span> <span class="n">collision</span> <span class="ow">in</span> <span class="n">name_collisions</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Two models have parameters named &#39;</span><span class="si">{</span><span class="n">collision</span><span class="si">}</span><span class="s2">&#39;; &quot;</span>
+                        <span class="s2">&quot;use distinct names.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># the unique ``independent_vars`` of the left and right model are</span>
+        <span class="c1"># combined to ``independent_vars`` of the ``CompositeModel``</span>
+        <span class="k">if</span> <span class="s1">&#39;independent_vars&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kws</span><span class="p">:</span>
+            <span class="n">ivars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">independent_vars</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">independent_vars</span>
+            <span class="n">kws</span><span class="p">[</span><span class="s1">&#39;independent_vars&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">ivars</span><span class="p">))</span>
+        <span class="k">if</span> <span class="s1">&#39;nan_policy&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kws</span><span class="p">:</span>
+            <span class="n">kws</span><span class="p">[</span><span class="s1">&#39;nan_policy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">nan_policy</span>
+        <span class="k">if</span> <span class="s1">&#39;cost_func&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kws</span><span class="p">:</span>
+            <span class="n">kws</span><span class="p">[</span><span class="s1">&#39;cost_func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">cost_func</span>
+
+        <span class="k">def</span> <span class="nf">_tmp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="n">EMGModel</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_tmp</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">side</span><span class="o">.</span><span class="n">prefix</span>
+            <span class="k">for</span> <span class="n">basename</span><span class="p">,</span> <span class="n">hint</span> <span class="ow">in</span> <span class="n">side</span><span class="o">.</span><span class="n">param_hints</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">param_hints</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">basename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hint</span></div>
+    
+<div class="viewcode-block" id="CompositeEMGModel._parse_params"><a class="viewcode-back" href="../../modules.html#emgfit.model.CompositeEMGModel._parse_params">[docs]</a>    <span class="k">def</span> <span class="nf">_parse_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Method adopted from :mod:`lmfit.model` module.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_func_haskeywords</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">_func_haskeywords</span> <span class="ow">or</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">_func_haskeywords</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_func_allargs</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">_func_allargs</span> <span class="o">+</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">_func_allargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">def_vals</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">def_vals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">def_vals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">def_vals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">opts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">opts</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CompositeEMGModel._reprstring"><a class="viewcode-back" href="../../modules.html#emgfit.model.CompositeEMGModel._reprstring">[docs]</a>    <span class="k">def</span> <span class="nf">_reprstring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Method adopted from :mod:`lmfit.model` module.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">_reprstring</span><span class="p">(</span><span class="n">long</span><span class="o">=</span><span class="n">long</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_known_ops</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">_reprstring</span><span class="p">(</span><span class="n">long</span><span class="o">=</span><span class="n">long</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CompositeEMGModel.eval"><a class="viewcode-back" href="../../modules.html#emgfit.model.CompositeEMGModel.eval">[docs]</a>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate model function for composite model.</span>
+<span class="sd">        </span>
+<span class="sd">        Method adopted from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CompositeEMGModel.eval_components"><a class="viewcode-back" href="../../modules.html#emgfit.model.CompositeEMGModel.eval_components">[docs]</a>    <span class="k">def</span> <span class="nf">eval_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dictionary of name, results for each component.</span>
+<span class="sd">        </span>
+<span class="sd">        Method adopted from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">eval_components</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">eval_components</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="CompositeEMGModel.post_fit"><a class="viewcode-back" href="../../modules.html#emgfit.model.CompositeEMGModel.post_fit">[docs]</a>    <span class="k">def</span> <span class="nf">post_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fitresult</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;function that is called just after fit, can be overloaded by</span>
+<span class="sd">        subclasses to add non-fitting &#39;calculated parameters&#39;</span>
+
+<span class="sd">        Method adopted from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">post_fit</span><span class="p">(</span><span class="n">fitresult</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">post_fit</span><span class="p">(</span><span class="n">fitresult</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">param_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return parameter names for composite model.</span>
+<span class="sd">        </span>
+<span class="sd">        Method adopted from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">param_names</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">param_names</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return components for composite model.</span>
+<span class="sd">        </span>
+<span class="sd">        Method adopted from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">components</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">components</span>
+
+<div class="viewcode-block" id="CompositeEMGModel._get_state"><a class="viewcode-back" href="../../modules.html#emgfit.model.CompositeEMGModel._get_state">[docs]</a>    <span class="k">def</span> <span class="nf">_get_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Method adopted from :mod:`lmfit.model` module.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">_get_state</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">_get_state</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CompositeEMGModel._set_state"><a class="viewcode-back" href="../../modules.html#emgfit.model.CompositeEMGModel._set_state">[docs]</a>    <span class="k">def</span> <span class="nf">_set_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Method adopted from :mod:`lmfit.model` module.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_buildmodel</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="n">funcdefs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CompositeEMGModel._make_all_args"><a class="viewcode-back" href="../../modules.html#emgfit.model.CompositeEMGModel._make_all_args">[docs]</a>    <span class="k">def</span> <span class="nf">_make_all_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate **all** function arguments for all functions.</span>
+
+<span class="sd">        Method adopted from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">_make_all_args</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">_make_all_args</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span></div></div>
+
+
+
+<div class="viewcode-block" id="save_model"><a class="viewcode-back" href="../../modules.html#emgfit.model.save_model">[docs]</a><span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save an EMGModel to a file.</span>
+
+<span class="sd">    Function adopted from :mod:`lmfit.model` module.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : :class:`~emgfit.model.EMGModel`</span>
+<span class="sd">        Model to be saved.</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        Name of file for saved Model.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fout</span><span class="p">:</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">fout</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_model"><a class="viewcode-back" href="../../modules.html#emgfit.model.load_model">[docs]</a><span class="k">def</span> <span class="nf">load_model</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> 
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a saved EMGModel from a file.</span>
+
+<span class="sd">    Function modified from :mod:`lmfit.model` module.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        Name of file containing saved EMGModel.</span>
+<span class="sd">    funcdefs : dict, optional</span>
+<span class="sd">        Dictionary of custom function names and definitions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Model</span>
+<span class="sd">        Model object loaded from file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">EMGModel</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="n">funcdefs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="_buildmodel"><a class="viewcode-back" href="../../modules.html#emgfit.model._buildmodel">[docs]</a><span class="k">def</span> <span class="nf">_buildmodel</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build EMGModel from saved state.</span>
+
+<span class="sd">    Intended for internal use only.</span>
+
+<span class="sd">    Function modified from :mod:`lmfit.model` module.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot restore Model&quot;</span><span class="p">)</span>
+    <span class="n">known_funcs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">lineshapes</span><span class="o">.</span><span class="n">functions</span><span class="p">:</span>
+        <span class="n">fcn</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">lineshapes</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">fcn</span><span class="p">):</span>
+            <span class="n">known_funcs</span><span class="p">[</span><span class="n">fname</span><span class="p">]</span> <span class="o">=</span> <span class="n">fcn</span>
+    <span class="k">if</span> <span class="n">funcdefs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">known_funcs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">funcdefs</span><span class="p">)</span>
+
+    <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">op</span> <span class="o">=</span> <span class="n">state</span>
+    <span class="k">if</span> <span class="n">op</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">right</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">fcndef</span><span class="p">,</span> <span class="n">cost_func</span><span class="p">,</span> <span class="n">par_hint_args</span><span class="p">,</span> <span class="n">vary_baseline</span><span class="p">,</span> <span class="n">vary_shape</span><span class="p">,</span> 
+         <span class="n">name</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">ivars</span><span class="p">,</span> <span class="n">pnames</span><span class="p">,</span> 
+         <span class="n">phints</span><span class="p">,</span> <span class="n">nan_policy</span><span class="p">,</span> <span class="n">opts</span><span class="p">)</span> <span class="o">=</span> <span class="n">left</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">fcndef</span><span class="p">)</span> <span class="ow">and</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">known_funcs</span><span class="p">:</span>
+            <span class="n">fcndef</span> <span class="o">=</span> <span class="n">known_funcs</span><span class="p">[</span><span class="n">fname</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">fcndef</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot restore Model: model function not found&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fname</span> <span class="o">==</span> <span class="s1">&#39;_eval&#39;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fcndef</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">EMGModel</span><span class="p">(</span><span class="n">fcndef</span><span class="p">,</span> <span class="n">cost_func</span><span class="o">=</span><span class="n">cost_func</span><span class="p">,</span> 
+                             <span class="n">par_hint_args</span><span class="o">=</span><span class="n">par_hint_args</span><span class="p">,</span> 
+                             <span class="n">vary_baseline</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">vary_baseline</span><span class="p">),</span> 
+                             <span class="n">vary_shape</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">vary_shape</span><span class="p">),</span> 
+                             <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">,</span>
+                             <span class="n">independent_vars</span><span class="o">=</span><span class="n">ivars</span><span class="p">,</span> <span class="n">param_names</span><span class="o">=</span><span class="n">pnames</span><span class="p">,</span>
+                             <span class="n">nan_policy</span><span class="o">=</span><span class="n">nan_policy</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">hint</span> <span class="ow">in</span> <span class="n">phints</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">hint</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lmodel</span> <span class="o">=</span> <span class="n">_buildmodel</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="n">funcdefs</span><span class="p">)</span>
+        <span class="n">rmodel</span> <span class="o">=</span> <span class="n">_buildmodel</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="n">funcdefs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">CompositeEMGModel</span><span class="p">(</span><span class="n">lmodel</span><span class="p">,</span> <span class="n">rmodel</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">op</span><span class="p">))</span></div>
+    
+
+<div class="viewcode-block" id="save_modelresult"><a class="viewcode-back" href="../../modules.html#emgfit.model.save_modelresult">[docs]</a><span class="k">def</span> <span class="nf">save_modelresult</span><span class="p">(</span><span class="n">modelresult</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save an EMGModelResult to a file.</span>
+
+<span class="sd">    Function adopted from :mod:`lmfit.model` module.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    modelresult : :class:`~emgfit.model.EMGModelResult`</span>
+<span class="sd">        EMGModelResult to be saved.</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        Name of file for saved EMGModelResult.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fout</span><span class="p">:</span>
+        <span class="n">modelresult</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">fout</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_modelresult"><a class="viewcode-back" href="../../modules.html#emgfit.model.load_modelresult">[docs]</a><span class="k">def</span> <span class="nf">load_modelresult</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a saved EMGModelResult from a file.</span>
+
+<span class="sd">    Function modified from :mod:`lmfit.model` module.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        Name of file containing saved EMGModelResult.</span>
+<span class="sd">    funcdefs : dict, optional</span>
+<span class="sd">        Dictionary of custom function names and definitions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`~emgfit.model.EMGModelResult`</span>
+<span class="sd">        EMGModelResult object loaded from file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">()</span>
+    <span class="n">modres</span> <span class="o">=</span> <span class="n">EMGModelResult</span><span class="p">(</span><span class="n">EMGModel</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">),</span> <span class="n">params</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="n">mresult</span> <span class="o">=</span> <span class="n">modres</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="n">funcdefs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mresult</span></div>
+
+
+
+<span class="c1">################################################################################</span>
+<span class="c1">###### Define emgfit EMGModelResult class</span>
+<div class="viewcode-block" id="EMGModelResult"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModelResult">[docs]</a><span class="k">class</span> <span class="nc">EMGModelResult</span><span class="p">(</span><span class="n">lmfit</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ModelResult</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result from an EMGModel fit.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EMGModelResult.__init__"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModelResult.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">fitted_peaks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;least_squares&#39;</span><span class="p">,</span> <span class="n">fcn_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">fcn_kws</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iter_cb</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_covar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">,</span> <span class="n">calc_covar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_nfev</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="o">**</span><span class="n">fit_kws</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model : Model</span>
+<span class="sd">            Model to use.</span>
+<span class="sd">        params : Parameters</span>
+<span class="sd">            Parameters with initial values for model.</span>
+<span class="sd">        data : array_like</span>
+<span class="sd">            Ordinate values of data to be modeled.</span>
+<span class="sd">        weights : array_like, optional</span>
+<span class="sd">            Weights to multiply ``(data-model)`` for default fit residual.</span>
+<span class="sd">        fitted_peaks : list of :class:`emgfit.spectrum.spectrum.peak`</span>
+<span class="sd">            List of fitted peak objects.</span>
+<span class="sd">        method : str, optional</span>
+<span class="sd">            Name of minimization method to use (default is `&#39;least_squares&#39;`).</span>
+<span class="sd">        fcn_args : sequence, optional</span>
+<span class="sd">            Positional arguments to send to model function.</span>
+<span class="sd">        fcn_kws : dict, optional</span>
+<span class="sd">            Keyword arguments to send to model function.</span>
+<span class="sd">        iter_cb : callable, optional</span>
+<span class="sd">            Function to call on each iteration of fit.</span>
+<span class="sd">        scale_covar : bool, optional</span>
+<span class="sd">            Whether to scale covariance matrix for uncertainty evaluation.</span>
+<span class="sd">        nan_policy : {&#39;raise&#39;, &#39;propagate&#39;, &#39;omit&#39;}, optional</span>
+<span class="sd">            What to do when encountering NaNs when fitting Model.</span>
+<span class="sd">        calc_covar : bool, optional</span>
+<span class="sd">            Whether to calculate the covariance matrix (default is True)</span>
+<span class="sd">            for solvers other than `&#39;leastsq&#39;` and `&#39;least_squares&#39;`.</span>
+<span class="sd">            Requires the ``numdifftools`` package to be installed.</span>
+<span class="sd">        max_nfev : int or None, optional</span>
+<span class="sd">            Maximum number of function evaluations (default is None). The</span>
+<span class="sd">            default value depends on the fitting method.</span>
+<span class="sd">        **fit_kws : optional</span>
+<span class="sd">            Keyword arguments to send to minimization routine.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">fcn_kws</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fcn_kws</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitted_peaks</span> <span class="o">=</span> <span class="n">fitted_peaks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_kws</span> <span class="o">=</span> <span class="n">fit_kws</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> 
+                         <span class="n">fcn_args</span><span class="o">=</span><span class="n">fcn_args</span><span class="p">,</span> <span class="n">fcn_kws</span><span class="o">=</span><span class="n">fcn_kws</span><span class="p">,</span> <span class="n">iter_cb</span><span class="o">=</span><span class="n">iter_cb</span><span class="p">,</span> 
+                         <span class="n">scale_covar</span><span class="o">=</span><span class="n">scale_covar</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="n">nan_policy</span><span class="p">,</span> 
+                         <span class="n">calc_covar</span><span class="o">=</span><span class="n">calc_covar</span><span class="p">,</span> <span class="n">max_nfev</span><span class="o">=</span><span class="n">max_nfev</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_kws</span><span class="p">)</span></div>
+    
+    <span class="nd">@property</span> 
+    <span class="k">def</span> <span class="nf">x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ordinate values of fitted data&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">userkws</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">{}]:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">userkws</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">independent_vars</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">y</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Abscissa values of fitted data&quot;&quot;&quot;</span>   
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> 
+    
+    <span class="nd">@property</span> 
+    <span class="k">def</span> <span class="nf">y_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Uncertainties of abscissa values of fitted data&quot;&quot;&quot;</span>   
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost_func</span> <span class="o">==</span> <span class="s2">&quot;chi-square&quot;</span><span class="p">:</span>
+            <span class="c1"># Calculate final weights for plotting</span>
+            <span class="n">y_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_fit</span>
+            <span class="n">Pearson_weights</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">y_m</span> <span class="o">+</span> <span class="n">EPS</span><span class="p">)</span>
+            <span class="n">y_err</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">Pearson_weights</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">y_err</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
+        <span class="k">return</span> <span class="n">y_err</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">x_fit_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Range of fitted ordinate values&quot;&quot;&quot;</span>   
+        <span class="k">return</span>  <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">x_fit_cen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Centre of fitted ordinate range&quot;&quot;&quot;</span> 
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">x_fit_range</span>
+    
+    <span class="nd">@property</span> 
+    <span class="k">def</span> <span class="nf">fit_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Name of hyper-EMG model used in fit&quot;&quot;&quot;</span> 
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">CompositeEMGModel</span><span class="p">):</span> 
+            <span class="n">fit_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fit_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="n">fit_model</span>
+    
+    <span class="nd">@property</span> 
+    <span class="k">def</span> <span class="nf">vary_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the amplitude of the uniform background was varied in the fit&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">vary_baseline</span>
+
+    <span class="nd">@property</span> 
+    <span class="k">def</span> <span class="nf">vary_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the peak shape (and scale) parameters were varied in the fit&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">vary_shape</span>
+    
+    <span class="nd">@property</span> 
+    <span class="k">def</span> <span class="nf">par_hint_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;User-specified parameter hints used in the fit&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">par_hint_args</span>
+    
+    <span class="nd">@property</span> 
+    <span class="k">def</span> <span class="nf">cost_func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Name of the cost function used in the fit&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cost_func</span>
+   
+
+<div class="viewcode-block" id="EMGModelResult.fit"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModelResult.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fitted_peaks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+            <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Re-perform fit for a Model, given data and params.  </span>
+
+<span class="sd">        Method modified from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : array_like, optional </span>
+<span class="sd">            Data to be modeled.</span>
+<span class="sd">        fitted_peaks : list of :class:`emgfit.spectrum.spectrum.peak`</span>
+<span class="sd">            List of peak objects to be fitted.</span>
+<span class="sd">        params : Parameters, optional</span>
+<span class="sd">            Parameters with initial values for model.</span>
+<span class="sd">        weights : array_like, optional</span>
+<span class="sd">            Weights to multiply ``(data-model)`` for fit residual - only </span>
+<span class="sd">            relevant when using the default lmfit cost function. </span>
+<span class="sd">        method : str, optional</span>
+<span class="sd">            Name of minimization method to use (default is `&#39;least_squares&#39;`).</span>
+<span class="sd">        nan_policy : {&#39;raise&#39;, &#39;propagate&#39;, &#39;omit&#39;}, optional</span>
+<span class="sd">            What to do when encountering NaNs when fitting Model.</span>
+<span class="sd">        **kwargs : optional</span>
+<span class="sd">            Keyword arguments to send to minimization routine.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">if</span> <span class="n">fitted_peaks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fitted_peaks</span> <span class="o">=</span> <span class="n">fitted_peaks</span>
+        <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_params</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="k">if</span> <span class="n">nan_policy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nan_policy</span> <span class="o">=</span> <span class="n">nan_policy</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ci_out</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">userargs</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">userkws</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">userkws</span><span class="p">)</span>
+        <span class="n">_ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">post_fit</span><span class="p">(</span><span class="n">_ret</span><span class="p">)</span>
+        <span class="n">_ret</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">create_uvars</span><span class="p">(</span><span class="n">covar</span><span class="o">=</span><span class="n">_ret</span><span class="o">.</span><span class="n">covar</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">_ret</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">attr</span> <span class="o">!=</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_ret</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_make_all_args</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_make_all_args</span><span class="p">(</span><span class="n">_ret</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">_ret</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">userkws</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+           <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_fit</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+           <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_fit</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">dat</span> <span class="o">=</span> <span class="n">coerce_arraylike</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="p">((</span><span class="n">dat</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_fit</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">sstot</span> <span class="o">=</span> <span class="p">((</span><span class="n">dat</span> <span class="o">-</span> <span class="n">dat</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rsquared</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">resid</span><span class="o">/</span><span class="nb">max</span><span class="p">(</span><span class="n">tiny</span><span class="p">,</span> <span class="n">sstot</span><span class="p">)</span></div>
+    
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return representation of EMGModelResult.</span>
+<span class="sd">        </span>
+<span class="sd">        Method modified from :mod:`lmfit.model` module.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;emgfit.EMGModelResult: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+    
+<div class="viewcode-block" id="EMGModelResult.loads"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModelResult.loads">[docs]</a>    <span class="k">def</span> <span class="nf">loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load ModelResult from a JSON string.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        s : str</span>
+<span class="sd">            String representation of ModelResult, as from `dumps`.</span>
+<span class="sd">        funcdefs : dict, optional</span>
+<span class="sd">            Dictionary of custom function names and definitions.</span>
+<span class="sd">        **kws : optional</span>
+<span class="sd">            Keyword arguments that are passed to `json.loads`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ModelResult</span>
+<span class="sd">            ModelResult instance from JSON string representation.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        load, dumps, json.dumps</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">modres</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;modelresult&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">modres</span><span class="p">[</span><span class="s1">&#39;__class__&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;ModelResult.loads() needs saved ModelResult&#39;</span><span class="p">)</span>
+
+        <span class="n">modres</span> <span class="o">=</span> <span class="n">decode4js</span><span class="p">(</span><span class="n">modres</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;model&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">modres</span> <span class="ow">or</span> <span class="s1">&#39;params&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">modres</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;ModelResult.loads() needs valid ModelResult&#39;</span><span class="p">)</span>
+
+        <span class="c1"># model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">_buildmodel</span><span class="p">(</span><span class="n">decode4js</span><span class="p">(</span><span class="n">modres</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]),</span> <span class="n">funcdefs</span><span class="o">=</span><span class="n">funcdefs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">funcdefs</span><span class="p">:</span>
+            <span class="c1"># Remove model function so as not pass it into the _asteval.symtable</span>
+            <span class="n">funcdefs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># how params are saved was changed with version 2:</span>
+        <span class="n">modres_vers</span> <span class="o">=</span> <span class="n">modres</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;__version__&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">modres_vers</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;params&#39;</span><span class="p">,</span> <span class="s1">&#39;init_params&#39;</span><span class="p">):</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;unique_symbols&#39;</span><span class="p">:</span> <span class="n">modres</span><span class="p">[</span><span class="s1">&#39;unique_symbols&#39;</span><span class="p">],</span> <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+                <span class="k">for</span> <span class="n">parstate</span> <span class="ow">in</span> <span class="n">modres</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]:</span>
+                    <span class="n">_par</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="n">_par</span><span class="o">.</span><span class="n">__setstate__</span><span class="p">(</span><span class="n">parstate</span><span class="p">)</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_par</span><span class="p">)</span>
+                <span class="n">_params</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">usersyms</span><span class="o">=</span><span class="n">funcdefs</span><span class="p">)</span>
+                <span class="n">_params</span><span class="o">.</span><span class="n">__setstate__</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">_params</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">modres_vers</span> <span class="o">==</span> <span class="s1">&#39;2&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;params&#39;</span><span class="p">,</span> <span class="s1">&#39;init_params&#39;</span><span class="p">):</span>
+                <span class="n">_pars</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">()</span>
+                <span class="n">_pars</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">modres</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">funcdefs</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">funcdefs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">_pars</span><span class="o">.</span><span class="n">_asteval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">_pars</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;aborted&#39;</span><span class="p">,</span> <span class="s1">&#39;aic&#39;</span><span class="p">,</span> <span class="s1">&#39;best_fit&#39;</span><span class="p">,</span> <span class="s1">&#39;best_values&#39;</span><span class="p">,</span> <span class="s1">&#39;bic&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;chisqr&#39;</span><span class="p">,</span> <span class="s1">&#39;ci_out&#39;</span><span class="p">,</span> <span class="s1">&#39;col_deriv&#39;</span><span class="p">,</span> <span class="s1">&#39;covar&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;errorbars&#39;</span><span class="p">,</span> <span class="s1">&#39;fjac&#39;</span><span class="p">,</span> <span class="s1">&#39;flatchain&#39;</span><span class="p">,</span> <span class="s1">&#39;ier&#39;</span><span class="p">,</span> <span class="s1">&#39;init_fit&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;init_values&#39;</span><span class="p">,</span> <span class="s1">&#39;kws&#39;</span><span class="p">,</span> <span class="s1">&#39;lmdif_message&#39;</span><span class="p">,</span> <span class="s1">&#39;message&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="s1">&#39;nan_policy&#39;</span><span class="p">,</span> <span class="s1">&#39;ndata&#39;</span><span class="p">,</span> <span class="s1">&#39;nfev&#39;</span><span class="p">,</span> <span class="s1">&#39;nfree&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;nvarys&#39;</span><span class="p">,</span> <span class="s1">&#39;redchi&#39;</span><span class="p">,</span> <span class="s1">&#39;residual&#39;</span><span class="p">,</span> <span class="s1">&#39;rsquared&#39;</span><span class="p">,</span> <span class="s1">&#39;scale_covar&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;calc_covar&#39;</span><span class="p">,</span> <span class="s1">&#39;success&#39;</span><span class="p">,</span> <span class="s1">&#39;userargs&#39;</span><span class="p">,</span> <span class="s1">&#39;userkws&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;var_names&#39;</span><span class="p">,</span> <span class="s1">&#39;weights&#39;</span><span class="p">,</span> <span class="s1">&#39;user_options&#39;</span><span class="p">,</span> <span class="s1">&#39;fitted_peaks&#39;</span><span class="p">,</span> 
+                     <span class="s1">&#39;fit_kws&#39;</span><span class="p">):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">decode4js</span><span class="p">(</span><span class="n">modres</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">userkws</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">userargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">userargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">userargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">parname</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">par</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parname</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">par</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">par</span><span class="o">.</span><span class="n">correl</span> <span class="o">=</span> <span class="n">par</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">par</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">par</span><span class="o">.</span><span class="n">init_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_values</span><span class="p">[</span><span class="n">parname</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_params</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">userkws</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">lmfit</span><span class="o">.</span><span class="n">minimizer</span><span class="o">.</span><span class="n">MinimizerResult</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">errorbars</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uvars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">create_uvars</span><span class="p">(</span><span class="n">covar</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">covar</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_vals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_values</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="EMGModelResult.load"><a class="viewcode-back" href="../../modules.html#emgfit.model.EMGModelResult.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">funcdefs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load JSON representation of ModelResult from a file-like object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fp : file-like object</span>
+<span class="sd">            An open and `.read()`-supporting file-like object.</span>
+<span class="sd">        funcdefs : dict, optional</span>
+<span class="sd">            Dictionary of function definitions to use to construct Model.</span>
+<span class="sd">        **kws : optional</span>
+<span class="sd">            Keyword arguments that are passed to `loads`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ModelResult</span>
+<span class="sd">            ModelResult created from `fp`.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        dump, loads, json.load</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">funcdefs</span><span class="o">=</span><span class="n">funcdefs</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span></div></div>
+
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Stefan Paul.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
