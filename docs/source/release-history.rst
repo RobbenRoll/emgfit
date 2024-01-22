@@ -8,7 +8,7 @@ versions can be found `here`_.
 .. _here: https://RobbenRoll.github.io/emgfit
 
 
-v0.5.0 (2024-01-20)
+v0.5.0 (2024-01-21)
 -------------------
 
 Added 
@@ -24,6 +24,9 @@ Added
 * Add :mod:`~emgfit.model` module with custom model interface, thus providing
   a cleaner way to override lmfit's default residual with emgfit's custom cost 
   functions. 
+* Introduce :attr:`~emgfit.spectrum.peak._index` and :attr:`~emgfit.spectrum.peak._blinded` 
+  attributes, and :attr:`~emgfit.spectrum.peak._prefix` property to 
+  :class:`~emgfit.spectrum.peak` class.
   
 Changed
 ^^^^^^^
@@ -47,7 +50,7 @@ Fixed
 * Fix bug in calculation of statistical mass uncertainties of multiply charged
   peaks with :meth:`~emgfit.spectrum.spectrum.get_errors_from_resampling`.
 * Fix peak shape error evalution with 
-  :meth:`~emgfit.spectrum.spectrum._eval_peak_shape_errors` failing due to 
+  :meth:`~emgfit.spectrum.spectrum._eval_peakshape_errors` failing due to 
   varied parameters falling outside of bounds or due to precision loss in mu0 
   calculation. 
 * Fix bug in preparation of MCMC shape parameters samples in 
