@@ -146,8 +146,8 @@ def h_m_emg(x, mu, sigma, li_eta_m,li_tau_m):
     if sigma <= 0:
         raise Exception("sigma must be positive!")
 
-    li_eta_m = np.array(li_eta_m).astype(np.float_)
-    li_tau_m = np.array(li_tau_m).astype(np.float_)
+    li_eta_m = np.array(li_eta_m).astype(np.float64)
+    li_tau_m = np.array(li_tau_m).astype(np.float64)
     t_order_m = len(li_eta_m) # order of negative tail exponentials
     sum_eta_m = 0.
     for i in range(t_order_m):
@@ -265,8 +265,8 @@ def h_p_emg(x, mu, sigma, li_eta_p, li_tau_p):
     if sigma <= 0:
         raise Exception("sigma must be positive!")
 
-    li_eta_p = np.array(li_eta_p).astype(np.float_)
-    li_tau_p = np.array(li_tau_p).astype(np.float_)
+    li_eta_p = np.array(li_eta_p).astype(np.float64)
+    li_tau_p = np.array(li_tau_p).astype(np.float64)
     t_order_p = len(li_eta_p) # order of positive tails
     sum_eta_p = 0.
     for i in range(t_order_p):

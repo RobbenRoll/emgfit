@@ -148,7 +148,7 @@ class TestSampling():
         N_bins = int((x_max-x_min)/(0.1*shape_pars["sigma"]))
         bin_width = (x_max - x_min)/N_bins
         N_bkg = 0.4*N_bins
-        amps = np.array([0.3,0.7])*(N_events-N_bkg)*bin_width
+        amps = np.asarray([0.3,0.7])*(N_events-N_bkg)*bin_width
         data = simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min,
                                x_max, out='hist', N_bins=N_bins)
         spec = emgfit.spectrum(df=data, show_plot=False)

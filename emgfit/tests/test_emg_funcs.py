@@ -80,7 +80,7 @@ class Test_h_emg(unittest.TestCase):
                                        (eta_p1,eta_p2,eta_p3),
                                        (tau_p1,tau_p2,tau_p3))
 
-        assert np.allclose(ret,ret_mpmath,rtol=1e-12)
+        assert np.allclose(ret,ret_mpmath, rtol=1e-12)
 
     def test_extreme_args(self):
         """Check for finiteness at extreme arguments """

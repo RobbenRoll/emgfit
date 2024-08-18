@@ -78,7 +78,7 @@ def h_m_emg_rvs(mu, sigma, *t_args,N_samples=None):
 
     # randomly distribute ions between tails according to eta_m weights
     tail_nos = np.random.choice(range(t_order_m),size=N_samples,p = li_eta_m)
-    rvs = np.array([])
+    rvs = np.asarray([])
     for i in range(t_order_m):
         N_i = np.count_nonzero(tail_nos == i)
         tau_m = li_tau_m[i]
@@ -127,7 +127,7 @@ def h_p_emg_rvs(mu, sigma, *t_args, N_samples=None):
 
     # randomly distribute ions between tails according to eta_p weights
     tail_nos = np.random.choice(range(t_order_p),size=N_samples,p = li_eta_p)
-    rvs = np.array([])
+    rvs = np.asarray([])
     for i in range(t_order_p):
         N_i = np.count_nonzero(tail_nos == i)
         tau_p = li_tau_p[i]
@@ -358,7 +358,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
     peak_dist = np.random.choice(range(N_peaks+1), size=N_events, p=weights)
     N_bkg = np.count_nonzero(peak_dist == N_peaks) # calc. number of bkgd counts
 
-    events = np.array([])
+    events = np.asarray([])
     # Create & add random samples from each individual peak
     for i in range(N_peaks):
         N_i = np.count_nonzero(peak_dist == i) # get no. of ions in peak
@@ -366,8 +366,8 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
             events_i = Gaussian_rvs(mus[i], sigma*scl_facs[i], N_samples=N_i)
         else: # hyper-EMG
             events_i = h_emg_rvs(mus[i], sigma*scl_facs[i], theta, li_eta_m,
-                                 np.array(li_tau_m)*scl_facs[i], li_eta_p,
-                                 np.array(li_tau_p)*scl_facs[i], N_samples=N_i)
+                                 np.asarray(li_tau_m)*scl_facs[i], li_eta_p,
+                                 np.asarray(li_tau_p)*scl_facs[i], N_samples=N_i)
         events = np.append(events, events_i)
 
     # Create & add background events
@@ -715,12 +715,12 @@ def fit_simulated_spectra(spec, fit_result, alt_result=None, N_spectra=1000,
     from joblib import Parallel, delayed
     try:
         if MC_shape_par_samples is None:
-            min_results = np.array(Parallel(n_jobs=n_cores)
-                                    (delayed(refit)(s, shape_pars) for s in tqdm(joblib_seeds)))
+            min_results = np.asarray(Parallel(n_jobs=n_cores)
+                                     (delayed(refit)(s, shape_pars) for s in tqdm(joblib_seeds)))
         else:
             from .spectrum import _strip_prefs
-            min_results = np.array(Parallel(n_jobs=n_cores)
-                                    (delayed(refit)(s, _strip_prefs(dict(MC_shape_par_samples.iloc[i]))) for i, s in tqdm(enumerate(joblib_seeds))))
+            min_results = np.asarray(Parallel(n_jobs=n_cores)
+                                     (delayed(refit)(s, _strip_prefs(dict(MC_shape_par_samples.iloc[i]))) for i, s in tqdm(enumerate(joblib_seeds))))
     finally:
         # Force workers to shut down and clean up temp SAV file
         from joblib.externals.loky import get_reusable_executor
@@ -795,7 +795,7 @@ def resample_events(df, N_events=None, x_cen=None, x_range=0.02, out='hist'):
         return events
     elif out == 'hist':
         hist = np.histogram(events, bins=bin_edges)
-        df_new = pd.DataFrame(data=hist[0], index=bin_cens, dtype=float,
+        df_new = pd.DataFrame(data=hist[0], index=bin_cens, dtype=np.float64,
                             columns=["Counts"])
         df_new.index.name = "m/z [u]"
         return df_new

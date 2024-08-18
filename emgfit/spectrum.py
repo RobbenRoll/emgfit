@@ -467,7 +467,7 @@ class spectrum:
                 data_uncut = pd.read_csv(filename, header=None,
                                          names=['m/z [u]', 'Counts'],
                                          skiprows=skiprows,
-                                         delim_whitespace=True,
+                                         sep='\s+',
                                          index_col=False, dtype=float)
                 data_uncut.set_index('m/z [u]',inplace =True)
                 self.input_filename = filename
@@ -592,7 +592,7 @@ class spectrum:
 
     	Parameters
         ----------
-        x : numpy.array
+        x : :class:`numpy.ndarray`
             The input data
         window_len : odd int, optional
             Length of the smoothing window; **must be an odd integer**!
@@ -1169,6 +1169,8 @@ class spectrum:
         defined = [True if p.m_ion != None else False for p in self.peaks]
         blinded = [p._blinded for p in self.peaks]
         mask = np.logical_and(blinded, defined)
+        if any(mask):
+            df_prop.astype(object)
         df_prop.loc[mask, ['m_ion','atomic_ME_keV','m_dev_keV']] = 'blinded'
 
         # Apply formatting
@@ -2217,7 +2219,7 @@ class spectrum:
 
         # Initialize walkers with truncated normal PDFs around best-fit values
         np.random.seed(MCMC_seed) # make MCMC chains reproducible
-        sigmas = np.array(varied_par_errs) # sigma of initial Gaussian PDFs
+        sigmas = np.asarray(varied_par_errs) # sigma of initial Gaussian PDFs
         from scipy.stats import truncnorm
         lb = [p.min for p in varied_pars.values()]
         ub = [p.max for p in varied_pars.values()]
@@ -3038,14 +3040,14 @@ class spectrum:
         print("Depending on the choice of `N_spectra` this can take a few "
               "minutes. Interrupt kernel if this takes too long.")
         np.random.seed(seed=34) # to make bootstrapped spectra reproducible
-        std_devs_of_mus = np.array([]) # standard deviation of sample means mu
-        mean_areas = np.array([]) # array for numbers of detected counts
+        std_devs_of_mus = np.asarray([]) # standard deviation of sample means mu
+        mean_areas = np.asarray([]) # array for numbers of detected counts
         import emgfit.sample as sample
         from tqdm.auto import tqdm # add progress bar with tqdm
         t = tqdm(total=len(li_N_counts)*N_spectra)
         for N_counts in li_N_counts:
-            mus = np.array([])
-            areas = np.array([])
+            mus = np.asarray([])
+            areas = np.asarray([])
 
             for i in range(N_spectra):
                 # create resampled spectrum data
@@ -3326,11 +3328,11 @@ class spectrum:
             # use fit model that produces the lowest chi-square without having eta's compatible with zero within errobar
             li_fit_models = ['Gaussian','emg01','emg10','emg11','emg12','emg21',
                              'emg22','emg23','emg32','emg33']
-            li_red_chis = np.array([np.nan]*len(li_fit_models))
-            li_red_chi_errs = np.array([np.nan]*len(li_fit_models))
+            li_red_chis = np.asarray([np.nan]*len(li_fit_models))
+            li_red_chi_errs = np.asarray([np.nan]*len(li_fit_models))
             # Prepare list of flags for excluding models with tail parameters
             # compatible with zero within error or with failed error estimation:
-            li_flags =np.array([False]*len(li_fit_models))
+            li_flags =np.asarray([False]*len(li_fit_models))
             for model in li_fit_models:
                 try:
                     print("\n### Fitting data with",model,"###\n")
@@ -3663,8 +3665,8 @@ class spectrum:
 
         if self.eff_mass_shifts is None:
             # initialize arrays of empty dictionaries
-            self.eff_mass_shifts = np.array([{} for i in range(len(self.peaks))])
-            self.area_shifts = np.array([{} for i in range(len(self.peaks))])
+            self.eff_mass_shifts = np.asarray([{} for i in range(len(self.peaks))])
+            self.area_shifts = np.asarray([{} for i in range(len(self.peaks))])
         if verbose:
             print('All centroid shifts below are corrected for the '
                   'corresponding shifts of the mass calibrant peak.\n')
@@ -4092,19 +4094,19 @@ class spectrum:
                     new_mus.append(mu)
                     new_amps.append(amp)
 
-                return np.array([new_mus, new_amps])
+                return np.asarray([new_mus, new_amps])
 
             except Exception as err:
                 print("Skipped a parameter set due to error: ")
                 print(err)
-                return np.array([[np.nan]*N_peaks, [np.nan]*N_peaks])
+                return np.asarray([[np.nan]*N_peaks, [np.nan]*N_peaks])
 
         from tqdm.auto import tqdm
         from joblib import Parallel, delayed
         print("Fitting peaks with "+str(N_samples)+" different MCMC-shape-"
               "parameter sets to determine refined peak-shape errors.")
         try:
-            res = np.array(Parallel(n_jobs=n_cores)(delayed(refit)(pars)
+            res = np.asarray(Parallel(n_jobs=n_cores)(delayed(refit)(pars)
                                     for pars in tqdm(shape_par_samples)))
         finally:
             # Force workers to shut down and clean up temp SAV file
@@ -5544,7 +5546,7 @@ class spectrum:
             cols_max = [max(max(lwidth(v) for v in dataframe[col].values),
                             len(str(col))+1)  for col in dataframe.columns]
             # return concatenated lengths of idx and cols
-            return np.array([idx_max] + cols_max)
+            return np.asarray([idx_max] + cols_max)
 
         # Write DataFrames to separate sheets of EXCEL file
         fname = filename+'_results.xlsx'
