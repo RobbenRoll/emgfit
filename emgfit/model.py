@@ -623,8 +623,6 @@ class CompositeEMGModel(EMGModel):
         out.update(self.left._make_all_args(params=params, **kwargs))
         return out
 
-
-
 def save_model(model, fname):
     """Save an EMGModel to a file.
 
@@ -640,7 +638,6 @@ def save_model(model, fname):
     """
     with open(fname, 'w') as fout:
         model.dump(fout)
-
 
 def load_model(fname, funcdefs=None): 
     """Load a saved EMGModel from a file.
@@ -664,7 +661,6 @@ def load_model(fname, funcdefs=None):
     with open(fname) as fh:
         model = m.load(fh, funcdefs=funcdefs)
     return model
-
 
 def _buildmodel(state, funcdefs=None):
     """Build EMGModel from saved state.
@@ -714,7 +710,6 @@ def _buildmodel(state, funcdefs=None):
         rmodel = _buildmodel(right, funcdefs=funcdefs)
         return CompositeEMGModel(lmodel, rmodel, getattr(operator, op))
     
-
 def save_modelresult(modelresult, fname):
     """Save an EMGModelResult to a file.
 
@@ -730,7 +725,6 @@ def save_modelresult(modelresult, fname):
     """
     with open(fname, 'w') as fout:
         modelresult.dump(fout)
-
 
 def load_modelresult(fname, funcdefs=None):
     """Load a saved EMGModelResult from a file.
@@ -755,7 +749,6 @@ def load_modelresult(fname, funcdefs=None):
     with open(fname) as fh:
         mresult = modres.load(fh, funcdefs=funcdefs)
     return mresult
-
 
 
 ################################################################################
@@ -878,7 +871,6 @@ class EMGModelResult(lmfit.model.ModelResult):
         """Name of the cost function used in the fit"""
         return self.model.cost_func
    
-
     def fit(self, data=None, fitted_peaks=None, params=None, weights=None, 
             method=None, nan_policy=None, **kwargs):
         """Re-perform fit for a Model, given data and params.  

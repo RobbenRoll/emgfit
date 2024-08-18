@@ -2299,7 +2299,7 @@ class spectrum:
         plt.ylabel('acceptance fraction',fontsize=16)
         plt.show()
 
-        # Plot autocorrelation times of Parameters
+        # Print autocorrelation times of Parameters
         result_emcee.acor = result_emcee.sampler.get_autocorr_time(quiet=True)
         if any(thin < result_emcee.acor):
             warnings.warn("Thinning interval `thin` is less than the "
