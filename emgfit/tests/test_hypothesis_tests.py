@@ -40,7 +40,7 @@ class TestHypothesisTests:
         alt_mu = mus[0] + 910e-06
         alt_x_min = alt_mu -  992e-06
         alt_x_max = alt_mu + 1008e-06 
-        GV_seed = 42
+        GV_seed = 4532
         steps = 100
         N_GV_spectra = 5 #100
 
@@ -50,11 +50,10 @@ class TestHypothesisTests:
                           min_significance=3, N_spectra=N_GV_spectra, c0=0.5, 
                           seed=GV_seed, show_fits=False, show_upcrossings=False)
 
-
         assert np.isclose(LRT_results["LLR"], 15.71, rtol=1e-03, atol=1e-02)
-        assert np.isclose(LRT_results["p-value"], 1.23e-03, rtol=1e-03, 
+        assert np.isclose(LRT_results["p-value"], 5.36e-04, rtol=1e-03, 
                           atol=1e-05)
-        assert np.isclose(LRT_results["p-value error"], 2.00e-04, rtol=1e-03, 
+        assert np.isclose(LRT_results["p-value error"], 1.58e-04, rtol=1e-03, 
                           atol=1e-05)
         assert LRT_results["reject_null_model"] is True
 
@@ -94,7 +93,7 @@ class TestHypothesisTests:
         alt_mu = mus[0] + 910e-06
         alt_x_min = alt_mu -  992e-06
         alt_x_max = alt_mu + 1008e-06
-        seed = 42
+        seed = 4532
         N_MC_spectra = 5000 
         from emgfit.fit_models import get_mu0
         alt_mu_min = get_mu0(alt_x_min, spec.shape_cal_pars, spec.fit_model)
@@ -108,8 +107,8 @@ class TestHypothesisTests:
                              show_results=False, show_LLR_hist=False)
 
         assert np.isclose(MC_LRT_results["LLR"], 15.71, rtol=1e-03, atol=1e-02)
-        assert np.isclose(MC_LRT_results["p-value"], 0.000600120024004,
+        assert np.isclose(MC_LRT_results["p-value"], 0.0006001,
                           rtol=1e-02, atol=1e-05)
-        assert np.isclose(MC_LRT_results["p-value error"], 0.00034647945740525,
+        assert np.isclose(MC_LRT_results["p-value error"], 0.0003465,
                           rtol=1e-02, atol=1e-05)
         assert MC_LRT_results["reject_null_model"] is True 

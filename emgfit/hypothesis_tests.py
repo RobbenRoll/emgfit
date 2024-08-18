@@ -290,13 +290,10 @@ def run_MC_likelihood_ratio_test(spec, null_result_index, alt_x_pos,
         plt.show()
 
     # Determine p-value from the fraction of LLR samples above the obs. LLR
-    N_above = np.sum(np.where(np.array(MC_LLRs) > LLR, 1, 0))
-    N_tot = np.sum(np.isfinite(np.array(MC_LLRs)))
-    p_val = N_above/N_tot
-    if N_above > 0:
-        p_val_err = np.sqrt(p_val/N_tot)
-    elif N_above == 0:
-        p_val_err = np.sqrt(1/N_tot)
+    N_above = np.sum(np.where(np.asarray(MC_LLRs) > LLR, 1, 0))
+    N_tot = np.sum(np.isfinite(np.asarray(MC_LLRs)))
+    p_val = (N_above + 1)/(N_tot + 1) # add 1's to prevent p-val=0 for N_above=0
+    p_val_err = np.sqrt(p_val/N_tot)
     print(f"Monte Carlo p-value: p = {p_val:.2e} +- {p_val_err:.2e}")
     if p_val_err < alpha:
         success= True
@@ -544,7 +541,7 @@ def run_GV_likelihood_ratio_test(spec, null_result_index, alt_x_min, alt_x_max,
         reject_null_model = False
 
     if show_upcrossings:
-        plt.hist(np.array(all_sim_LLRs).flatten(), density=False, bins=20)
+        plt.hist(np.asarray(all_sim_LLRs).flatten(), density=False, bins=20)
         plt.gca().axvline(max_LLR, color="black")
         plt.xlabel("Local LRT statistic")
         plt.ylabel("Occurences")
