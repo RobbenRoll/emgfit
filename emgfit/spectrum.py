@@ -1059,7 +1059,7 @@ class spectrum:
                 err_msg3 = str("Selection of one or multiple peaks from "
                                "specified `x_pos` failed.")
                 raise Exception(err_msg3)
-        # Remove peaks - make safety copies for case of error in peak removals
+        # Remove peaks - make safety copy for case of error in peak removals
         orig_peaks = copy.deepcopy(self.peaks)
         orig_results = copy.deepcopy(self.fit_results)
         rem_pos = []
@@ -1076,6 +1076,20 @@ class spectrum:
                           " peaks and fit_results lists.").format(i)
                 raise Exception(msg)
         self._update_peak_indeces()
+        if self.index_shape_calib or self.index_mass_calib:
+            if i < self.index_shape_calib:
+                index_shape_calib = self.index_shape_calib - 1
+            else:
+                index_shape_calib = self.index_shape_calib
+            if i < self.index_mass_calib:
+                index_mass_calib = self.index_mass_calib - 1
+            else:
+                index_mass_calib = self.index_mass_calib
+            self._reset_shape_calib_props(index_shape_calib)
+            self._reset_all_fit_props(index_mass_calib)
+            warnings.warn("Peaks generally shouldn't be removed once any fits "
+                          "have been performed. All fit-related peak and "
+                          "spectrum attributes have been reset to defaults.")
         if verbose:
             rem_pos.reverse() # switch to ascending order
             for x_pos in rem_pos:
@@ -4699,7 +4713,7 @@ class spectrum:
             self._show_blinded_report(fit_result)
 
         # Update recalibration factor and calibrant properties
-        self._update_calibrant_props(index_mass_calib,fit_result)
+        self._update_calibrant_props(index_mass_calib, fit_result)
         # Calculate updated recalibration factors from absolute centroid shifts
         # of calibrant and as prep for subsequent peak-shape error determination
         # for ions of interest
@@ -4718,7 +4732,7 @@ class spectrum:
         self.fit_results[self.index_mass_calib] = fit_result
 
 
-    def _reset_shape_calib_props(self):
+    def _reset_shape_calib_props(self, index_shape_calib=None):
         """Reset all shape-calibration-related spectrum and peak properties
 
         See also
@@ -4726,9 +4740,10 @@ class spectrum:
         :meth:`_reset_all_fit_props`
 
         """
-        if self.index_shape_calib is not None:
-            self.fit_results[self.index_shape_calib] = None
-            scal_comment = self.peaks[self.index_shape_calib].comment
+        index_shape_calib = index_shape_calib or self.index_shape_calib
+        if index_shape_calib is not None:
+            self.fit_results[index_shape_calib] = None
+            scal_comment = self.peaks[index_shape_calib].comment
             flags = ["shape & mass calibrant", "shape calibrant"]
             replacements = ["mass calibrant", ""]
             for flag, replacement in zip(flags, replacements):
@@ -4743,7 +4758,7 @@ class spectrum:
                 scal_comment = scal_comment.replace(flag, replacement)
             if scal_comment == "" or scal_comment == ",":
                 scal_comment = "-"
-            self.peaks[self.index_shape_calib].comment = scal_comment
+            self.peaks[index_shape_calib].comment = scal_comment
         self.index_shape_calib = None
         self.shape_cal_result = None
         self.shape_cal_pars = None
@@ -4754,7 +4769,7 @@ class spectrum:
         self.MCMC_par_samples = None
 
 
-    def _reset_all_fit_props(self):
+    def _reset_all_fit_props(self, index_mass_calib=None):
         """Reset all fit-related spectrum and peak attributes to their defaults 
 
         Note
@@ -4797,8 +4812,9 @@ class spectrum:
         self.recal_fac = 1.0
         self.recal_fac_error = None
         self.recal_facs_pm = None
-        if self.index_mass_calib is not None:
-            cal_comment = self.peaks[self.index_mass_calib].comment
+        index_mass_calib = index_mass_calib or self.index_mass_calib
+        if index_mass_calib is not None:
+            cal_comment = self.peaks[index_mass_calib].comment
             flags = ["shape & mass calibrant", "mass calibrant"]
             replacements = ["shape calibrant", ""]
             for flag, replacement in zip(flags, replacements):
@@ -4813,7 +4829,7 @@ class spectrum:
                 cal_comment = cal_comment.replace(flag, replacement)
             if cal_comment == "":
                 cal_comment = "-"
-            self.peaks[self.index_mass_calib].comment = cal_comment
+            self.peaks[index_mass_calib].comment = cal_comment
             self.index_mass_calib = None
 
 
@@ -4848,7 +4864,6 @@ class spectrum:
                 pass  # prevent overwritting of mass recalibration results
             else:
                 peak_idx = self.peaks.index(p)
-                pref = self.peaks[peak_idx]._prefix
                 p.fit_model = fit_result.fit_model
                 p.cost_func = fit_result.cost_func
                 p.method = fit_result.method
@@ -4865,7 +4880,7 @@ class spectrum:
                 # A_stat_G = 0.42... and  A_stat_emg from `determine_A_stat_emg`
                 # method or default value from config.py
                 if p.fit_model == 'Gaussian':
-                    std_dev = fit_result.best_values[pref+'sigma']
+                    std_dev = fit_result.best_values[p._prefix+'sigma']
                 else:  # for emg models
                     FWHM_emg = self.calc_FWHM_emg(peak_idx,
                                                   fit_result=fit_result)
