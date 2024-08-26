@@ -395,7 +395,7 @@ def simulate_events(shape_pars, mus, amps, bkg_c, N_events, x_min, x_max,
 
 
 def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
-                      scl_facs=None, bkg_c=None, N_events=None,
+                      scl_facs=None, bkg_c=None, N_events=None, 
                       copy_spec=False):
     """Create a simulated spectrum using the attributes of a reference spectrum
 
@@ -475,8 +475,8 @@ def simulate_spectrum(spec, x_cen=None, x_range=None, mus=None, amps=None,
         x_max = x[-1] + bin_width_end/2
         indeces = range(len(spec.peaks)) # get peak indeces in sampling range
     else:
-        x_min = x_cen - x_range
-        x_max = x_cen + x_range
+        x_min = x_cen - x_range/2
+        x_max = x_cen + x_range/2
         # Get peak indeces in sampling range:
         peaks = spec.peaks
         indeces = [i for i in range(len(peaks)) if x_min <= peaks[i].x_pos <= x_max]

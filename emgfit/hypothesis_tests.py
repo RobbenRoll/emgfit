@@ -477,10 +477,9 @@ def run_GV_likelihood_ratio_test(spec, null_result_index, alt_x_min, alt_x_max,
         # Simulate spectrum from best-fit null model
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
-            null_result = spec.fit_results[null_result_index]
             sim_spec = simulate_spectrum(spec, copy_spec=True, 
-                                         x_cen=null_result.x_fit_cen,
-                                         x_range=null_result.x_fit_range)
+                                         x_cen=ref_null_result.x_fit_cen,
+                                         x_range=ref_null_result.x_fit_range)
 
         for x_alt in np.atleast_1d(alt_x_pos):
             # Fit data with null and alternative model to determine local LRT

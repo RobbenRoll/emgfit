@@ -51,9 +51,9 @@ class TestHypothesisTests:
                           seed=GV_seed, show_fits=False, show_upcrossings=False)
 
         assert np.isclose(LRT_results["LLR"], 15.71, rtol=1e-03, atol=1e-02)
-        assert np.isclose(LRT_results["p-value"], 5.36e-04, rtol=1e-03, 
+        assert np.isclose(LRT_results["p-value"], 3.36e-04, rtol=1e-03, 
                           atol=1e-05)
-        assert np.isclose(LRT_results["p-value error"], 1.58e-04, rtol=1e-03, 
+        assert np.isclose(LRT_results["p-value error"], 1.22e-04, rtol=1e-03, 
                           atol=1e-05)
         assert LRT_results["reject_null_model"] is True
 
